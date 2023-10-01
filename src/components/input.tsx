@@ -1,8 +1,13 @@
 import React, { FunctionComponent, useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faInfoCircle, faCheck, faEdit } from "@fortawesome/free-solid-svg-icons";
-import './input.css';
+import { faInfoCircle, faCheck, faEdit, faEye, faEyeSlash, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import "./input.css";
+
+export interface ValidateResponse {
+    isValid: boolean;
+    errorMessage: string;
+}
 
 interface BaseInputProps {
     id: string;
@@ -16,14 +21,19 @@ interface BaseInputProps {
     required?: boolean;
     className?: string;
     disabled?: boolean;
+    labelInline?: boolean;
     onChange?(value: string): void;
     onBlur?(): void;
     onSubmit?(value: string): void;
+    validate?(value: string): ValidateResponse;
 }
 
 interface TextInputProps extends BaseInputProps {
-    type: "text";
+    type: "text" | "email" | "password";
     size?: number;
+    maxlength?: number;
+    minlength?: number;
+    pattern?: string;
 }
 
 interface NumberInputProps extends BaseInputProps {
@@ -41,39 +51,70 @@ export type InputProps =
 const Input: FunctionComponent<InputProps> = (props) => {
     const [inputValue, setInputValue] = useState(props.initialValue);
     const [isDisabled, setDisabled] = useState(!!props.disabled);
-    const [isInvalid, setInvalid] = useState(false);
+    const [isValid, setValid] = useState(true);
+    const [isTouch, setTouch] = useState(false);
+    const [inputType, setInputType] = useState(props.type);
+    const [rightIcon, setRightIcon] = useState<IconProp | undefined>(props.rightIcon);
     const inputRef = useRef<any>();
 
     const debouncedTimeout = 300;
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            if (props.onChange) {
-                props.onChange(inputValue.trim());
+            if (props.onChange && isValid) {
+                props.onChange(("" + inputValue).trim());
             }
         }, debouncedTimeout);
+
+        const inpElm = inputRef.current as HTMLInputElement;
+        if (inpElm && inpElm.validity.valid !== isValid && isTouch && !isDisabled)
+            setValid(inpElm.validity.valid);
 
         return () => {
             clearTimeout(timeoutId);
         };
-    }, [inputValue]);
+    }, [inputValue, isValid]);
 
     useEffect(() => {
-        setInvalid(inputRef.current && !inputRef.current.validity.valid);
-    }, [inputRef.current && inputRef.current.validity.valid]);
+        if (!isTouch) return;
+        let validity = true,
+            errorMessage = null;
+        if (props.required && inputValue.length === 0) {
+            validity = false;
+            errorMessage = "Please fill out this field.";
+        } else if (props.validate) {
+            const validityObj = props.validate(inputValue);
+            validity = validityObj.isValid;
+            errorMessage = validityObj.errorMessage;
+        }
+        if (validity !== isValid) {
+            setValid(validity);
+            const inpElm = inputRef.current as HTMLInputElement;
+            if (validity) {
+                inpElm.setCustomValidity("");
+            } else {
+                if (errorMessage !== null) inpElm.setCustomValidity(errorMessage);
+                inpElm.reportValidity();
+            }
+        }
+
+    }, [inputValue, isTouch, props.validate, props.required]);
 
     const onChangeHandler: React.ChangeEventHandler<HTMLInputElement> = event => {
         event.preventDefault();
+        setTouch(true);
         setInputValue(event.target.value);
     };
 
     const onBlurHandler: React.FocusEventHandler<HTMLInputElement> = event => {
         event.preventDefault();
+        setTouch(true);
         if (props.onBlur)
             props.onBlur();
     };
 
     const onClickHandler: React.MouseEventHandler<HTMLInputElement> = event => {
         if (!isDisabled) {
+            setTouch(true);
             event.preventDefault();
             event.stopPropagation();
         }
@@ -87,6 +128,7 @@ const Input: FunctionComponent<InputProps> = (props) => {
         // more than 100 ms after typing, this should work.
         setTimeout(() => {
             setDisabled(prev => {
+                if (!isValid) return prev;
                 const disabled = (!!inputValue && !prev);
                 if (disabled && inputValue && props.onSubmit) {
                     props.onSubmit(inputValue.trim());
@@ -96,32 +138,51 @@ const Input: FunctionComponent<InputProps> = (props) => {
         }, debouncedTimeout);
     };
 
+    if (props.type === "password" && inputType === "password" && rightIcon !== faEye) {
+        setRightIcon(faEye);
+    } else if (props.type === "password" && inputType === "text" && rightIcon !== faEyeSlash) {
+        setRightIcon(faEyeSlash);
+    }
+
+    const onClickRightIconHandler: React.MouseEventHandler<HTMLSpanElement> = event => {
+        if (props.type === "password") {
+            event.preventDefault();
+            event.stopPropagation();
+            if (rightIcon === faEye) {
+                setInputType("text");
+            } else {
+                setInputType("password");
+            }
+        }
+    };
 
     let tooltip: JSX.Element | undefined;
     if (props.tooltip) {
         tooltip = <span className="icon has-text-info tooltip is-tooltip-multiline is-tooltip-right" data-tooltip={ props.tooltip }> <FontAwesomeIcon icon={ faInfoCircle } /> </span>;
     }
 
-    const defaultClasses = `input ${props.className || ""}`;
-    const inputClasses = defaultClasses + (isInvalid ? " is-danger is-invalid" : "");
+    const inputClasses = "input " + (props.className || "") + (isValid ? "" : " is-danger is-invalid");
 
     return (
-        <div className="field">
+        <div className={ `input-comp field ${props.labelInline ? "is-inline-flex" : ""}` }>
             <label htmlFor={ props.id }
-                className={ `label ${props.label ? "" : "is-hidden"}` }>
+                className={ `label ${props.label ? "" : "is-hidden"} mr-5` }>
                 <span>{ props.label || props.id } </span>
                 { tooltip }
             </label>
-            <div className={ `control ${props.onSubmit ? "is-flex" : ""} ${props.leftIcon ? "has-icons-left" : ""} ${props.rightIcon ? "has-icons-right" : ""}` }>
+            <div className={ `control ${props.onSubmit ? "is-flex" : ""} ${props.leftIcon ? "has-icons-left" : ""} ${rightIcon ? "has-icons-right" : ""}` }>
                 {
-                    props.type === "text" &&
+                    props.type !== "number" &&
                     <input
                         ref={ inputRef }
-                        type={ props.type }
+                        type={ inputType }
                         name={ props.id }
                         id={ props.id }
                         placeholder={ props.placeholder }
                         size={ props.size }
+                        maxLength={ props.maxlength }
+                        minLength={ props.minlength }
+                        pattern={ props.pattern }
                         value={ inputValue }
                         className={ inputClasses }
                         onChange={ onChangeHandler }
@@ -159,9 +220,9 @@ const Input: FunctionComponent<InputProps> = (props) => {
                     </span>
                 }
                 {
-                    props.rightIcon &&
-                    <span className="icon is-small is-right">
-                        <FontAwesomeIcon icon={ props.rightIcon } size={ "sm" } />
+                    rightIcon &&
+                    <span className="icon is-small is-right" onClick={ onClickRightIconHandler }>
+                        <FontAwesomeIcon icon={ rightIcon } size={ "sm" } />
                     </span>
                 }
                 { props.onSubmit &&
@@ -172,6 +233,9 @@ const Input: FunctionComponent<InputProps> = (props) => {
                     </button>
                 }
             </div>
+            { inputRef.current && !!inputRef.current.validationMessage && isTouch && !isDisabled &&
+                <p className="help is-danger">{ inputRef.current.validationMessage }</p>
+            }
         </div>
     );
 };

@@ -9,6 +9,7 @@ export interface VerifyIndicatorProps {
     verifiedDateTime?: Date;
     onChange?(datetime?: Date): void;
     disabled?: boolean;
+    className?: string;
 }
 
 const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
@@ -38,6 +39,9 @@ const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
         setOpenModal(false);
     };
 
+    const unverifiedSizeClass = props.className && props.className.includes("is-smaller") ? "" : "is-small";
+    const verifiedSizeClass = props.className && props.className.includes("is-smaller") ? "" : "is-large";
+
     return (
         <div className="field verify-indicator">
             {
@@ -47,7 +51,7 @@ const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
             <div className="control">
                 { props.verifiedDateTime &&
                     <span className="icon-text">
-                        <span className="icon has-text-success is-large">
+                        <span className={ `icon has-text-success ${verifiedSizeClass} ${props.className || ""}` }>
                             <FontAwesomeIcon icon={ faCheckCircle } />
                         </span>
                         { !props.disabled &&
@@ -58,13 +62,13 @@ const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
                 {
                     !props.verifiedDateTime && !props.disabled &&
                     <div className="mx-3">
-                        <span className="is-danger notification is-light is-small">{ props.labelPrefix } un-verified </span>
+                        <span className={ `is-danger notification is-light ${unverifiedSizeClass} ${props.className || ""}` }> { props.labelPrefix } un-verified </span>
                         <button className="is-link button is-small is-rounded mx-5" onClick={ onClickModalOpenHandler }>click to verify</button>
                     </div>
                 }
                 {
                     !props.verifiedDateTime && props.disabled &&
-                    <span className="is-danger notification is-light is-small">{ props.labelPrefix } un-verified </span>
+                    <span className={ `is-danger notification is-light ${unverifiedSizeClass} ${props.className || ""}` }> { props.labelPrefix } un-verified </span>
                 }
                 <div className={ `modal ${openModal ? "is-active" : ""}` }>
                     <div className="modal-background"></div>

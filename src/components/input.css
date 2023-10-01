@@ -3,3 +3,8 @@ input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
 }
+
+.input-comp .control span.icon.is-right {
+  pointer-events: all;
+  cursor: pointer;
+}

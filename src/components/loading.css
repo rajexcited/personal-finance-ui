@@ -1,0 +1,12 @@
+.modal.spinner .modal-card-body {
+    background-color: inherit;
+}
+
+.modal.spinner .icon {
+    background-color: inherit;
+    font-size: 4rem;
+}
+
+.modal.spinner .modal-background {
+    background-color: inherit;
+}

@@ -1,24 +1,23 @@
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent, useEffect, useState, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleUp, faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import DropDownItem from "./dropdown-item";
 
+export type DropDownItemType = {
+    id: string;
+    content: string;
+    tooltip?: string;
+};
 
 export interface DropDownProps {
     id: string;
     label: string;
-    items: string[];
-    selectedItem?: string;
+    items: string[] | DropDownItemType[];
+    selectedItem?: string | DropDownItemType;
     defaultItem?: string;
-    allowInput?: boolean;
-    onSelect (item: string): void;
+    onSelect (item: string | DropDownItemType): void;
     direction?: "up" | "down";
     size?: "normal" | "small" | "medium" | "large";
-}
-
-interface Item {
-    id: string;
-    content: string;
 }
 
 const findUniqueElementId = (prefix: string) => {
@@ -34,43 +33,90 @@ const findUniqueElementId = (prefix: string) => {
 
 const DropDown: FunctionComponent<DropDownProps> = (props) => {
     const [isOpen, setOpen] = useState(false);
-    const [selectedItem, setSelectedItem] = useState(props.selectedItem);
-    const [newInputValue, setNewInputValue] = useState('');
-    const [inputItemId, setInputItemId] = useState('');
+    const [selectedItem, setSelectedItem] = useState<DropDownItemType>();
     const [dropdownMenuId, setDropdownMenuId] = useState('');
+    const [items, setItems] = useState<DropDownItemType[]>([]);
+
+    const closeDropdownHandler = useCallback((event: MouseEvent) => {
+        event.preventDefault();
+        setOpen(false);
+    }, []);
 
     useEffect(() => {
-        // to set only one time while initializing
-        setDropdownMenuId(findUniqueElementId("dropdown-menu"));
-        if (props.allowInput) {
-            setInputItemId(findUniqueElementId("dropdown-input-item"));
+        let selected: DropDownItemType;
+        if (props.selectedItem) {
+            if (typeof props.selectedItem === "string") {
+                selected = {
+                    id: props.selectedItem,
+                    content: props.selectedItem
+                };
+            } else {
+                selected = props.selectedItem;
+            }
+            setSelectedItem(selected);
         }
-    }, [props.allowInput]);
+        setDropdownMenuId(findUniqueElementId("dropdown-menu"));
 
-    const items = Object.fromEntries(props.items.map(item => [item, item]));
-    items[inputItemId] = newInputValue;
+        return () => {
+            document.removeEventListener("click", closeDropdownHandler);
+        };
+    }, []);
 
-    //todo the click event is getting triggered when hitting enter key on input element. this is causing 
-    //dropdown to be toggled. investigate why enter key is propogating to click event.
-    // elements are not overlapping. not high priority
+    useEffect(() => {
+        if (!isOpen) {
+            setTimeout(() => {
+                document.removeEventListener("click", closeDropdownHandler);
+            }, 10);
+        } else {
+            setTimeout(() => {
+                document.addEventListener("click", closeDropdownHandler);
+            }, 10);
+        }
+    }, [isOpen, closeDropdownHandler]);
+
+    useEffect(() => {
+        if (props.items && props.items.length) {
+            let ddItems: DropDownItemType[];
+            if (typeof props.items[0] === "string") {
+                ddItems = props.items.map(item => ({
+                    id: item,
+                    content: item
+                })) as DropDownItemType[];
+            } else {
+                ddItems = [...props.items] as DropDownItemType[];
+            }
+            setItems(ddItems);
+        }
+
+    }, [props.items]);
+
     const toggleDropdownHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        setOpen((active) => !active);
+        setOpen(active => !active);
     };
 
-    const onSelectHandler = (id: string) => {
+    const onSelectHandler = (item: DropDownItemType, selectedId: string) => {
         setOpen(false);
-        setSelectedItem(id);
-        const value = props.allowInput && id === inputItemId ? newInputValue : items[id];
-        props.onSelect(value);
+        setSelectedItem(item);
+        if (typeof props.items[0] === "string") {
+            props.onSelect(item.id);
+        } else {
+            props.onSelect(item);
+        }
     };
 
-    const maxLength = Math.max(...props.items.map(it => it.length), 20);
-    const triggerItem = selectedItem ? items[selectedItem] : props.defaultItem ? props.defaultItem : "Select";
-    const paddingLength = maxLength / 2 + 2 - triggerItem.length;
-    const triggerItemPadding = [];
+    const contentsLength = items.map(it => it.content.length);
+    let triggerItem;
+    if (selectedItem) {
+        triggerItem = items.find(itm => itm.id === selectedItem.id)?.content;
+    }
+    const selectedTriggerContent = triggerItem || props.defaultItem || "Select";
+    const paddingLength = (Math.max(...contentsLength, 20) / 2) + 2 - selectedTriggerContent.length;
+    const triggerItemPaddingBefore = [];
+    const triggerItemPaddingAfter = [];
     for (let i = 0; i < paddingLength; i++) {
-        triggerItemPadding.push(<>&nbsp;</>);
+        triggerItemPaddingBefore.push(<span key={ "drdwn-itm-pad-bfr" + i + props.id }>&nbsp;</span>);
+        triggerItemPaddingAfter.push(<span key={ "drdwn-itm-pad-aftr" + i + props.id }>&nbsp;</span>);
     }
 
     return (
@@ -80,7 +126,7 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
                 <div className={ `dropdown is-${props.direction === "down" ? "down" : "up"} ${isOpen ? "is-active" : ""}` } id={ props.id }>
                     <div className="dropdown-trigger">
                         <button className={ `button ${props.size ? "is-" + props.size : ""}` } aria-haspopup="true" aria-controls={ dropdownMenuId } onClick={ toggleDropdownHandler }>
-                            <span>{ triggerItemPadding.map(pad => pad) }{ triggerItem }{ triggerItemPadding.map(pad => pad) }</span>
+                            <span>{ triggerItemPaddingBefore.map(pad => pad) }{ selectedTriggerContent }{ triggerItemPaddingAfter.map(pad => pad) }</span>
                             <span className="icon is-small">
                                 <FontAwesomeIcon icon={ props.direction !== "down" && isOpen ? faAngleUp : faAngleDown } size={ "sm" } />
                             </span>
@@ -90,27 +136,15 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
                     <div className="dropdown-menu" id={ dropdownMenuId } role="menu">
                         <div className="dropdown-content">
                             {
-                                Object.entries(items).slice(0, -1).map(([id, content]) =>
+                                items.map((itm) =>
                                     <DropDownItem
-                                        key={ id }
-                                        id={ id }
-                                        content={ content }
-                                        onSelect={ onSelectHandler }
+                                        key={ itm.id + "drpdwnitm" }
+                                        id={ itm.id + "drpdwnitm" }
+                                        content={ itm.content }
+                                        onSelect={ onSelectHandler.bind(null, itm) }
                                         type="text"
-                                        selectedId={ selectedItem }
-                                    />
+                                        selectedId={ selectedItem?.id + "drpdwnitm" } />
                                 )
-                            }
-                            {
-                                props.allowInput && <DropDownItem
-                                    key={ inputItemId }
-                                    id={ inputItemId }
-                                    type="input"
-                                    onSubmit={ setNewInputValue }
-                                    onSelect={ onSelectHandler }
-                                    selectedId={ selectedItem }
-                                    size={ 20 }
-                                />
                             }
                         </div>
                         <div className={ props.direction === "down" && isOpen ? "my-5 py-5" : "is-hidden" }>&nbsp;</div>
