@@ -53,9 +53,10 @@ const Input: FunctionComponent<InputProps> = (props) => {
     const [isDisabled, setDisabled] = useState(!!props.disabled);
     const [isValid, setValid] = useState(true);
     const [isTouch, setTouch] = useState(false);
+    const [error, setError] = useState("");
     const [inputType, setInputType] = useState(props.type);
     const [rightIcon, setRightIcon] = useState<IconProp | undefined>(props.rightIcon);
-    const inputRef = useRef<any>();
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const debouncedTimeout = 300;
     useEffect(() => {
@@ -65,7 +66,7 @@ const Input: FunctionComponent<InputProps> = (props) => {
             }
         }, debouncedTimeout);
 
-        const inpElm = inputRef.current as HTMLInputElement;
+        const inpElm = inputRef.current;
         if (inpElm && inpElm.validity.valid !== isValid && isTouch && !isDisabled)
             setValid(inpElm.validity.valid);
 
@@ -78,25 +79,53 @@ const Input: FunctionComponent<InputProps> = (props) => {
         if (!isTouch) return;
         let validity = true,
             errorMessage = null;
-        if (props.required && inputValue.length === 0) {
+        // browser errors will be given priority
+        let hasInputError = false;
+        if (inputRef.current) {
+            const validity = inputRef.current.validity;
+            for (let key in validity) {
+                if (key !== "customError" && key !== "valid" && validity[key as keyof typeof validity]) {
+                    hasInputError = true;
+                    break;
+                }
+            }
+        }
+        if (hasInputError) {
             validity = false;
-            errorMessage = "Please fill out this field.";
         } else if (props.validate) {
             const validityObj = props.validate(inputValue);
             validity = validityObj.isValid;
-            errorMessage = validityObj.errorMessage;
+            if (!validityObj.isValid) errorMessage = validityObj.errorMessage;
         }
         if (validity !== isValid) {
             setValid(validity);
-            const inpElm = inputRef.current as HTMLInputElement;
-            if (validity) {
-                inpElm.setCustomValidity("");
-            } else {
-                if (errorMessage !== null) inpElm.setCustomValidity(errorMessage);
-                inpElm.reportValidity();
+            const inpElm = inputRef.current;
+            if (inpElm) {
+                if (validity) {
+                    inpElm.setCustomValidity("");
+                    setError("");
+                } else {
+                    if (errorMessage !== null) inpElm.setCustomValidity(errorMessage);
+                    else inpElm.setCustomValidity("");
+                    inpElm.reportValidity();
+                    setError(inpElm.validationMessage);
+                }
+            }
+        } else if (!validity) {
+            // in case of error state not change, display correct error message
+            const inpElm = inputRef.current;
+            if (inpElm) {
+                if (errorMessage !== null && errorMessage !== inpElm.validationMessage) {
+                    inpElm.setCustomValidity(errorMessage);
+                    setError(errorMessage);
+                } else if (errorMessage === null) {
+                    if (inpElm.validity.customError) inpElm.setCustomValidity("");
+                    if (error !== inpElm.validationMessage) {
+                        setError(inpElm.validationMessage);
+                    }
+                }
             }
         }
-
     }, [inputValue, isTouch, props.validate, props.required]);
 
     const onChangeHandler: React.ChangeEventHandler<HTMLInputElement> = event => {

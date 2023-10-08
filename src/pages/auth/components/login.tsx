@@ -1,11 +1,14 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Input, LoadSpinner } from "../../../components";
+import { Input, LoadSpinner, Animated, InputValidateResponse } from "../../../components";
 import { faEnvelope, faLock, faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import ReactMarkdown from "react-markdown";
 import useAuth from "../hooks/use-auth";
-import { PAGE_URL } from "../../navigation";
+import { PAGE_URL } from "../../root/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import "./login.css";
+
+
 
 
 const LoginPage: FunctionComponent = () => {
@@ -13,6 +16,7 @@ const LoginPage: FunctionComponent = () => {
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [loginCompleted, setLoginCompleted] = useState(false);
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -20,9 +24,19 @@ const LoginPage: FunctionComponent = () => {
 
     useEffect(() => {
         if (auth.isAuthenticated) {
-            navigate("/");
+            navigate(location.state?.from?.pathname || "/");
         }
     }, []);
+
+    useEffect(() => {
+        if (!loginCompleted) return;
+        setSubmitting(false);
+        if (auth.isAuthenticated) {
+            navigate(location.state?.from?.pathname || "/");
+        } else {
+            setErrorMessage("We are unable to logging you in. please try later in new browser window");
+        }
+    }, [auth.isAuthenticated, loginCompleted]);
 
     const onSubmitLoginHandler: React.FormEventHandler<HTMLFormElement> = async event => {
         event.preventDefault();
@@ -33,7 +47,6 @@ const LoginPage: FunctionComponent = () => {
         } catch (e) {
             const err = e as Error;
             setErrorMessage(err.message);
-        } finally {
             setSubmitting(false);
         }
     };
@@ -43,30 +56,36 @@ const LoginPage: FunctionComponent = () => {
         navigate(PAGE_URL.signupPage.fullUrl);
     };
 
+    const passwordValidator = (value: string): InputValidateResponse => {
+        const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#$%^&*])[\w!@#$%^&*\)\(\=]+$/;
+        return { errorMessage: "password must contain a special character, number, UPPERCASE.", isValid: passwordRegex.test(value) };
+    };
+
     return (
-        <section className="section">
+        <section className="login-section isPlaying">
             <LoadSpinner loading={ submitting } />
 
-            {
-                !!errorMessage &&
-                <div className="columns is-centered">
-                    <div className="column is-half">
-                        <article className="message is-danger mb-5">
-                            <div className="message-body">
-                                <ReactMarkdown children={ errorMessage } />
-                            </div>
-                        </article>
-                        <div className="p-3">&nbsp;</div>
+            { !!errorMessage &&
+                <Animated animateOnMount={ true } isPlayIn={ !submitting } animatedIn="fadeInDown" animatedOut="fadeOutUp">
+                    <div className="columns is-centered">
+                        <div className="column is-half">
+                            <article className="message is-danger mb-3">
+                                <div className="message-body">
+                                    <ReactMarkdown children={ errorMessage } />
+                                </div>
+                            </article>
+                        </div>
                     </div>
-                </div>
+                </Animated>
             }
+
             <form onSubmit={ onSubmitLoginHandler }>
                 <div className="columns is-centered">
                     <div className="column is-half">
                         <Input
                             id="emailId"
                             type="email"
-                            label="Email Id: "
+                            label="Email Id "
                             placeholder="Enter Email id"
                             leftIcon={ faEnvelope }
                             initialValue={ emailId }
@@ -77,7 +96,7 @@ const LoginPage: FunctionComponent = () => {
                         <Input
                             id="password"
                             type="password"
-                            label="Password: "
+                            label="Password "
                             placeholder="Enter password"
                             leftIcon={ faLock }
                             initialValue={ password }
@@ -85,6 +104,7 @@ const LoginPage: FunctionComponent = () => {
                             maxlength={ 25 }
                             minlength={ 8 }
                             required={ true }
+                            validate={ passwordValidator }
                         />
                     </div>
                 </div>

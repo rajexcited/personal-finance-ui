@@ -7,13 +7,13 @@ import {
     PymtAccountsRoot,
     AddPymtAccount,
     UpdatePymtAccount,
-    pymtAccountListLoader,
-    pymtAccountAddUpdateAction,
-    pymtAccountDetailLoader
-} from '../pymt-accounts';
-import { AddExpense, ExpenseJournalPage, ExpenseList, UpdateExpense } from '../expenses';
-import { ExpenseCategoryPage, PymtAccountTypePage, SettingsRoot } from "../settings";
-import { LoginPage, RequireAuth, SignupPage } from "../auth";
+    pymtAccountAddUpdateActionHandler,
+    pymtAccountDetailLoaderHandler,
+    pymtAccountListLoaderHandler
+} from '../../pymt-accounts';
+import { AddExpense, ExpenseJournalPage, ExpenseList, UpdateExpense } from '../../expenses';
+import { ExpenseCategoryPage, PymtAccountTypePage, SettingsRoot } from "../../settings";
+import { LoginPage, RequireAuth, SignupPage, LogoutPage } from "../../auth";
 
 
 export const router = createBrowserRouter([
@@ -25,6 +25,7 @@ export const router = createBrowserRouter([
             { index: true, element: <div>Home page</div> },
             { path: PAGE_URL.loginPage.shortUrl, element: <LoginPage /> },
             { path: PAGE_URL.signupPage.shortUrl, element: <SignupPage /> },
+            { path: PAGE_URL.logoutPage.shortUrl, element: <LogoutPage /> },
             {
                 path: PAGE_URL.expenseJournalRoot.shortUrl,
                 element: <RequireAuth><ExpenseJournalPage /></RequireAuth>,
@@ -38,9 +39,9 @@ export const router = createBrowserRouter([
                 path: PAGE_URL.pymtAccountsRoot.shortUrl,
                 element: <RequireAuth><PymtAccountsRoot /></RequireAuth>,
                 children: [
-                    { index: true, element: <PymtAccountList />, loader: pymtAccountListLoader, action: pymtAccountAddUpdateAction, },
-                    { path: PAGE_URL.addPymAccount.shortUrl, element: <AddPymtAccount />, action: pymtAccountAddUpdateAction },
-                    { path: PAGE_URL.updatePymAccount.shortUrl, element: <UpdatePymtAccount />, loader: pymtAccountDetailLoader },
+                    { index: true, element: <PymtAccountList />, loader: pymtAccountListLoaderHandler, action: pymtAccountAddUpdateActionHandler, },
+                    { path: PAGE_URL.addPymAccount.shortUrl, element: <AddPymtAccount />, action: pymtAccountAddUpdateActionHandler },
+                    { path: PAGE_URL.updatePymAccount.shortUrl, element: <UpdatePymtAccount />, loader: pymtAccountDetailLoaderHandler },
                 ]
             },
             {

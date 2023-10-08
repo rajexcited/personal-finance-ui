@@ -1,22 +1,31 @@
-import axios from "axios";
-import { REST_ROOT_PATH, ConfigTypeService, ConfigTypeStatus } from "../../../services";
+import { axios, ConfigTypeService, ConfigTypeStatus, handleRestErrors } from "../../../services";
 import dateutils from "date-and-time";
 
 export interface AuthDetailType {
   roles: string[];
-  userName: string;
+  emailId: string;
   isAuthenticated: boolean;
   fullName: string;
   expiryDate: Date;
+  firstname: string;
+  lastname: string;
 }
 
 export interface LoginDataType {
-  userName: string;
+  emailId: string;
   password: string;
 }
 
+export interface SignupDetailType {
+  emailId: string;
+  password: string;
+  firstname: string;
+  lastname: string;
+  roles: string[];
+}
+
 export interface UserDetailType {
-  userName: string;
+  emailId: string;
   fullName: string;
   isAuthenticated: boolean;
   expiryDate: Date;
@@ -29,6 +38,7 @@ interface AuthenticationService {
   isAuthorized(pageid: string): Promise<boolean>;
   destroy(): void;
   getUserDetails(): UserDetailType;
+  signup(details: SignupDetailType): Promise<void>;
 }
 
 const AuthenticationServiceImpl = (): AuthenticationService => {
@@ -37,10 +47,11 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
 
   const login = async (details: LoginDataType) => {
     try {
-      const data = { userName: details.userName, password: details.password };
-      const response = await axios.post(REST_ROOT_PATH + "/login", data, { withCredentials: true });
+      const data = { emailId: details.emailId, password: details.password };
+      const response = await axios.post("/login", data, { withCredentials: true });
       const authResponse: AuthDetailType = {
         ...response.data,
+        fullName: response.data.firstname + " " + response.data.lastname,
         expiryDate: dateutils.addSeconds(new Date(), response.data.expiresIn),
       };
 
@@ -50,19 +61,11 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
       };
       sessionStorage.setItem(authSessionKey, JSON.stringify(authDetails));
     } catch (e) {
-      // handleRestErrors(e as Error);
+      const err = e as Error;
+      handleRestErrors(err);
       console.error("not rest error", e);
-      // throw e;
-      sessionStorage.setItem(
-        authSessionKey,
-        JSON.stringify({
-          roles: ["role1"],
-          userName: "neel4ever@gmail.com",
-          isAuthenticated: true,
-          fullName: "Neel Sheth",
-          expiryDate: dateutils.addSeconds(new Date(), 2 * 60).getTime(),
-        })
-      );
+      const msg = err.message || e;
+      throw Error(msg as string);
     }
   };
 
@@ -93,6 +96,7 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
 
   const logout = () => {
     sessionStorage.removeItem(authSessionKey);
+    axios.post("/logout", { withCredentials: true });
   };
 
   const getUserDetails = (): UserDetailType => {
@@ -101,13 +105,13 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
       return {
         fullName: authDetails.fullName,
         isAuthenticated: authDetails.isAuthenticated,
-        userName: authDetails.userName,
+        emailId: authDetails.emailId,
         expiryDate: authDetails.expiryDate,
       };
     }
     return {
       fullName: "",
-      userName: "",
+      emailId: "",
       isAuthenticated: false,
       expiryDate: dateutils.parse("1/1/1000", "m/d/yyyy"),
     };
@@ -126,6 +130,35 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
     return false;
   };
 
+  const signup = async (details: SignupDetailType) => {
+    if (isAuthenticated()) {
+      throw new Error("You are already logged in. Cannot sing you up.");
+    }
+    try {
+      const data = { ...details };
+      // default configs will be created with sign up
+      const response = await axios.post("/signup", data, { withCredentials: true });
+      const authResponse: AuthDetailType = {
+        ...response.data,
+        fullName: response.data.firstname + " " + response.data.lastname,
+        expiryDate: dateutils.addSeconds(new Date(), response.data.expiresIn),
+      };
+
+      const authDetails = {
+        ...authResponse,
+        isAuthenticated: true,
+        expiryDate: authResponse.expiryDate.getTime(),
+      };
+      sessionStorage.setItem(authSessionKey, JSON.stringify(authDetails));
+    } catch (e) {
+      const err = e as Error;
+      handleRestErrors(err);
+      console.error("not rest error", e);
+      const msg = err.message || e;
+      throw Error(msg as string);
+    }
+  };
+
   const destroy = () => {
     authRoleConfigService.destroy();
   };
@@ -137,6 +170,7 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
     isAuthorized,
     getUserDetails,
     destroy,
+    signup,
   };
 };
 

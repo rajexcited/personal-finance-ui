@@ -7,6 +7,10 @@ export const PAGE_URL = {
     shortUrl: "signup",
     fullUrl: "/signup",
   },
+  logoutPage: {
+    shortUrl: "logout",
+    fullUrl: "/logout",
+  },
   expenseJournalRoot: {
     shortUrl: "expense-journal",
     fullUrl: "/expense-journal",

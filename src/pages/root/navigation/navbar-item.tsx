@@ -9,9 +9,10 @@ export interface NavbarItemProp {
     icon: IconProp | null;
     label: string;
     isProtected: boolean;
+    isSelected: boolean;
 }
 
-const NavBarItem: FunctionComponent<NavbarItemProp> = ({ icon, label, link, id }) => {
+const NavBarItem: FunctionComponent<NavbarItemProp> = ({ icon, label, link, id, isSelected }) => {
     let itemLabelChild: JSX.Element;
     if (icon) {
         itemLabelChild = (
@@ -26,7 +27,7 @@ const NavBarItem: FunctionComponent<NavbarItemProp> = ({ icon, label, link, id }
         itemLabelChild = <span key={ label }> { label } </span>;
     }
 
-    return <Link className="navbar-item" to={ link }>
+    return <Link className={ `navbar-item ${isSelected ? "is-active" : ""}` } to={ link } id={ id }>
         { itemLabelChild }
     </Link>;
 };

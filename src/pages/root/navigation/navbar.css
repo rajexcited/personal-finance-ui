@@ -1,0 +1,8 @@
+.navbar.is-white .navbar-end .navbar-link.is-active,
+.navbar.is-white .navbar-end>a.navbar-item.is-active,
+.navbar.is-white .navbar-start .navbar-link.is-active,
+.navbar.is-white .navbar-start>a.navbar-item.is-active,
+.navbar.is-white .navbar-brand .navbar-link.is-active,
+.navbar.is-white .navbar-brand>a.navbar-item.is-active {
+    background-color: #dfdfdf;
+}

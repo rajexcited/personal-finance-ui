@@ -10,11 +10,6 @@ interface LoadSpinnerProps {
 }
 
 const LoadSpinner: FunctionComponent<LoadSpinnerProps> = (props) => {
-    // const [waiting, setWaiting] = useDebounceState(true);
-
-    // useEffect(() => {
-    //     setWaiting(props.loading);
-    // }, [props.loading]);
 
     return (
         <div className={ `modal spinner ${props.loading ? "is-active" : ""}` }>

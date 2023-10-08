@@ -1,6 +1,6 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { PAGE_URL } from "../navigation";
+import { PAGE_URL } from "../root/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCoins, faMoneyBills, faTags, faUserAlt } from "@fortawesome/free-solid-svg-icons";
 import { HeroTabs } from "../../components";

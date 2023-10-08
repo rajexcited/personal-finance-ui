@@ -11,3 +11,4 @@ export type { SortDirection, SortType } from "./table-head";
 export type { DropDownItemType } from "./dropdown";
 export { default as LoadSpinner } from "./loading";
 export { default as HeroTabs } from "./hero-tabs";
+export { default as Animated } from "./animated";

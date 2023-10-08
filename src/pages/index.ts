@@ -1,3 +1,2 @@
-export { ErrorPage, router } from "./main-layout";
-export { PAGE_URL } from "./navigation";
+export { ErrorPage, router, PAGE_URL } from "./root";
 export { AuthContextProvider } from "./auth";
