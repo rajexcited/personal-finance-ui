@@ -1,19 +1,22 @@
 import { createContext } from "react";
+import { SignupDetailType } from "../services/auth-service";
 
 interface AuthContextType {
   fullName: string;
   isAuthenticated: boolean;
-  userName: string;
-  login(userName: string, password: string): Promise<void>;
+  emailId: string;
+  login(emailId: string, password: string): Promise<void>;
   logout(): void;
+  signup(details: SignupDetailType): Promise<void>;
 }
 
 export const defaultAuthContext: AuthContextType = {
   fullName: "",
   isAuthenticated: false,
-  userName: "",
+  emailId: "",
   login: async (name: string, pass: string) => {},
   logout: () => {},
+  signup: async (details: SignupDetailType) => {},
 };
 
 const AuthContext = createContext<AuthContextType>(defaultAuthContext);

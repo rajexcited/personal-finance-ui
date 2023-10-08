@@ -1,10 +1,10 @@
 import { ActionFunctionArgs, redirect } from "react-router-dom";
-import { PAGE_URL } from "../../navigation";
+import { PAGE_URL } from "../../root/navigation";
 import { PymtAccountService } from "../services";
 
 const pymtAccountService = PymtAccountService();
 
-export const pymtAccountAddUpdateAction = async ({ request }: ActionFunctionArgs) => {
+export const pymtAccountAddUpdateActionHandler = async ({ request }: ActionFunctionArgs) => {
   console.log("pymt add action");
   const formdata = await request.formData();
   const data: any = {};
@@ -14,7 +14,7 @@ export const pymtAccountAddUpdateAction = async ({ request }: ActionFunctionArgs
   data.accountName = formdata.get("accountName");
   data.accountNumber = formdata.get("accountNumber");
   if (formdata.get("typeId")) data.typeId = formdata.get("typeId");
-  if (formdata.get("typeName")) data.typeId = formdata.get("typeName");
+  if (formdata.get("typeName")) data.typeName = formdata.get("typeName");
   data.tags = formdata.get("tags");
   data.institutionName = formdata.get("institutionName");
   data.description = formdata.get("description");

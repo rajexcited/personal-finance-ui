@@ -155,7 +155,7 @@ declare module "@creativebulma/bulma-tagsinput" {
      * @param {string} eventName
      * @param {function} listener
      */
-    on(eventName: EventType, listener: (item: string) => void): void;
+    on(eventName: EventType, listener: (itemOrObj: any) => void): void;
     /**
      * Subscribes on event name specified function to fire only once
      *

@@ -1,6 +1,6 @@
 import { FunctionComponent } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../navigation/page-url";
+import { PAGE_URL } from "../../root/navigation/page-url";
 
 
 const AccountsHome: FunctionComponent = () => {
@@ -15,7 +15,7 @@ const AccountsHome: FunctionComponent = () => {
                     </div>
                 </div>
             </div>
-            <section className="section">
+            <section className="section is-narrow-y">
                 <Outlet />
             </section>
         </>

@@ -1,19 +1,27 @@
 import { FunctionComponent, useState } from "react";
 import Input from "./input";
-import './dropdown-item.css'
+import './dropdown-item.css';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
 
-interface DropDownItemPropBase {
+interface WaitDropDownItemPropBase {
     id: string;
-    selectedId?: string;
-    onSelect(id: string): void;
+    type: "wait";
 }
 
-interface TextDropDownItemProps extends DropDownItemPropBase {
+interface NonwaitDropDownItemPropBase {
+    id: string;
+    selectedId?: string;
+    onSelect (id: string): void;
+}
+
+interface TextDropDownItemProps extends NonwaitDropDownItemPropBase {
     type: "text";
     content: string;
 }
-interface InputDropDownItemProps extends DropDownItemPropBase {
+
+interface InputDropDownItemProps extends NonwaitDropDownItemPropBase {
     type: "input";
     placeholder?: string;
     size?: number;
@@ -22,19 +30,19 @@ interface InputDropDownItemProps extends DropDownItemPropBase {
 }
 
 export type DropDownItemProps =
+    | WaitDropDownItemPropBase
     | TextDropDownItemProps
-    | InputDropDownItemProps
+    | InputDropDownItemProps;
 
 const DropDownItem: FunctionComponent<DropDownItemProps> = (props) => {
-    // const [selectedItem, setSelectedItem] = useState(props.selectedId);
     const [newInputValue, setNewInputValue] = useState('');
 
     const selectItemHandler = (event: React.MouseEvent<HTMLDivElement>, id: string) => {
         event.preventDefault();
         event.stopPropagation();
-        // setSelectedItem(id);
-        // setOpen(false);
-        props.onSelect(id);
+        if ("onSelect" in props) {
+            props.onSelect(id);
+        }
     };
 
     const onInputChangeHandler = (value: string) => {
@@ -44,24 +52,33 @@ const DropDownItem: FunctionComponent<DropDownItemProps> = (props) => {
         }
     };
 
+    const isActive = "selectedId" in props && props.selectedId === props.id;
+
     return (
         <>
             <div
-                className={`dropdown-item ${props.selectedId === props.id ? "is-active" : ""}`}
-                onClick={(e) => selectItemHandler(e, props.id)} >
+                className={ `dropdown-item ${isActive ? "is-active" : ""}` }
+                onClick={ (e) => selectItemHandler(e, props.id) } >
 
-                {props.type === "text" && <span>{props.content}</span>}
-                {props.type === "input" && <>
+                { props.type === "text" && <span>{ props.content }</span> }
+                { props.type === "input" &&
                     <Input className="is-small"
                         type="text"
-                        id={props.id}
-                        placeholder={props.placeholder? props.placeholder: "Enter"}
-                        size={props.size}
-                        initialValue={newInputValue}
-                        onChange={onInputChangeHandler}
-                        onSubmit={props.onSubmit}
+                        id={ props.id }
+                        placeholder={ props.placeholder ? props.placeholder : "Enter" }
+                        size={ props.size }
+                        initialValue={ newInputValue }
+                        onChange={ onInputChangeHandler }
+                        onSubmit={ props.onSubmit }
                     />
-                </>
+                }
+                {
+                    props.type === "wait" &&
+                    <div className="has-text-centered">
+                        <span className="icon">
+                            <FontAwesomeIcon icon={ faSpinner } className="fa-pulse" />
+                        </span>
+                    </div>
                 }
             </div>
             <hr className="dropdown-divider" />

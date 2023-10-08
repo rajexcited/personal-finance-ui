@@ -1,7 +1,6 @@
 import { openDB } from "idb";
-import axios from "axios";
 import AccountTypeService from "./account-type-service";
-import { IDATABASE_TRACKER, REST_ROOT_PATH, convertAuditFields, handleRestErrors } from "../../../services";
+import { axios, IDATABASE_TRACKER, convertAuditFields, handleRestErrors } from "../../../services";
 import { PymtAccountFields } from "../store";
 
 interface PymtAccountService {
@@ -38,7 +37,7 @@ const PymtAccountServiceImpl = (): PymtAccountService => {
     const db = await dbPromise;
     try {
       if ((await db.count(objectStoreName)) === 0) {
-        const response = await axios.get(REST_ROOT_PATH + "/accounts");
+        const response = await axios.get("/accounts");
         const accountsResponse = response.data as PymtAccountFields[];
         const accountTypesEnum = await getAccountTypesEnum();
         const dbAddPymtAccPromises = accountsResponse.map((pymtAccount) => {
@@ -104,7 +103,7 @@ const PymtAccountServiceImpl = (): PymtAccountService => {
     };
     const accountTypeMap = await getAccountTypesEnum();
     updateAccountType(accountTypeMap, data);
-    const response = await axios.post(REST_ROOT_PATH + "/accounts", data);
+    const response = await axios.post("/accounts", data);
     const pymtAccountResponse = response.data as PymtAccountFields;
     updateAccountType(accountTypeMap, pymtAccountResponse);
     convertAuditFields(pymtAccountResponse);
@@ -116,7 +115,7 @@ const PymtAccountServiceImpl = (): PymtAccountService => {
     const data = { ...acc };
     const accountTypeMap = await getAccountTypesEnum();
     updateAccountType(accountTypeMap, data);
-    const response = await axios.post(REST_ROOT_PATH + "/accounts", data);
+    const response = await axios.post("/accounts", data);
     const pymtAccountResponse = response.data as PymtAccountFields;
     updateAccountType(accountTypeMap, pymtAccountResponse);
     convertAuditFields(pymtAccountResponse);
@@ -127,7 +126,7 @@ const PymtAccountServiceImpl = (): PymtAccountService => {
   const removePymtAccount = async (acc: PymtAccountFields) => {
     const db = await dbPromise;
     try {
-      const response = await axios.delete(REST_ROOT_PATH + "/accounts/" + acc.accountId);
+      const response = await axios.delete("/accounts/" + acc.accountId);
       await db.delete(objectStoreName, acc.accountId);
     } catch (e) {
       handleRestErrors(e as Error);

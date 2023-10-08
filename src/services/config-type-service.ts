@@ -1,8 +1,8 @@
 import { IDBPDatabase, openDB } from "idb";
-import axios from "axios";
 import { IDATABASE_TRACKER } from "./db";
 import { AuditFields, convertAuditFields } from "./audit-fields";
-import { REST_ROOT_PATH, handleRestErrors } from "./utils";
+import { handleRestErrors } from "./utils";
+import axios from "./axios-proxy";
 
 export interface ConfigType extends AuditFields {
   configId: string;
@@ -17,9 +17,9 @@ export interface ConfigType extends AuditFields {
 }
 
 export enum ConfigTypeStatus {
-  enable,
-  disable,
-  deleted,
+  enable = "enable",
+  disable = "disable",
+  deleted = "deleted",
 }
 
 interface ConfigTypeService {
@@ -56,7 +56,7 @@ const ConfigTypeServiceImpl = (belongsToParam: string): ConfigTypeService => {
       } else {
         dbKeys = filterByStatuses.map((filterByStatus) => [belongsToParam, filterByStatus]);
         queyParams = { belongsTo: belongsToParam, status: filterByStatuses };
-        console.log("queyParams: ", queyParams, "dbKeys: ", dbKeys);
+        console.debug("queyParams: ", queyParams, "dbKeys: ", dbKeys);
         indexName = IDATABASE_TRACKER.EXPENSE_DATABASE.CONFIG_STORE.INDEXES.STATUS_INDEX.NAME;
       }
 
@@ -64,7 +64,7 @@ const ConfigTypeServiceImpl = (belongsToParam: string): ConfigTypeService => {
       const totalCount = (await Promise.all(countPromises)).reduce((prev, curr) => curr + prev, 0);
       if (totalCount === 0) {
         // no records
-        const response = await axios.get(REST_ROOT_PATH + "/config/types", { params: queyParams });
+        const response = await axios.get("/config/types", { params: queyParams });
         const configTypes = response.data as ConfigType[];
         const dbAddPromises = configTypes.map(async (configType) => {
           convertAuditFields(configType);
@@ -74,7 +74,9 @@ const ConfigTypeServiceImpl = (belongsToParam: string): ConfigTypeService => {
         return configTypes;
       }
 
-      const configTypes = await db.getAllFromIndex(objectStoreName, indexName, dbKeys);
+      const configTypePromises = dbKeys.map(async (dbKey) => db.getAllFromIndex(objectStoreName, indexName, dbKey));
+      const configTypes = (await Promise.all(configTypePromises)).flatMap((configType) => configType);
+
       return configTypes as ConfigType[];
     } catch (e) {
       handleRestErrors(e as Error);
@@ -101,14 +103,14 @@ const ConfigTypeServiceImpl = (belongsToParam: string): ConfigTypeService => {
   const addConfigType = async (configType: ConfigType) => {
     const data: any = { ...configType };
     delete data.configId;
-    const response = await axios.post(REST_ROOT_PATH + "/config/types", data);
+    const response = await axios.post("/config/types", data);
     const db = await dbPromise;
     await db.add(objectStoreName, response.data);
   };
 
   const updateConfigType = async (configType: ConfigType) => {
     const data = { ...configType };
-    const response = await axios.post(REST_ROOT_PATH + "/config/types", data);
+    const response = await axios.post("/config/types", data);
     const db = await dbPromise;
     await db.put(objectStoreName, response.data);
   };
@@ -116,7 +118,7 @@ const ConfigTypeServiceImpl = (belongsToParam: string): ConfigTypeService => {
   const removeConfigType = async (configType: ConfigType) => {
     const db = await dbPromise;
     try {
-      const response = await axios.delete(REST_ROOT_PATH + "/config/types/" + configType.configId);
+      const response = await axios.delete("/config/types/" + configType.configId);
       await db.put(objectStoreName, response.data);
     } catch (e) {
       handleRestErrors(e as Error);

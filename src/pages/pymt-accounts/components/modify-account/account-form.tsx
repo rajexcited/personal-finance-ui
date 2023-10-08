@@ -1,6 +1,6 @@
-import { FunctionComponent, useEffect, useState, useCallback } from "react";
+import { FunctionComponent, useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../../navigation";
+import { PAGE_URL } from "../../../root/navigation";
 import { PymtAccountFields } from "../../store";
 import { TagsInput, Input, InputValidateResponse, TextArea, DropDown } from "../../../../components";
 import { PymtAccountTypeService, ConfigType } from "../../services";
@@ -23,18 +23,24 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
     const [tags, setTags] = useState(props.tags);
     const [typeName, setTypeName] = useState(props.typeName?.toString() || "");
     const [accountTypeMap, setAccountTypeMap] = useState(new Map<string, ConfigType>());
-    const [sourceTags, setSourceTags] = useState<string[]>();
+    // how to set this value? if I collect values from displayed paymentAccounts, 
+    // there are chances to missed the tags. 
+    // if I set it as config type, I need to manage add/remove. tideous task.
+    // may be I can allow user to load old tags and store it as settings and 
+    // can setup a rest api to retrieve tags
+    const [sourceTagValues, setSourceTagValues] = useState<string[]>();
 
     const navigate = useNavigate();
 
     useEffect(() => {
-        (async () => {
+        const setAccountTypes = async () => {
             const list = await accountTypeService.getAccountTypes();
             const map = new Map();
             list.forEach(item => map.set(item.name, item));
             setAccountTypeMap(map);
-        })();
+        };
 
+        setAccountTypes();
     }, []);
 
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = event => {
@@ -61,17 +67,14 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
         navigate(PAGE_URL.pymtAccountsRoot.fullUrl);
     };
 
-    const accountTypes = [];
-    for (let acctype of accountTypeMap.values()) {
-        accountTypes.push(acctype.name);
-    }
+    const accountTypes = useMemo(() => [...accountTypeMap.keys()], [accountTypeMap]);
 
     const nameValidator = useCallback((inputValue: string): InputValidateResponse => {
-        const regex = /^[\w\d\s@!'_\.,\$\*-]+$/;
+        const regex = /^[\w\s'"\.,-]*$/;
         const isValid = regex.test(inputValue);
         return {
             isValid,
-            errorMessage: "allow characters are alpha-numeric, digits, dash, underscore, comma, single quote, $, *, @ and !"
+            errorMessage: "allow characters are alpha-numeric, digits, dash, underscore, comma, quote, and dot"
         };
     }, []);
 
@@ -166,7 +169,8 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                     <TagsInput
                                         id="xpns-tags"
                                         label="Tags: "
-                                        value={ tags || "lomesh,pappa" }
+                                        defaultValue={ tags }
+                                        sourceValues={ sourceTagValues }
                                         placeholder="Add Tags"
                                         onChange={ setTags }
                                         key={ "xpns-tags" }

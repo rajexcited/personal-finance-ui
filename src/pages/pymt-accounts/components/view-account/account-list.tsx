@@ -1,14 +1,21 @@
 import { FunctionComponent } from "react";
 import AccountItemCard from "./account-item-view";
 import { PymtAccountFields } from "../../store";
-import { Await, useLoaderData } from "react-router-dom";
+import { useLoaderData } from "react-router-dom";
 
 
 
 interface AccountListProps { }
 
 const AccountList: FunctionComponent<AccountListProps> = (props) => {
-    const pymtAccList = useLoaderData() as PymtAccountFields[];
+    const loaderData = useLoaderData();
+
+    console.log("loaderData: ", loaderData);
+    let pymtAccList: PymtAccountFields[] = [];
+    if (Array.isArray(loaderData)) {
+        pymtAccList = loaderData as PymtAccountFields[];
+    }
+
 
     return (
         <section className="container">

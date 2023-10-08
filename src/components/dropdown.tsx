@@ -115,8 +115,8 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
     const triggerItemPaddingBefore = [];
     const triggerItemPaddingAfter = [];
     for (let i = 0; i < paddingLength; i++) {
-        triggerItemPaddingBefore.push(<span key={ "drdwn-itm-pad-bfr" + i + props.id }>&nbsp;</span>);
-        triggerItemPaddingAfter.push(<span key={ "drdwn-itm-pad-aftr" + i + props.id }>&nbsp;</span>);
+        triggerItemPaddingBefore.push(<span key={ "drpdwn-itm-pad-bfr" + i + props.id }>&nbsp;</span>);
+        triggerItemPaddingAfter.push(<span key={ "drpdwn-itm-pad-aftr" + i + props.id }>&nbsp;</span>);
     }
 
     return (
@@ -145,6 +145,13 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
                                         type="text"
                                         selectedId={ selectedItem?.id + "drpdwnitm" } />
                                 )
+                            }
+                            {
+                                !items.length &&
+                                <DropDownItem
+                                    id="drpdwnitm-wait"
+                                    type="wait"
+                                />
                             }
                         </div>
                         <div className={ props.direction === "down" && isOpen ? "my-5 py-5" : "is-hidden" }>&nbsp;</div>

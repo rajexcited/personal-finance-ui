@@ -1,12 +1,13 @@
-import { FunctionComponent, useRef, useEffect } from "react";
+import { FunctionComponent, useRef, useEffect, useState } from "react";
 import BulmaTagsInput, { BulmaTagsInputOptions } from '@creativebulma/bulma-tagsinput';
 import "@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css";
 
 
-export interface TagsInputProps extends BulmaTagsInputOptions {
+export interface TagsInputProps {
   id: string;
   label: string;
-  value: string;
+  defaultValue?: string;
+  sourceValues?: string[];
   placeholder: string;
   onChange?(value: string): void;
 }
@@ -28,18 +29,22 @@ const defaultOptions = {
   searchOn: 'text',
   selectable: true,
   tagClass: 'is-rounded is-link',
-  trim: true
+  trim: true,
+  itemText: "val"
 };
 
 
 const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
   const tagsRef = useRef<HTMLInputElement>(null);
+  // const [inputValue, setInputValue] = useState(props.defaultValue);
 
   useEffect(() => {
+    const sourceValues: string[] = [];
+
     const options = {
       ...defaultOptions,
       ...props,
-      source: props.source || props.value || ["neel", "nita", "guddu"]
+      source: sourceValues
     };
 
     if (!tagsRef.current) {
@@ -47,16 +52,33 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
     }
     const tagsInput = new BulmaTagsInput(tagsRef.current, options);
 
-    tagsInput.on("after.add", (item) => {
+    tagsInput.on("after.add", (itemObj: { item: string; }) => {
       // added item 
-      if (props.onChange)
+      console.log(itemObj, tagsInput.value);
+      if (props.onChange) {
+        // setInputValue(tagsInput.value);
+        updateSourceValues(itemObj.item);
         props.onChange(tagsInput.value);
+        // sourceValues.push(itemObj.item);
+      }
     });
     tagsInput.on("after.remove", (item) => {
       // removed item 
-      if (props.onChange)
+      console.log(item, tagsInput.value);
+      if (props.onChange) {
+        // setInputValue(tagsInput.value);
         props.onChange(tagsInput.value);
+      }
     });
+
+    const updateSourceValues = (item: string) => {
+      const sourceValueSet = new Set(props.sourceValues);
+      props.defaultValue?.split(",").forEach(value => sourceValueSet.add(value));
+      sourceValueSet.add(item);
+
+      sourceValues.length = 0;
+      sourceValueSet.forEach(value => sourceValues.push(value));
+    };
 
     return () => {
       tagsInput.flush();
@@ -77,6 +99,7 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
           placeholder={ props.placeholder }
           className="input is-large"
           data-type="tags"
+          defaultValue={ props.defaultValue }
         />
       </div>
     </div>

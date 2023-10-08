@@ -1,6 +1,5 @@
 import { openDB } from "idb";
-import axios from "axios";
-import { IDATABASE_TRACKER, REST_ROOT_PATH, convertAuditFields, handleRestErrors } from "../../../services";
+import { axios, IDATABASE_TRACKER, convertAuditFields, handleRestErrors } from "../../../services";
 import { ExpenseFields, ExpenseItemFields } from "../store/state/field-types";
 import ExpenseCategoryService from "./expense-category-service";
 
@@ -66,7 +65,7 @@ const ExpenseServiceImpl = (): ExpenseService => {
     const db = await dbPromise;
     try {
       if ((await db.count(objectStoreName)) === 0) {
-        const response = await axios.get(REST_ROOT_PATH + "/expenses");
+        const response = await axios.get("/expenses");
         const expensesResponse = response.data as ExpenseFields[];
         await updateCategoriesInExpenseItems(expensesResponse);
         const dbAddExpensePromises = expensesResponse.map((exp: any) => {
@@ -116,7 +115,7 @@ const ExpenseServiceImpl = (): ExpenseService => {
       tags: exp.tags.split(","),
       expenseId: null,
     };
-    const response = await axios.post(REST_ROOT_PATH + "/expenses", data);
+    const response = await axios.post("/expenses", data);
     const expensesResponse = response.data as ExpenseFields;
     await updateCategoriesInExpenseItems([expensesResponse]);
     const expense = {
@@ -134,7 +133,7 @@ const ExpenseServiceImpl = (): ExpenseService => {
       ...exp,
       tags: exp.tags.split(","),
     };
-    const response = await axios.post(REST_ROOT_PATH + "/expenses", data);
+    const response = await axios.post("/expenses", data);
     const expensesResponse = response.data as ExpenseFields;
     await updateCategoriesInExpenseItems([expensesResponse]);
     const expense = {
@@ -150,7 +149,7 @@ const ExpenseServiceImpl = (): ExpenseService => {
   const removeExpense = async (expense: ExpenseFields) => {
     const db = await dbPromise;
     try {
-      const response = await axios.delete(REST_ROOT_PATH + "/expenses/" + expense.expenseId);
+      const response = await axios.delete("/expenses/" + expense.expenseId);
       await db.delete(objectStoreName, expense.expenseId);
     } catch (e) {
       handleRestErrors(e as Error);

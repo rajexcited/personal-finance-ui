@@ -4,7 +4,7 @@ import ExpenseTableRow from "./view-expense-item-tablerow";
 import "./view-expense-list.css";
 import { Header, rowHeaders, ExpenseContext, ExpenseFields } from "../store";
 import { useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../navigation";
+import { PAGE_URL } from "../../root/navigation";
 
 
 interface ExpenseListProps { }

@@ -4,16 +4,19 @@ import { v4 as uuidv4 } from "uuid";
 import AccountForm from "./account-form";
 import { PymtAccountFields } from "../../store";
 import { LoadSpinner } from "../../../../components";
-import { PAGE_URL } from "../../../navigation";
+import { PAGE_URL } from "../../../root/navigation";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "../../../auth";
 
 
 const AddAccount: FunctionComponent = () => {
     const [accountId, setAccountId] = useState('');
     const navigation = useNavigation();
     const submit = useSubmit();
+    const auth = useAuth();
     // for error
     const actionData: any = useActionData();
+    const [errorMessage, setErrorMessage] = useState(actionData?.errorMessage);
 
     useEffect(() => {
         // creating temporary id
@@ -21,19 +24,23 @@ const AddAccount: FunctionComponent = () => {
     }, []);
 
     const onAddedAccount = (data: PymtAccountFields) => {
-        const formData: any = {
-            accountId,
-            shortName: data.shortName,
-            institutionName: data.institutionName,
-            accountName: data.accountName,
-            accountNumber: data.accountNumber,
-            typeName: data.typeName,
-            tags: data.tags,
-            description: data.description,
-            icon: data.icon
-        };
+        if (auth.isAuthenticated) {
+            const formData: any = {
+                accountId,
+                shortName: data.shortName,
+                institutionName: data.institutionName,
+                accountName: data.accountName,
+                accountNumber: data.accountNumber,
+                typeName: data.typeName,
+                tags: data.tags,
+                description: data.description,
+                icon: data.icon
+            };
 
-        submit(formData, { action: PAGE_URL.addPymAccount.fullUrl, method: "post" });
+            submit(formData, { action: PAGE_URL.addPymAccount.fullUrl, method: "post" });
+        } else {
+            setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
+        }
     };
 
     return (
@@ -41,7 +48,8 @@ const AddAccount: FunctionComponent = () => {
             <LoadSpinner loading={ navigation.state !== "idle" } />
 
             {
-                !!actionData && !!actionData.errorMessage &&
+                // !!actionData && !!actionData.errorMessage &&
+                errorMessage &&
                 <article className="message is-danger">
                     <div className="message-body">
                         <ReactMarkdown children={ actionData.errorMessage } />

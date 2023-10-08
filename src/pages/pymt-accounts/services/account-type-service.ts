@@ -29,18 +29,7 @@ const PymtAccountTypeServiceImpl = (): PymtAccountTypeService => {
    * @returns list of account type
    */
   const getAccountTypes = async () => {
-    // const accountTypes = await configTypeService.getConfigTypes([ConfigTypeStatus.enable, ConfigTypeStatus.disable]);
-    const accountTypes: ConfigType[] = [
-      {
-        belongsTo: "pymt-account-type",
-        configId: "config-id-uuid-v4-dummy",
-        name: "checking",
-        status: ConfigTypeStatus.enable,
-        value: "checking",
-        relations: [],
-        description: "checking account type",
-      },
-    ];
+    const accountTypes = await configTypeService.getConfigTypes([ConfigTypeStatus.enable, ConfigTypeStatus.disable]);
     return accountTypes;
   };
 
@@ -58,7 +47,7 @@ const PymtAccountTypeServiceImpl = (): PymtAccountTypeService => {
    * @returns list of account type
    */
   const getDeletedAccountTypes = async () => {
-    const accountTypes = await configTypeService.getConfigTypes([ConfigTypeStatus.enable]);
+    const accountTypes = await configTypeService.getConfigTypes([ConfigTypeStatus.deleted]);
     return accountTypes;
   };
 

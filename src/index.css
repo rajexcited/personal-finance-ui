@@ -17,3 +17,13 @@
     color: #7a7a7a !important;
     cursor: not-allowed;
 }
+
+.section.is-narrow-y {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.section.is-narrow-x {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}

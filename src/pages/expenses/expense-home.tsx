@@ -1,6 +1,6 @@
 import { FunctionComponent } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../navigation";
+import { PAGE_URL } from "../root/navigation";
 import { ExpenseContextProvider } from "./store/context";
 
 const ExpenseJournalPage: FunctionComponent = () => {

@@ -1,6 +1,6 @@
 import { FunctionComponent, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../navigation/page-url";
+import { PAGE_URL } from "../../root/navigation/page-url";
 import "bulma-extensions/bulma-tooltip/dist/css/bulma-tooltip.min.css";
 import ExpenseForm from "./expense-form";
 import { v4 as uuidv4 } from "uuid";
@@ -20,7 +20,7 @@ const AddExpense: FunctionComponent<AddExpenseProps> = () => {
     }, []);
 
     const onExpenseAdded = (data: ExpenseFields) => {
-        console.log("expense added", data);
+        console.debug("expense added", data);
         context.onAddExpense(data);
         setTimeout(() => {
             navigate(PAGE_URL.expenseJournalRoot.fullUrl);

@@ -1,6 +1,6 @@
 import { FunctionComponent, useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../navigation";
+import { PAGE_URL } from "../../root/navigation";
 import { faStore, faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import {
     TagsInput,
@@ -172,7 +172,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                             <TagsInput
                                 id="xpns-tags"
                                 label="Tags: "
-                                value={ tags }
+                                defaultValue={ tags }
                                 placeholder="Add Tags"
                                 onChange={ setTags }
                                 key={ "xpns-tags" }

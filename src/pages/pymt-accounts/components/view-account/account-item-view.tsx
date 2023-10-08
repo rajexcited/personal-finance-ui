@@ -68,8 +68,12 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                                 <label className="label">Tags: </label>
                                 <div className="tags">
                                     {
-                                        props.details.tags && props.details.tags.split(",").map(
-                                            tag => <span className="tag is-link">{ tag }</span>
+                                        props.details.tags &&
+                                        props.details.tags.split(",").map(
+                                            tag => <span
+                                                className="tag is-link"
+                                                key={ tag + "-tag-key" }
+                                            >{ tag }</span>
                                         )
                                     }
                                 </div>
@@ -85,15 +89,7 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                         </div>
                     </div>
                 </div>
-                <footer className={ `card-footer ${isBodyOpen ? "is-active" : "is-hidden"}` }>
-                    <div className="container my-1 p-1 mr-3 pr-3">
-                        <div className="columns ">
-                            <div className="column is-offset-8 has-text-right">
-                                audit details
-                            </div>
-                        </div>
-                    </div>
-                </footer>
+                <footer className={ `card-footer ${isBodyOpen ? "is-active" : "is-hidden"}` }> </footer>
             </div>
 
         </section>

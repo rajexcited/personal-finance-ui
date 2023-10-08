@@ -119,7 +119,7 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
                 <TagsInput
                     id="xpns-item-tags"
                     label="Item Tags: "
-                    value={ itemTags }
+                    defaultValue={ itemTags }
                     placeholder="Add Item Tags"
                     onChange={ setItemTags }
                     key={ "xpns-item-tags" }
