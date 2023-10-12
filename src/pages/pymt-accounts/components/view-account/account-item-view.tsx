@@ -1,35 +1,41 @@
 import { faAngleUp, faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useState } from "react";
-import { PymtAccountFields } from "../../store";
+import { PymtAccountFields } from "../../services";
+import { useNavigate } from "react-router-dom";
+import { PAGE_URL } from "../../../root";
 
 export interface AccountItemProps {
     id: string;
     details: PymtAccountFields;
+    onDeleteRequest (pymtAccountId: string): void;
 }
 
 const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
-
     const [isBodyOpen, setBodyOpen] = useState(false);
-    const onClickBodyToggleHandler: React.MouseEventHandler<HTMLButtonElement | HTMLParagraphElement> = event => {
+    const navigate = useNavigate();
+
+    const onClickBodyToggleHandler: React.MouseEventHandler<HTMLButtonElement | HTMLSpanElement> = event => {
         event.preventDefault();
         setBodyOpen((oldstate) => !oldstate);
     };
 
     const onClickUpdateHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
+        navigate(PAGE_URL.updatePymAccount.fullUrl.replace(":accountId", props.details.accountId));
     };
 
     const onClickDeleteHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
+        props.onDeleteRequest(props.details.accountId);
     };
 
     return (
         <section className="container mb-2 p-2">
             <div className="card">
                 <header className="card-header">
-                    <p className="card-header-title" onClick={ onClickBodyToggleHandler }>
-                        <span className="card-header-icon">
+                    <p className="card-header-title">
+                        <span className="card-header-icon" onClick={ onClickBodyToggleHandler }>
                             <span>
                                 { props.details.shortName }
                             </span>

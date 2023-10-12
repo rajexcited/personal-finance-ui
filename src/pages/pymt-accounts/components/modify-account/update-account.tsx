@@ -1,8 +1,10 @@
-import { FunctionComponent, useContext, useState, useEffect } from "react";
+import { FunctionComponent, useState, useEffect } from "react";
 import { useActionData, useLoaderData, useNavigation, useSubmit } from "react-router-dom";
-import { PymtAccountFields } from "../../store";
-import { LoadSpinner } from "../../../../components";
+import { PymtAccountFields } from "../../services";
 import AccountForm from "./account-form";
+import { PAGE_URL } from "../../../root";
+import { useAuth } from "../../../auth";
+import ReactMarkdown from "react-markdown";
 
 
 const UpdateAccount: FunctionComponent = () => {
@@ -10,20 +12,31 @@ const UpdateAccount: FunctionComponent = () => {
     const submit = useSubmit();
     const actionData: any = useActionData();
     const accountDetails = useLoaderData() as PymtAccountFields;
+    const auth = useAuth();
+    const [errorMessage, setErrorMessage] = useState("");
+
+    useEffect(() => {
+        if (actionData?.errorMessage && actionData.errorMessage !== errorMessage)
+            setErrorMessage(actionData.errorMessage);
+    }, [errorMessage, actionData?.errorMessage]);
 
     const onUpdateAccount = (data: PymtAccountFields) => {
-        const formData: any = { ...data };
-        submit(formData);
+        if (auth.isAuthenticated) {
+            const formData: any = { ...data };
+            submit(formData, { action: PAGE_URL.pymtAccountsRoot.fullUrl, method: "post" });
+        } else {
+            setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
+        }
     };
+
 
     return (
         <>
-            <LoadSpinner loading={ navigation.state === "submitting" } />
             {
-                !!actionData && !!actionData.errorMessage &&
+                errorMessage &&
                 <article className="message is-danger">
                     <div className="message-body">
-                        { actionData.errorMessage }
+                        <ReactMarkdown children={ errorMessage } />
                     </div>
                 </article>
             }
@@ -40,6 +53,7 @@ const UpdateAccount: FunctionComponent = () => {
                         institutionName={ accountDetails.institutionName }
                         shortName={ accountDetails.shortName }
                         tags={ accountDetails.tags }
+                        typeName={ accountDetails.typeName }
                     />
                 </div>
             </div>

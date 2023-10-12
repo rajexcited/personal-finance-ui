@@ -1,13 +1,13 @@
 import { FunctionComponent, useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../../root/navigation";
-import { PymtAccountFields } from "../../store";
+import { PAGE_URL } from "../../../root";
 import { TagsInput, Input, InputValidateResponse, TextArea, DropDown } from "../../../../components";
-import { PymtAccountTypeService, ConfigType } from "../../services";
+import { PymtAccountTypeService, ConfigType, PymtAccountFields, PymtAccountService } from "../../services";
 import { faBank } from "@fortawesome/free-solid-svg-icons";
 
 
 const accountTypeService = PymtAccountTypeService();
+const accountService = PymtAccountService();
 
 export interface AccountFormProps extends PymtAccountFields {
     onSubmit (account: PymtAccountFields): void;
@@ -33,14 +33,21 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const setAccountTypes = async () => {
+        const configureAccountTypes = async () => {
             const list = await accountTypeService.getAccountTypes();
             const map = new Map();
             list.forEach(item => map.set(item.name, item));
             setAccountTypeMap(map);
         };
 
-        setAccountTypes();
+        const init = async () => {
+            const tagList = await accountService.getPymtAccountTags();
+            setSourceTagValues(tagList);
+            configureAccountTypes();
+        };
+
+        init();
+
     }, []);
 
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = event => {

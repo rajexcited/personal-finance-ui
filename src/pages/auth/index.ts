@@ -4,4 +4,4 @@ export { default as LogoutPage } from "./components/logout";
 export { default as RequireAuth } from "./components/require-auth";
 export { default as useAuth } from "./hooks/use-auth";
 export { default as AuthContextProvider } from "./context/auth-provider";
-export { default as AuthenticationService } from "./services/auth-service";
+export { AuthenticationService } from "./services";

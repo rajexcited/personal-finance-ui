@@ -1,13 +1,14 @@
 import { openDB } from "idb";
-import AccountTypeService from "./account-type-service";
 import { axios, IDATABASE_TRACKER, convertAuditFields, handleRestErrors } from "../../../services";
-import { PymtAccountFields } from "../store";
+import AccountTypeService from "./account-type-service";
+import { PymtAccountFields } from "./field-types";
 
 interface PymtAccountService {
   getPymtAccounts(): Promise<PymtAccountFields[]>;
   getPymtAccount(accountId: string): Promise<PymtAccountFields | null>;
   addUpdatePymtAccount(accDetails: PymtAccountFields): Promise<void>;
-  removePymtAccount(accDetails: PymtAccountFields): Promise<void>;
+  removePymtAccount(accountId: string): Promise<void>;
+  getPymtAccountTags(): Promise<string[]>;
   destroy(): void;
 }
 
@@ -123,11 +124,11 @@ const PymtAccountServiceImpl = (): PymtAccountService => {
     await db.put(objectStoreName, pymtAccountResponse);
   };
 
-  const removePymtAccount = async (acc: PymtAccountFields) => {
+  const removePymtAccount = async (accountId: string) => {
     const db = await dbPromise;
     try {
-      const response = await axios.delete("/accounts/" + acc.accountId);
-      await db.delete(objectStoreName, acc.accountId);
+      const response = await axios.delete("/accounts/" + accountId);
+      await db.delete(objectStoreName, accountId);
     } catch (e) {
       handleRestErrors(e as Error);
       console.error("not rest error", e);
@@ -140,11 +141,22 @@ const PymtAccountServiceImpl = (): PymtAccountService => {
     accountTypeService.destroy();
   };
 
+  const getPymtAccountTags = async () => {
+    const pymtAccounts = await getPymtAccounts();
+    const tags = pymtAccounts
+      .map((acc) => acc.tags)
+      .join(",")
+      .split(",");
+
+    return tags;
+  };
+
   return {
     getPymtAccounts,
     getPymtAccount,
     addUpdatePymtAccount,
     removePymtAccount,
+    getPymtAccountTags,
     destroy,
   };
 };

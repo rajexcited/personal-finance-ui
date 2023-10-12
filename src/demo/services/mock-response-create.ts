@@ -15,7 +15,7 @@ export const AxiosResponseCreator = (config: AxiosRequestConfig) => {
   };
 
   const toForbiddenError = (error: any) => {
-    return toError(403, error);
+    return toError(401, error);
   };
 
   const toUnknownError = (errors: any) => {

@@ -1,7 +1,8 @@
 import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
-import { missingValidation } from "./common-validators";
+import { missingValidation, validateUuid } from "./common-validators";
 import { UserSessionDetails } from "./userDetails";
+import { v4 as uuidv4 } from "uuid";
 
 const MockLogin = (demoMock: MockAdapter) => {
   const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#$%^&*])[\w!@#$%^&\(\)\=*]{8,25}$/;
@@ -34,7 +35,7 @@ const MockLogin = (demoMock: MockAdapter) => {
     UserSessionDetails.firstName = data.firstname;
     UserSessionDetails.lastName = data.lastname;
 
-    return responseCreator.toCreateResponse({ ...data, password: null, expiresIn: 180 });
+    return responseCreator.toCreateResponse({ ...data, password: null, expiresIn: 180, accessToken: uuidv4() });
   });
 
   demoMock.onPost("/login").reply((config) => {
@@ -58,7 +59,7 @@ const MockLogin = (demoMock: MockAdapter) => {
     }
 
     const responseData = {
-      roles: [],
+      accessToken: uuidv4(),
       emailId: data.emailId,
       isAuthenticated: true,
       firstname: data.emailId.replace("@demo.com", ""),
@@ -81,6 +82,19 @@ const MockLogin = (demoMock: MockAdapter) => {
     UserSessionDetails.lastName = "";
 
     return responseCreator.toSuccessResponse("successfuly logged out");
+  });
+
+  demoMock.onPost("/user/refresh").reply((config) => {
+    const responseCreator = AxiosResponseCreator(config);
+    const data = JSON.parse(config.data);
+
+    if (data.refreshToken && data.refreshToken.startsWith("Bearer ")) {
+      const validErrors = validateUuid(data.refreshToken.replace("Bearer ", ""), "refreshToken");
+      if (!validErrors) {
+        return responseCreator.toSuccessResponse({ expiresIn: 180, accessToken: uuidv4() });
+      }
+    }
+    return responseCreator.toForbiddenError("You are not authorized");
   });
 };
 

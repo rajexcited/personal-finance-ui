@@ -1,11 +1,18 @@
-import { ActionFunctionArgs, redirect } from "react-router-dom";
-import { PAGE_URL } from "../../root/navigation";
+import { ActionFunctionArgs, json, redirect } from "react-router-dom";
+import { PAGE_URL } from "../../root";
 import { PymtAccountService } from "../services";
 
 const pymtAccountService = PymtAccountService();
 
-export const pymtAccountAddUpdateActionHandler = async ({ request }: ActionFunctionArgs) => {
-  console.log("pymt add action");
+export const pymtAccountActionHandler = async ({ request }: ActionFunctionArgs) => {
+  if (request.method === "POST") {
+    return await pymtAccountAddUpdateActionHandler(request);
+  } else if (request.method === "DELETE") {
+    return await pymtAccountDeleteActionHandler(request);
+  }
+};
+
+const pymtAccountAddUpdateActionHandler = async (request: Request) => {
   const formdata = await request.formData();
   const data: any = {};
 
@@ -27,5 +34,17 @@ export const pymtAccountAddUpdateActionHandler = async ({ request }: ActionFunct
     return { errorMessage: err.message };
   }
 
+  return redirect(PAGE_URL.pymtAccountsRoot.fullUrl);
+};
+
+const pymtAccountDeleteActionHandler = async (request: Request) => {
+  try {
+    const formdata = await request.formData();
+    const accountId = formdata.get("accountId") as string;
+    await pymtAccountService.removePymtAccount(accountId);
+  } catch (e) {
+    const err = e as Error;
+    return { errorMessage: err.message };
+  }
   return redirect(PAGE_URL.pymtAccountsRoot.fullUrl);
 };

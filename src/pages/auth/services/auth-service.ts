@@ -1,35 +1,8 @@
+import "./interceptors";
 import { axios, ConfigTypeService, ConfigTypeStatus, handleRestErrors } from "../../../services";
 import dateutils from "date-and-time";
-
-export interface AuthDetailType {
-  roles: string[];
-  emailId: string;
-  isAuthenticated: boolean;
-  fullName: string;
-  expiryDate: Date;
-  firstname: string;
-  lastname: string;
-}
-
-export interface LoginDataType {
-  emailId: string;
-  password: string;
-}
-
-export interface SignupDetailType {
-  emailId: string;
-  password: string;
-  firstname: string;
-  lastname: string;
-  roles: string[];
-}
-
-export interface UserDetailType {
-  emailId: string;
-  fullName: string;
-  isAuthenticated: boolean;
-  expiryDate: Date;
-}
+import { LoginDataType, UserDetailType, SignupDetailType, AuthDetailType } from "./field-types";
+import { authTokenSessionKey, authUserSessionKey } from "./refresh-token";
 
 interface AuthenticationService {
   login(details: LoginDataType): Promise<void>;
@@ -39,18 +12,26 @@ interface AuthenticationService {
   destroy(): void;
   getUserDetails(): UserDetailType;
   signup(details: SignupDetailType): Promise<void>;
+  ping(): void;
 }
 
 const AuthenticationServiceImpl = (): AuthenticationService => {
   const authRoleConfigService = ConfigTypeService("auth");
-  const authSessionKey = "fin-auth";
 
   const login = async (details: LoginDataType) => {
     try {
       const data = { emailId: details.emailId, password: details.password };
       const response = await axios.post("/login", data, { withCredentials: true });
+      if (!(response.data.accessToken && response.data.expiresIn)) {
+        throw Error("user login unauthorized");
+      }
+      sessionStorage.setItem(
+        authTokenSessionKey,
+        JSON.stringify({ accessToken: response.data.accessToken, expiresIn: response.data.expiresIn })
+      );
       const authResponse: AuthDetailType = {
         ...response.data,
+        accessToken: undefined,
         fullName: response.data.firstname + " " + response.data.lastname,
         expiryDate: dateutils.addSeconds(new Date(), response.data.expiresIn),
       };
@@ -59,7 +40,7 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
         ...authResponse,
         expiryDate: authResponse.expiryDate.getTime(),
       };
-      sessionStorage.setItem(authSessionKey, JSON.stringify(authDetails));
+      sessionStorage.setItem(authUserSessionKey, JSON.stringify(authDetails));
     } catch (e) {
       const err = e as Error;
       handleRestErrors(err);
@@ -70,7 +51,7 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
   };
 
   const getValidAuthSessionDetails = () => {
-    const sessionDetails = sessionStorage.getItem(authSessionKey);
+    const sessionDetails = sessionStorage.getItem(authUserSessionKey);
     if (sessionDetails) {
       const parsedDetails = JSON.parse(sessionDetails);
       if (parsedDetails.expiryDate > new Date()) {
@@ -81,6 +62,7 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
         return authDetails;
       }
     }
+    sessionStorage.removeItem(authUserSessionKey);
     return null;
   };
 
@@ -95,7 +77,8 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
   };
 
   const logout = () => {
-    sessionStorage.removeItem(authSessionKey);
+    sessionStorage.removeItem(authUserSessionKey);
+    sessionStorage.removeItem(authTokenSessionKey);
     axios.post("/logout", { withCredentials: true });
   };
 
@@ -113,7 +96,7 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
       fullName: "",
       emailId: "",
       isAuthenticated: false,
-      expiryDate: dateutils.parse("1/1/1000", "m/d/yyyy"),
+      expiryDate: dateutils.parse("1/1/1000", "M/D/YYYY"),
     };
   };
 
@@ -138,8 +121,16 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
       const data = { ...details };
       // default configs will be created with sign up
       const response = await axios.post("/signup", data, { withCredentials: true });
+      if (!(response.data.accessToken && response.data.expiresIn)) {
+        throw Error("user login unauthorized");
+      }
+      sessionStorage.setItem(
+        authTokenSessionKey,
+        JSON.stringify({ accessToken: response.data.accessToken, expiresIn: response.data.expiresIn })
+      );
       const authResponse: AuthDetailType = {
         ...response.data,
+        accessToken: undefined,
         fullName: response.data.firstname + " " + response.data.lastname,
         expiryDate: dateutils.addSeconds(new Date(), response.data.expiresIn),
       };
@@ -149,7 +140,7 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
         isAuthenticated: true,
         expiryDate: authResponse.expiryDate.getTime(),
       };
-      sessionStorage.setItem(authSessionKey, JSON.stringify(authDetails));
+      sessionStorage.setItem(authUserSessionKey, JSON.stringify(authDetails));
     } catch (e) {
       const err = e as Error;
       handleRestErrors(err);
@@ -157,6 +148,10 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
       const msg = err.message || e;
       throw Error(msg as string);
     }
+  };
+
+  const ping = async () => {
+    axios.get("/health/ping");
   };
 
   const destroy = () => {
@@ -171,6 +166,7 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
     getUserDetails,
     destroy,
     signup,
+    ping,
   };
 };
 

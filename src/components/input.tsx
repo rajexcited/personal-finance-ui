@@ -34,6 +34,7 @@ interface TextInputProps extends BaseInputProps {
     maxlength?: number;
     minlength?: number;
     pattern?: string;
+    autocomplete?: string;
 }
 
 interface NumberInputProps extends BaseInputProps {
@@ -219,6 +220,7 @@ const Input: FunctionComponent<InputProps> = (props) => {
                         disabled={ isDisabled }
                         onClick={ onClickHandler }
                         required={ props.required }
+                        autoComplete={ props.autocomplete }
                     />
                 }
                 {

@@ -12,3 +12,4 @@ export type { DropDownItemType } from "./dropdown";
 export { default as LoadSpinner } from "./loading";
 export { default as HeroTabs } from "./hero-tabs";
 export { default as Animated } from "./animated";
+export { default as ConfirmDialog } from "./confirm-dialog";

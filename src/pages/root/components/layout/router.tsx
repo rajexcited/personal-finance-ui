@@ -7,13 +7,13 @@ import {
     PymtAccountsRoot,
     AddPymtAccount,
     UpdatePymtAccount,
-    pymtAccountAddUpdateActionHandler,
+    pymtAccountActionHandler,
     pymtAccountDetailLoaderHandler,
     pymtAccountListLoaderHandler
-} from '../../pymt-accounts';
-import { AddExpense, ExpenseJournalPage, ExpenseList, UpdateExpense } from '../../expenses';
-import { ExpenseCategoryPage, PymtAccountTypePage, SettingsRoot } from "../../settings";
-import { LoginPage, RequireAuth, SignupPage, LogoutPage } from "../../auth";
+} from '../../../pymt-accounts';
+import { AddExpense, ExpenseJournalPage, ExpenseList, UpdateExpense } from '../../../expenses';
+import { ExpenseCategoryPage, PymtAccountTypePage, SettingsRoot } from "../../../settings";
+import { LoginPage, RequireAuth, SignupPage, LogoutPage } from "../../../auth";
 
 
 export const router = createBrowserRouter([
@@ -38,9 +38,10 @@ export const router = createBrowserRouter([
             {
                 path: PAGE_URL.pymtAccountsRoot.shortUrl,
                 element: <RequireAuth><PymtAccountsRoot /></RequireAuth>,
+                action: pymtAccountActionHandler,
                 children: [
-                    { index: true, element: <PymtAccountList />, loader: pymtAccountListLoaderHandler, action: pymtAccountAddUpdateActionHandler, },
-                    { path: PAGE_URL.addPymAccount.shortUrl, element: <AddPymtAccount />, action: pymtAccountAddUpdateActionHandler },
+                    { index: true, element: <PymtAccountList />, loader: pymtAccountListLoaderHandler, },
+                    { path: PAGE_URL.addPymAccount.shortUrl, element: <AddPymtAccount />, action: pymtAccountActionHandler },
                     { path: PAGE_URL.updatePymAccount.shortUrl, element: <UpdatePymtAccount />, loader: pymtAccountDetailLoaderHandler },
                 ]
             },

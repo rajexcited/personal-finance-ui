@@ -1,17 +1,5 @@
 import { ConfigType, ConfigTypeService, ConfigTypeStatus } from "../../../services";
 
-/**
- * General category. this is usually broad types. any specifics user can add as tags
- */
-// export enum AccountType {
-//   checking,
-//   savings,
-//   creditCard,
-//   investment,
-//   ira,
-//   loan,
-// }
-
 interface PymtAccountTypeService {
   getAccountTypes(): Promise<ConfigType[]>;
   getActiveAccountTypes(): Promise<ConfigType[]>;

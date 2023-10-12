@@ -3,7 +3,7 @@ import { useState, FunctionComponent, useEffect } from "react";
 import { faCalculator, faMoneyBill, faBank, faGears, faUserPlus, faSignInAlt, faSignOut } from "@fortawesome/free-solid-svg-icons";
 import NavBarItem, { NavbarItemProp } from "./navbar-item";
 import { PAGE_URL } from "./page-url";
-import { useAuth } from "../../auth";
+import { useAuth } from "../../../auth";
 import { useLocation } from "react-router-dom";
 
 

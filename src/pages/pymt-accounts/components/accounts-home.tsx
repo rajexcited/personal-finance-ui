@@ -1,6 +1,6 @@
 import { FunctionComponent } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../root/navigation/page-url";
+import { PAGE_URL } from "../../root";
 
 
 const AccountsHome: FunctionComponent = () => {

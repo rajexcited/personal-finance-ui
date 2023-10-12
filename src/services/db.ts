@@ -111,7 +111,7 @@ export const getLowerBound = (key: string, posFromEnd?: number) => {
 // https://hackernoon.com/use-indexeddb-with-idb-a-1kb-library-that-makes-it-easy-8p1f3yqq
 const db = await openDB(IDATABASE_TRACKER.EXPENSE_DATABASE.NAME, IDATABASE_TRACKER.EXPENSE_DATABASE.VERSION, {
   upgrade(db, oldVersion, newVersion, transaction, event) {
-    console.log("in db upgrade", db, oldVersion, newVersion, transaction, event);
+    console.debug("in db upgrade", db, oldVersion, newVersion, transaction, event);
     Object.values(IDATABASE_TRACKER.EXPENSE_DATABASE).forEach((storeObj) => {
       if (typeof storeObj === "object") {
         const storeConfig = storeObj as StoreConfigType;

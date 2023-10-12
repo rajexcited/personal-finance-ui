@@ -1,14 +1,12 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Input, LoadSpinner, Animated, InputValidateResponse } from "../../../components";
-import { faEnvelope, faLock, faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import ReactMarkdown from "react-markdown";
 import useAuth from "../hooks/use-auth";
-import { PAGE_URL } from "../../root/navigation";
+import { PAGE_URL } from "../../root";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEnvelope, faLock, faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import "./login.css";
-
-
 
 
 const LoginPage: FunctionComponent = () => {
@@ -92,6 +90,7 @@ const LoginPage: FunctionComponent = () => {
                             onChange={ setEmailId }
                             maxlength={ 50 }
                             required={ true }
+                            autocomplete="username"
                         />
                         <Input
                             id="password"
@@ -105,6 +104,7 @@ const LoginPage: FunctionComponent = () => {
                             minlength={ 8 }
                             required={ true }
                             validate={ passwordValidator }
+                            autocomplete="current-password"
                         />
                     </div>
                 </div>

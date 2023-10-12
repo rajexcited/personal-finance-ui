@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { SignupDetailType } from "../services/auth-service";
+import { SignupDetailType } from "../services";
 
 interface AuthContextType {
   fullName: string;

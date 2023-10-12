@@ -2,11 +2,10 @@ import { FunctionComponent, useState, useEffect } from "react";
 import { useNavigation, useSubmit, useActionData } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import AccountForm from "./account-form";
-import { PymtAccountFields } from "../../store";
-import { LoadSpinner } from "../../../../components";
-import { PAGE_URL } from "../../../root/navigation";
-import ReactMarkdown from "react-markdown";
+import { PymtAccountFields } from "../../services";
+import { PAGE_URL } from "../../../root";
 import { useAuth } from "../../../auth";
+import ReactMarkdown from "react-markdown";
 
 
 const AddAccount: FunctionComponent = () => {
@@ -16,12 +15,17 @@ const AddAccount: FunctionComponent = () => {
     const auth = useAuth();
     // for error
     const actionData: any = useActionData();
-    const [errorMessage, setErrorMessage] = useState(actionData?.errorMessage);
+    const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
         // creating temporary id
         setAccountId(uuidv4());
     }, []);
+
+    useEffect(() => {
+        if (actionData?.errorMessage && actionData.errorMessage !== errorMessage)
+            setErrorMessage(actionData.errorMessage);
+    }, [errorMessage, actionData?.errorMessage]);
 
     const onAddedAccount = (data: PymtAccountFields) => {
         if (auth.isAuthenticated) {
@@ -45,14 +49,11 @@ const AddAccount: FunctionComponent = () => {
 
     return (
         <>
-            <LoadSpinner loading={ navigation.state !== "idle" } />
-
             {
-                // !!actionData && !!actionData.errorMessage &&
                 errorMessage &&
                 <article className="message is-danger">
                     <div className="message-body">
-                        <ReactMarkdown children={ actionData.errorMessage } />
+                        <ReactMarkdown children={ errorMessage } />
                     </div>
                 </article>
             }

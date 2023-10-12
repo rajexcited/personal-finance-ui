@@ -1,8 +1,7 @@
-import { PymtAccountService } from "../services";
-import { descCompare } from "../../../services";
 import { LoaderFunctionArgs, json, redirect } from "react-router-dom";
+import { PymtAccountService, descCompare } from "../services";
 import { AuthenticationService } from "../../auth";
-import { PAGE_URL } from "../../root/navigation";
+import { PAGE_URL } from "../../root";
 
 const accountService = PymtAccountService();
 const authenticationService = AuthenticationService();
@@ -22,6 +21,7 @@ export const pymtAccountListLoaderHandler = async () => {
 };
 
 export const pymtAccountDetailLoaderHandler = async ({ params }: LoaderFunctionArgs) => {
+  console.debug("in payment account details loader, accountId: ", params.accountId, params);
   if (!authenticationService.isAuthenticated()) {
     return redirect(PAGE_URL.loginPage.fullUrl);
   }

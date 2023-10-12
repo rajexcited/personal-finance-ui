@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import { Animated, Input, InputValidateResponse, LoadSpinner } from "../../../components";
 import useAuth from "../hooks/use-auth";
 
+
 const SignupPage: FunctionComponent = () => {
     const [firstname, setFirstname] = useState('');
     const [lastname, setLastname] = useState('');
@@ -125,6 +126,7 @@ const SignupPage: FunctionComponent = () => {
                                     maxlength={ 50 }
                                     required={ true }
                                     disabled={ auth.isAuthenticated }
+                                    autocomplete="username"
                                 />
                                 <Input
                                     id="password"
@@ -139,6 +141,7 @@ const SignupPage: FunctionComponent = () => {
                                     required={ true }
                                     validate={ passwordValidator }
                                     disabled={ auth.isAuthenticated }
+                                    autocomplete="new-password"
                                 />
                             </div>
                         </div>

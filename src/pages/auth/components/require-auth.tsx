@@ -1,6 +1,6 @@
+import { FunctionComponent } from "react";
 import { useLocation, Navigate } from "react-router-dom";
 import useAuth from "../hooks/use-auth";
-import { FunctionComponent } from "react";
 
 
 interface RequireAuthProps {

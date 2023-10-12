@@ -33,7 +33,7 @@ const defaultOptions = {
   itemText: "val"
 };
 
-
+// doc link - https://bulma-tagsinput.netlify.app/get-started/usage/
 const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
   const tagsRef = useRef<HTMLInputElement>(null);
   // const [inputValue, setInputValue] = useState(props.defaultValue);
@@ -54,19 +54,14 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
 
     tagsInput.on("after.add", (itemObj: { item: string; }) => {
       // added item 
-      console.log(itemObj, tagsInput.value);
       if (props.onChange) {
-        // setInputValue(tagsInput.value);
         updateSourceValues(itemObj.item);
         props.onChange(tagsInput.value);
-        // sourceValues.push(itemObj.item);
       }
     });
     tagsInput.on("after.remove", (item) => {
       // removed item 
-      console.log(item, tagsInput.value);
       if (props.onChange) {
-        // setInputValue(tagsInput.value);
         props.onChange(tagsInput.value);
       }
     });

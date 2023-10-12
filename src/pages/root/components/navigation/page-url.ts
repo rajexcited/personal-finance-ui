@@ -35,6 +35,10 @@ export const PAGE_URL = {
     shortUrl: "account/:accountId/update",
     fullUrl: "/payment-accounts/account/:accountId/update",
   },
+  deletePymAccount: {
+    shortUrl: "account/delete",
+    fullUrl: "/payment-accounts/account/delete",
+  },
   settingsRoot: {
     shortUrl: "settings",
     fullUrl: "/settings",

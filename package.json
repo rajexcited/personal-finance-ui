@@ -1,6 +1,7 @@
 {
   "name": "my-personal-expense",
-  "version": "0.1.0",
+  "description": "UI app for managing my personal finance. it helps with tracking expenses, managing payment accounts.",
+  "version": "0.1.1",
   "private": true,
   "dependencies": {
     "@creativebulma/bulma-tagsinput": "^1.0.3",
@@ -25,6 +26,7 @@
     "date-and-time": "^3.0.2",
     "idb": "^7.1.1",
     "lodash": "^4.17.21",
+    "mem": "^9.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^8.0.7",

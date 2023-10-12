@@ -1,3 +1,4 @@
+// doc link - https://bulma-tagsinput.netlify.app/get-started/usage/
 declare module "@creativebulma/bulma-tagsinput" {
   export interface BulmaTagsInputOptions {
     allowDuplicates?: boolean; // Are duplicate tags allowed ?

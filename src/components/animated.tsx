@@ -7,6 +7,7 @@ interface AnimatedProps {
     isPlayIn: boolean;
     animateOnMount: boolean;
     resetOnAnimationEnd?: boolean;
+    isVisibleAfterAnimateOut?: boolean;
 }
 
 const Animated: FunctionComponent<AnimatedProps> = (props) => {
@@ -16,16 +17,19 @@ const Animated: FunctionComponent<AnimatedProps> = (props) => {
 
     useEffect(() => {
         let timeoutId: NodeJS.Timeout;
-        const animationEndHandler = () => {
-            if (props.resetOnAnimationEnd) {
-                timeoutId = setTimeout(() => {
-                    setVisible(false);
-                }, 100);
-            }
+        const animationEndHandler = (event: AnimationEvent) => {
+            event.preventDefault();
+            timeoutId = setTimeout(() => {
+                setVisible(false);
+                console.debug("animation ended,  visible: ", visible);
+            }, 100);
+
             document.documentElement.classList.remove('isPlaying');
         };
 
-        const animationStartHandler = () => {
+        const animationStartHandler = (event: AnimationEvent) => {
+            event.preventDefault();
+            console.debug("animation start");
             clearTimeout(timeoutId);
             document.documentElement.classList.add('isPlaying');
         };
@@ -48,10 +52,12 @@ const Animated: FunctionComponent<AnimatedProps> = (props) => {
         }
     }, [props.isPlayIn]);
 
-    console.debug("visible: ", visible, "isPlayIn: ", isPlayIn, "animate class: ", (visible ? `animate__animated animate__${isPlayIn ? props.animatedIn : props.animatedOut}` : ""), new Date());
+    console.debug("visible: ", visible, "isPlayIn: ", isPlayIn, "animate class: ", (visible ? `animate__animated animate__${isPlayIn && props.resetOnAnimationEnd ? props.animatedIn : props.animatedOut}` : ""), new Date());
 
-    return <div className={ visible ? `animate__animated animate__${isPlayIn ? props.animatedIn : props.animatedOut}` : "" } ref={ animatedRef }>
-        { props.children }
+    return <div className={ visible || !props.resetOnAnimationEnd ? `animate__animated animate__${isPlayIn ? props.animatedIn : props.animatedOut}` : "" } ref={ animatedRef }>
+        { (visible || props.isVisibleAfterAnimateOut !== false || isPlayIn) &&
+            props.children
+        }
     </div>;
 };
 

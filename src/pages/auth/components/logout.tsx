@@ -1,10 +1,12 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import useAuth from "../hooks/use-auth";
+import { useLocation } from "react-router-dom";
 
 
 const LogoutPage: FunctionComponent = () => {
     const auth = useAuth();
     const [name, setName] = useState(auth.fullName || "");
+    const location = useLocation();
 
     useEffect(() => {
         if (name !== auth.fullName) {
@@ -22,6 +24,10 @@ const LogoutPage: FunctionComponent = () => {
                             <p>Bye, { name }!</p>
                         </div>
                         <div className="message-body">
+                            {
+                                location.state?.from?.idleTimeout &&
+                                <p>Since there is no activity,</p>
+                            }
                             <p>You have been logged out. See you soon</p>
                         </div>
                     </article>

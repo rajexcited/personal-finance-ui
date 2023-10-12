@@ -4,12 +4,12 @@ import { Outlet, useNavigation } from "react-router-dom";
 import { faDashboard } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { NavBar } from "../navigation";
-import { LoadSpinner } from "../../../components";
+import { LoadSpinner } from "../../../../components";
 
 
 const RootLayout: FunctionComponent = () => {
     const navigation = useNavigation();
-    const isLoading = navigation.state === "loading";
+    const isLoading = navigation.state !== "idle";
 
     return (
         <div className="section">

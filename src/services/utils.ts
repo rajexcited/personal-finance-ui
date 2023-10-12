@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const handleRestErrors = (e: Error) => {
   if (axios.isAxiosError(e)) {
-    console.error("rest call has errors: ", e);
+    console.error("rest call has errors: ", e, e.config, e.toJSON(), e.response, e.request, e.cause);
     if (e.response?.status === 400) {
       // validation error
       const msg = e.response.data.validation_error.body_params

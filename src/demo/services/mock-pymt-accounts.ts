@@ -28,10 +28,9 @@ const MockPaymentAccounts = (demoMock: MockAdapter) => {
   demoMock.onPost("/accounts").reply((config) => {
     const responseCreator = AxiosResponseCreator(config);
     const data = JSON.parse(config.data);
-    console.log(data, config);
     if ("accountId" in data && data.accountId) {
       // update
-      const err = validateUuid(data.configId, "accountId");
+      const err = validateUuid(data.accountId, "accountId");
       if (err) {
         return responseCreator.toValidationError(err);
       }
