@@ -1,11 +1,12 @@
 import { FunctionComponent, useState, useEffect } from "react";
-import { useNavigation, useSubmit, useActionData } from "react-router-dom";
+import { useNavigation, useSubmit, useActionData, useLoaderData } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import AccountForm from "./account-form";
 import { PymtAccountFields } from "../../services";
 import { PAGE_URL } from "../../../root";
 import { useAuth } from "../../../auth";
 import ReactMarkdown from "react-markdown";
+import { PymtAccountDetailLoaderType } from "../../route-handlers/account-loader";
 
 
 const AddAccount: FunctionComponent = () => {
@@ -16,6 +17,7 @@ const AddAccount: FunctionComponent = () => {
     // for error
     const actionData: any = useActionData();
     const [errorMessage, setErrorMessage] = useState("");
+    const loaderData = useLoaderData() as PymtAccountDetailLoaderType;
 
     useEffect(() => {
         // creating temporary id
@@ -65,13 +67,8 @@ const AddAccount: FunctionComponent = () => {
                         accountId={ accountId }
                         submitLabel={ navigation.state === "submitting" ? "Adding Account details..." : "Add" }
                         onSubmit={ onAddedAccount }
-                        accountName=""
-                        accountNumber=""
-                        description=""
-                        institutionName=""
-                        shortName=""
-                        tags=""
-                        typeName=""
+                        sourceTags={ loaderData.pymtAccountTags }
+                        categoryTypes={ loaderData.categoryTypes }
                     />
                 </div>
             </div>

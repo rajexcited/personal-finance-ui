@@ -5,15 +5,17 @@ import AccountForm from "./account-form";
 import { PAGE_URL } from "../../../root";
 import { useAuth } from "../../../auth";
 import ReactMarkdown from "react-markdown";
+import { PymtAccountDetailLoaderType } from "../../route-handlers/account-loader";
 
 
 const UpdateAccount: FunctionComponent = () => {
     const navigation = useNavigation();
     const submit = useSubmit();
     const actionData: any = useActionData();
-    const accountDetails = useLoaderData() as PymtAccountFields;
     const auth = useAuth();
     const [errorMessage, setErrorMessage] = useState("");
+    const loaderData = useLoaderData() as PymtAccountDetailLoaderType;
+
 
     useEffect(() => {
         if (actionData?.errorMessage && actionData.errorMessage !== errorMessage)
@@ -23,7 +25,7 @@ const UpdateAccount: FunctionComponent = () => {
     const onUpdateAccount = (data: PymtAccountFields) => {
         if (auth.isAuthenticated) {
             const formData: any = { ...data };
-            submit(formData, { action: PAGE_URL.pymtAccountsRoot.fullUrl, method: "post" });
+            submit(formData, { action: PAGE_URL.updatePymAccount.fullUrl, method: "post" });
         } else {
             setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
         }
@@ -42,19 +44,17 @@ const UpdateAccount: FunctionComponent = () => {
             }
             <div className="columns">
                 <div className="column">
-                    <AccountForm
-                        key="update-account-form"
-                        accountId={ accountDetails.accountId }
-                        submitLabel={ navigation.state === "submitting" ? "Saving Account details..." : "Update" }
-                        onSubmit={ onUpdateAccount }
-                        accountName={ accountDetails.accountName }
-                        accountNumber={ accountDetails.accountNumber }
-                        description={ accountDetails.description }
-                        institutionName={ accountDetails.institutionName }
-                        shortName={ accountDetails.shortName }
-                        tags={ accountDetails.tags }
-                        typeName={ accountDetails.typeName }
-                    />
+                    { loaderData.pymtAccountDetail &&
+                        <AccountForm
+                            key="update-account-form"
+                            accountId={ loaderData.pymtAccountDetail.accountId }
+                            submitLabel={ navigation.state === "submitting" ? "Saving Account details..." : "Update" }
+                            onSubmit={ onUpdateAccount }
+                            details={ loaderData.pymtAccountDetail }
+                            sourceTags={ loaderData.pymtAccountTags }
+                            categoryTypes={ loaderData.categoryTypes }
+                        />
+                    }
                 </div>
             </div>
         </>

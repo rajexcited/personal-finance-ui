@@ -1,5 +1,5 @@
-import { SortDirection, SortType } from "../../../../../components";
-import { ExpenseFields } from "../field-types";
+import { SortDirection, SortType } from "../../../components";
+import { ExpenseFields } from "./field-types";
 
 export interface ExpenseSortDetails {
   sortable: true;
@@ -23,7 +23,7 @@ interface UnSortableHeader {
 export type Header = SortableHeader | UnSortableHeader;
 
 export const rowHeaders: Header[] = [
-  { id: "pymt-acc", label: "Payment Account", sortable: true, datafieldKey: "pymtacc" },
+  { id: "pymt-acc", label: "Payment Account", sortable: true, datafieldKey: "pymtaccName" },
   {
     id: "prchs-dt",
     label: "Purchased Date",

@@ -11,9 +11,11 @@ import {
     pymtAccountDetailLoaderHandler,
     pymtAccountListLoaderHandler
 } from '../../../pymt-accounts';
-import { AddExpense, ExpenseJournalPage, ExpenseList, UpdateExpense } from '../../../expenses';
+import { AddExpense, ExpenseJournalPage, ExpenseList, UpdateExpense, expenseListLoaderHandler, expenseActionHandler, expenseDetailLoaderHandler, expenseDetailSupportingLoaderHandler } from '../../../expenses';
 import { ExpenseCategoryPage, PymtAccountTypePage, SettingsRoot } from "../../../settings";
 import { LoginPage, RequireAuth, SignupPage, LogoutPage } from "../../../auth";
+import HomePage from "./home";
+import { pymtAccountDetailSupportingLoaderHandler } from "../../../pymt-accounts/route-handlers/account-loader";
 
 
 export const router = createBrowserRouter([
@@ -22,17 +24,18 @@ export const router = createBrowserRouter([
         element: <RootLayout />,
         errorElement: <ErrorPage />,
         children: [
-            { index: true, element: <div>Home page</div> },
+            { index: true, element: <HomePage /> },
             { path: PAGE_URL.loginPage.shortUrl, element: <LoginPage /> },
             { path: PAGE_URL.signupPage.shortUrl, element: <SignupPage /> },
             { path: PAGE_URL.logoutPage.shortUrl, element: <LogoutPage /> },
             {
                 path: PAGE_URL.expenseJournalRoot.shortUrl,
                 element: <RequireAuth><ExpenseJournalPage /></RequireAuth>,
+                action: expenseActionHandler,
                 children: [
-                    { index: true, element: <ExpenseList /> },
-                    { path: PAGE_URL.addExpense.shortUrl, element: <AddExpense /> },
-                    { path: PAGE_URL.updateExpense.shortUrl, element: <UpdateExpense /> },
+                    { index: true, element: <ExpenseList />, loader: expenseListLoaderHandler, },
+                    { path: PAGE_URL.addExpense.shortUrl, element: <AddExpense />, loader: expenseDetailSupportingLoaderHandler, action: expenseActionHandler },
+                    { path: PAGE_URL.updateExpense.shortUrl, element: <UpdateExpense />, loader: expenseDetailLoaderHandler, action: expenseActionHandler },
                 ]
             },
             {
@@ -41,8 +44,8 @@ export const router = createBrowserRouter([
                 action: pymtAccountActionHandler,
                 children: [
                     { index: true, element: <PymtAccountList />, loader: pymtAccountListLoaderHandler, },
-                    { path: PAGE_URL.addPymAccount.shortUrl, element: <AddPymtAccount />, action: pymtAccountActionHandler },
-                    { path: PAGE_URL.updatePymAccount.shortUrl, element: <UpdatePymtAccount />, loader: pymtAccountDetailLoaderHandler },
+                    { path: PAGE_URL.addPymAccount.shortUrl, element: <AddPymtAccount />, loader: pymtAccountDetailSupportingLoaderHandler, action: pymtAccountActionHandler },
+                    { path: PAGE_URL.updatePymAccount.shortUrl, element: <UpdatePymtAccount />, loader: pymtAccountDetailLoaderHandler, action: pymtAccountActionHandler, },
                 ]
             },
             {

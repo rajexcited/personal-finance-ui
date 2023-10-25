@@ -1,7 +1,7 @@
 import { ActionType, ExpenseAction } from "../actions";
-import { ExpenseFields } from "../field-types";
+import { ExpenseFields } from "../../../services/field-types";
 import { ExpenseState } from "./expense-state";
-import { expenseComparator } from "./sort-comparator";
+import { expenseComparator } from "../../../services/sort-comparator";
 
 export const defaultExpenseState: ExpenseState = {
   expenses: [],
@@ -102,6 +102,6 @@ const reducer = (state: ExpenseState, action: ExpenseAction): ExpenseState => {
 
 export default reducer;
 export type { ExpenseState };
-export type { Header, HeaderStateType, ExpenseSortDetails, ExpenseSortStateType } from "./sort-headers";
-export { expenseComparator } from "./sort-comparator";
-export { rowHeaders } from "./sort-headers";
+export type { Header, HeaderStateType, ExpenseSortDetails, ExpenseSortStateType } from "../../../services/sort-headers";
+export { expenseComparator } from "../../../services/sort-comparator";
+export { rowHeaders } from "../../../services/sort-headers";

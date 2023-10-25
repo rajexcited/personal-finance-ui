@@ -1,7 +1,9 @@
 import { openDB } from "idb";
-import { axios, IDATABASE_TRACKER, convertAuditFields, handleRestErrors } from "../../../services";
+import { axios, IDATABASE_TRACKER, convertAuditFields, handleRestErrors, ConfigType } from "../../../services";
 import AccountTypeService from "./account-type-service";
 import { PymtAccountFields } from "./field-types";
+import pMemoize from "p-memoize";
+import ExpiryMap from "expiry-map";
 
 interface PymtAccountService {
   getPymtAccounts(): Promise<PymtAccountFields[]>;
@@ -9,6 +11,7 @@ interface PymtAccountService {
   addUpdatePymtAccount(accDetails: PymtAccountFields): Promise<void>;
   removePymtAccount(accountId: string): Promise<void>;
   getPymtAccountTags(): Promise<string[]>;
+  getPymtAccountTypes(): Promise<ConfigType[]>;
   destroy(): void;
 }
 
@@ -17,17 +20,20 @@ const PymtAccountServiceImpl = (): PymtAccountService => {
   const objectStoreName = IDATABASE_TRACKER.EXPENSE_DATABASE.PYMT_ACCOUNT_STORE.NAME;
   const dbPromise = openDB(IDATABASE_TRACKER.EXPENSE_DATABASE.NAME, IDATABASE_TRACKER.EXPENSE_DATABASE.VERSION);
 
-  const getAccountTypesEnum = async () => {
-    const acctypes = await accountTypeService.getAccountTypes();
-    const typeMap = new Map<string, string>();
-    acctypes.forEach((at) => {
-      if (at.configId && at.name) {
-        typeMap.set(at.configId, at.name);
-        typeMap.set(at.name, at.configId);
-      }
-    });
-    return typeMap;
-  };
+  const getAccountTypesEnum = pMemoize(
+    async () => {
+      const acctypes = await accountTypeService.getAccountTypes();
+      const typeMap = new Map<string, string>();
+      acctypes.forEach((at) => {
+        if (at.configId && at.name) {
+          typeMap.set(at.configId, at.name);
+          typeMap.set(at.name, at.configId);
+        }
+      });
+      return typeMap;
+    },
+    { cache: new ExpiryMap(2 * 1000) }
+  );
 
   const updateAccountType = (accountTypeMap: Map<string, string>, pymtAccount: PymtAccountFields) => {
     if (pymtAccount.typeId) pymtAccount.typeName = accountTypeMap.get(pymtAccount.typeId);
@@ -151,12 +157,17 @@ const PymtAccountServiceImpl = (): PymtAccountService => {
     return tags;
   };
 
+  const getPymtAccountTypes = () => {
+    return accountTypeService.getAccountTypes();
+  };
+
   return {
     getPymtAccounts,
     getPymtAccount,
     addUpdatePymtAccount,
     removePymtAccount,
     getPymtAccountTags,
+    getPymtAccountTypes,
     destroy,
   };
 };

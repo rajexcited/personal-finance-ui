@@ -32,7 +32,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
 
     useEffect(() => {
         const intervalId = setInterval(() => {
-            console.debug("in interval after 1 sec", authState.isAuthenticated, expiringStatus, new Date());
+
             if (!authState.isAuthenticated && (expiringStatus === ExpireStatus.Expired || expiringStatus === ExpireStatus.Unknown)) {
                 // public user or logged out user
                 return;
@@ -44,12 +44,12 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
                 // update the current state
                 if (authState.isAuthenticated) setAuthState(authStat);
                 // logged out user, but false status. update status
-                else setExpiringStatus(ExpireStatus.Expired);
+                else setExpiringStatus(ExpireStatus.Unknown);
             }
-            console.debug(authState.isAuthenticated, authStat.isAuthenticated, expiringStatus);
+
             if (authStat.isAuthenticated) {
                 const diffTime = dateutil.subtract(authStat?.expiryDate || authState.expiryDate, new Date());
-                console.debug("is authenticated", diffTime.toSeconds());
+
                 if (diffTime.toSeconds() - 30 <= 0) {
                     // about to expire scenario
                     if (expiringStatus !== ExpireStatus.ExpiringSoon) setExpiringStatus(ExpireStatus.ExpiringSoon);
@@ -113,20 +113,15 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
                                     expiringStatus === ExpireStatus.Expired &&
                                     <ReactMarkdown children="You are logged out due to inactive" />
                                 }
+                                {
+                                    expiringStatus !== ExpireStatus.ExpiringSoon && expiringStatus !== ExpireStatus.Expired &&
+                                    <p>&nbsp;&nbsp;&nbsp;</p>
+                                }
                             </div>
                         </div>
                     </div>
                 }
             </Animated>
-
-            {/* <Animated animateOnMount={ true } isPlayIn={ expiringStatus === ExpireStatus.Expired } animatedIn="slideInDown" animatedOut="slideOutUp">
-                    <div className="container mt-2 pt-2">
-                        <div className="notification-container px-5 mx-5">
-                            <div className="notification is-link is-light">
-                            </div>
-                        </div>
-                    </div>
-                </Animated> */}
 
             { children }
         </AuthContext.Provider>

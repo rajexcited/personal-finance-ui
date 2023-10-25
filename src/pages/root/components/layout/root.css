@@ -1,3 +1,12 @@
 .root-route-child {
     padding: 1.5rem 2rem 0rem;
 }
+
+.demo.logo .icon {
+    background-image: url("../../../../assets/images/demo-logo.png");
+    background-size: 100%;
+    width: 140px;
+    height: 65px;
+    background-repeat: no-repeat;
+    transform: rotate(-25deg);
+}

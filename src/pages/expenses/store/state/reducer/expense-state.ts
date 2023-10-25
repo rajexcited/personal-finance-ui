@@ -1,5 +1,5 @@
-import { ExpenseFields, ExpenseFilterType } from "../field-types";
-import { ExpenseSortStateType } from "./sort-headers";
+import { ExpenseFields, ExpenseFilterType } from "../../../services/field-types";
+import { ExpenseSortStateType } from "../../../services/sort-headers";
 
 export interface ExpenseState {
   expenses: ExpenseFields[];

@@ -9,8 +9,8 @@ import {
   ExpenseLoadingAction,
   ErrorExpenseAction,
 } from "../actions";
-import { ExpenseFields, ExpenseFilterType } from "../field-types";
-import { ExpenseSortDetails, ExpenseSortStateType } from "../reducer/sort-headers";
+import { ExpenseFields, ExpenseFilterType } from "../../../services/field-types";
+import { ExpenseSortDetails, ExpenseSortStateType } from "../../../services/sort-headers";
 
 export const loadExpense = (): ExpenseLoadingAction => {
   return {

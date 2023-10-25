@@ -2,7 +2,6 @@ import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useEffect } from "react";
 import "./loading.css";
-import { useDebounceState } from "../hooks";
 
 
 interface LoadSpinnerProps {

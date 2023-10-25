@@ -1,4 +1,5 @@
 import { FunctionComponent, useState, useRef, useEffect } from "react";
+import "./animated.css";
 
 interface AnimatedProps {
     children: JSX.Element | JSX.Element[] | React.ReactNode;
@@ -12,6 +13,7 @@ interface AnimatedProps {
 
 const Animated: FunctionComponent<AnimatedProps> = (props) => {
     const [visible, setVisible] = useState(props.animateOnMount);
+    const [isHeightTransitionEnded, setHeightTransitionEnded] = useState(false);
     const [isPlayIn, setPlayIn] = useState(props.isPlayIn);
     const animatedRef = useRef<HTMLDivElement>(null);
 
@@ -21,7 +23,6 @@ const Animated: FunctionComponent<AnimatedProps> = (props) => {
             event.preventDefault();
             timeoutId = setTimeout(() => {
                 setVisible(false);
-                console.debug("animation ended,  visible: ", visible);
             }, 100);
 
             document.documentElement.classList.remove('isPlaying');
@@ -29,17 +30,25 @@ const Animated: FunctionComponent<AnimatedProps> = (props) => {
 
         const animationStartHandler = (event: AnimationEvent) => {
             event.preventDefault();
-            console.debug("animation start");
             clearTimeout(timeoutId);
             document.documentElement.classList.add('isPlaying');
         };
 
+        const transitionEndHandler = (event: TransitionEvent) => {
+            event.preventDefault();
+            setTimeout(() => {
+                setHeightTransitionEnded(true);
+            }, 100);
+        };
+
         animatedRef.current?.addEventListener("animationend", animationEndHandler);
         animatedRef.current?.addEventListener("animationstart", animationStartHandler);
+        animatedRef.current?.addEventListener("transitionend", transitionEndHandler);
 
         return () => {
             animatedRef.current?.removeEventListener("animationend", animationEndHandler);
             animatedRef.current?.removeEventListener("animationstart", animationStartHandler);
+            animatedRef.current?.removeEventListener("transitionend", transitionEndHandler);
         };
     }, []);
 
@@ -48,14 +57,19 @@ const Animated: FunctionComponent<AnimatedProps> = (props) => {
             if ((props.animatedIn && props.isPlayIn) || (props.animatedOut && !props.isPlayIn)) {
                 setPlayIn(props.isPlayIn);
                 setVisible(true);
+                setHeightTransitionEnded(false);
             }
         }
     }, [props.isPlayIn]);
 
-    console.debug("visible: ", visible, "isPlayIn: ", isPlayIn, "animate class: ", (visible ? `animate__animated animate__${isPlayIn && props.resetOnAnimationEnd ? props.animatedIn : props.animatedOut}` : ""), new Date());
+    let animateClassname = visible || !props.resetOnAnimationEnd ? `animate__animated animate__${isPlayIn ? props.animatedIn : props.animatedOut}` : "";
+    if (props.isVisibleAfterAnimateOut === false) {
+        const heightTransitionClassname = isPlayIn ? "transition__height_auto" : "transition__height_0";
+        animateClassname = animateClassname + " " + heightTransitionClassname;
+    }
 
-    return <div className={ visible || !props.resetOnAnimationEnd ? `animate__animated animate__${isPlayIn ? props.animatedIn : props.animatedOut}` : "" } ref={ animatedRef }>
-        { (visible || props.isVisibleAfterAnimateOut !== false || isPlayIn) &&
+    return <div className={ animateClassname } ref={ animatedRef }>
+        { (visible || props.isVisibleAfterAnimateOut !== false || isPlayIn || !isHeightTransitionEnded) &&
             props.children
         }
     </div>;

@@ -1,6 +1,6 @@
-import { FunctionComponent, useState, useEffect, useContext } from "react";
+import { FunctionComponent, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../root/navigation";
+import { PAGE_URL } from "../../../root/components/navigation";
 import { faStore, faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import {
     TagsInput,
@@ -10,33 +10,31 @@ import {
     TextArea,
     VerifyIndicator,
     DropDownItemType
-} from "../../../components";
+} from "../../../../components";
 import ExpenseBreakDown from "./expense-breakdown";
-import { ExpenseItemFields, ExpenseFields } from "../store";
-import { PymtAccountContext } from "../../pymt-accounts";
-import { CategoryService } from "../services";
-import { ConfigType } from "../../../services";
-import { v4 as uuidv4 } from "uuid";
+import { ConfigType, ExpenseFields, ExpenseItemFields } from "../../services";
 
-
-const categoryService = await CategoryService();
 
 export interface ExpenseFormProps {
     submitLabel: string;
     expenseId: string;
     onSubmit (fields: ExpenseFields): void;
     details?: ExpenseFields;
+    categoryTypes: ConfigType[];
+    paymentAccounts: Map<string, string>;
+    sourceTags: string[];
 }
 
 const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
     const [billName, setBillName] = useState(props.details?.billname || '');
     const [amount, setAmount] = useState(props.details?.amount || '');
-    const [pymtAccount, setPymtAccount] = useState(props.details?.pymtacc || '');
+    const [pymtAccounts, setPymtAccounts] = useState<DropDownItemType[]>([]);
+    const [selectedPymtAccount, setSelectedPymtAccount] = useState<DropDownItemType>();
     const [description, setDescription] = useState(props.details?.description || '');
     const [purchasedDate, setPurchaseDate] = useState(props.details?.purchasedDate || new Date());
     const [tags, setTags] = useState(props.details?.tags || '');
     const [categories, setCategories] = useState<DropDownItemType[]>([]);
-    const [category, setCategory] = useState<DropDownItemType>();
+    const [selectedCategory, setSelectedCategory] = useState<DropDownItemType>();
     const [verifiedDateTime, setVerifiedDateTime] = useState(props.details?.verifiedDateTime);
     const [expenseItems, setExpenseItems] = useState<ExpenseItemFields[]>(props.details?.expenseItems || []);
     const navigate = useNavigate();
@@ -45,17 +43,16 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
         event.preventDefault();
 
         const data: ExpenseFields = {
-            id: props.details?.id || uuidv4(),
             expenseId: props.expenseId,
             billname: billName,
-            pymtacc: pymtAccount,
+            pymtaccName: selectedPymtAccount?.content,
             amount,
             description,
             purchasedDate,
             tags,
             verifiedDateTime,
             expenseItems,
-            categoryName: category?.content
+            categoryName: selectedCategory?.content
         };
 
         props.onSubmit(data);
@@ -67,30 +64,34 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
         navigate(PAGE_URL.expenseJournalRoot.fullUrl);
     };
 
-    const accountContextObject = useContext(PymtAccountContext);
-    const pymtAccounts = accountContextObject.accounts.map(acc => acc.shortName);
-
     useEffect(() => {
-        categoryService.getCategories()
-            .then((categoryTypes: ConfigType[]) => {
-                const myCategories = categoryTypes.map(ctg => {
-                    const itm: DropDownItemType = {
-                        id: ctg.configId || "configIdNeverUsed",
-                        content: ctg.name,
-                        tooltip: ctg.description
-                    };
-                    return itm;
-                });
-                setCategories(myCategories);
-            });
+        const myCategories = props.categoryTypes.map(ctg => {
+            const itm: DropDownItemType = {
+                id: ctg.configId || "configIdNeverUsed",
+                content: ctg.name,
+                tooltip: ctg.description
+            };
+            return itm;
+        });
+        setCategories(myCategories);
+        const selectedCtg = myCategories.find(ctg => ctg.content === props.details?.categoryName);
+        setSelectedCategory(selectedCtg);
+
+        const myPymtAccounts: DropDownItemType[] = [];
+        props.paymentAccounts.forEach((id, name) => {
+            const itm: DropDownItemType = {
+                id: id,
+                content: name
+            };
+            myPymtAccounts.push(itm);
+        });
+        setPymtAccounts(myPymtAccounts);
+        const selectedAcc = myPymtAccounts.find(acc => acc.content === props.details?.pymtaccName);
+        setSelectedPymtAccount(selectedAcc);
+
     }, []);
 
-    useEffect(() => {
-        if (props.details?.categoryName !== category?.content && categories) {
-            const ctgMatched = categories.find((ctg) => ctg.content === props.details?.categoryName);
-            if (ctgMatched) setCategory(ctgMatched);
-        }
-    }, [props.details?.categoryName, categories]);
+    console.log("in expenseForm, sourceTags", props.sourceTags);
 
     return (
         <form onSubmit={ onSubmitHandler }>
@@ -138,8 +139,8 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 key={ "xpns-pymt-acc" }
                                 label="Payment Account: "
                                 items={ pymtAccounts }
-                                onSelect={ (id: string) => setPymtAccount(id) }
-                                selectedItem={ pymtAccount }
+                                onSelect={ (selected: DropDownItemType) => setSelectedPymtAccount(selected) }
+                                selectedItem={ selectedPymtAccount }
                             />
                         </div>
                         <div className="column">
@@ -148,9 +149,9 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 label="Category: "
                                 items={ categories }
                                 key={ "xpns-category" }
-                                onSelect={ (selected: DropDownItemType) => setCategory(selected) }
+                                onSelect={ (selected: DropDownItemType) => setSelectedCategory(selected) }
                                 direction="down"
-                                selectedItem={ category }
+                                selectedItem={ selectedCategory }
                             />
 
                         </div>
@@ -176,6 +177,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 placeholder="Add Tags"
                                 onChange={ setTags }
                                 key={ "xpns-tags" }
+                                sourceValues={ props.sourceTags }
                             />
                         </div>
                     </div>
@@ -217,6 +219,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                         parentExpenseId={ props.expenseId }
                         expenseItems={ expenseItems }
                         onChange={ setExpenseItems }
+                        sourceTags={ props.sourceTags }
                     />
                 </div>
             </div>

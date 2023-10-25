@@ -1,11 +1,11 @@
-import { ascCompare, descCompare } from "../../../../../services";
-import { ExpenseFields } from "../field-types";
+import { ascCompare, descCompare } from "../../../services";
+import { ExpenseFields } from "./field-types";
 import { ExpenseSortStateType, ExpenseSortDetails } from "./sort-headers";
 
 export const expenseComparator = (sortableHeaders: ExpenseSortStateType, a: ExpenseFields, b: ExpenseFields) => {
   let diff = 0;
   const headers: ExpenseSortDetails[] = [];
-  Object.values(sortableHeaders).forEach((item) => item && headers.push(item));
+  Object.values(sortableHeaders).forEach((item) => item && headers.push({ ...item }));
 
   headers.sort((ah, bh) => {
     const asl = ah.sortLevel || 10000;

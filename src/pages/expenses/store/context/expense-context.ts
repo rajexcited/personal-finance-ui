@@ -1,6 +1,6 @@
 import { createContext } from "react";
 import { ExpenseFields, ExpenseFilterType } from "../state";
-import { ExpenseSortDetails, ExpenseSortStateType } from "../state/reducer/sort-headers";
+import { ExpenseSortDetails, ExpenseSortStateType } from "../../services/sort-headers";
 
 // create a filter component for th and similar to below link.
 // each column has filter capability with actions.

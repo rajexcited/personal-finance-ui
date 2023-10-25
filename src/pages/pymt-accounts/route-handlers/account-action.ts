@@ -42,9 +42,9 @@ const pymtAccountDeleteActionHandler = async (request: Request) => {
     const formdata = await request.formData();
     const accountId = formdata.get("accountId") as string;
     await pymtAccountService.removePymtAccount(accountId);
+    return "deleted";
   } catch (e) {
     const err = e as Error;
     return { errorMessage: err.message };
   }
-  return redirect(PAGE_URL.pymtAccountsRoot.fullUrl);
 };

@@ -2,51 +2,55 @@ import { FunctionComponent, useEffect, useState, useCallback, useMemo } from "re
 import { useNavigate } from "react-router-dom";
 import { PAGE_URL } from "../../../root";
 import { TagsInput, Input, InputValidateResponse, TextArea, DropDown } from "../../../../components";
-import { PymtAccountTypeService, ConfigType, PymtAccountFields, PymtAccountService } from "../../services";
+import { ConfigType, PymtAccountFields } from "../../services";
 import { faBank } from "@fortawesome/free-solid-svg-icons";
 
 
-const accountTypeService = PymtAccountTypeService();
-const accountService = PymtAccountService();
-
-export interface AccountFormProps extends PymtAccountFields {
+export interface AccountFormProps {
     onSubmit (account: PymtAccountFields): void;
     submitLabel: string;
-}
-
-const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
-    const [shortName, setShortName] = useState(props.shortName);
-    const [accountName, setAccountName] = useState(props.accountName);
-    const [institutionName, setInstitutionName] = useState(props.institutionName);
-    const [accountNumber, setAccountNumber] = useState(props.accountNumber);
-    const [description, setDescription] = useState(props.description);
-    const [tags, setTags] = useState(props.tags);
-    const [typeName, setTypeName] = useState(props.typeName?.toString() || "");
-    const [accountTypeMap, setAccountTypeMap] = useState(new Map<string, ConfigType>());
     // how to set this value? if I collect values from displayed paymentAccounts, 
     // there are chances to missed the tags. 
     // if I set it as config type, I need to manage add/remove. tideous task.
     // may be I can allow user to load old tags and store it as settings and 
     // can setup a rest api to retrieve tags
-    const [sourceTagValues, setSourceTagValues] = useState<string[]>();
+    sourceTags: string[];
+    categoryTypes: ConfigType[];
+    details?: PymtAccountFields;
+    accountId: string;
+}
+
+const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
+    const [shortName, setShortName] = useState(props.details?.shortName || "");
+    const [accountName, setAccountName] = useState(props.details?.accountName || "");
+    const [institutionName, setInstitutionName] = useState(props.details?.institutionName || "");
+    const [accountNumber, setAccountNumber] = useState(props.details?.accountNumber || "");
+    const [description, setDescription] = useState(props.details?.description || "");
+    const [tags, setTags] = useState(props.details?.tags || "");
+    const [typeName, setTypeName] = useState(props.details?.typeName?.toString() || "");
+    // const [accountTypeMap, setAccountTypeMap] = useState(new Map<string, ConfigType>());
+    // how to set this value? if I collect values from displayed paymentAccounts, 
+    // there are chances to missed the tags. 
+    // if I set it as config type, I need to manage add/remove. tideous task.
+    // may be I can allow user to load old tags and store it as settings and 
+    // can setup a rest api to retrieve tags
+    // const [sourceTagValues, setSourceTagValues] = useState<string[]>();
 
     const navigate = useNavigate();
 
     useEffect(() => {
-        const configureAccountTypes = async () => {
-            const list = await accountTypeService.getAccountTypes();
-            const map = new Map();
-            list.forEach(item => map.set(item.name, item));
-            setAccountTypeMap(map);
-        };
+        // const configureAccountTypes = async () => {
+        //     const list = await accountTypeService.getAccountTypes();
+        //     const map = new Map();
+        //     list.forEach(item => map.set(item.name, item));
+        //     setAccountTypeMap(map);
+        // };
 
-        const init = async () => {
-            const tagList = await accountService.getPymtAccountTags();
-            setSourceTagValues(tagList);
-            configureAccountTypes();
-        };
+        // const init = async () => {
+        //     configureAccountTypes();
+        // };
 
-        init();
+        // init();
 
     }, []);
 
@@ -74,7 +78,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
         navigate(PAGE_URL.pymtAccountsRoot.fullUrl);
     };
 
-    const accountTypes = useMemo(() => [...accountTypeMap.keys()], [accountTypeMap]);
+    const accountTypes = useMemo(() => props.categoryTypes.map(ctg => ctg.name), [props.categoryTypes]);
 
     const nameValidator = useCallback((inputValue: string): InputValidateResponse => {
         const regex = /^[\w\s'"\.,-]*$/;
@@ -177,7 +181,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                         id="xpns-tags"
                                         label="Tags: "
                                         defaultValue={ tags }
-                                        sourceValues={ sourceTagValues }
+                                        sourceValues={ props.sourceTags }
                                         placeholder="Add Tags"
                                         onChange={ setTags }
                                         key={ "xpns-tags" }

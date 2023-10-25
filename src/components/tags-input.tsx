@@ -47,6 +47,7 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
       source: sourceValues
     };
 
+    // this will never happen in useEffect
     if (!tagsRef.current) {
       return;
     }
@@ -67,13 +68,16 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
     });
 
     const updateSourceValues = (item: string) => {
+      console.log("updateSourceValues, source values", props.sourceValues);
       const sourceValueSet = new Set(props.sourceValues);
       props.defaultValue?.split(",").forEach(value => sourceValueSet.add(value));
-      sourceValueSet.add(item);
+      if (!item) sourceValueSet.add(item);
 
       sourceValues.length = 0;
       sourceValueSet.forEach(value => sourceValues.push(value));
     };
+
+    updateSourceValues("");
 
     return () => {
       tagsInput.flush();

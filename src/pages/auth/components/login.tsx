@@ -60,11 +60,11 @@ const LoginPage: FunctionComponent = () => {
     };
 
     return (
-        <section className="login-section isPlaying">
+        <section className="login-section">
             <LoadSpinner loading={ submitting } />
 
             { !!errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ !submitting } animatedIn="fadeInDown" animatedOut="fadeOutUp">
+                <Animated animateOnMount={ true } isPlayIn={ !submitting } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
                     <div className="columns is-centered">
                         <div className="column is-half">
                             <article className="message is-danger mb-3">

@@ -1,10 +1,10 @@
 import { FunctionComponent, useState, useRef } from "react";
 import { faSquarePlus, faSquareMinus, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { VerifyIndicator } from "../../../components";
-import { CategoryService } from "../services";
+import { VerifyIndicator } from "../../../../components";
+import { CategoryService, ExpenseFields } from "../../services";
 import dateutil from "date-and-time";
-import { ExpenseFields } from "../store";
+import { formatAmount } from "../../../../formatters";
 
 
 const categoryService = CategoryService();
@@ -12,10 +12,10 @@ const categoryService = CategoryService();
 interface ExpenseItemTableRowProps {
     id: string;
     details: ExpenseFields;
-    onSelect (id: string): void;
+    onSelect (expenseId: string): void;
     isSelected: Boolean;
-    onRemove (id: string): void;
-    onEditRequest (id: string): void;
+    onRemove (expenseId: string): void;
+    onEditRequest (expenseId: string): void;
 }
 
 const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props) => {
@@ -32,19 +32,19 @@ const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props)
         event.preventDefault();
         event.stopPropagation();
         if (props.isSelected) props.onSelect("");
-        else props.onSelect(props.id);
+        else props.onSelect(props.details.expenseId);
     };
 
     const onClickTrashExpense: React.MouseEventHandler<HTMLAnchorElement> = event => {
         event.preventDefault();
         event.stopPropagation();
-        props.onRemove(props.id);
+        props.onRemove(props.details.expenseId);
     };
 
     const onClickonEditStartExpense: React.MouseEventHandler<HTMLAnchorElement> = event => {
         event.preventDefault();
         event.stopPropagation();
-        props.onEditRequest(props.id);
+        props.onEditRequest(props.details.expenseId);
     };
 
     const itemizeAmounts = props.details.expenseItems && props.details.expenseItems.map(it => Number(it.amount)).filter(n => !isNaN(n));
@@ -62,22 +62,17 @@ const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props)
         return text && text.length > 15 ? text.substring(0, 12).concat("...") : text;
     };
 
-    const formatAmount = (amt?: string | number) => {
-        const amtt = amt && Number(amt) || 0;
-        return "$ " + amtt.toFixed(2);
-    };
-
     let itemBreakdownAction;
     if (showBreakdown) {
         itemBreakdownAction = (<a className="is-link" onClick={ onClickToggleBreakdownRows } key={ "item-breakdown" + props.id }>
             <span className="icon tooltip" data-tooltip="Hide Breakdown">
-                <FontAwesomeIcon icon={ faSquarePlus } />
+                <FontAwesomeIcon icon={ faSquareMinus } />
             </span>
         </a>);
     } else {
         itemBreakdownAction = (<a className="is-link" onClick={ onClickToggleBreakdownRows } key={ "item-breakdown" + props.id }>
             <span className="icon tooltip" data-tooltip="Show Breakdown">
-                <FontAwesomeIcon icon={ faSquareMinus } />
+                <FontAwesomeIcon icon={ faSquarePlus } />
             </span>
         </a>);
     }
@@ -94,16 +89,15 @@ const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props)
         </span>
     </a>);
 
-    const actions = [];
+    const actions = [updateExpenseAction, removeExpenseAction];
     if (!!props.details.expenseItems && !!props.details.expenseItems.length) {
         actions.push(itemBreakdownAction);
     }
-    actions.push(updateExpenseAction, removeExpenseAction);
 
     return (
         <>
             <tr ref={ rowRef } onClick={ onClickToggleRowSelection } className={ props.isSelected ? "is-selected" : "" }>
-                <td>{ props.details.pymtacc || "-" }</td>
+                <td>{ props.details.pymtaccName || "-" }</td>
                 <td>{ dateutil.format(props.details.purchasedDate, "MMM DD, YYYY") }</td>
                 <td>{ props.details.billname }</td>
                 <td>{ formatAmount(props.details.amount) }</td>
@@ -124,22 +118,17 @@ const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props)
             </tr>
             {
                 !!props.details.expenseItems && !!props.details.expenseItems.length &&
-                <>
-                    {
-                        props.details.expenseItems.map(item =>
-                            <tr className={ `${showBreakdown ? "" : "is-hidden"} is-light ${props.isSelected ? "is-selected" : ""}` } key={ item.id + "breakdownrow" }>
-                                <td colSpan={ 2 }> &nbsp; </td>
-                                <td> { item.billname } </td>
-                                <td> { formatAmount(item.amount) } </td>
-                                <td> { item.categoryName || "-" } </td>
-                                <td> &nbsp; </td>
-                                <td> { getShortForm(item.tags) || "-" } </td>
-                                <td colSpan={ 2 }> { getShortForm(item.description) || "-" } </td>
-                            </tr>
-                        )
-                    }
-                </>
-
+                props.details.expenseItems.map(item =>
+                    <tr className={ `${showBreakdown ? "" : "is-hidden"} is-light ${props.isSelected ? "is-selected" : ""}` } key={ item.expenseId + "breakdownrow" }>
+                        <td colSpan={ 2 }> &nbsp; </td>
+                        <td> { item.billname } </td>
+                        <td> { formatAmount(item.amount) } </td>
+                        <td> { item.categoryName || "-" } </td>
+                        <td> &nbsp; </td>
+                        <td> { getShortForm(item.tags) || "-" } </td>
+                        <td colSpan={ 2 }> { getShortForm(item.description) || "-" } </td>
+                    </tr>
+                )
             }
         </>
     );

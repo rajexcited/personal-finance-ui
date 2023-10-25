@@ -2,9 +2,10 @@ import { FunctionComponent, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleUp, faAngleDown, faBars } from "@fortawesome/free-solid-svg-icons";
 import ExpenseBreakDownItem, { ExpenseItemProps } from "./expense-breakdown-item";
-import { ExpenseItemFields } from "../store";
-import { DropDownItemType } from "../../../components";
-
+import { ExpenseItemFields } from "../../services";
+import { DropDownItemType } from "../../../../components";
+import _ from "lodash";
+import { formatAmount } from "../../../../formatters";
 
 
 export interface ExpenseBreakDownProps {
@@ -14,6 +15,7 @@ export interface ExpenseBreakDownProps {
     billname?: string;
     amount?: string;
     parentExpenseId: string;
+    sourceTags: string[];
     onChange (items: ExpenseItemFields[]): void;
 }
 
@@ -21,18 +23,24 @@ const idPrefix = "xpnse-item-";
 
 const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
     const [isBodyOpen, setBodyOpen] = useState(false);
-    const [expenseItems, setExpenseItems] = useState(props.expenseItems);
+    const [expenseItems, setExpenseItems] = useState<ExpenseItemFields[]>([]);
     const [totalItemizeAmount, setTotalItemizeAmount] = useState(0);
 
     const addItem = (oldList: ExpenseItemFields[]) => {
-        const ids = oldList.map(item => Number(item.id.replace(idPrefix, "")));
+        const ids = oldList.map(item => item.id || "")
+            .map(itemId => Number(itemId.replace(idPrefix, "")))
+            .map(idnum => isNaN(idnum) ? 0 : idnum);
         let maxIndexInList = Math.max(...ids, 0);
         return [...oldList, getEmptyExpenseItem(props.parentExpenseId, maxIndexInList + 1)];
     };
 
     useEffect(() => {
         // initialize
-        setExpenseItems(addItem);
+        props.expenseItems.forEach((item, ind) => {
+            item.id = item.id || item.expenseId || (idPrefix + ind);
+        });
+        const items = addItem(props.expenseItems);
+        setExpenseItems(items);
     }, []);
 
     const getEmptyExpenseItem = (parentExpenseId: string, ind: number): ExpenseItemFields => {
@@ -53,7 +61,7 @@ const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
         setBodyOpen((oldstate) => !oldstate);
     };
 
-    const onChangeItemHandler = (item: ExpenseItemProps) => {
+    const onChangeItemHandler = (item: ExpenseItemFields) => {
         const itemToUpdate = expenseItems?.find(it => item.id === it.id);
         if (!itemToUpdate) {
             console.error("item with id [ '" + item.id + "' ] not found.");
@@ -64,7 +72,6 @@ const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
         itemToUpdate.categoryName = item.categoryName;
         itemToUpdate.description = item.description;
         itemToUpdate.tags = item.tags;
-
 
         const emptyItem = expenseItems?.find(isEmptyItemRow);
         if (!emptyItem) {
@@ -93,9 +100,11 @@ const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
 
     const amt = props.amount ? Number(props.amount) : 0;
     const amountdiff = amt - totalItemizeAmount;
-    const tooltipText = amountdiff === 0 ? "itemize amount total is matching the expense amount" :
-        amountdiff > 0 ? "itemize amount total is less than expense amount, difference is " + amountdiff :
-            "expense amount is less than the itemize amout, difference is " + amountdiff;
+    const tooltipText = _.round(amountdiff, 2) === 0 ? "itemize amount total is matching the expense amount" :
+        amountdiff > 0 ? "itemize amount total is less than expense amount, difference is " + formatAmount(amountdiff) :
+            "expense amount is less than the itemize amout, difference is " + formatAmount(amountdiff);
+
+    console.log("in expense breakdown, sourceTags", props.sourceTags);
 
     return (
         <div className="card">
@@ -122,16 +131,9 @@ const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
                         expenseItems?.map(item =>
                             <ExpenseBreakDownItem
                                 key={ item.id }
-                                id={ item.id }
-                                expenseId={ item.expenseId }
-                                parentExpenseId={ item.parentExpenseId }
-                                billname={ item.billname }
-                                amount={ item.amount }
-                                categoryName={ item.categoryName }
-                                categoryId={ item.categoryId }
-                                description={ item.description }
-                                tags={ item.tags }
+                                itemDetail={ item }
                                 categories={ props.categories }
+                                sourceTags={ props.sourceTags }
                                 onChange={ onChangeItemHandler }
                                 onRemove={ onRemoveItemHandler }
                             />
@@ -151,11 +153,11 @@ const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
                         </div>
                         <div className="column">
                             <button
-                                className={ `button is-light tooltip ${amountdiff !== 0 ? "is-danger" : ""} totalItemizeAmount}` }
+                                className={ `button is-light tooltip is-tooltip-multiline ${_.round(amountdiff, 2) !== 0 ? "is-danger" : ""}` }
                                 data-tooltip={ tooltipText }
                                 disabled>
                                 &nbsp;&nbsp;&nbsp;&nbsp;
-                                { totalItemizeAmount }
+                                { formatAmount(totalItemizeAmount) }
                                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                             </button>
                         </div>

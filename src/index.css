@@ -27,3 +27,12 @@
     padding-left: 1rem;
     padding-right: 1rem;
 }
+
+.table tr.is-selected {
+    background-color: #5f79e8
+}
+
+tr.is-selected.is-light {
+    background-color: #5f85f8;
+    color: #fee;
+}

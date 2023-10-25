@@ -7,20 +7,11 @@ import { PAGE_URL } from "../../../root";
 import ReactMarkdown from "react-markdown";
 
 
-interface AccountListProps { }
-
-const AccountList: FunctionComponent<AccountListProps> = (props) => {
-    const loaderData = useLoaderData();
+const AccountList: FunctionComponent = () => {
+    const pymtAccList = useLoaderData() as PymtAccountFields[];
     const actionData = useActionData() as { errorMessage: string; };
     const [deletingAccountId, setDeletingAccountId] = useState("");
-    const [pymtAccList, setPymtAccList] = useState<PymtAccountFields[]>([]);
     const submit = useSubmit();
-
-    useEffect(() => {
-        if (Array.isArray(loaderData)) setPymtAccList(loaderData);
-    }, [loaderData]);
-
-    console.debug("loaderData: ", loaderData, "actionData", actionData);
 
     const onDeleteConfirmHandler = () => {
         const deletingPymtAcc = pymtAccList.find(acc => acc.accountId === deletingAccountId);

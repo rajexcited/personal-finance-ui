@@ -7,7 +7,7 @@ import { AuthContextProvider, router } from './pages';
 import { LoadSpinner } from './components';
 import axiosMock from "./demo";
 
-console.debug(axiosMock);
+console.debug(axiosMock.history);
 
 
 const App = () => {

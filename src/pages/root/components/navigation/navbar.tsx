@@ -22,22 +22,12 @@ const NavBar: FunctionComponent = () => {
     const { pathname } = useLocation();
 
     useEffect(() => {
-        console.debug("if auth status changes", auth.isAuthenticated,
-            "navbar items: ", navbarItems,
-            "len=", navbarItems.length,
-            "is 0?", (!navbarItems.length),
-            "first item protected?", navbarItems.length > 0 ? navbarItems[0].isProtected : "NA",
-            "protected same as previous?", navbarItems.length > 0 ? navbarItems[0].isProtected !== auth.isAuthenticated : "NA",
-        );
         let navbarItemlist = navbarItems;
         if (!navbarItems.length || navbarItems[0].isProtected !== auth.isAuthenticated) {
             navbarItemlist = items
                 .filter(item => (auth.isAuthenticated === item.isProtected))
                 .map(item => ({ ...item }));
-            console.debug("setting new navbar list", navbarItemlist);
-            // setNavbarItems([...navbarItemlist]);
         }
-        console.debug("pathname: ", pathname, "navbaritems", navbarItemlist);
         let selectedNavbarItem = navbarItemlist.find(item => pathname === item.link);
         if (pathname === "/") {
             selectedNavbarItem = undefined;
@@ -50,13 +40,13 @@ const NavBar: FunctionComponent = () => {
                 });
                 isPreviouslySelected = isPreviouslySelected || item.isSelected;
             });
-            console.debug("isPreviouslySelected = updating navbaritems?", isPreviouslySelected, "navbaritems", list);
+
             if (isPreviouslySelected) navbarItemlist = [...list];
             // if (isPreviouslySelected) setNavbarItems([...list]);
         } else if (!selectedNavbarItem) {
             selectedNavbarItem = navbarItemlist.find(item => pathname.startsWith(item.link));
         }
-        console.debug("selectedNavbarItem", selectedNavbarItem);
+
         if (selectedNavbarItem) {
             if (!selectedNavbarItem.isSelected) {
                 const list: NavbarItemProp[] = [];
@@ -75,8 +65,6 @@ const NavBar: FunctionComponent = () => {
                         list.push(item);
                     }
                 });
-                console.debug("selected navbaritem is not selected, so setting selected and updating navbaritems", list);
-                // setNavbarItems([...list]);
                 navbarItemlist = [...list];
             }
         }

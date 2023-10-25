@@ -1,7 +1,7 @@
 import { FunctionComponent } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../root/navigation";
-import { ExpenseContextProvider } from "./store/context";
+import { PAGE_URL } from "../../root/components/navigation";
+
 
 const ExpenseJournalPage: FunctionComponent = () => {
     const navigate = useNavigate();
@@ -20,10 +20,8 @@ const ExpenseJournalPage: FunctionComponent = () => {
                     </div>
                 </div>
             </div>
-            <section className="container p-3 my-2">
-                <ExpenseContextProvider>
-                    <Outlet />
-                </ExpenseContextProvider>
+            <section className="section is-narrow-y">
+                <Outlet />
             </section>
         </>
     );

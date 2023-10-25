@@ -56,7 +56,7 @@ const ConfigTypeServiceImpl = (belongsToParam: string): ConfigTypeService => {
       } else {
         dbKeys = filterByStatuses.map((filterByStatus) => [belongsToParam, filterByStatus]);
         queyParams = { belongsTo: belongsToParam, status: filterByStatuses };
-        console.debug("queyParams: ", queyParams, "dbKeys: ", dbKeys);
+        // console.debug("queyParams: ", queyParams, "dbKeys: ", dbKeys);
         indexName = IDATABASE_TRACKER.EXPENSE_DATABASE.CONFIG_STORE.INDEXES.STATUS_INDEX.NAME;
       }
 

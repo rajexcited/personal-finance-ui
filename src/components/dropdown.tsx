@@ -43,18 +43,6 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
     }, []);
 
     useEffect(() => {
-        let selected: DropDownItemType;
-        if (props.selectedItem) {
-            if (typeof props.selectedItem === "string") {
-                selected = {
-                    id: props.selectedItem,
-                    content: props.selectedItem
-                };
-            } else {
-                selected = props.selectedItem;
-            }
-            setSelectedItem(selected);
-        }
         setDropdownMenuId(findUniqueElementId("dropdown-menu"));
 
         return () => {
@@ -75,6 +63,22 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
     }, [isOpen, closeDropdownHandler]);
 
     useEffect(() => {
+        if (props.selectedItem) {
+            if (typeof props.selectedItem === "string") {
+                if (props.selectedItem !== selectedItem?.content) {
+                    const selected = {
+                        id: props.selectedItem,
+                        content: props.selectedItem
+                    };
+                    setSelectedItem(selected);
+                }
+            } else if (props.selectedItem.content !== selectedItem?.content) {
+                setSelectedItem(props.selectedItem);
+            }
+        }
+    }, [props.selectedItem]);
+
+    useEffect(() => {
         if (props.items && props.items.length) {
             let ddItems: DropDownItemType[];
             if (typeof props.items[0] === "string") {
@@ -87,7 +91,6 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
             }
             setItems(ddItems);
         }
-
     }, [props.items]);
 
     const toggleDropdownHandler: React.MouseEventHandler<HTMLButtonElement> = event => {

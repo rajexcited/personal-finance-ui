@@ -11,8 +11,6 @@ const RequireAuth: FunctionComponent<RequireAuthProps> = ({ children }) => {
     const auth = useAuth();
     const location = useLocation();
 
-    console.debug("in requireAuth: ", auth, " location: ", location);
-
     return (
         auth.isAuthenticated ?
             children :

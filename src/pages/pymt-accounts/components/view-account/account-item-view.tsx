@@ -4,6 +4,7 @@ import { FunctionComponent, useState } from "react";
 import { PymtAccountFields } from "../../services";
 import { useNavigate } from "react-router-dom";
 import { PAGE_URL } from "../../../root";
+import { Animated } from "../../../../components";
 
 export interface AccountItemProps {
     id: string;
@@ -22,7 +23,7 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
 
     const onClickUpdateHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        navigate(PAGE_URL.updatePymAccount.fullUrl.replace(":accountId", props.details.accountId));
+        navigate(PAGE_URL.updatePymAccount.shortUrl.replace(":accountId", props.details.accountId));
     };
 
     const onClickDeleteHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
@@ -31,7 +32,7 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
     };
 
     return (
-        <section className="container mb-2 p-2">
+        <section className="container mb-3 px-2">
             <div className="card">
                 <header className="card-header">
                     <p className="card-header-title">
@@ -49,53 +50,55 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                         </span>
                     </button>
                 </header>
-                <div className={ `card-content ${isBodyOpen ? "is-active" : "is-hidden"}` }>
-                    <div className="content">
-                        <div className="columns is-variable">
-                            <div className="column">
-                                <label className="label">Account Name: </label>
-                                <span>{ props.details.accountName }</span>
-                            </div>
-                            <div className="column">
-                                <label className="label">Institution Name: </label>
-                                <span>{ props.details.institutionName }</span>
-                            </div>
-                            <div className="column">
-                                <label className="label">Account Number: </label>
-                                <span>{ props.details.accountNumber }</span>
-                            </div>
-                        </div>
-                        <div className="columns is-variable">
-                            <div className="column">
-                                <label className="label">Account Type: </label>
-                                <span>{ props.details.typeName }</span>
-                            </div>
-                            <div className="column">
-                                <label className="label">Tags: </label>
-                                <div className="tags">
-                                    {
-                                        props.details.tags &&
-                                        props.details.tags.split(",").map(
-                                            tag => <span
-                                                className="tag is-link"
-                                                key={ tag + "-tag-key" }
-                                            >{ tag }</span>
-                                        )
-                                    }
+                <Animated animateOnMount={ false } isPlayIn={ isBodyOpen } animatedIn="fadeIn" animatedOut="zoomOut" isVisibleAfterAnimateOut={ false } >
+                    <div className="card-content is-active">
+                        <div className="content">
+                            <div className="columns is-variable">
+                                <div className="column">
+                                    <label className="label">Account Name: </label>
+                                    <span>{ props.details.accountName }</span>
                                 </div>
-
+                                <div className="column">
+                                    <label className="label">Institution Name: </label>
+                                    <span>{ props.details.institutionName }</span>
+                                </div>
+                                <div className="column">
+                                    <label className="label">Account Number: </label>
+                                    <span>{ props.details.accountNumber }</span>
+                                </div>
                             </div>
-                            <div className="column">&nbsp;</div>
-                        </div>
-                        <div className="columns is-variable">
-                            <div className="column">
-                                <label className="label">Description: </label>
-                                <span>{ props.details.description }</span>
+                            <div className="columns is-variable">
+                                <div className="column">
+                                    <label className="label">Account Type: </label>
+                                    <span>{ props.details.typeName }</span>
+                                </div>
+                                <div className="column">
+                                    <label className="label">Tags: </label>
+                                    <div className="tags">
+                                        {
+                                            props.details.tags &&
+                                            props.details.tags.split(",").map(
+                                                tag => <span
+                                                    className="tag is-link"
+                                                    key={ tag + "-tag-key" }
+                                                >{ tag }</span>
+                                            )
+                                        }
+                                    </div>
+
+                                </div>
+                                <div className="column">&nbsp;</div>
+                            </div>
+                            <div className="columns is-variable">
+                                <div className="column">
+                                    <label className="label">Description: </label>
+                                    <span>{ props.details.description }</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <footer className={ `card-footer ${isBodyOpen ? "is-active" : "is-hidden"}` }> </footer>
+                    <footer className="card-footer is-active"> </footer>
+                </Animated>
             </div>
 
         </section>

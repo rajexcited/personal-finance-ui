@@ -1,5 +1,5 @@
 import { FunctionComponent, useReducer } from "react";
-import { PAGE_URL } from "../../../root/navigation";
+import { PAGE_URL } from "../../../root/components/navigation";
 import { ExpenseContext } from "./expense-context";
 import { reducer, defaultExpenseState, ExpenseSortDetails, HeaderStateType, ExpenseFilterType, ExpenseFields } from "../state";
 import {
@@ -15,7 +15,7 @@ import {
 import ExpenseService from "../../services/expenses-service";
 import { foundErrorForExpense, loadExpense } from "../state/action-creators/action-creators";
 import { useNavigate } from "react-router-dom";
-import { rowHeaders } from "../state/reducer/sort-headers";
+import { rowHeaders } from "../../services/sort-headers";
 
 
 
@@ -67,7 +67,7 @@ const ExpenseContextProvider: FunctionComponent<ExpenseContextProviderProps> = (
     const onRemoveExpenseHandler = (expense: ExpenseFields) => {
         console.log("in onRemoveExpenseHandler, expense: ", expense);
         dispatchExpenseAction(loadExpense());
-        expenseService.removeExpense(expense)
+        expenseService.removeExpense(expense.expenseId)
             .then(() => {
                 dispatchExpenseAction(removeExpense(expense.expenseId));
             }).catch(error => {

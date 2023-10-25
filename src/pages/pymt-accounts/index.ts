@@ -6,4 +6,4 @@ export { default as UpdatePymtAccount } from "./components/modify-account/update
 export { pymtAccountActionHandler } from "./route-handlers/account-action";
 export { pymtAccountDetailLoaderHandler, pymtAccountListLoaderHandler } from "./route-handlers/account-loader";
 
-export { PymtAccountTypeService } from "./services";
+export { PymtAccountService } from "./services";

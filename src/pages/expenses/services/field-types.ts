@@ -1,7 +1,7 @@
-import { AuditFields } from "../../../../services";
+import { AuditFields } from "../../../services";
 
 interface BaseExpenseFields extends AuditFields {
-  id: string;
+  id?: string;
   expenseId: string;
   billname: string;
   amount?: string;
@@ -16,7 +16,8 @@ export interface ExpenseItemFields extends BaseExpenseFields {
 }
 
 export interface ExpenseFields extends BaseExpenseFields {
-  pymtacc?: string;
+  pymtaccId?: string;
+  pymtaccName?: string;
   purchasedDate: Date;
   verifiedDateTime?: Date;
   expenseItems: ExpenseItemFields[];

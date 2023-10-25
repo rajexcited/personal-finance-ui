@@ -67,9 +67,9 @@ const MockLogin = (demoMock: MockAdapter) => {
       expiresIn: 180,
     };
 
-    UserSessionDetails.emailId = data.emailId;
-    UserSessionDetails.firstName = data.firstname;
-    UserSessionDetails.lastName = data.lastname;
+    UserSessionDetails.emailId = responseData.emailId;
+    UserSessionDetails.firstName = responseData.firstname;
+    UserSessionDetails.lastName = responseData.lastname;
 
     return responseCreator.toSuccessResponse(responseData);
   });

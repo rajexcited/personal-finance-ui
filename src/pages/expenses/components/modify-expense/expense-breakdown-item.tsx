@@ -1,35 +1,37 @@
 import { FunctionComponent, useEffect, useState } from "react";
-import { TagsInput, Input, DropDown, TextArea, DropDownItemType } from "../../../components";
+import { TagsInput, Input, DropDown, TextArea, DropDownItemType } from "../../../../components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import { faTrashAlt } from "@fortawesome/free-regular-svg-icons";
-import { ExpenseItemFields } from "../store";
+import { ExpenseItemFields } from "../../services";
 
 
-export interface ExpenseItemProps extends ExpenseItemFields {
+export interface ExpenseItemProps {
     categories: DropDownItemType[];
     onChange (item: ExpenseItemFields): void;
     onRemove (id: string): void;
+    sourceTags: string[];
+    itemDetail: ExpenseItemFields;
 }
 
 const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
-    const [itemBillName, setItemBillName] = useState(props.billname || '');
-    const [itemAmount, setItemAmount] = useState(props.amount || '');
+    const [itemBillName, setItemBillName] = useState(props.itemDetail.billname || '');
+    const [itemAmount, setItemAmount] = useState(props.itemDetail.amount || '');
     const [itemCategory, setItemCategory] = useState<DropDownItemType>();
-    const [itemTags, setItemTags] = useState(props.tags || '');
-    const [itemDescription, setItemDescription] = useState(props.description || '');
+    const [itemTags, setItemTags] = useState(props.itemDetail.tags || '');
+    const [itemDescription, setItemDescription] = useState(props.itemDetail.description || '');
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             const data = {
-                ...props,
-                name: itemBillName,
+                ...props.itemDetail,
+                billname: itemBillName,
                 amount: itemAmount,
                 tags: itemTags,
                 description: itemDescription,
                 categoryName: itemCategory?.content,
+                categoryId: undefined,
             };
-            delete data.categoryId;
             props.onChange(data);
         }, 500);
 
@@ -39,16 +41,18 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
     }, [itemBillName, itemAmount, itemCategory, itemTags, itemDescription]);
 
     useEffect(() => {
-        if (props.categoryName !== itemCategory?.content && props.categories) {
-            const ctgMatched = props.categories.find((ctg) => ctg.content === props.categoryName);
+        if (props.itemDetail.categoryName !== itemCategory?.content && props.categories) {
+            const ctgMatched = props.categories.find((ctg) => ctg.content === props.itemDetail.categoryName);
             if (ctgMatched) setItemCategory(ctgMatched);
         }
-    }, [props.categoryName, props.categories]);
+    }, [props.itemDetail.categoryName, props.categories]);
 
     const onCLickRemoveHandler: React.MouseEventHandler<HTMLSpanElement> = event => {
         event.preventDefault();
-        props.onRemove(props.id);
+        props.onRemove(props.itemDetail.id || "");
     };
+
+    console.log("in expense breakdown item, sourceTags", props.sourceTags);
 
     return (
         <div className="columns">
@@ -123,6 +127,7 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
                     placeholder="Add Item Tags"
                     onChange={ setItemTags }
                     key={ "xpns-item-tags" }
+                    sourceValues={ props.sourceTags }
                 />
             </div>
         </div>
