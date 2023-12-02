@@ -21,7 +21,7 @@ import SecurityPage from "../../../settings/components/security";
 
 export const router = createBrowserRouter([
     {
-        path: "/",
+        path: "/finance-journal-ui/",
         element: <RootLayout />,
         errorElement: <ErrorPage />,
         children: [
