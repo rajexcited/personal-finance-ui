@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import RootLayout from "./root";
 import ErrorPage from "./error";
-import { PAGE_URL } from "../navigation";
+import { PAGE_URL, rootPath } from "../navigation";
 import {
     PymtAccountList,
     PymtAccountsRoot,
@@ -21,7 +21,7 @@ import SecurityPage from "../../../settings/components/security";
 
 export const router = createBrowserRouter([
     {
-        path: "/finance-journal-ui/",
+        path: rootPath + "/",
         element: <RootLayout />,
         errorElement: <ErrorPage />,
         children: [
