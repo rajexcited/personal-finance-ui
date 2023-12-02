@@ -6,10 +6,10 @@ export interface TextAreaProps {
     placeholder?: string;
     cols?: number;
     rows?: number;
-    maxlength?:number;
+    maxlength?: number;
     value: string;
     className?: string;
-    onChange(value: string): void;
+    onChange (value: string): void;
 }
 
 const TextArea: FunctionComponent<TextAreaProps> = (props) => {
@@ -33,20 +33,24 @@ const TextArea: FunctionComponent<TextAreaProps> = (props) => {
 
     return (
         <div className="field">
-            <label htmlFor={props.id} className="label">{props.label}</label>
+            <label htmlFor={ props.id } className="label">{ props.label }</label>
             <div className="control">
                 <textarea
-                    name={props.id}
-                    id={props.id}
-                    placeholder={props.placeholder}
-                    cols={props.cols}
-                    rows={props.rows}
-                    maxLength={props.maxlength}
-                    className={`textarea ${props.className}`}
-                    value={inputValue}
-                    onChange={onChangeHandler}
+                    name={ props.id }
+                    id={ props.id }
+                    placeholder={ props.placeholder }
+                    cols={ props.cols }
+                    rows={ props.rows }
+                    maxLength={ props.maxlength }
+                    className={ `textarea ${props.className}` }
+                    value={ inputValue }
+                    onChange={ onChangeHandler }
                 />
             </div>
+
+            <p className="help is-info has-text-right">
+                { "counter: " + inputValue.length + (props.maxlength ? "/" + props.maxlength : "") }
+            </p>
         </div>
     );
 };

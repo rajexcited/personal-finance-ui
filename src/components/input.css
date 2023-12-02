@@ -8,3 +8,8 @@ input::-webkit-inner-spin-button {
   pointer-events: all;
   cursor: pointer;
 }
+
+.input-comp .label {
+  margin-top: 0.5rem;
+  margin-right: 1.5rem;
+}

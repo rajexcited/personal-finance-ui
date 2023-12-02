@@ -1,7 +1,7 @@
 import { FunctionComponent, useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PAGE_URL } from "../../../root";
-import { TagsInput, Input, InputValidateResponse, TextArea, DropDown } from "../../../../components";
+import { TagsInput, Input, InputValidateResponse, TextArea, DropDown, InputValidators } from "../../../../components";
 import { ConfigType, PymtAccountFields } from "../../services";
 import { faBank } from "@fortawesome/free-solid-svg-icons";
 
@@ -80,14 +80,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
 
     const accountTypes = useMemo(() => props.categoryTypes.map(ctg => ctg.name), [props.categoryTypes]);
 
-    const nameValidator = useCallback((inputValue: string): InputValidateResponse => {
-        const regex = /^[\w\s'"\.,-]*$/;
-        const isValid = regex.test(inputValue);
-        return {
-            isValid,
-            errorMessage: "allow characters are alpha-numeric, digits, dash, underscore, comma, quote, and dot"
-        };
-    }, []);
+    const validateName = InputValidators.nameValidator();
 
     return (
         <div>
@@ -108,7 +101,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                         tooltip="This is a name that you can recognize the trascation. this will be displayed as payment account"
                                         onChange={ setShortName }
                                         required={ true }
-                                        validate={ nameValidator }
+                                        validate={ validateName }
                                     />
                                 </div>
                             </div>
@@ -125,7 +118,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                         initialValue={ institutionName }
                                         tooltip="Name of the financial institution where this account belongs to. It could be bank name, credit card institution, loaner, etc. for example, Bank of America, Chase"
                                         onChange={ setInstitutionName }
-                                        validate={ nameValidator }
+                                        validate={ validateName }
                                     />
                                 </div>
                             </div>
@@ -144,7 +137,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                         tooltip="The account you want to add. give full name of account"
                                         onChange={ setAccountName }
                                         required={ true }
-                                        validate={ nameValidator }
+                                        validate={ validateName }
                                     />
                                 </div>
                             </div>
@@ -152,14 +145,14 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                 <div className="ml-2 pl-2">
                                     <Input
                                         id="account-number"
-                                        label="Account Number: "
+                                        label="Account Number/Id: "
                                         type="text"
                                         placeholder="Enter Account number"
                                         size={ 25 }
                                         maxlength={ 25 }
                                         initialValue={ accountNumber }
                                         onChange={ setAccountNumber }
-                                        validate={ nameValidator }
+                                        validate={ validateName }
                                     />
                                 </div>
                             </div>
@@ -185,6 +178,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                         placeholder="Add Tags"
                                         onChange={ setTags }
                                         key={ "xpns-tags" }
+                                        maxTags={ 5 }
                                     />
                                 </div>
                             </div>
@@ -197,6 +191,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                     rows={ 2 }
                                     value={ description }
                                     onChange={ setDescription }
+                                    maxlength={ 150 }
                                 />
                             </div>
                         </div>

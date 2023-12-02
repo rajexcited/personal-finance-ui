@@ -30,48 +30,10 @@
 }
 
 .hero-tabs .hero .hero-body .tabs-content-wrap .tab-content {
-    /* display: none; */
     display: block;
-    animation: fadeInLeft .5s;
     min-height: 70vh;
 }
 
 .hero-tabs .hero .hero-body .tabs-content-wrap .tab-content.is-active {
     display: block;
-}
-
-
-/* Keyframes */
-@-webkit-keyframes fadeInLeft {
-    from {
-        -webkit-transform: translate3d(20px, 0, 0);
-        transform: translate3d(20px, 0, 0);
-        opacity: 0;
-    }
-
-    to {
-        -webkit-transform: translate3d(0, 0, 0);
-        transform: translate3d(0, 0, 0);
-        opacity: 1;
-    }
-}
-
-@keyframes fadeInLeft {
-    from {
-        -webkit-transform: translate3d(20px, 0, 0);
-        transform: translate3d(20px, 0, 0);
-        opacity: 0;
-    }
-
-    to {
-        -webkit-transform: translate3d(0, 0, 0);
-        transform: translate3d(0, 0, 0);
-        opacity: 1;
-    }
-}
-
-.fadeInLeft {
-    opacity: 0;
-    -webkit-animation-name: fadeInLeft;
-    animation-name: fadeInLeft;
 }

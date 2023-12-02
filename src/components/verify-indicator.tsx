@@ -1,4 +1,4 @@
-import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
+import { faCheckCircle, faCircleNodes, faTimesCircle, faWindowClose } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useState } from "react";
 import ConfirmDialog from "./confirm-dialog";
@@ -32,8 +32,7 @@ const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
         setOpenModal(true);
     };
 
-    const unverifiedSizeClass = props.className && props.className.includes("is-smaller") ? "" : "is-small";
-    const verifiedSizeClass = props.className && props.className.includes("is-smaller") ? "" : "is-large";
+    const badgeSizeClass = props.className && props.className.includes("is-smaller") ? "" : "is-large";
 
     let verifiedConfirmDialogContent = props.verifiedDateTime ?
         "Really, Do you want to un-verify this expense?" :
@@ -48,7 +47,7 @@ const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
             <div className="control">
                 { props.verifiedDateTime &&
                     <span className="icon-text">
-                        <span className={ `icon has-text-success ${verifiedSizeClass} ${props.className || ""}` }>
+                        <span className={ `icon has-text-success ${badgeSizeClass} ${props.className || ""}` }>
                             <FontAwesomeIcon icon={ faCheckCircle } />
                         </span>
                         { !props.disabled &&
@@ -56,18 +55,16 @@ const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
                         }
                     </span>
                 }
-                {
-                    !props.verifiedDateTime && !props.disabled &&
-                    <div className="mx-3">
-                        <span className={ `is-danger notification is-light ${unverifiedSizeClass} ${props.className || ""}` }> { props.labelPrefix } un-verified </span>
-                        <button className="is-link button is-small is-rounded mx-5" onClick={ onClickModalOpenHandler }>click to verify</button>
-                    </div>
+                { !props.verifiedDateTime &&
+                    <span className="icon-text">
+                        <span className={ `icon has-text-danger ${badgeSizeClass} ${props.className || ""}` }>
+                            <FontAwesomeIcon icon={ faTimesCircle } />
+                        </span>
+                        { !props.disabled &&
+                            <button className="button is-danger is-inverted is-medium" onClick={ onClickModalOpenHandler }> { props.labelPrefix } un-verified </button>
+                        }
+                    </span>
                 }
-                {
-                    !props.verifiedDateTime && props.disabled &&
-                    <span className={ `is-danger notification is-light ${unverifiedSizeClass} ${props.className || ""}` }> { props.labelPrefix } un-verified </span>
-                }
-
                 <ConfirmDialog
                     id={ props.id + "-verify-confirm-dialog" }
                     open={ openModal }

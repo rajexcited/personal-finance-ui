@@ -36,7 +36,7 @@ export const expenseDetailLoaderHandler = async ({ params }: LoaderFunctionArgs)
     const details = await expenseService.getExpense(params.expenseId as string);
     if (!details) throw Error("Expense details not found");
 
-    const categoryTypes = await categoryService.getCategories();
+    const categoryTypes = await categoryService.getActiveCategories();
     const paymentAccounts = await expenseService.getPaymentAccountMap();
     const expenseTags = await expenseService.getExpenseTags();
 
@@ -58,7 +58,7 @@ export const expenseDetailSupportingLoaderHandler = async () => {
   }
 
   try {
-    const categoryTypes = await categoryService.getCategories();
+    const categoryTypes = await categoryService.getActiveCategories();
     const paymentAccounts = await expenseService.getPaymentAccountMap();
     const expenseTags = await expenseService.getExpenseTags();
 

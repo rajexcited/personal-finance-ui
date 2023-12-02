@@ -29,7 +29,7 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
                 amount: itemAmount,
                 tags: itemTags,
                 description: itemDescription,
-                categoryName: itemCategory?.content,
+                categoryName: itemCategory?.content || props.itemDetail.categoryName,
                 categoryId: undefined,
             };
             props.onChange(data);
@@ -52,8 +52,6 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
         props.onRemove(props.itemDetail.id || "");
     };
 
-    console.log("in expense breakdown item, sourceTags", props.sourceTags);
-
     return (
         <div className="columns">
             <div className="column is-one-twenty-fourth my-5 py-5">
@@ -64,11 +62,6 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
                 </a>
             </div>
             <div className="column">
-                {/* <Autocomplete
-                    id={ "xpns-item-bill-name-auto-cmplt" }
-                    key={ "xpns-item-bill-name-auto-cmplt" + itemBillName }
-                    data={ [itemBillName] }
-                /> */}
                 <Input
                     id="xpns-item-bill-name"
                     label="Item Name: "
@@ -79,6 +72,7 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
                     key={ "xpns-item-bill-name" }
                     onChange={ setItemBillName }
                     className="is-large"
+                    maxlength={ 50 }
                 />
             </div>
             <div className="column">
@@ -107,6 +101,7 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
                     direction="down"
                     selectedItem={ itemCategory }
                     size="medium"
+                    defaultItem={ props.itemDetail.categoryName }
                 />
             </div>
             <div className="column">
@@ -117,6 +112,7 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
                     value={ itemDescription }
                     onChange={ setItemDescription }
                     key={ "xpns-item-desc" }
+                    maxlength={ 100 }
                 />
             </div>
             <div className="column">
@@ -128,6 +124,7 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
                     onChange={ setItemTags }
                     key={ "xpns-item-tags" }
                     sourceValues={ props.sourceTags }
+                    maxTags={ 3 }
                 />
             </div>
         </div>

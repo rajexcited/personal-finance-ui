@@ -4,6 +4,10 @@ export { default as AddPymtAccount } from "./components/modify-account/add-accou
 export { default as UpdatePymtAccount } from "./components/modify-account/update-account";
 
 export { pymtAccountActionHandler } from "./route-handlers/account-action";
-export { pymtAccountDetailLoaderHandler, pymtAccountListLoaderHandler } from "./route-handlers/account-loader";
+export {
+  pymtAccountDetailLoaderHandler,
+  pymtAccountListLoaderHandler,
+  pymtAccountDetailSupportingLoaderHandler,
+} from "./route-handlers/account-loader";
 
-export { PymtAccountService } from "./services";
+export { PymtAccountService, PymtAccountTypeService } from "./services";

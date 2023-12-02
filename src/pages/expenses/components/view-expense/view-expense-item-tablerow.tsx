@@ -1,5 +1,5 @@
 import { FunctionComponent, useState, useRef } from "react";
-import { faSquarePlus, faSquareMinus, faEdit, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faSquarePlus, faSquareMinus, faEdit, faTrash, faReceipt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { VerifyIndicator } from "../../../../components";
 import { CategoryService, ExpenseFields } from "../../services";
@@ -16,35 +16,42 @@ interface ExpenseItemTableRowProps {
     isSelected: Boolean;
     onRemove (expenseId: string): void;
     onEditRequest (expenseId: string): void;
+    onViewReceipt (expenseId: string): void;
 }
 
 const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props) => {
     const [showBreakdown, setShowBreakdown] = useState(false);
     const rowRef = useRef<HTMLTableRowElement>(null);
 
-    const onClickToggleBreakdownRows: React.MouseEventHandler<HTMLAnchorElement> = event => {
+    const onClickToggleBreakdownRowsHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
         event.preventDefault();
         event.stopPropagation();
         setShowBreakdown(prev => !prev);
     };
 
-    const onClickToggleRowSelection: React.MouseEventHandler<HTMLTableRowElement> = event => {
+    const onClickToggleRowSelectionHandler: React.MouseEventHandler<HTMLTableRowElement> = event => {
         event.preventDefault();
         event.stopPropagation();
         if (props.isSelected) props.onSelect("");
         else props.onSelect(props.details.expenseId);
     };
 
-    const onClickTrashExpense: React.MouseEventHandler<HTMLAnchorElement> = event => {
+    const onClickTrashExpenseHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
         event.preventDefault();
         event.stopPropagation();
         props.onRemove(props.details.expenseId);
     };
 
-    const onClickonEditStartExpense: React.MouseEventHandler<HTMLAnchorElement> = event => {
+    const onClickonEditStartExpenseHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
         event.preventDefault();
         event.stopPropagation();
         props.onEditRequest(props.details.expenseId);
+    };
+
+    const onClickShowReceiptsHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
+        event.preventDefault();
+        event.stopPropagation();
+        props.onViewReceipt(props.details.expenseId);
     };
 
     const itemizeAmounts = props.details.expenseItems && props.details.expenseItems.map(it => Number(it.amount)).filter(n => !isNaN(n));
@@ -64,39 +71,50 @@ const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props)
 
     let itemBreakdownAction;
     if (showBreakdown) {
-        itemBreakdownAction = (<a className="is-link" onClick={ onClickToggleBreakdownRows } key={ "item-breakdown" + props.id }>
+        itemBreakdownAction = (<a className="is-link" onClick={ onClickToggleBreakdownRowsHandler } key={ "item-breakdown-action" + props.id }>
             <span className="icon tooltip" data-tooltip="Hide Breakdown">
                 <FontAwesomeIcon icon={ faSquareMinus } />
             </span>
         </a>);
     } else {
-        itemBreakdownAction = (<a className="is-link" onClick={ onClickToggleBreakdownRows } key={ "item-breakdown" + props.id }>
+        itemBreakdownAction = (<a className="is-link" onClick={ onClickToggleBreakdownRowsHandler } key={ "item-breakdown-action" + props.id }>
             <span className="icon tooltip" data-tooltip="Show Breakdown">
                 <FontAwesomeIcon icon={ faSquarePlus } />
             </span>
         </a>);
     }
 
-    const updateExpenseAction = (<a className="is-link" onClick={ onClickonEditStartExpense } key={ "updt-xpns" + props.id }>
+    const updateExpenseAction = (<a className="is-link" onClick={ onClickonEditStartExpenseHandler } key={ "updt-xpns-action" + props.id }>
         <span className="icon tooltip" data-tooltip="Update Expense">
             <FontAwesomeIcon icon={ faEdit } />
         </span>
     </a>);
 
-    const removeExpenseAction = (<a className="is-link" onClick={ onClickTrashExpense } key={ "rmve-xpns" + props.id }>
+    const removeExpenseAction = (<a className="is-link" onClick={ onClickTrashExpenseHandler } key={ "rmve-xpns-action" + props.id }>
         <span className="icon tooltip" data-tooltip="Remove Expense">
             <FontAwesomeIcon icon={ faTrash } />
         </span>
     </a>);
 
+    const viewReceiptsAction = (
+        <a className="is-link" onClick={ onClickShowReceiptsHandler } key={ "view-receipts-action" + props.id }>
+            <span className="icon tooltip" data-tooltip="View Receipts">
+                <FontAwesomeIcon icon={ faReceipt } />
+            </span>
+        </a>
+    );
+
     const actions = [updateExpenseAction, removeExpenseAction];
-    if (!!props.details.expenseItems && !!props.details.expenseItems.length) {
+    if (!!props.details.receipts.length) {
+        actions.push(viewReceiptsAction);
+    }
+    if (!!props.details.expenseItems.length) {
         actions.push(itemBreakdownAction);
     }
 
     return (
         <>
-            <tr ref={ rowRef } onClick={ onClickToggleRowSelection } className={ props.isSelected ? "is-selected" : "" }>
+            <tr ref={ rowRef } onClick={ onClickToggleRowSelectionHandler } className={ props.isSelected ? "is-selected" : "" }>
                 <td>{ props.details.pymtaccName || "-" }</td>
                 <td>{ dateutil.format(props.details.purchasedDate, "MMM DD, YYYY") }</td>
                 <td>{ props.details.billname }</td>

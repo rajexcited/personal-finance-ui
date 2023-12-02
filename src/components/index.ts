@@ -1,5 +1,6 @@
 export { default as Input } from "./input";
-export type { ValidateResponse as InputValidateResponse } from "./input";
+export type { InputValidateResponse } from "./input-validators";
+export { InputValidators } from "./input-validators";
 export { default as TagsInput } from "./tags-input";
 export { default as DropDown } from "./dropdown";
 export { default as Calendar } from "./calendar";
@@ -13,3 +14,5 @@ export { default as LoadSpinner } from "./loading";
 export { default as HeroTabs } from "./hero-tabs";
 export { default as Animated } from "./animated";
 export { default as ConfirmDialog } from "./confirm-dialog";
+export { default as List } from "./list";
+export { default as Switch } from "./switch";

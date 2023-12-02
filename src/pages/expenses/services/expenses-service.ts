@@ -1,6 +1,6 @@
 import { openDB } from "idb";
 import { axios, IDATABASE_TRACKER, convertAuditFields, handleRestErrors } from "../../../services";
-import { ExpenseFields, ExpenseItemFields } from "./field-types";
+import { ExpenseFields, ExpenseItemFields, ReceiptProps } from "./field-types";
 import ExpenseCategoryService from "./expense-category-service";
 import { PymtAccountService } from "../../pymt-accounts";
 import pMemoize from "p-memoize";
@@ -80,6 +80,35 @@ const ExpenseServiceImpl = (): ExpenseService => {
       });
   };
 
+  const updateExpenseReceipts = async (expense: ExpenseFields) => {
+    const uploadedReceiptsPromises = expense.receipts.map(async (rct) => {
+      try {
+        if (!rct.file) return { ...rct };
+        const formData = new FormData();
+        formData.append("file", rct.file);
+        formData.append("type", rct.file.type);
+        formData.append("name", rct.file.name);
+        const response = await axios.postForm("/expenses/" + expense.expenseId + "/receipts", formData);
+        const result: ReceiptProps = {
+          ...rct,
+          ...response.data,
+          file: undefined,
+        };
+        return result;
+      } catch (e) {
+        try {
+          handleRestErrors(e as Error);
+        } catch (e) {
+          return { ...rct, file: undefined, error: (e as Error).message };
+        }
+        throw { ...rct, file: undefined, error: (e as Error).message };
+      }
+    });
+    expense.receipts = await Promise.all(uploadedReceiptsPromises);
+    const errorReceipts = expense.receipts.filter((rct) => rct.error);
+    if (errorReceipts.length > 0) throw new Error(JSON.stringify(errorReceipts));
+  };
+
   const getExpense = async (expenseId: string) => {
     const db = await dbPromise;
     try {
@@ -144,6 +173,7 @@ const ExpenseServiceImpl = (): ExpenseService => {
       delete expense.categoryId;
       delete expense.pymtaccId;
       await updateCategoryAndPymtAccName(expense);
+      await updateExpenseReceipts(expense);
       if ((await db.count(objectStoreName, expense.expenseId)) === 0) {
         await addExpense(expense);
       } else {

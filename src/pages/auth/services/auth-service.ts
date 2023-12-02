@@ -1,8 +1,9 @@
 import "./interceptors";
 import { axios, ConfigTypeService, ConfigTypeStatus, handleRestErrors } from "../../../services";
 import dateutils from "date-and-time";
-import { LoginDataType, UserDetailType, SignupDetailType, AuthDetailType } from "./field-types";
+import { LoginDataType, UserDetailType, SignupDetailType, AuthDetailType, SecurityDetailType } from "./field-types";
 import { authTokenSessionKey, authUserSessionKey } from "./refresh-token";
+import { ConfigTypeBelongsTo } from "../../../services/config-type-service";
 
 interface AuthenticationService {
   login(details: LoginDataType): Promise<void>;
@@ -13,15 +14,17 @@ interface AuthenticationService {
   getUserDetails(): UserDetailType;
   signup(details: SignupDetailType): Promise<void>;
   ping(): void;
+  getSecutiyDetails(): Promise<SecurityDetailType>;
+  updateSecurityDetails(details: SecurityDetailType): Promise<void>;
 }
 
 const AuthenticationServiceImpl = (): AuthenticationService => {
-  const authRoleConfigService = ConfigTypeService("auth");
+  const authRoleConfigService = ConfigTypeService(ConfigTypeBelongsTo.Auth);
 
   const login = async (details: LoginDataType) => {
     try {
       const data = { emailId: details.emailId, password: details.password };
-      const response = await axios.post("/login", data, { withCredentials: true });
+      const response = await axios.post("/login", data);
       if (!(response.data.accessToken && response.data.expiresIn)) {
         throw Error("user login unauthorized");
       }
@@ -32,7 +35,7 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
       const authResponse: AuthDetailType = {
         ...response.data,
         accessToken: undefined,
-        fullName: response.data.firstname + " " + response.data.lastname,
+        fullName: response.data.firstName + " " + response.data.lastName,
         expiryDate: dateutils.addSeconds(new Date(), response.data.expiresIn),
       };
 
@@ -79,7 +82,7 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
   const logout = () => {
     sessionStorage.removeItem(authUserSessionKey);
     sessionStorage.removeItem(authTokenSessionKey);
-    axios.post("/logout", { withCredentials: true });
+    axios.post("/logout");
   };
 
   const getUserDetails = (): UserDetailType => {
@@ -105,10 +108,11 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
     if (authDetails) {
       const authConfigs = await authRoleConfigService.getConfigTypes([ConfigTypeStatus.enable]);
       const authRoleCfgs = authConfigs.filter((cfg) => cfg.relations.includes("auth-roles"));
-      const authRoleMatched = authRoleCfgs
-        .filter((cfg) => cfg.value === pageid)
-        .find((cfg) => authDetails.roles.includes(cfg.name));
-      return !!authRoleMatched;
+      // const authRoleMatched = authRoleCfgs
+      //   .filter((cfg) => cfg.value === pageid)
+      //   .find((cfg) => authDetails.roles.includes(cfg.name));
+      // return !!authRoleMatched;
+      return false;
     }
     return false;
   };
@@ -120,7 +124,7 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
     try {
       const data = { ...details };
       // default configs will be created with sign up
-      const response = await axios.post("/signup", data, { withCredentials: true });
+      const response = await axios.post("/signup", data);
       if (!(response.data.accessToken && response.data.expiresIn)) {
         throw Error("user login unauthorized");
       }
@@ -131,7 +135,7 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
       const authResponse: AuthDetailType = {
         ...response.data,
         accessToken: undefined,
-        fullName: response.data.firstname + " " + response.data.lastname,
+        fullName: response.data.firstName + " " + response.data.lastName,
         expiryDate: dateutils.addSeconds(new Date(), response.data.expiresIn),
       };
 
@@ -158,6 +162,27 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
     authRoleConfigService.destroy();
   };
 
+  const getSecutiyDetails = async () => {
+    try {
+      const response = await axios.get("/security/details");
+      return response.data as SecurityDetailType;
+    } catch (e) {
+      handleRestErrors(e as Error);
+      console.error("not rest error", e);
+      throw e;
+    }
+  };
+
+  const updateSecurityDetails = async (details: SecurityDetailType) => {
+    try {
+      await axios.post("/security/details", details);
+    } catch (e) {
+      handleRestErrors(e as Error);
+      console.error("not rest error", e);
+      throw e;
+    }
+  };
+
   return {
     login,
     logout,
@@ -167,6 +192,8 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
     destroy,
     signup,
     ping,
+    getSecutiyDetails,
+    updateSecurityDetails,
   };
 };
 

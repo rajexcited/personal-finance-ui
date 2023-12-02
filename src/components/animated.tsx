@@ -1,5 +1,7 @@
 import { FunctionComponent, useState, useRef, useEffect } from "react";
 import "./animated.css";
+import "animate.css/animate.min.css";
+
 
 interface AnimatedProps {
     children: JSX.Element | JSX.Element[] | React.ReactNode;
@@ -11,6 +13,9 @@ interface AnimatedProps {
     isVisibleAfterAnimateOut?: boolean;
 }
 
+/**
+ * doc link - https://animate.style/#utilities
+ */
 const Animated: FunctionComponent<AnimatedProps> = (props) => {
     const [visible, setVisible] = useState(props.animateOnMount);
     const [isHeightTransitionEnded, setHeightTransitionEnded] = useState(false);

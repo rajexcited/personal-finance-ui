@@ -1,12 +1,13 @@
 import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
-import { validateUuid } from "./common-validators";
+import { missingValidation, validateUuid } from "./common-validators";
 import { v4 as uuidv4 } from "uuid";
 import { configSessionData } from "./mock-config-type";
 import { auditData } from "./userDetails";
 import dateutil from "date-and-time";
 import { PymtAccountsSessionData } from "./mock-pymt-accounts";
 import { difference } from "../../services";
+import { Receipts } from "./expense-receipts-db";
 
 const MockExpenses = (demoMock: MockAdapter) => {
   demoMock.onDelete(/\/expenses\/.+/).reply((config) => {
@@ -37,10 +38,8 @@ const MockExpenses = (demoMock: MockAdapter) => {
       if (err) {
         return responseCreator.toValidationError(err);
       }
-      console.debug("before updating");
       result = expensesSessionData.addUpdateExpense({ ...data, ...auditData(data.createdBy, data.createdOn) });
     } else {
-      console.debug("before adding");
       result = expensesSessionData.addUpdateExpense({ ...data, expenseId: uuidv4(), ...auditData() });
     }
     if (result.updated) return responseCreator.toSuccessResponse(result.updated);
@@ -53,6 +52,36 @@ const MockExpenses = (demoMock: MockAdapter) => {
 
     const result = expensesSessionData.getExpenses();
     return responseCreator.toSuccessResponse(result.list);
+  });
+
+  demoMock.onPost(/\/expenses.+\/receipts/).reply(async (config) => {
+    const responseCreator = AxiosResponseCreator(config);
+    const formdata = config.data as FormData;
+    const data: any = {};
+    formdata.forEach((val, key) => {
+      data[key] = val;
+    });
+
+    const missingErrors = missingValidation(data, ["file", "type", "name"]);
+    if (missingErrors) {
+      return responseCreator.toValidationError(missingErrors);
+    }
+    const file = data.file as File;
+    if (file.size >= 2 * 1024 * 1024) {
+      // 2 MB
+      return responseCreator.toValidationError([{ loc: ["file"], msg: "file cannot be larger than 2 MB" }]);
+    }
+    if (data.type !== "image/jpeg" && data.type !== "image/png" && data.type !== "application/pdf") {
+      return responseCreator.toValidationError([{ loc: ["type"], msg: "unsupported file type of receipt" }]);
+    }
+    const result = await Receipts.save(file);
+
+    return responseCreator.toSuccessResponse({
+      id: result.id,
+      lastUpdatedDate: result.lastUpdatedDate,
+      fileName: result.file.name,
+      url: result.url,
+    });
   });
 };
 
@@ -79,6 +108,7 @@ function SessionData() {
       pymtaccId: pymtAccId("checking"),
       purchasedDate: dateutil.addDays(new Date(), -10),
       categoryId: categoryId("hangout"),
+      receipts: [],
       expenseItems: [],
     });
 
@@ -93,6 +123,7 @@ function SessionData() {
       purchasedDate: dateutil.addDays(new Date(), -1),
       categoryId: categoryId("food shopping"),
       verifiedDateTime: dateutil.addHours(new Date(), -1),
+      receipts: [],
       expenseItems: [
         {
           parentExpenseId: parentExpenseId,

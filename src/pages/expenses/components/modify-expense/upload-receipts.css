@@ -1,0 +1,76 @@
+.upload-receipts-section {
+    padding-left: 1rem;
+}
+
+.upload-receipts-section .subtitle {
+    padding-left: 1rem;
+}
+
+.upload-receipts-section .modal .image.is-height-256 {
+    height: 256px;
+    width: fit-content;
+}
+
+.upload-receipts-section .modal .image img {
+    max-height: -webkit-fill-available;
+    cursor: pointer;
+}
+
+.upload-receipts-section .fullscreen-image-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(10, 10, 10, .88);
+    background-position: center center;
+    z-index: 9999;
+    overflow: scroll;
+    display: none;
+    text-align: center;
+    text-align: -webkit-center;
+}
+
+.upload-receipts-section .fullscreen-image-container.is-active {
+    display: block;
+}
+
+.upload-receipts-section .fullscreen-image-container .image img {
+    height: 100%;
+    width: auto;
+    transform-origin: top center;
+    padding: 1rem;
+    max-height: 100%;
+}
+
+.upload-receipts-section .modal-card.is-fullscreen {
+    width: 80%;
+    flex-grow: 1;
+}
+
+.upload-receipts-section .modal-card .file .error.message {
+    margin-left: 0.5rem;
+}
+
+.upload-receipts-section .modal-card .file .error.message .message-body {
+    padding: 0.5rem 1rem;
+}
+
+.upload-receipts-section .modal-close {
+    z-index: 1;
+    right: 30px;
+}
+
+.upload-receipts-section .modal-close .delete {
+    transform: scale(1.5);
+    z-index: 2;
+}
+
+.upload-receipts-section .modal-card-header-actions {
+    position: fixed;
+    bottom: 40px;
+    pointer-events: auto;
+    right: 40px;
+    display: inline-block;
+    z-index: 1;
+}

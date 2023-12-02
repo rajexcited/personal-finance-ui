@@ -53,7 +53,7 @@ export const rowHeaders: Header[] = [
   { id: "ctgr", label: "Category", sortable: true, datafieldKey: "categoryName" },
   { id: "vrfd", label: "Verified", sortable: false },
   { id: "tags", label: "Tags", sortable: false },
-  { id: "notes", label: "Notes", sortable: false },
+  { id: "notes", label: "Description", sortable: false },
   { id: "actions", label: "Actions", sortable: false },
 ];
 

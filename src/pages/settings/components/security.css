@@ -1,0 +1,12 @@
+.security-settings .dwp .input-comp .label {
+    margin-top: 0.5rem;
+}
+
+.security-settings .email-primary {
+    display: inline-flex;
+}
+
+.security-settings .email-primary .label {
+    padding-right: 1rem;
+    padding-top: 0.25rem;
+}

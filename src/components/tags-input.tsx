@@ -1,3 +1,4 @@
+import "./tags-input.css";
 import { FunctionComponent, useRef, useEffect, useState } from "react";
 import BulmaTagsInput, { BulmaTagsInputOptions } from '@creativebulma/bulma-tagsinput';
 import "@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css";
@@ -9,10 +10,11 @@ export interface TagsInputProps {
   defaultValue?: string;
   sourceValues?: string[];
   placeholder: string;
+  maxTags?: number;
   onChange?(value: string): void;
 }
 
-const defaultOptions = {
+const defaultOptions: BulmaTagsInputOptions = {
   allowDuplicates: false,
   caseSensitive: false,
   clearSelectionOnTyping: false,
@@ -30,13 +32,18 @@ const defaultOptions = {
   selectable: true,
   tagClass: 'is-rounded is-link',
   trim: true,
-  itemText: "val"
+  itemText: "val",
+  maxTags: 30,
 };
 
-// doc link - https://bulma-tagsinput.netlify.app/get-started/usage/
+/**
+ * doc link - https://bulma-tagsinput.netlify.app/get-started/usage/
+ * https://wikiki.github.io/
+ * 
+ **/
 const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
   const tagsRef = useRef<HTMLInputElement>(null);
-  // const [inputValue, setInputValue] = useState(props.defaultValue);
+  const [tagCount, setTagCount] = useState(0);
 
   useEffect(() => {
     const sourceValues: string[] = [];
@@ -59,16 +66,17 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
         updateSourceValues(itemObj.item);
         props.onChange(tagsInput.value);
       }
+      setTagCount(prev => prev + 1);
     });
     tagsInput.on("after.remove", (item) => {
       // removed item 
       if (props.onChange) {
         props.onChange(tagsInput.value);
       }
+      setTagCount(prev => prev - 1);
     });
 
     const updateSourceValues = (item: string) => {
-      console.log("updateSourceValues, source values", props.sourceValues);
       const sourceValueSet = new Set(props.sourceValues);
       props.defaultValue?.split(",").forEach(value => sourceValueSet.add(value));
       if (!item) sourceValueSet.add(item);
@@ -78,6 +86,7 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
     };
 
     updateSourceValues("");
+    if (props.defaultValue) setTagCount(props.defaultValue.split(",").length);
 
     return () => {
       tagsInput.flush();
@@ -101,6 +110,9 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
           defaultValue={ props.defaultValue }
         />
       </div>
+      <p className="help is-info has-text-right">
+        { "counter: " + tagCount + (props.maxTags ? "/" + props.maxTags : "") }
+      </p>
     </div>
   );
 };

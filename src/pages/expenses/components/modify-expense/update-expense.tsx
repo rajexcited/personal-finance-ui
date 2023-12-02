@@ -24,11 +24,24 @@ const UpdateExpense: FunctionComponent = () => {
             setErrorMsg(actionData.errorMessage);
     }, [errorMsg, actionData?.errorMessage]);
 
-    const onExpenseUpdated = (data: ExpenseFields) => {
+    const onExpenseUpdated = (data: ExpenseFields, formData: FormData) => {
         if (auth.isAuthenticated) {
             console.log("expense updated", data.expenseId, data, data.expenseItems, "same as loader expense? ", loaderData.expenseDetail?.expenseId === data.expenseId, "object difference = ", JSON.stringify(difference(data, loaderData.expenseDetail)));
-            const formData: any = { ...data };
-            submit(formData, { action: PAGE_URL.updateExpense.fullUrl.replace(":expenseId", data.expenseId), method: "post", encType: "application/json" });
+            // const formData: any = { ...data };
+            // const formData = new FormData();
+            // data.receipts.forEach(rct => {
+            //     if (!rct.file) return;
+            //     formData.append(rct.id, rct.file);
+            //     rct.file = undefined;
+            // });
+            // Object.entries(data).forEach((entry) => {
+            //     const key = entry[0];
+            //     let value = entry[1];
+            //     if (typeof value === "object") value = JSON.stringify(value);
+            //     formData.append(key, value);
+            // });
+            // submit(formData, { action: PAGE_URL.updateExpense.fullUrl.replace(":expenseId", data.expenseId), method: "post", encType: "application/json" });
+            submit(formData, { action: PAGE_URL.updateExpense.fullUrl.replace(":expenseId", data.expenseId), method: "post", encType: "multipart/form-data" });
         } else {
             setErrorMsg("you have been logged out. please (login)[/login] to add payment account");
         }
@@ -46,7 +59,7 @@ const UpdateExpense: FunctionComponent = () => {
                         </div>
                     </article>
                 </Animated >
-            };
+            }
 
             <div className="columns">
                 <div className="column">

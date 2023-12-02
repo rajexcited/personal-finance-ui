@@ -8,14 +8,23 @@ import { useDebounceState } from "../../../../hooks";
 import ExpenseTableRow from "./view-expense-item-tablerow";
 import ExpenseTableHead, { ExpenseTableHeadRefType } from "./expense-table-head";
 import "./view-expense-list.css";
+import { difference } from "../../../../services";
+import ViewReceipts from "./view-receipts";
 
+
+declare global {
+    interface Window {
+        prevSortDetails: any;
+    }
+}
 
 const ExpenseList: FunctionComponent = () => {
     const loaderData = useLoaderData() as ExpenseFields[];
     const actionData = useActionData() as { errorMessage: string; };
     const [expenseList, setExpenseList] = useState<ExpenseFields[]>([]);
-    const [selectedExpenseId, setSelectedExpenseId] = useState('');
+    const [selectedExpenseId, setSelectedExpenseId] = useState("");
     const [deletingExpenseId, setDeletingExpenseId] = useState("");
+    const [isViewReceiptsEnable, setViewReceiptsEnable] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
     const navigate = useNavigate();
     const submit = useSubmit();
@@ -25,9 +34,18 @@ const ExpenseList: FunctionComponent = () => {
     // do I need this useeffect? can i not set loader data directly to expenseList state?
     useEffect(() => {
         if (Array.isArray(loaderData) && loaderData.length !== expenseList.length) {
+            setLoading(true);
             const sortDetails: ExpenseSortStateType = {};
-            if (headerRef && headerRef.current) {
+            if (headerRef && headerRef.current && Object.keys(headerRef.current.sortDetails()).length) {
                 setExpenseList(getSortedExpenses(loaderData, headerRef.current.sortDetails()));
+            } else {
+                const initialSortDetails: ExpenseSortStateType = {};
+                rowHeaders.forEach(rh => {
+                    if (rh.sortable) {
+                        initialSortDetails[rh.datafieldKey] = { ...rh };
+                    }
+                });
+                setExpenseList(getSortedExpenses(loaderData, initialSortDetails));
             }
         }
         if (actionData?.errorMessage && errorMsg !== actionData.errorMessage) {
@@ -39,6 +57,8 @@ const ExpenseList: FunctionComponent = () => {
     const getSortedExpenses = (expenses: ExpenseFields[], sortDetails: ExpenseSortStateType): ExpenseFields[] => {
         const sortedExpenses = [...expenses];
         sortedExpenses.sort(expenseComparator.bind(null, sortDetails));
+        // console.log("getSortedExpenses", new Date(), "sortDetails", JSON.stringify(sortDetails), "diff: ", difference(sortDetails, window.prevSortDetails || sortDetails));
+        window.prevSortDetails = sortDetails;
         return sortedExpenses;
     };
 
@@ -57,6 +77,16 @@ const ExpenseList: FunctionComponent = () => {
         navigate(PAGE_URL.updateExpense.shortUrl.replace(":expenseId", expenseId));
     };
 
+    const onRemoveRequestHandler = (expenseId: string) => {
+        setSelectedExpenseId(expenseId);
+        setDeletingExpenseId(expenseId);
+    };
+
+    const onViewReceiptsRequestHandler = (expenseId: string) => {
+        setSelectedExpenseId(expenseId);
+        setViewReceiptsEnable(true);
+    };
+
     const onDeleteConfirmHandler = () => {
         const deletingExpense = expenseList.find(xpns => xpns.expenseId === deletingExpenseId);
         const data: any = { ...deletingExpense };
@@ -64,8 +94,10 @@ const ExpenseList: FunctionComponent = () => {
         setDeletingExpenseId("");
     };
 
+    // console.log(new Date(), "view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billname));
+
     return (
-        <section className="container">
+        <section>
             <LoadSpinner loading={ loading } />
 
             <Animated animateOnMount={ false } isPlayIn={ !!errorMsg } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
@@ -86,17 +118,20 @@ const ExpenseList: FunctionComponent = () => {
                     onChangeExpenseSort={ onChangeExpenseSortHandler }
                 />
                 <tbody>
-                    { expenseList.map(xpns =>
-                        <ExpenseTableRow
-                            key={ xpns.expenseId + "-trow" }
-                            id={ xpns.expenseId + "-trow" }
-                            details={ xpns }
-                            onSelect={ setSelectedExpenseId }
-                            isSelected={ selectedExpenseId === xpns.expenseId }
-                            onEditRequest={ onEditRequestExpenseHandler }
-                            onRemove={ setDeletingExpenseId }
-                        />
-                    ) }
+                    {
+                        expenseList.map(xpns =>
+                            <ExpenseTableRow
+                                key={ xpns.expenseId + "-trow" }
+                                id={ xpns.expenseId + "-trow" }
+                                details={ xpns }
+                                onSelect={ setSelectedExpenseId }
+                                isSelected={ selectedExpenseId === xpns.expenseId }
+                                onEditRequest={ onEditRequestExpenseHandler }
+                                onRemove={ onRemoveRequestHandler }
+                                onViewReceipt={ onViewReceiptsRequestHandler }
+                            />
+                        )
+                    }
                     {
                         !expenseList.length &&
                         <tr>
@@ -115,6 +150,12 @@ const ExpenseList: FunctionComponent = () => {
                 onConfirm={ onDeleteConfirmHandler }
                 onCancel={ () => setDeletingExpenseId("") }
                 yesButtonClassname="is-danger"
+            />
+            <ViewReceipts
+                key={ "view-receipts-" + (isViewReceiptsEnable ? selectedExpenseId : "dummy") }
+                isShow={ isViewReceiptsEnable }
+                receipts={ isViewReceiptsEnable && expenseList.find(xpns => xpns.expenseId === selectedExpenseId)?.receipts || [] }
+                onHide={ () => setViewReceiptsEnable(false) }
             />
         </section>
     );

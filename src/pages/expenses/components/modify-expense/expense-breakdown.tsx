@@ -104,8 +104,6 @@ const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
         amountdiff > 0 ? "itemize amount total is less than expense amount, difference is " + formatAmount(amountdiff) :
             "expense amount is less than the itemize amout, difference is " + formatAmount(amountdiff);
 
-    console.log("in expense breakdown, sourceTags", props.sourceTags);
-
     return (
         <div className="card">
             <header className="card-header">

@@ -12,13 +12,14 @@ import {
     DropDownItemType
 } from "../../../../components";
 import ExpenseBreakDown from "./expense-breakdown";
-import { ConfigType, ExpenseFields, ExpenseItemFields } from "../../services";
+import { ConfigType, ExpenseFields, ExpenseItemFields, ReceiptProps } from "../../services";
+import UploadReceiptsModal from "./upload-receipts";
 
 
 export interface ExpenseFormProps {
     submitLabel: string;
     expenseId: string;
-    onSubmit (fields: ExpenseFields): void;
+    onSubmit (fields: ExpenseFields, formData: FormData): void;
     details?: ExpenseFields;
     categoryTypes: ConfigType[];
     paymentAccounts: Map<string, string>;
@@ -37,6 +38,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
     const [selectedCategory, setSelectedCategory] = useState<DropDownItemType>();
     const [verifiedDateTime, setVerifiedDateTime] = useState(props.details?.verifiedDateTime);
     const [expenseItems, setExpenseItems] = useState<ExpenseItemFields[]>(props.details?.expenseItems || []);
+    const [receipts, setReceipts] = useState<ReceiptProps[]>(props.details?.receipts || []);
     const navigate = useNavigate();
 
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = async event => {
@@ -52,10 +54,26 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
             tags,
             verifiedDateTime,
             expenseItems,
-            categoryName: selectedCategory?.content
+            categoryName: selectedCategory?.content || props.details?.categoryName,
+            receipts,
         };
 
-        props.onSubmit(data);
+        // const formData = new FormData(document.createElement("form"));
+        const formData = new FormData();
+        data.receipts.forEach(rct => {
+            if (!rct.file) return;
+            formData.append(rct.id, rct.file);
+            rct.file = undefined;
+        });
+        Object.entries(data).forEach((entry) => {
+            const key = entry[0];
+            let value = entry[1];
+            if (typeof value === "object") value = JSON.stringify(value);
+            formData.append(key, value);
+        });
+
+
+        props.onSubmit(data, formData);
     };
 
     const onCancelHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
@@ -91,7 +109,6 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
 
     }, []);
 
-    console.log("in expenseForm, sourceTags", props.sourceTags);
 
     return (
         <form onSubmit={ onSubmitHandler }>
@@ -111,6 +128,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 key={ "xpns-bill-name" }
                                 onChange={ setBillName }
                                 required={ true }
+                                maxlength={ 50 }
                             />
                         </div>
                     </div>
@@ -118,14 +136,14 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                         <div className="column">
                             <Input
                                 id="xpns-amount"
-                                label="Amount: "
+                                label="Bill Amount: "
                                 type="number"
                                 placeholder="0.00"
                                 min={ -10000000 }
                                 max={ 10000000 }
                                 initialValue={ amount }
                                 leftIcon={ faDollarSign }
-                                className="is-large"
+                                className="is-medium"
                                 key={ "xpns-amount" }
                                 onChange={ setAmount }
                                 step={ 0.01 }
@@ -141,6 +159,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 items={ pymtAccounts }
                                 onSelect={ (selected: DropDownItemType) => setSelectedPymtAccount(selected) }
                                 selectedItem={ selectedPymtAccount }
+                                defaultItem={ props.details?.pymtaccName }
                             />
                         </div>
                         <div className="column">
@@ -152,7 +171,13 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 onSelect={ (selected: DropDownItemType) => setSelectedCategory(selected) }
                                 direction="down"
                                 selectedItem={ selectedCategory }
+                                defaultItem={ props.details?.categoryName }
                             />
+
+                        </div>
+                    </div>
+                    <div className="columns">
+                        <div className="column">
 
                         </div>
                     </div>
@@ -165,6 +190,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 value={ description }
                                 onChange={ setDescription }
                                 key={ "xpns-desc" }
+                                maxlength={ 150 }
                             />
                         </div>
                     </div>
@@ -178,6 +204,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 onChange={ setTags }
                                 key={ "xpns-tags" }
                                 sourceValues={ props.sourceTags }
+                                maxTags={ 10 }
                             />
                         </div>
                     </div>
@@ -191,6 +218,14 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 labelPrefix="Expense "
                                 onChange={ setVerifiedDateTime }
                                 verifiedDateTime={ verifiedDateTime }
+                            />
+                        </div>
+                    </div>
+                    <div className="columns">
+                        <div className="column">
+                            <UploadReceiptsModal
+                                receipts={ receipts }
+                                onChange={ setReceipts }
                             />
                         </div>
                     </div>

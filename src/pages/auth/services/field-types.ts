@@ -1,11 +1,10 @@
 export interface AuthDetailType {
-  roles: string[];
   emailId: string;
   isAuthenticated: boolean;
   fullName: string;
   expiryDate: Date;
-  firstname: string;
-  lastname: string;
+  firstName: string;
+  lastName: string;
 }
 
 export interface LoginDataType {
@@ -16,9 +15,8 @@ export interface LoginDataType {
 export interface SignupDetailType {
   emailId: string;
   password: string;
-  firstname: string;
-  lastname: string;
-  roles: string[];
+  firstName: string;
+  lastName: string;
 }
 
 export interface UserDetailType {
@@ -26,4 +24,12 @@ export interface UserDetailType {
   fullName: string;
   isAuthenticated: boolean;
   expiryDate: Date;
+}
+
+export interface SecurityDetailType {
+  emailId?: string;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+  newPassword?: string;
 }

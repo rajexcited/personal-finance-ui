@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { faEnvelope, faLock, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ReactMarkdown from "react-markdown";
-import { Animated, Input, InputValidateResponse, LoadSpinner } from "../../../components";
+import { Animated, Input, InputValidateResponse, InputValidators, LoadSpinner } from "../../../components";
 import useAuth from "../hooks/use-auth";
 
 
 const SignupPage: FunctionComponent = () => {
-    const [firstname, setFirstname] = useState('');
-    const [lastname, setLastname] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
     const [emailId, setEmailId] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
@@ -42,11 +42,10 @@ const SignupPage: FunctionComponent = () => {
         try {
             setSubmitting(true);
             await auth.signup({
-                firstname,
-                lastname,
+                firstName,
+                lastName,
                 emailId,
                 password,
-                roles: []
             });
             setSignupComplete(true);
         } catch (e) {
@@ -56,10 +55,8 @@ const SignupPage: FunctionComponent = () => {
         }
     };
 
-    const passwordValidator = (value: string): InputValidateResponse => {
-        const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#$%^&*])[\w!@#$%^&*\)\(\=]+$/;
-        return { errorMessage: "password must contain a special character, number, UPPERCASE.", isValid: passwordRegex.test(value) };
-    };
+    const validatePassword = InputValidators.passwordValidator();
+
 
     return (
         <section className="section">
@@ -90,8 +87,8 @@ const SignupPage: FunctionComponent = () => {
                                     type="text"
                                     label="First Name "
                                     placeholder="Enter First Name"
-                                    initialValue={ firstname }
-                                    onChange={ setFirstname }
+                                    initialValue={ firstName }
+                                    onChange={ setFirstName }
                                     maxlength={ 25 }
                                     required={ true }
                                     pattern="[\w\s]+"
@@ -104,8 +101,8 @@ const SignupPage: FunctionComponent = () => {
                                     type="text"
                                     label="Last Name "
                                     placeholder="Enter Last Name"
-                                    initialValue={ lastname }
-                                    onChange={ setLastname }
+                                    initialValue={ lastName }
+                                    onChange={ setLastName }
                                     maxlength={ 25 }
                                     required={ true }
                                     pattern="[\w\s]+"
@@ -126,7 +123,7 @@ const SignupPage: FunctionComponent = () => {
                                     maxlength={ 50 }
                                     required={ true }
                                     disabled={ auth.isAuthenticated }
-                                    autocomplete="username"
+                                    autocomplete="new-username"
                                 />
                                 <Input
                                     id="password"
@@ -139,7 +136,7 @@ const SignupPage: FunctionComponent = () => {
                                     maxlength={ 25 }
                                     minlength={ 8 }
                                     required={ true }
-                                    validate={ passwordValidator }
+                                    validate={ validatePassword }
                                     disabled={ auth.isAuthenticated }
                                     autocomplete="new-password"
                                 />

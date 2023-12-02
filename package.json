@@ -22,7 +22,9 @@
     "axios-mock-adapter": "^1.22.0",
     "bulma": "^0.9.4",
     "bulma-calendar": "^6.1.19",
+    "bulma-carousel": "^4.0.24",
     "bulma-extensions": "^6.2.7",
+    "bulma-list": "^1.2.0",
     "date-and-time": "^3.0.2",
     "expiry-map": "^2.0.0",
     "idb": "^7.1.1",
@@ -46,7 +48,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "demo": "react-scripts build && move demo\\index.html .\\"
   },
   "eslintConfig": {
     "extends": [

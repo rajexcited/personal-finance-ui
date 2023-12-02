@@ -1,11 +1,11 @@
 import "bulma/css/bulma.min.css";
-import "animate.css/animate.min.css";
 import "./index.css";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from 'react-router-dom';
 import { AuthContextProvider, router } from './pages';
 import { LoadSpinner } from './components';
 import axiosMock from "./demo";
+
 
 console.debug(axiosMock.history);
 

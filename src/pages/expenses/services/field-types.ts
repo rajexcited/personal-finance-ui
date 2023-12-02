@@ -15,12 +15,29 @@ export interface ExpenseItemFields extends BaseExpenseFields {
   parentExpenseId: string;
 }
 
+export enum ReceiptType {
+  PNG = "image/png",
+  JPEG = "image/jpeg",
+  PDF = "application/pdf",
+}
+
+export interface ReceiptProps {
+  file?: File;
+  error?: string;
+  fileName: string;
+  lastUpdatedDate: Date;
+  fileType: ReceiptType;
+  id: string;
+  url: string;
+}
+
 export interface ExpenseFields extends BaseExpenseFields {
   pymtaccId?: string;
   pymtaccName?: string;
   purchasedDate: Date;
   verifiedDateTime?: Date;
   expenseItems: ExpenseItemFields[];
+  receipts: ReceiptProps[];
 }
 
 export const ExpenseDataFilterItems = [

@@ -1,0 +1,3 @@
+.view-config-settings input[type="color"]:disabled {
+    width: 5rem;
+}

@@ -3,11 +3,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faInfoCircle, faCheck, faEdit, faEye, faEyeSlash, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import "./input.css";
+import { InputValidateResponse } from "./input-validators";
 
-export interface ValidateResponse {
-    isValid: boolean;
-    errorMessage: string;
-}
 
 interface BaseInputProps {
     id: string;
@@ -25,7 +22,7 @@ interface BaseInputProps {
     onChange?(value: string): void;
     onBlur?(): void;
     onSubmit?(value: string): void;
-    validate?(value: string): ValidateResponse;
+    validate?(value: string): InputValidateResponse;
 }
 
 interface TextInputProps extends BaseInputProps {
@@ -44,9 +41,14 @@ interface NumberInputProps extends BaseInputProps {
     max?: number;
 }
 
+interface ColorInputProps extends BaseInputProps {
+    type: "color";
+}
+
 export type InputProps =
     | TextInputProps
-    | NumberInputProps;
+    | NumberInputProps
+    | ColorInputProps;
 
 
 const Input: FunctionComponent<InputProps> = (props) => {
@@ -129,6 +131,11 @@ const Input: FunctionComponent<InputProps> = (props) => {
         }
     }, [inputValue, isTouch, props.validate, props.required]);
 
+    useEffect(() => {
+        if (props.disabled) setInputValue(props.initialValue);
+        setDisabled(!!props.disabled);
+    }, [props.initialValue, props.disabled]);
+
     const onChangeHandler: React.ChangeEventHandler<HTMLInputElement> = event => {
         event.preventDefault();
         setTouch(true);
@@ -196,13 +203,13 @@ const Input: FunctionComponent<InputProps> = (props) => {
     return (
         <div className={ `input-comp field ${props.labelInline ? "is-inline-flex" : ""}` }>
             <label htmlFor={ props.id }
-                className={ `label ${props.label ? "" : "is-hidden"} mr-5` }>
+                className={ `label ${props.label ? "" : "is-hidden"}` }>
                 <span>{ props.label || props.id } </span>
                 { tooltip }
             </label>
             <div className={ `control ${props.onSubmit ? "is-flex" : ""} ${props.leftIcon ? "has-icons-left" : ""} ${rightIcon ? "has-icons-right" : ""}` }>
                 {
-                    props.type !== "number" &&
+                    (props.type === "text" || props.type === "email" || props.type === "password") &&
                     <input
                         ref={ inputRef }
                         type={ inputType }
@@ -240,6 +247,21 @@ const Input: FunctionComponent<InputProps> = (props) => {
                         onBlur={ onBlurHandler }
                         disabled={ isDisabled }
                         onClick={ onClickHandler }
+                        required={ props.required }
+                    />
+                }
+                {
+                    props.type === "color" &&
+                    <input
+                        ref={ inputRef }
+                        type={ props.type }
+                        name={ props.id }
+                        id={ props.id }
+                        value={ inputValue }
+                        className={ inputClasses }
+                        onChange={ onChangeHandler }
+                        onBlur={ onBlurHandler }
+                        disabled={ isDisabled }
                         required={ props.required }
                     />
                 }

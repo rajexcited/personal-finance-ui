@@ -11,11 +11,13 @@ const MockConfigType = (demoMock: MockAdapter) => {
   demoMock.onDelete(/\/config\/types\/.+/).reply((config) => {
     const responseCreator = AxiosResponseCreator(config);
     const configId = (config.url || "").replace("/config/types/", "");
+    console.log("url", config.url, "configId", configId);
     const error = validateUuid(configId, "configId");
     if (error) {
       return responseCreator.toValidationError(error);
     }
     const result = configSessionData.deleteConfigType(configId);
+    console.log("delete result", result);
     if (result.error) {
       return responseCreator.toValidationError([
         { loc: ["configId"], msg: "config with given configId does not exist." },
@@ -25,10 +27,11 @@ const MockConfigType = (demoMock: MockAdapter) => {
     return responseCreator.toSuccessResponse(result.deleted);
   });
 
-  demoMock.onPost("/config/types/").reply((config) => {
+  demoMock.onPost("/config/types").reply((config) => {
     const responseCreator = AxiosResponseCreator(config);
     const data = JSON.parse(config.data);
     let result: { added?: any; updated?: any };
+    console.log("add update config", data);
     if ("configId" in data) {
       // update
       const err = validateUuid(data.configId, "configId");
@@ -40,7 +43,7 @@ const MockConfigType = (demoMock: MockAdapter) => {
     } else {
       result = configSessionData.addUpdateConfigTypes({ ...data, configId: uuidv4(), ...auditData() });
     }
-
+    console.log("result", result);
     if (result.updated) return responseCreator.toSuccessResponse(result.updated);
     // add
     return responseCreator.toCreateResponse(result.added);
@@ -64,7 +67,7 @@ const MockConfigType = (demoMock: MockAdapter) => {
       responselist = responselist.filter((cfg: any) => config.params.status.includes(cfg.status));
     }
 
-    return responseCreator.toCreateResponse(responselist);
+    return responseCreator.toSuccessResponse(responselist);
   });
 };
 
@@ -72,7 +75,7 @@ function SessionData() {
   const configTypes: any[] = [];
 
   const randomStatus = () => {
-    const statuses = ["enable", "disable", "deleted"];
+    const statuses = ["enable", "disable"];
     const randomIndex = Math.floor(Math.random() * statuses.length);
     return statuses[randomIndex];
   };
@@ -86,10 +89,14 @@ function SessionData() {
       name: type,
       status: randomStatus(),
       value: type,
+      relations: [],
       description: type + " account type",
       ...auditData(),
     }));
+    // making sure at least 1 enable
     accTypes[0].status = "enable";
+    // having only 1 with deleted status
+    accTypes[accTypes.length - 1].status = "deleted";
 
     const defaultCategories = [
       "fee",
@@ -111,9 +118,11 @@ function SessionData() {
       name: category,
       status: randomStatus(),
       value: category,
+      relations: [],
       description: "Expense category is " + category + ". Used to tag expense transactions.",
       ...auditData(),
     }));
+    categories[categories.length - 1].status = "deleted";
 
     configTypes.push(...accTypes, ...categories);
   };
@@ -135,6 +144,7 @@ function SessionData() {
       (cfg: any) => cfg.configId === data.configId && data.belongsTo === cfg.belongsTo
     );
     if (existingConfigTypeIndex !== -1) {
+      console.log("updating data", data);
       configTypes[existingConfigTypeIndex] = data;
       return { updated: data };
     }
@@ -143,12 +153,15 @@ function SessionData() {
   };
 
   const deleteConfigType = (configId: string) => {
-    const existingConfigType = configTypes.find((cfg: any) => cfg.configId === configId);
-    if (existingConfigType) {
-      const newCfgs = [...configTypes];
-      configTypes.length = 0;
-      newCfgs.filter((cfg) => cfg.configId !== configId).forEach((cfg) => configTypes.push(cfg));
-      return { deleted: existingConfigType };
+    const existingConfigTypeIndex = configTypes.findIndex((cfg: any) => cfg.configId === configId);
+    if (existingConfigTypeIndex !== -1) {
+      const existingConfigType = configTypes[existingConfigTypeIndex];
+      configTypes[existingConfigTypeIndex] = {
+        ...existingConfigType,
+        status: "deleted",
+        ...auditData(existingConfigType.createdBy, existingConfigType.createdOn),
+      };
+      return { deleted: { ...configTypes[existingConfigTypeIndex] } };
     }
     return { error: "config not found" };
   };

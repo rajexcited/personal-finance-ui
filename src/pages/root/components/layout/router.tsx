@@ -9,13 +9,14 @@ import {
     UpdatePymtAccount,
     pymtAccountActionHandler,
     pymtAccountDetailLoaderHandler,
-    pymtAccountListLoaderHandler
+    pymtAccountListLoaderHandler,
+    pymtAccountDetailSupportingLoaderHandler
 } from '../../../pymt-accounts';
 import { AddExpense, ExpenseJournalPage, ExpenseList, UpdateExpense, expenseListLoaderHandler, expenseActionHandler, expenseDetailLoaderHandler, expenseDetailSupportingLoaderHandler } from '../../../expenses';
-import { ExpenseCategoryPage, PymtAccountTypePage, SettingsRoot } from "../../../settings";
+import { ExpenseCategoryPage, ProfileSettingsPage, PymtAccountTypePage, SettingsRoot, expenseCategoryListActionHandler, expenseCategoryListLoaderHandler, paymentAccountTypeListLoaderHandler, pymtAccTypeListActionHandler, securityDetailsActionHandler, securityDetailsLoaderHandler } from "../../../settings";
 import { LoginPage, RequireAuth, SignupPage, LogoutPage } from "../../../auth";
 import HomePage from "./home";
-import { pymtAccountDetailSupportingLoaderHandler } from "../../../pymt-accounts/route-handlers/account-loader";
+import SecurityPage from "../../../settings/components/security";
 
 
 export const router = createBrowserRouter([
@@ -52,11 +53,12 @@ export const router = createBrowserRouter([
                 path: PAGE_URL.settingsRoot.shortUrl,
                 element: <RequireAuth><SettingsRoot /></RequireAuth>,
                 children: [
-                    { index: true, element: <div>Settings Home</div> },
-                    { path: PAGE_URL.expenseCategorySettings.shortUrl, element: <ExpenseCategoryPage /> },
-                    { path: PAGE_URL.pymtAccountTypeSettings.shortUrl, element: <PymtAccountTypePage /> },
-                    { path: PAGE_URL.tagsSettings.shortUrl, element: <div> tags settings </div> },
-                    { path: PAGE_URL.profileSettings.shortUrl, element: <div> Profile settings </div> },
+                    { index: true, element: <div>Settings Home - General Settings</div> },
+                    { path: PAGE_URL.expenseCategorySettings.shortUrl, element: <ExpenseCategoryPage />, loader: expenseCategoryListLoaderHandler, action: expenseCategoryListActionHandler },
+                    { path: PAGE_URL.pymtAccountTypeSettings.shortUrl, element: <PymtAccountTypePage />, loader: paymentAccountTypeListLoaderHandler, action: pymtAccTypeListActionHandler },
+                    { path: PAGE_URL.tagsSettings.shortUrl, element: <div> tags settings will be launched later. it is lower priority </div> },
+                    { path: PAGE_URL.profileSettings.shortUrl, element: <ProfileSettingsPage />, loader: securityDetailsLoaderHandler, action: securityDetailsActionHandler },
+                    { path: PAGE_URL.securitySettings.shortUrl, element: <SecurityPage />, loader: securityDetailsLoaderHandler, action: securityDetailsActionHandler },
                 ]
             }
         ]

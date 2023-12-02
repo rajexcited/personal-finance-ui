@@ -9,7 +9,7 @@ export interface ConfigType extends AuditFields {
   value: string;
   name: string;
   relations: string[];
-  belongsTo: string;
+  belongsTo: ConfigTypeBelongsTo;
   description: string;
   status: ConfigTypeStatus;
   color?: string;
@@ -22,16 +22,22 @@ export enum ConfigTypeStatus {
   deleted = "deleted",
 }
 
+export enum ConfigTypeBelongsTo {
+  ExpenseCategory = "expense-category",
+  Auth = "auth",
+  PaymentAccountType = "pymt-account-type",
+}
+
 interface ConfigTypeService {
   getConfigTypes(filterByStatuses?: ConfigTypeStatus[]): Promise<ConfigType[]>;
   addUpdateConfigType(details: ConfigType): Promise<void>;
-  removeConfigType(details: ConfigType): Promise<void>;
+  deleteConfigType(configId: string): Promise<void>;
   disableConfigType(details: ConfigType): Promise<void>;
   destroy(): void;
   db(): Promise<IDBPDatabase>;
 }
 
-const ConfigTypeServiceImpl = (belongsToParam: string): ConfigTypeService => {
+const ConfigTypeServiceImpl = (belongsToParam: ConfigTypeBelongsTo): ConfigTypeService => {
   const objectStoreName = IDATABASE_TRACKER.EXPENSE_DATABASE.CONFIG_STORE.NAME;
   const dbPromise = openDB(IDATABASE_TRACKER.EXPENSE_DATABASE.NAME, IDATABASE_TRACKER.EXPENSE_DATABASE.VERSION);
 
@@ -89,9 +95,9 @@ const ConfigTypeServiceImpl = (belongsToParam: string): ConfigTypeService => {
     const db = await dbPromise;
     try {
       if ((await db.count(objectStoreName, configType.configId)) === 0) {
-        await updateConfigType(configType);
-      } else {
         await addConfigType(configType);
+      } else {
+        await updateConfigType(configType);
       }
     } catch (e) {
       handleRestErrors(e as Error);
@@ -104,22 +110,30 @@ const ConfigTypeServiceImpl = (belongsToParam: string): ConfigTypeService => {
     const data: any = { ...configType };
     delete data.configId;
     const response = await axios.post("/config/types", data);
+    const configResponse = {
+      ...response.data,
+    } as ConfigType;
+    convertAuditFields(configResponse);
     const db = await dbPromise;
-    await db.add(objectStoreName, response.data);
+    await db.add(objectStoreName, configResponse);
   };
 
   const updateConfigType = async (configType: ConfigType) => {
     const data = { ...configType };
     const response = await axios.post("/config/types", data);
+    const configResponse = {
+      ...response.data,
+    } as ConfigType;
+    convertAuditFields(configResponse);
     const db = await dbPromise;
-    await db.put(objectStoreName, response.data);
+    await db.put(objectStoreName, configResponse);
   };
 
-  const removeConfigType = async (configType: ConfigType) => {
+  const deleteConfigType = async (configId: string) => {
     const db = await dbPromise;
     try {
-      const response = await axios.delete("/config/types/" + configType.configId);
-      await db.put(objectStoreName, response.data);
+      const response = await axios.delete("/config/types/" + configId);
+      await db.delete(objectStoreName, response.data.configId);
     } catch (e) {
       handleRestErrors(e as Error);
       console.error("not rest error", e);
@@ -135,7 +149,7 @@ const ConfigTypeServiceImpl = (belongsToParam: string): ConfigTypeService => {
   return {
     getConfigTypes,
     addUpdateConfigType,
-    removeConfigType,
+    deleteConfigType,
     disableConfigType,
     destroy,
     db: () => dbPromise,

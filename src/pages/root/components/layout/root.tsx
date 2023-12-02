@@ -11,7 +11,7 @@ const RootLayout: FunctionComponent = () => {
     const navigation = useNavigation();
     const isLoading = navigation.state !== "idle";
     const location = useLocation();
-    let title = "Dashboard";
+    let title = "Home";
     let icon = faDashboard;
 
     if (location.pathname.startsWith(PAGE_URL.expenseJournalRoot.fullUrl)) {

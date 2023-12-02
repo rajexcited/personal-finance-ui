@@ -1,16 +1,17 @@
 import { ConfigType, ConfigTypeService, ConfigTypeStatus } from "../../../services";
+import { ConfigTypeBelongsTo } from "../../../services/config-type-service";
 
 interface PymtAccountTypeService {
   getAccountTypes(): Promise<ConfigType[]>;
   getActiveAccountTypes(): Promise<ConfigType[]>;
   getDeletedAccountTypes(): Promise<ConfigType[]>;
-  addUpdateAccountType(category: ConfigType): Promise<void>;
-  removeAccountType(category: ConfigType): Promise<void>;
+  addUpdateAccountType(pymtAccType: ConfigType): Promise<void>;
+  deleteAccountType(pymtAccTypeId: string): Promise<void>;
   destroy(): void;
 }
 
 const PymtAccountTypeServiceImpl = (): PymtAccountTypeService => {
-  const configTypeService = ConfigTypeService("pymt-account-type");
+  const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.PaymentAccountType);
 
   /**
    * retrives undeleted account types
@@ -43,8 +44,8 @@ const PymtAccountTypeServiceImpl = (): PymtAccountTypeService => {
     await configTypeService.addUpdateConfigType(accountType);
   };
 
-  const removeAccountType = async (accountType: ConfigType) => {
-    await configTypeService.removeConfigType(accountType);
+  const deleteAccountType = async (pymtAccountTypeId: string) => {
+    await configTypeService.deleteConfigType(pymtAccountTypeId);
   };
 
   return {
@@ -52,7 +53,7 @@ const PymtAccountTypeServiceImpl = (): PymtAccountTypeService => {
     getActiveAccountTypes,
     getDeletedAccountTypes,
     addUpdateAccountType,
-    removeAccountType,
+    deleteAccountType,
     destroy: configTypeService.destroy.bind(null),
   };
 };

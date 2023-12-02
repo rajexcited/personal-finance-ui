@@ -1,6 +1,6 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Input, LoadSpinner, Animated, InputValidateResponse } from "../../../components";
+import { Input, LoadSpinner, Animated, InputValidateResponse, InputValidators } from "../../../components";
 import ReactMarkdown from "react-markdown";
 import useAuth from "../hooks/use-auth";
 import { PAGE_URL } from "../../root";
@@ -54,10 +54,7 @@ const LoginPage: FunctionComponent = () => {
         navigate(PAGE_URL.signupPage.fullUrl);
     };
 
-    const passwordValidator = (value: string): InputValidateResponse => {
-        const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#$%^&*])[\w!@#$%^&*\)\(\=]+$/;
-        return { errorMessage: "password must contain a special character, number, UPPERCASE.", isValid: passwordRegex.test(value) };
-    };
+    const validatePassword = InputValidators.passwordValidator();
 
     return (
         <section className="login-section">
@@ -103,7 +100,7 @@ const LoginPage: FunctionComponent = () => {
                             maxlength={ 25 }
                             minlength={ 8 }
                             required={ true }
-                            validate={ passwordValidator }
+                            validate={ validatePassword }
                             autocomplete="current-password"
                         />
                     </div>
