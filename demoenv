@@ -1,0 +1,4 @@
+PUBLIC_URL=demo
+BUILD_PATH=demo
+REACT_APP_ROOT_PATH=/finance-journal-ui
+GENERATE_SOURCEMAP=false
