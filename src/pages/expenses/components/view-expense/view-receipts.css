@@ -1,0 +1,81 @@
+.view-receipts-carousel .modal-card.is-fullscreen {
+    width: 100%;
+    flex-grow: 1;
+    max-height: 100vh;
+}
+
+.view-receipts-carousel .image img {
+    height: 100%;
+    width: auto;
+    transform-origin: top center;
+}
+
+.view-receipts-carousel img {
+    width: auto;
+    max-height: 100%;
+}
+
+.view-receipts-carousel .fullscreen-image-container {
+    height: calc(100vh - 0.5rem);
+    overflow: scroll;
+    padding: 0.5rem 1rem;
+    text-align: center;
+    text-align: -webkit-center;
+}
+
+.view-receipts-carousel .fullscreen-image-container .fullscreen-image {
+    max-height: -webkit-fill-available;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-position: center top;
+}
+
+.view-receipts-carousel .fullscreen-image-container .fullscreen-image.is-zoom-in {
+    transform: scale(2);
+    cursor: zoom-out;
+}
+
+.view-receipts-carousel .fullscreen-image-container .fullscreen-image.is-zoom-out {
+    cursor: zoom-in;
+}
+
+.view-receipts-carousel .modal-card-body {
+    padding: 0.1rem;
+    background-color: rgba(10, 10, 10, .88);
+    overflow: hidden;
+}
+
+.view-receipts-carousel .modal-close {
+    z-index: 1;
+    right: 30px;
+}
+
+.view-receipts-carousel .modal-close .delete {
+    transform: scale(1.5);
+    z-index: 2;
+}
+
+.view-receipts-carousel .carousel {
+    overflow: hidden;
+}
+
+.view-receipts-carousel .modal-card-header-actions {
+    position: fixed;
+    bottom: 40px;
+    pointer-events: auto;
+    right: 40px;
+    display: inline-block;
+    z-index: 1;
+}
+
+.view-receipts-carousel .carousel .slider-navigation-next {
+    right: 1rem;
+}
+
+.view-receipts-carousel .carousel .slider-navigation-previous {
+    left: 0.5rem;
+}
+
+.view-receipts-carousel .carousel .slider-pagination {
+    bottom: 1rem;
+}

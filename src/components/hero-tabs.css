@@ -1,0 +1,39 @@
+.hero-tabs .hero {
+    flex-direction: unset;
+}
+
+.hero-tabs .hero .hero-head {
+    max-width: 30%;
+    display: flex;
+    padding: 1rem;
+}
+
+.hero-tabs .hero .hero-head .tabs {
+    flex-grow: 1;
+    margin-right: 1rem;
+}
+
+.hero-tabs .hero .hero-head .tabs ul {
+    display: block;
+    text-align: left;
+}
+
+.hero-tabs .hero .hero-head .tabs ul li a {
+    display: block;
+    border-bottom-color: transparent !important;
+    padding-right: 1.5rem;
+    margin-right: 1rem;
+}
+
+.hero-tabs .hero .hero-body {
+    flex-shrink: unset;
+}
+
+.hero-tabs .hero .hero-body .tabs-content-wrap .tab-content {
+    display: block;
+    min-height: 70vh;
+}
+
+.hero-tabs .hero .hero-body .tabs-content-wrap .tab-content.is-active {
+    display: block;
+}

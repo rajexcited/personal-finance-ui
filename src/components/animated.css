@@ -1,0 +1,11 @@
+.transition__height_auto {
+    transition: max-height 1s ease-in;
+    overflow: hidden;
+    max-height: 700px;
+}
+
+.transition__height_0 {
+    transition: max-height 1s ease-out;
+    overflow: hidden;
+    max-height: 0;
+}

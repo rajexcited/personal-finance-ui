@@ -1,0 +1,38 @@
+.column.is-one-twenty-fourth {
+    flex: none;
+    width: 4.166666%;
+}
+
+.columns.is-variable.is-one-twenty-fourth {
+    --columnGap: 0.125rem;
+}
+
+.is-disabled {
+    box-shadow: none;
+    color: #7a7a7a !important;
+}
+
+.is-disabled:hover,
+.is-disabled:active {
+    color: #7a7a7a !important;
+    cursor: not-allowed;
+}
+
+.section.is-narrow-y {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.section.is-narrow-x {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.table tr.is-selected {
+    background-color: #5f79e8
+}
+
+tr.is-selected.is-light {
+    background-color: #5f85f8;
+    color: #fee;
+}
