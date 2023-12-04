@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import RootLayout from "./root";
 import ErrorPage from "./error";
-import { PAGE_URL, rootPath } from "../navigation";
+import { PAGE_URL, pathBaseName } from "../navigation";
 import {
     PymtAccountList,
     PymtAccountsRoot,
@@ -21,7 +21,7 @@ import SecurityPage from "../../../settings/components/security";
 
 export const router = createBrowserRouter([
     {
-        path: rootPath + "/",
+        path: PAGE_URL.rootPath.fullUrl,
         element: <RootLayout />,
         errorElement: <ErrorPage />,
         children: [
@@ -63,4 +63,6 @@ export const router = createBrowserRouter([
             }
         ]
     },
-]);
+], {
+    basename: pathBaseName
+});

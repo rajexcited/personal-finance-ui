@@ -29,7 +29,7 @@ const NavBar: FunctionComponent = () => {
                 .map(item => ({ ...item }));
         }
         let selectedNavbarItem = navbarItemlist.find(item => pathname === item.link);
-        if (pathname === "/") {
+        if (pathname === PAGE_URL.rootPath.fullUrl) {
             selectedNavbarItem = undefined;
             const list: NavbarItemProp[] = [];
             let isPreviouslySelected = false;
@@ -85,13 +85,13 @@ const NavBar: FunctionComponent = () => {
                     <NavBarItem
                         icon={ faCalculator }
                         label="Personal Finance"
-                        link="/"
+                        link={ PAGE_URL.rootPath.fullUrl }
                         id="brandfinance"
                         key={ "brandfinance" }
                         isProtected={ false }
-                        isSelected={ pathname === "/" }
+                        isSelected={ pathname === PAGE_URL.rootPath.fullUrl }
                     />
-                    <a href="#/" className="navbar-burger" onClick={ toggleNavbar }>
+                    <a href={ "#" + PAGE_URL.rootPath.fullUrl } className="navbar-burger" onClick={ toggleNavbar }>
                         { navbarItems.map((itemProp) => <span key={ itemProp.id + "burger" }></span>) }
                     </a>
                 </div>
@@ -118,7 +118,7 @@ const NavBar: FunctionComponent = () => {
                                 <NavBarItem
                                     icon={ faSignOut }
                                     label="Logout"
-                                    link="/logout"
+                                    link={ PAGE_URL.logoutPage.fullUrl }
                                     id="logout"
                                     key="logout"
                                     isProtected={ true }
