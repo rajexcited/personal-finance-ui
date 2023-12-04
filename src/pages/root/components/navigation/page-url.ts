@@ -1,70 +1,74 @@
-export const rootPath = process.env.REACT_APP_ROOT_PATH || "";
+export const pathBaseName = process.env.REACT_APP_BASE_PATH;
 
 export const PAGE_URL = {
+  rootPath: {
+    shortUrl: "/",
+    fullUrl: "/",
+  },
   loginPage: {
     shortUrl: "login",
-    fullUrl: rootPath + "/login",
+    fullUrl: "/login",
   },
   signupPage: {
     shortUrl: "signup",
-    fullUrl: rootPath + "/signup",
+    fullUrl: "/signup",
   },
   logoutPage: {
     shortUrl: "logout",
-    fullUrl: rootPath + "/logout",
+    fullUrl: "/logout",
   },
   expenseJournalRoot: {
     shortUrl: "expense-journal",
-    fullUrl: rootPath + "/expense-journal",
+    fullUrl: "/expense-journal",
   },
   addExpense: {
     shortUrl: "expense/add",
-    fullUrl: rootPath + "/expense-journal/expense/add",
+    fullUrl: "/expense-journal/expense/add",
   },
   updateExpense: {
     shortUrl: "expense/:expenseId/update",
-    fullUrl: rootPath + "/expense-journal/expense/:expenseId/update",
+    fullUrl: "/expense-journal/expense/:expenseId/update",
     paramKey: ":expenseId",
   },
   pymtAccountsRoot: {
     shortUrl: "payment-accounts",
-    fullUrl: rootPath + "/payment-accounts",
+    fullUrl: "/payment-accounts",
   },
   addPymAccount: {
     shortUrl: "account/add",
-    fullUrl: rootPath + "/payment-accounts/account/add",
+    fullUrl: "/payment-accounts/account/add",
   },
   updatePymAccount: {
     shortUrl: "account/:accountId/update",
-    fullUrl: rootPath + "/payment-accounts/account/:accountId/update",
+    fullUrl: "/payment-accounts/account/:accountId/update",
     paramKey: ":accountId",
   },
   deletePymAccount: {
     shortUrl: "account/delete",
-    fullUrl: rootPath + "/payment-accounts/account/delete",
+    fullUrl: "/payment-accounts/account/delete",
   },
   settingsRoot: {
     shortUrl: "settings",
-    fullUrl: rootPath + "/settings",
+    fullUrl: "/settings",
   },
   expenseCategorySettings: {
     shortUrl: "expense-category",
-    fullUrl: rootPath + "/settings/expense-category",
+    fullUrl: "/settings/expense-category",
   },
   pymtAccountTypeSettings: {
     shortUrl: "pymt-account-type",
-    fullUrl: rootPath + "/settings/pymt-account-type",
+    fullUrl: "/settings/pymt-account-type",
   },
   tagsSettings: {
     shortUrl: "tags",
-    fullUrl: rootPath + "/settings/tags",
+    fullUrl: "/settings/tags",
   },
   profileSettings: {
     shortUrl: "profile",
-    fullUrl: rootPath + "/settings/profile",
+    fullUrl: "/settings/profile",
   },
   securitySettings: {
     shortUrl: "security",
-    fullUrl: rootPath + "/settings/security",
+    fullUrl: "/settings/security",
   },
 };
