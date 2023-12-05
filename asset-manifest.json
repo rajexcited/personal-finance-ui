@@ -1,15 +1,13 @@
 {
   "files": {
-    "main.css": "/finance-journal-ui/static/css/main.35529837.css",
-    "main.js": "/finance-journal-ui/static/js/main.a3b67665.js",
+    "main.css": "/finance-journal-ui/static/css/main.c1e75981.css",
+    "main.js": "/finance-journal-ui/static/js/main.a4a55fae.js",
     "static/media/axios.cjs": "/finance-journal-ui/static/media/axios.e7d77f0967a69d31d7fc.cjs",
     "static/media/demo-logo.png": "/finance-journal-ui/static/media/demo-logo.579bb2984be118d51e89.png",
-    "index.html": "/finance-journal-ui/index.html",
-    "main.35529837.css.map": "/finance-journal-ui/static/css/main.35529837.css.map",
-    "main.a3b67665.js.map": "/finance-journal-ui/static/js/main.a3b67665.js.map"
+    "index.html": "/finance-journal-ui/index.html"
   },
   "entrypoints": [
-    "static/css/main.35529837.css",
-    "static/js/main.a3b67665.js"
+    "static/css/main.c1e75981.css",
+    "static/js/main.a4a55fae.js"
   ]
 }
