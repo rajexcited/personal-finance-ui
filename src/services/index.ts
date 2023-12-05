@@ -6,5 +6,4 @@ export { handleRestErrors } from "./utils";
 export type { ConfigType } from "./config-type-service";
 export { default as ConfigTypeService, ConfigTypeStatus, ConfigTypeBelongsTo } from "./config-type-service";
 export { default as axios } from "./axios-proxy";
-export { BASE_URL } from "./axios-proxy";
 export { default as difference } from "./difference";

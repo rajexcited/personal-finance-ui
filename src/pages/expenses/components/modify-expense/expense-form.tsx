@@ -68,7 +68,8 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
         Object.entries(data).forEach((entry) => {
             const key = entry[0];
             let value = entry[1];
-            if (typeof value === "object") value = JSON.stringify(value);
+            if (value instanceof Date) value = String(value);
+            else if (typeof value === "object") value = JSON.stringify(value);
             formData.append(key, value);
         });
 

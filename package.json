@@ -3,6 +3,7 @@
   "description": "UI app for managing my personal finance. it helps with tracking expenses, managing payment accounts.",
   "version": "0.1.1",
   "private": true,
+  "homepage": "https://rajexcited.github.io/finance-journal-ui/",
   "dependencies": {
     "@creativebulma/bulma-tagsinput": "^1.0.3",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
@@ -27,6 +28,7 @@
     "bulma-list": "^1.2.0",
     "date-and-time": "^3.0.2",
     "expiry-map": "^2.0.0",
+    "gh-pages": "^6.1.0",
     "idb": "^7.1.1",
     "lodash": "^4.17.21",
     "mem": "^9.0.2",
@@ -49,7 +51,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "demo": "move demoenv .env && react-scripts build && move .env demoenv && move demo\\index.html .\\"
+    "predeploy": "move demoenv .env.production.local && npm run build",
+    "deploy": "gh-pages -d build",
+    "postdeploy": "move .env.production.local demoenv"
   },
   "eslintConfig": {
     "extends": [

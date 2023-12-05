@@ -1,9 +1,10 @@
 import axios from "axios";
 
-export const BASE_URL = "http://localhost:5000/my-finance/rest";
+const DOMAIN = process.env.domain || "http://localhost:5000";
+const BASE_URL = (process.env.REACT_APP_BASE_PATH || "/my-finance") + "/rest";
 
 const axiosProxy = axios.create({
-  baseURL: BASE_URL,
+  baseURL: DOMAIN + BASE_URL,
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
 });

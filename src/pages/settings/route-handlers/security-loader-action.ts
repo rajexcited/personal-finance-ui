@@ -1,8 +1,6 @@
 import { ActionFunctionArgs, json, redirect } from "react-router-dom";
 import { AuthenticationService } from "../../auth";
 import { PAGE_URL } from "../../root";
-import { ExpenseCategoryService } from "../../expenses";
-import { ConfigType } from "../../../services";
 
 const authenticationService = AuthenticationService();
 

@@ -92,8 +92,8 @@ const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
     };
 
     const scaleTooltip = "current scale: " + (scaleValue * 100).toFixed(2) + "%";
-    const nextScaleTooltip = !!nextScaleValue ? "next zoom In: " + nextScaleValue : "cannot zoom in anymore.";
-    const prevScaleTooltip = !!previousScaleValue ? "previous zoom out: " + previousScaleValue : "cannot zoom out anymore.";
+    const nextScaleTooltip = !!nextScaleValue ? "next zoom In: " + nextScaleValue + ". " : "cannot zoom in anymore.";
+    const prevScaleTooltip = !!previousScaleValue ? "previous zoom out: " + previousScaleValue + ". " : "cannot zoom out anymore.";
 
     return (
         <section className="section view-receipts-carousel">

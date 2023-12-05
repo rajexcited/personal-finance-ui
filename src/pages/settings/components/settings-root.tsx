@@ -4,6 +4,7 @@ import { PAGE_URL } from "../../root";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCoins, faGear, faMoneyBills, faTags, faUserAlt, faUserSecret } from "@fortawesome/free-solid-svg-icons";
 import { HeroTabs } from "../../../components";
+import { pathBaseName } from "../../root/components/navigation";
 
 
 const SettingsRootPage: FunctionComponent = () => {
@@ -21,13 +22,19 @@ const SettingsRootPage: FunctionComponent = () => {
     const [activeTabId, setActiveTabId] = useState("");
 
     useEffect(() => {
-        const tabhed = TAB_HEADS.find(tbhd => window.location.pathname === tbhd.url);
+        console.log("pathBaseName", pathBaseName,
+            "location.pathname", location.pathname,
+            "location.hash", location.hash,
+            "location.state", JSON.stringify(location.state),
+            "window.location.pathname", window.location.pathname);
+        const tabhed = TAB_HEADS.find(tbhd => location.pathname === tbhd.url);
         setActiveTabId(tabhed && tabhed.id || TAB_HEADS[0].id);
     }, [location.pathname]);
 
     const onTabSelectHandler = (tabId: string) => {
         const tabHeadSelected = TAB_HEADS.find(thd => thd.id === tabId);
         if (tabHeadSelected) {
+            console.log("tabHeadSelected", { ...tabHeadSelected }, "tabId", tabId);
             navigate(tabHeadSelected.url);
         } else {
             console.error("tab head not found, tabId", tabId);
@@ -51,6 +58,7 @@ const SettingsRootPage: FunctionComponent = () => {
         </HeroTabs.TabContent>
     );
 
+    console.log(new Date(), "activeTabId", activeTabId, "tabChildren.length", tabChildren.length);
     return (
         <HeroTabs.Wrapper>
             <HeroTabs.Tab onTabSelect={ onTabSelectHandler }>

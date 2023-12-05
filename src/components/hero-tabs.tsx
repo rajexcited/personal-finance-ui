@@ -40,13 +40,14 @@ const HeroTabs: FunctionComponent<HeroTabsProps> = (props) => {
     let tabContentElement: JSX.Element | null = null;
     let onTabSelect: (tabId: string) => void;
     let activeTabHeadId: string = "";
-    if (props.children.type.name === "HeroTab") {
+    console.log("props.children.type.name", props.children.type.name);
+    if (props.children.type.name === "HeroTab" || props.children.type.name === "Tab") {
         const heroTabProps = props.children.props as HeroTabProps;
         onTabSelect = heroTabProps.onTabSelect;
         const tabHeadElememts = Children.toArray(heroTabProps.children).filter(ch => {
             if (isValidElement(ch)) {
                 const elm = ch as JSX.Element;
-                return elm.type.name === "HeroTabHead";
+                return elm.type.name === "HeroTabHead" || elm.type.name === "TabHead";
             }
             return false;
         }) as JSX.Element[];
@@ -61,10 +62,11 @@ const HeroTabs: FunctionComponent<HeroTabsProps> = (props) => {
         tabContentElement = Children.toArray(heroTabProps.children).find(ch => {
             if (isValidElement(ch)) {
                 const elm = ch as JSX.Element;
-                return elm.type.name === "HeroTabContent";
+                return elm.type.name === "HeroTabContent" || elm.type.name === "TabContent";
             }
             return false;
         }) as JSX.Element;
+        console.log("tabHeadElememts", tabHeadElememts, "tabHeads", tabHeads, "tabContentElement", tabContentElement, "onTabSelect", onTabSelect);
     }
 
     const onClickTabHeadHandler = (tabId: string, event: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
