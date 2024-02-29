@@ -1,2 +1,2 @@
-REACT_APP_BASE_PATH=/finance-journal-ui
+REACT_APP_BASE_PATH=/personal-finance-ui
 GENERATE_SOURCEMAP=false
