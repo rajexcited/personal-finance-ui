@@ -3,7 +3,7 @@
   "description": "UI app for managing my personal finance. it helps with tracking expenses, managing payment accounts.",
   "version": "0.1.1",
   "private": true,
-  "homepage": "https://rajexcited.github.io/finance-journal-ui/",
+  "homepage": "https://rajexcited.github.io/personal-finance-ui/",
   "dependencies": {
     "@creativebulma/bulma-tagsinput": "^1.0.3",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
