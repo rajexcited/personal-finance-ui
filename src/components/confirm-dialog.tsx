@@ -20,7 +20,7 @@ const ConfirmDialog: FunctionComponent<ConfirmDialogProps> = (props) => {
         if (props.open && !isOpen) {
             setOpen(true);
         }
-    }, [props.open]);
+    }, [props.open, isOpen]);
 
     const onClickCloseOrCancelHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();

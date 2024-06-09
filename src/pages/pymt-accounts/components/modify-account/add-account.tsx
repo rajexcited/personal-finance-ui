@@ -6,7 +6,8 @@ import { PymtAccountFields } from "../../services";
 import { PAGE_URL } from "../../../root";
 import { useAuth } from "../../../auth";
 import ReactMarkdown from "react-markdown";
-import { PymtAccountDetailLoaderType } from "../../route-handlers/account-loader";
+import { PymtAccountDetailLoaderResource } from "../../route-handlers/account-loader";
+import { RouteHandlerResponse } from "../../../../services";
 
 
 const AddAccount: FunctionComponent = () => {
@@ -15,9 +16,9 @@ const AddAccount: FunctionComponent = () => {
     const submit = useSubmit();
     const auth = useAuth();
     // for error
-    const actionData: any = useActionData();
+    const actionData = useActionData() as RouteHandlerResponse<any> | null;
+    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountDetailLoaderResource>;
     const [errorMessage, setErrorMessage] = useState("");
-    const loaderData = useLoaderData() as PymtAccountDetailLoaderType;
 
     useEffect(() => {
         // creating temporary id
@@ -25,22 +26,19 @@ const AddAccount: FunctionComponent = () => {
     }, []);
 
     useEffect(() => {
-        if (actionData?.errorMessage && actionData.errorMessage !== errorMessage)
+        if (actionData?.type === "error" && actionData.errorMessage !== errorMessage) {
             setErrorMessage(actionData.errorMessage);
-    }, [errorMessage, actionData?.errorMessage]);
+        }
+        else if (loaderData.type === "error" && loaderData.errorMessage !== errorMessage) {
+            setErrorMessage(loaderData.errorMessage);
+        }
+    }, [errorMessage, actionData, loaderData]);
 
     const onAddedAccount = (data: PymtAccountFields) => {
-        if (auth.isAuthenticated) {
+        if (auth.userDetails.isAuthenticated) {
             const formData: any = {
-                accountId,
-                shortName: data.shortName,
-                institutionName: data.institutionName,
-                accountName: data.accountName,
-                accountNumber: data.accountNumber,
-                typeName: data.typeName,
-                tags: data.tags,
-                description: data.description,
-                icon: data.icon
+                ...data,
+                id: accountId,
             };
 
             submit(formData, { action: PAGE_URL.addPymAccount.fullUrl, method: "post" });
@@ -67,8 +65,8 @@ const AddAccount: FunctionComponent = () => {
                         accountId={ accountId }
                         submitLabel={ navigation.state === "submitting" ? "Adding Account details..." : "Add" }
                         onSubmit={ onAddedAccount }
-                        sourceTags={ loaderData.pymtAccountTags }
-                        categoryTypes={ loaderData.categoryTypes }
+                        sourceTags={ loaderData.data.pymtAccountTags }
+                        categoryTypes={ loaderData.data.categoryTypes }
                     />
                 </div>
             </div>

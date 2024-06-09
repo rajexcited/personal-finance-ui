@@ -5,7 +5,7 @@ import { faBank, faDashboard, faGears, faMoneyBills, faSignIn, faUserPlus } from
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { NavBar, PAGE_URL } from "../navigation";
 import { LoadSpinner } from "../../../../components";
-
+import axiosMock from "../../../../demo";
 
 const RootLayout: FunctionComponent = () => {
     const navigation = useNavigation();
@@ -13,6 +13,7 @@ const RootLayout: FunctionComponent = () => {
     const location = useLocation();
     let title = "Home";
     let icon = faDashboard;
+    // logger.log("in root layout", "location.pathname =", location.pathname, "location =", location, "navigation =", navigation);
 
     if (location.pathname.startsWith(PAGE_URL.expenseJournalRoot.fullUrl)) {
         title = "Manage Expenses";
@@ -35,7 +36,10 @@ const RootLayout: FunctionComponent = () => {
         <div className="section">
             <div className="columns">
                 <div className="column is-1">
-                    <div className="demo logo"><figure className="icon"></figure></div>
+                    {
+                        !axiosMock.history.isDummy &&
+                        <div className="demo logo"><figure className="icon"></figure></div>
+                    }
                 </div>
                 <div className="column mt-3 has-text-centered">
                     <h2 className="title is-1">

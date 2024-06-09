@@ -8,19 +8,19 @@ import { useDebounceState } from "../../../../hooks";
 import ExpenseTableRow from "./view-expense-item-tablerow";
 import ExpenseTableHead, { ExpenseTableHeadRefType } from "./expense-table-head";
 import "./view-expense-list.css";
-import { difference } from "../../../../services";
+import { RouteHandlerResponse, difference } from "../../../../services";
 import ViewReceipts from "./view-receipts";
 
 
-declare global {
-    interface Window {
-        prevSortDetails: any;
-    }
-}
+// declare global {
+//     interface Window {
+//         prevSortDetails: any;
+//     }
+// }
 
 const ExpenseList: FunctionComponent = () => {
-    const loaderData = useLoaderData() as ExpenseFields[];
-    const actionData = useActionData() as { errorMessage: string; };
+    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseFields[]>;
+    const actionData = useActionData() as RouteHandlerResponse<any> | null;
     const [expenseList, setExpenseList] = useState<ExpenseFields[]>([]);
     const [selectedExpenseId, setSelectedExpenseId] = useState("");
     const [deletingExpenseId, setDeletingExpenseId] = useState("");
@@ -33,11 +33,11 @@ const ExpenseList: FunctionComponent = () => {
 
     // do I need this useeffect? can i not set loader data directly to expenseList state?
     useEffect(() => {
-        if (Array.isArray(loaderData) && loaderData.length !== expenseList.length) {
+        if (loaderData.type === "success" && Array.isArray(loaderData.data) && loaderData.data.length !== expenseList.length) {
             setLoading(true);
-            const sortDetails: ExpenseSortStateType = {};
+            // const sortDetails: ExpenseSortStateType = {};
             if (headerRef && headerRef.current && Object.keys(headerRef.current.sortDetails()).length) {
-                setExpenseList(getSortedExpenses(loaderData, headerRef.current.sortDetails()));
+                setExpenseList(getSortedExpenses(loaderData.data, headerRef.current.sortDetails()));
             } else {
                 const initialSortDetails: ExpenseSortStateType = {};
                 rowHeaders.forEach(rh => {
@@ -45,12 +45,14 @@ const ExpenseList: FunctionComponent = () => {
                         initialSortDetails[rh.datafieldKey] = { ...rh };
                     }
                 });
-                setExpenseList(getSortedExpenses(loaderData, initialSortDetails));
+                setExpenseList(getSortedExpenses(loaderData.data, initialSortDetails));
             }
         }
-        if (actionData?.errorMessage && errorMsg !== actionData.errorMessage) {
+        if (actionData?.type === "error" && errorMsg !== actionData.errorMessage) {
             // should i seperate the use effect since both have different outcomes?
-            setErrorMsg(actionData?.errorMessage);
+            setErrorMsg(actionData.errorMessage);
+        } else if (loaderData.type === "error" && errorMsg !== loaderData.errorMessage) {
+            setErrorMsg(loaderData.errorMessage);
         }
     }, [loaderData, actionData]);
 
@@ -58,7 +60,7 @@ const ExpenseList: FunctionComponent = () => {
         const sortedExpenses = [...expenses];
         sortedExpenses.sort(expenseComparator.bind(null, sortDetails));
         // console.log("getSortedExpenses", new Date(), "sortDetails", JSON.stringify(sortDetails), "diff: ", difference(sortDetails, window.prevSortDetails || sortDetails));
-        window.prevSortDetails = sortDetails;
+        // window.prevSortDetails = sortDetails;
         return sortedExpenses;
     };
 
@@ -88,13 +90,13 @@ const ExpenseList: FunctionComponent = () => {
     };
 
     const onDeleteConfirmHandler = () => {
-        const deletingExpense = expenseList.find(xpns => xpns.expenseId === deletingExpenseId);
+        const deletingExpense = expenseList.find(xpns => xpns.id === deletingExpenseId);
         const data: any = { ...deletingExpense };
         submit(data, { action: PAGE_URL.expenseJournalRoot.fullUrl, method: "delete" });
         setDeletingExpenseId("");
     };
 
-    // console.log(new Date(), "view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billname));
+    // logger.log(new Date(), "view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billname));
 
     return (
         <section>
@@ -121,11 +123,11 @@ const ExpenseList: FunctionComponent = () => {
                     {
                         expenseList.map(xpns =>
                             <ExpenseTableRow
-                                key={ xpns.expenseId + "-trow" }
-                                id={ xpns.expenseId + "-trow" }
+                                key={ xpns.id + "-trow" }
+                                id={ xpns.id + "-trow" }
                                 details={ xpns }
                                 onSelect={ setSelectedExpenseId }
-                                isSelected={ selectedExpenseId === xpns.expenseId }
+                                isSelected={ selectedExpenseId === xpns.id }
                                 onEditRequest={ onEditRequestExpenseHandler }
                                 onRemove={ onRemoveRequestHandler }
                                 onViewReceipt={ onViewReceiptsRequestHandler }
@@ -154,7 +156,7 @@ const ExpenseList: FunctionComponent = () => {
             <ViewReceipts
                 key={ "view-receipts-" + (isViewReceiptsEnable ? selectedExpenseId : "dummy") }
                 isShow={ isViewReceiptsEnable }
-                receipts={ isViewReceiptsEnable && expenseList.find(xpns => xpns.expenseId === selectedExpenseId)?.receipts || [] }
+                receipts={ isViewReceiptsEnable && expenseList.find(xpns => xpns.id === selectedExpenseId)?.receipts || [] }
                 onHide={ () => setViewReceiptsEnable(false) }
             />
         </section>

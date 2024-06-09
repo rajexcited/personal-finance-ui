@@ -1,19 +1,16 @@
 import { AuditFields } from "../../../services";
 
-interface BaseExpenseFields extends AuditFields {
-  id?: string;
-  expenseId: string;
-  billname: string;
+interface BaseExpenseFields {
+  id: string;
+  billName: string;
   amount?: string;
   description: string;
-  tags: string;
-  categoryId?: string;
-  categoryName?: string;
+  tags: string[];
+  expenseCategoryId?: string;
+  expenseCategoryName?: string;
 }
 
-export interface ExpenseItemFields extends BaseExpenseFields {
-  parentExpenseId: string;
-}
+export interface ExpenseItemFields extends BaseExpenseFields {}
 
 export enum ReceiptType {
   PNG = "image/png",
@@ -21,23 +18,30 @@ export enum ReceiptType {
   PDF = "application/pdf",
 }
 
+export enum ExpenseStatus {
+  Enable = "enable",
+  Deleted = "deleted",
+}
+
 export interface ReceiptProps {
   file?: File;
-  error?: string;
-  fileName: string;
-  lastUpdatedDate: Date;
-  fileType: ReceiptType;
+  name: string;
   id: string;
-  url: string;
+  contentType: ReceiptType;
+  error?: string;
+  url?: string;
 }
 
 export interface ExpenseFields extends BaseExpenseFields {
-  pymtaccId?: string;
-  pymtaccName?: string;
-  purchasedDate: Date;
-  verifiedDateTime?: Date;
-  expenseItems: ExpenseItemFields[];
+  paymentAccountId?: string;
+  paymentAccountName?: string;
+  purchasedDate: string | Date;
+  verifiedTimestamp?: Date | string;
+  expenseItems?: ExpenseItemFields[];
   receipts: ReceiptProps[];
+  status?: ExpenseStatus;
+  auditDetails: AuditFields;
+  deletedTimestamp?: Date | string;
 }
 
 export const ExpenseDataFilterItems = [
@@ -53,16 +57,7 @@ export const ExpenseDataFilterItems = [
   "categoryName",
 ];
 
-export const FilterActions = [
-  "equals",
-  "greater than",
-  "less than",
-  "contains",
-  "not equals",
-  "not greater than",
-  "not less than",
-  "not contains",
-];
+export const FilterActions = ["equals", "greater than", "less than", "contains", "not equals", "not greater than", "not less than", "not contains"];
 
 export interface ExpenseFilterType {
   fieldName: keyof typeof ExpenseDataFilterItems;

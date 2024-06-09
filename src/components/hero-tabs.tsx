@@ -1,6 +1,6 @@
 import { FunctionComponent, Children, isValidElement } from "react";
 import "./hero-tabs.css";
-import { v4 as uuidv4 } from "uuid";
+
 
 
 interface HeroTabHeadProps {
@@ -107,10 +107,11 @@ const HeroTabs: FunctionComponent<HeroTabsProps> = (props) => {
     );
 };
 
-export default {
+const HeroTabsComponent = {
     Wrapper: HeroTabs,
     Tab: HeroTab,
     TabHead: HeroTabHead,
     TabContent: HeroTabContent,
-}
+};
 
+export default HeroTabsComponent;

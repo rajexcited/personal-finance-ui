@@ -3,8 +3,7 @@ import { faMagnifyingGlassMinus, faMagnifyingGlassPlus, faUpload } from "@fortaw
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useState, MouseEventHandler, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { ReceiptProps } from "../../services";
-import { ReceiptType } from "../../services/field-types";
+import { ReceiptProps, ReceiptType } from "../../services";
 
 interface UploadReceiptsModalProps {
     receipts: ReceiptProps[],
@@ -63,12 +62,11 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
                     }
                     const url = URL.createObjectURL(file);
                     supportedReceipts.push({
-                        fileName: file.name,
+                        name: file.name,
                         id: uuidv4(),
-                        lastUpdatedDate: new Date(file.lastModified),
                         url,
                         file,
-                        fileType: fileType
+                        contentType: fileType
                     });
                 } catch (e) {
                     console.log("unsupported file", e);
@@ -86,7 +84,13 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
         const processedReceipts = preProcessUploadedReceipts(event.target.files);
         setReceipts(prev => {
             const newReceipts = [...prev, ...processedReceipts.supportedReceipts];
-            Promise.resolve(newReceipts).then(props.onChange);
+            Promise.resolve(newReceipts)
+                .then(rcts => {
+                    props.onChange(rcts.map(rct => {
+                        rct.url = undefined;
+                        return rct;
+                    }));
+                });
             return newReceipts;
         });
         let msg = "";
@@ -159,7 +163,7 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
                     <button className="delete" type="button" onClick={ onClickHideFullscreenImageHandler }></button>
                 </div>
                 {
-                    fullscreenReceipt && fullscreenReceipt.fileType !== ReceiptType.PDF &&
+                    fullscreenReceipt && fullscreenReceipt.contentType !== ReceiptType.PDF &&
                     <div className="modal-card-header-actions">
                         <button className="button is-white is-inverted image-zoomIn" type="button" onClick={ onClickZoomInHandler }>
                             <span className="icon tooltip is-tooltip-left" data-tooltip={ nextScaleTooltip + scaleTooltip }>
@@ -174,14 +178,14 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
                     </div>
                 }
                 {
-                    fullscreenReceipt && (fullscreenReceipt.fileType === ReceiptType.JPEG || fullscreenReceipt.fileType === ReceiptType.PNG) &&
+                    fullscreenReceipt && (fullscreenReceipt.contentType === ReceiptType.JPEG || fullscreenReceipt.contentType === ReceiptType.PNG) &&
                     <figure className="image">
-                        <img src={ fullscreenReceipt.url } alt={ fullscreenReceipt.fileName } style={ { transform: "scale(" + scaleValue + ")" } } />
+                        <img src={ fullscreenReceipt.url } alt={ fullscreenReceipt.name } style={ { transform: "scale(" + scaleValue + ")" } } />
                     </figure>
                 }
                 {
-                    fullscreenReceipt && fullscreenReceipt.fileType === ReceiptType.PDF &&
-                    <embed src={ fullscreenReceipt.url } type={ fullscreenReceipt.fileType } height={ "99%" } width={ "93%" } />
+                    fullscreenReceipt && fullscreenReceipt.contentType === ReceiptType.PDF &&
+                    <embed src={ fullscreenReceipt.url } type={ fullscreenReceipt.contentType } height={ "99%" } width={ "93%" } />
                 }
             </div>
             <div className={ `modal ${isModalOpen ? "is-active" : ""}` }>
@@ -225,20 +229,20 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
                                     <div className="column" key={ "receipt-view-" + rct.id }>
                                         <article className="message is-light" key={ rct.id }>
                                             <div className="message-header">
-                                                <p>{ rct.fileName }</p>
+                                                <p>{ rct.name }</p>
                                                 <button className="button tooltip" type="button" onClick={ e => onClickShowFullscreenHandler(e, rct) } data-tooltip="View Fullscreen">View</button>
                                                 <button className="delete" aria-label="delete" onClick={ e => onClickUploadFileRemoveHandler(e, rct) }></button>
                                             </div>
                                             <div className="message-body">
                                                 {
-                                                    rct.fileType !== ReceiptType.PDF &&
+                                                    rct.contentType !== ReceiptType.PDF &&
                                                     <figure className="image is-height-256">
-                                                        <img src={ rct.url } alt={ rct.fileName } onClick={ onClickShowFullscreenImageHandler } />
+                                                        <img src={ rct.url } alt={ rct.name } onClick={ onClickShowFullscreenImageHandler } />
                                                     </figure>
                                                 }
                                                 {
-                                                    rct.fileType === ReceiptType.PDF &&
-                                                    <embed height={ 256 } src={ rct.url + "#toolbar=0" } type={ rct.fileType } />
+                                                    rct.contentType === ReceiptType.PDF &&
+                                                    <embed height={ 256 } src={ rct.url + "#toolbar=0" } type={ rct.contentType } />
                                                 }
                                             </div>
                                         </article>

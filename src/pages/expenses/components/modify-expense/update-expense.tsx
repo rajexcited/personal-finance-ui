@@ -7,27 +7,30 @@ import { useAuth } from "../../../auth";
 import { PAGE_URL } from "../../../root";
 import ReactMarkdown from "react-markdown";
 import { Animated } from "../../../../components";
-import { ExpenseDetailLoaderType } from "../../route-handlers/expense-loader";
-import { difference } from "../../../../services";
+import { ExpenseDetailLoaderResource } from "../../route-handlers/expense-loader";
+import { RouteHandlerResponse } from "../../../../services";
 
 
 const UpdateExpense: FunctionComponent = () => {
     const [errorMsg, setErrorMsg] = useState('');
     const navigation = useNavigation();
     const submit = useSubmit();
-    const loaderData = useLoaderData() as ExpenseDetailLoaderType;
-    const actionData: any = useActionData();
+    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseDetailLoaderResource>;
+    const actionData = useActionData() as RouteHandlerResponse<any> | null;
     const auth = useAuth();
 
     useEffect(() => {
-        if (actionData?.errorMessage && actionData.errorMessage !== errorMsg)
+        if (actionData?.type === "error" && actionData.errorMessage !== errorMsg) {
             setErrorMsg(actionData.errorMessage);
-    }, [errorMsg, actionData?.errorMessage]);
+        } else if (loaderData.type === "error" && loaderData.errorMessage !== errorMsg) {
+            setErrorMsg(loaderData.errorMessage);
+        }
+    }, [errorMsg, actionData, loaderData]);
 
     const onExpenseUpdated = (data: ExpenseFields, formData: FormData) => {
-        if (auth.isAuthenticated) {
+        if (auth.userDetails.isAuthenticated) {
             // console.log("expense updated", data.expenseId, data, data.expenseItems, "same as loader expense? ", loaderData.expenseDetail?.expenseId === data.expenseId, "object difference = ", JSON.stringify(difference(data, loaderData.expenseDetail)));
-            submit(formData, { action: PAGE_URL.updateExpense.fullUrl.replace(":expenseId", data.expenseId), method: "post", encType: "multipart/form-data" });
+            submit(formData, { action: PAGE_URL.updateExpense.fullUrl.replace(":expenseId", data.id), method: "post", encType: "multipart/form-data" });
         } else {
             setErrorMsg("you have been logged out. please (login)[/login] to add payment account");
         }
@@ -49,16 +52,16 @@ const UpdateExpense: FunctionComponent = () => {
             <div className="columns">
                 <div className="column">
                     {
-                        loaderData.expenseDetail &&
+                        loaderData.type === "success" && loaderData.data.expenseDetail &&
                         <ExpenseForm
                             key="update-expense-form"
-                            expenseId={ loaderData.expenseDetail.expenseId }
+                            expenseId={ loaderData.data.expenseDetail.id }
                             submitLabel={ navigation.state === "submitting" ? "Saving Account details..." : "Update" }
                             onSubmit={ onExpenseUpdated }
-                            details={ loaderData.expenseDetail }
-                            categoryTypes={ loaderData.categoryTypes }
-                            paymentAccounts={ loaderData.paymentAccounts }
-                            sourceTags={ loaderData.expenseTags }
+                            details={ loaderData.data.expenseDetail }
+                            categoryTypes={ loaderData.data.categoryTypes }
+                            paymentAccounts={ loaderData.data.paymentAccounts }
+                            sourceTags={ loaderData.data.expenseTags }
                         />
                     }
                 </div>

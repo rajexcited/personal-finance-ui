@@ -1,16 +1,6 @@
-import { ConfigType, ConfigTypeService, ConfigTypeStatus } from "../../../services";
-import { ConfigTypeBelongsTo } from "../../../services/config-type-service";
+import { ConfigResource, ConfigTypeService, ConfigTypeStatus, ConfigTypeBelongsTo, UpdateConfigStatusResource } from "../../../services";
 
-interface PymtAccountTypeService {
-  getAccountTypes(): Promise<ConfigType[]>;
-  getActiveAccountTypes(): Promise<ConfigType[]>;
-  getDeletedAccountTypes(): Promise<ConfigType[]>;
-  addUpdateAccountType(pymtAccType: ConfigType): Promise<void>;
-  deleteAccountType(pymtAccTypeId: string): Promise<void>;
-  destroy(): void;
-}
-
-const PymtAccountTypeServiceImpl = (): PymtAccountTypeService => {
+const PymtAccountTypeServiceImpl = () => {
   const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.PaymentAccountType);
 
   /**
@@ -18,7 +8,7 @@ const PymtAccountTypeServiceImpl = (): PymtAccountTypeService => {
    * @returns list of account type
    */
   const getAccountTypes = async () => {
-    const accountTypes = await configTypeService.getConfigTypes([ConfigTypeStatus.enable, ConfigTypeStatus.disable]);
+    const accountTypes = await configTypeService.getConfigTypes([ConfigTypeStatus.Enable, ConfigTypeStatus.Disable]);
     return accountTypes;
   };
 
@@ -27,7 +17,7 @@ const PymtAccountTypeServiceImpl = (): PymtAccountTypeService => {
    * @returns list of account type
    */
   const getActiveAccountTypes = async () => {
-    const accountTypes = await configTypeService.getConfigTypes([ConfigTypeStatus.enable]);
+    const accountTypes = await configTypeService.getConfigTypes([ConfigTypeStatus.Enable]);
     return accountTypes;
   };
 
@@ -36,16 +26,20 @@ const PymtAccountTypeServiceImpl = (): PymtAccountTypeService => {
    * @returns list of account type
    */
   const getDeletedAccountTypes = async () => {
-    const accountTypes = await configTypeService.getConfigTypes([ConfigTypeStatus.deleted]);
+    const accountTypes = await configTypeService.getConfigTypes([ConfigTypeStatus.Deleted]);
     return accountTypes;
   };
 
-  const addUpdateAccountType = async (accountType: ConfigType) => {
+  const addUpdateAccountType = async (accountType: ConfigResource) => {
     await configTypeService.addUpdateConfigType(accountType);
   };
 
   const deleteAccountType = async (pymtAccountTypeId: string) => {
     await configTypeService.deleteConfigType(pymtAccountTypeId);
+  };
+
+  const updateAccountTypeStatus = async (categoryStatusData: UpdateConfigStatusResource) => {
+    await configTypeService.updateConfigTypeStatus(categoryStatusData);
   };
 
   return {
@@ -54,7 +48,7 @@ const PymtAccountTypeServiceImpl = (): PymtAccountTypeService => {
     getDeletedAccountTypes,
     addUpdateAccountType,
     deleteAccountType,
-    destroy: configTypeService.destroy.bind(null),
+    updateAccountTypeStatus,
   };
 };
 

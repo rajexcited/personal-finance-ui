@@ -1,4 +1,4 @@
-import { ConfigType } from "../../../services";
+import { ConfigResource } from "../../../services";
 
 export enum ActionId {
   Add = "add",
@@ -10,7 +10,11 @@ export enum ActionId {
 }
 
 export type TypeCategoryAction = {
-  item: ConfigType;
+  item: ConfigResource;
   type: ActionId;
 };
 export { ConfigTypeBelongsTo } from "../../../services";
+
+export type { CurrencyProfileResource } from "./currency-profile-service";
+
+export { default as CurrencyProfileService } from "./currency-profile-service";

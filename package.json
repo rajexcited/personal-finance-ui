@@ -4,6 +4,46 @@
   "version": "0.1.1",
   "private": true,
   "homepage": "https://rajexcited.github.io/personal-finance-ui/",
+  "scripts": {
+    "prestart": "move envlocal .env.local",
+    "start": "react-scripts start",
+    "poststart": "move .env.local envlocal",
+    "env-learn-link": "https://create-react-app.dev/docs/adding-custom-environment-variables/#what-other-env-files-can-be-used",
+    "prebuildlocalaws": "npm run build && move envaws .env.local",
+    "buildlocalaws": "npm run buildwithoutmock",
+    "postbuildlocalaws": "move .env.local envaws",
+    "prebuildwithoutmock": "move src\\demo\\index.ts src\\demo\\mockindex.ts && move src\\demo\\dummyindex.ts src\\demo\\index.ts",
+    "buildwithoutmock": "react-scripts build",
+    "postbuildwithoutmock": "move src\\demo\\index.ts src\\demo\\dummyindex.ts && move src\\demo\\mockindex.ts src\\demo\\index.ts",
+    "precopytoinfra": "rmdir /S /Q ..\\personal-finance-backend-aws\\dist\\ui",
+    "copytoinfra": "xcopy /E build ..\\personal-finance-backend-aws\\dist\\ui\\",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "prebuilddemo": "move demoenv .env.production.local",
+    "builddemo": "react-scripts build",
+    "predeploydemo": "npm run builddemo",
+    "deploydemo": "gh-pages -d build",
+    "postdeploydemo": "move .env.production.local demoenv"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
   "dependencies": {
     "@creativebulma/bulma-tagsinput": "^1.0.3",
     "@fortawesome/fontawesome-svg-core": "^6.4.2",
@@ -28,10 +68,8 @@
     "bulma-list": "^1.2.0",
     "date-and-time": "^3.0.2",
     "expiry-map": "^2.0.0",
-    "gh-pages": "^6.1.0",
     "idb": "^7.1.1",
     "lodash": "^4.17.21",
-    "mem": "^9.0.2",
     "p-memoize": "^7.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -46,36 +84,10 @@
     "uuid": "^9.0.0",
     "web-vitals": "^2.1.4"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "predeploy": "move demoenv .env.production.local && npm run build",
-    "deploy": "gh-pages -d build",
-    "postdeploy": "move .env.production.local demoenv"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/lodash": "^4.14.198",
-    "@types/uuid": "^9.0.2"
+    "@types/uuid": "^9.0.2",
+    "gh-pages": "^6.1.0"
   }
 }

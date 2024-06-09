@@ -12,7 +12,7 @@ const RequireAuth: FunctionComponent<RequireAuthProps> = ({ children }) => {
     const location = useLocation();
 
     return (
-        auth.isAuthenticated ?
+        auth.userDetails.isAuthenticated ?
             children :
             <Navigate to="/login" state={ { from: location } } replace />
     );

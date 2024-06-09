@@ -1,14 +1,15 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import { useActionData, useLoaderData, useNavigation, useSubmit } from "react-router-dom";
-import { PAGE_URL } from "../../../root/components/navigation/page-url";
-import "bulma-extensions/bulma-tooltip/dist/css/bulma-tooltip.min.css";
-import ExpenseForm from "./expense-form";
+import ReactMarkdown from "react-markdown";
 import { v4 as uuidv4 } from "uuid";
+import "bulma-extensions/bulma-tooltip/dist/css/bulma-tooltip.min.css";
+import { PAGE_URL } from "../../../root";
+import ExpenseForm from "./expense-form";
 import { ExpenseFields } from "../../services";
 import { useAuth } from "../../../auth";
-import ReactMarkdown from "react-markdown";
 import { Animated } from "../../../../components";
-import { ExpenseDetailLoaderType } from "../../route-handlers/expense-loader";
+import { ExpenseDetailLoaderResource } from "../../route-handlers/expense-loader";
+import { RouteHandlerResponse } from "../../../../services";
 
 
 const AddExpense: FunctionComponent = () => {
@@ -17,8 +18,8 @@ const AddExpense: FunctionComponent = () => {
     const submit = useSubmit();
     const auth = useAuth();
     // for error
-    const actionData: any = useActionData();
-    const loaderData = useLoaderData() as ExpenseDetailLoaderType;
+    const actionData = useActionData() as RouteHandlerResponse<any> | null;
+    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseDetailLoaderResource>;
     const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
@@ -26,12 +27,17 @@ const AddExpense: FunctionComponent = () => {
     }, []);
 
     useEffect(() => {
-        if (actionData?.errorMessage && actionData.errorMessage !== errorMessage)
+        if (actionData?.type === "error" && actionData.errorMessage !== errorMessage) {
             setErrorMessage(actionData.errorMessage);
-    }, [errorMessage, actionData?.errorMessage]);
+        }
+        else
+            if (loaderData.type === "error" && loaderData.errorMessage !== errorMessage) {
+                setErrorMessage(loaderData.errorMessage);
+            }
+    }, [errorMessage, actionData]);
 
     const onExpenseAdded = (data: ExpenseFields, formData: FormData) => {
-        if (auth.isAuthenticated) {
+        if (auth.userDetails.isAuthenticated) {
             // console.log("expense added", data.expenseId, data);
             submit(formData, { action: PAGE_URL.addExpense.fullUrl, method: "post", encType: "multipart/form-data" });
         } else {
@@ -58,9 +64,9 @@ const AddExpense: FunctionComponent = () => {
                         expenseId={ expenseId }
                         submitLabel={ navigation.state === "submitting" ? "Adding Expense details..." : "Add" }
                         onSubmit={ onExpenseAdded }
-                        categoryTypes={ loaderData.categoryTypes }
-                        paymentAccounts={ loaderData.paymentAccounts }
-                        sourceTags={ loaderData.expenseTags }
+                        categoryTypes={ loaderData.data.categoryTypes }
+                        paymentAccounts={ loaderData.data.paymentAccounts }
+                        sourceTags={ loaderData.data.expenseTags }
                     />
                 </div>
             </div>

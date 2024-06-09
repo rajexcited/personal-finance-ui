@@ -1,7 +1,7 @@
 import { FunctionComponent, useMemo, useState } from "react";
 import { Animated, ConfirmDialog, List, Switch } from "../../../components";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
-import { ConfigType, ConfigTypeBelongsTo, ConfigTypeStatus } from "../../../services";
+import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, RouteHandlerResponse, UpdateConfigStatusResource } from "../../../services";
 import { Control, ListItem } from "../../../components/list";
 import { ActionId, TypeCategoryAction } from "../services";
 import ViewConfig from "./view-config";
@@ -13,20 +13,20 @@ import ReactMarkdown from "react-markdown";
 
 
 const ExpenseCategoryPage: FunctionComponent = () => {
-    const loaderData = useLoaderData() as ConfigType[];
-    const actionData: any = useActionData();
+    const loaderData = useLoaderData() as RouteHandlerResponse<ConfigResource[]>;
+    const actionData = useActionData() as RouteHandlerResponse<any> | null;
     const [enableFilter, setEnableFilter] = useState(true);
     const [action, setAction] = useState<TypeCategoryAction>();
     const [toggleUpdate, setToggleUpdate] = useState(false);
     const submit = useSubmit();
 
     const expenseCategoryItems: ListItem[] = useMemo(() => {
-        if (Array.isArray(loaderData)) {
-            const list = loaderData.map(cfg => ({
-                id: cfg.configId,
+        if (loaderData.type === "success" && Array.isArray(loaderData.data)) {
+            const list = loaderData.data.map(cfg => ({
+                id: cfg.id,
                 title: cfg.name + " - " + cfg.status,
                 description: cfg.description,
-                status: cfg.status === ConfigTypeStatus.enable
+                status: cfg.status === ConfigTypeStatus.Enable
             }));
             if (enableFilter) {
                 return list.filter(item => item.status);
@@ -38,14 +38,15 @@ const ExpenseCategoryPage: FunctionComponent = () => {
 
     const onClickRequestAddExpenseCategoryHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
-        const defaultAddConfig: ConfigType = {
+        const defaultAddConfig: ConfigResource = {
             belongsTo: ConfigTypeBelongsTo.ExpenseCategory,
-            configId: uuidv4(),
+            id: uuidv4(),
             description: "",
             name: "",
             value: "",
-            relations: [],
-            status: ConfigTypeStatus.enable,
+            status: ConfigTypeStatus.Enable,
+            auditDetails: { createdOn: "", updatedOn: "" },
+            tags: []
         };
         setAction({ item: defaultAddConfig, type: ActionId.Add });
     };
@@ -62,7 +63,7 @@ const ExpenseCategoryPage: FunctionComponent = () => {
     };
 
     const onRequestListControlExpenseCategoryHandler = (item: ListItem, control: Control) => {
-        const cfgitem = loaderData.find(cfg => cfg.configId === item.id);
+        const cfgitem = loaderData.data.find(cfg => cfg.id === item.id);
         if (!cfgitem) return;
 
         if (control.id === ActionId.View) {
@@ -75,12 +76,12 @@ const ExpenseCategoryPage: FunctionComponent = () => {
         } else if (control.id === ActionId.ToggleEnable) {
             onAddUpdateExpenseCategoryHandler({
                 ...cfgitem,
-                status: ConfigTypeStatus.enable
+                status: ConfigTypeStatus.Enable
             });
         } else if (control.id === ActionId.ToggleDisable) {
             onAddUpdateExpenseCategoryHandler({
                 ...cfgitem,
-                status: ConfigTypeStatus.disable
+                status: ConfigTypeStatus.Disable
             });
         }
     };
@@ -95,8 +96,9 @@ const ExpenseCategoryPage: FunctionComponent = () => {
         }
     };
 
-    const onAddUpdateExpenseCategoryHandler = (details: ConfigType) => {
+    const onAddUpdateExpenseCategoryHandler = (details: UpdateConfigStatusResource) => {
         setAction(undefined);
+
         const data: any = {
             ...details
         };
@@ -168,11 +170,21 @@ const ExpenseCategoryPage: FunctionComponent = () => {
                     </section>
                     <section className="mt-4 pt-4 px-4">
                         {
-                            actionData?.errorMessage &&
+                            actionData?.type === "error" &&
                             <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
                                 <article className="message is-danger">
                                     <div className="message-body">
-                                        <ReactMarkdown children={ actionData?.errorMessage } />
+                                        <ReactMarkdown children={ actionData.errorMessage } />
+                                    </div>
+                                </article>
+                            </Animated>
+                        }
+                        {
+                            loaderData.type === "error" &&
+                            <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
+                                <article className="message is-danger">
+                                    <div className="message-body">
+                                        <ReactMarkdown children={ loaderData.errorMessage } />
                                     </div>
                                 </article>
                             </Animated>

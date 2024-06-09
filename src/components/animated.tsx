@@ -55,7 +55,7 @@ const Animated: FunctionComponent<AnimatedProps> = (props) => {
             animatedRef.current?.removeEventListener("animationstart", animationStartHandler);
             animatedRef.current?.removeEventListener("transitionend", transitionEndHandler);
         };
-    }, []);
+    }, [animatedRef.current]);
 
     useEffect(() => {
         if (props.isPlayIn !== isPlayIn) {
@@ -65,7 +65,7 @@ const Animated: FunctionComponent<AnimatedProps> = (props) => {
                 setHeightTransitionEnded(false);
             }
         }
-    }, [props.isPlayIn]);
+    }, [props.isPlayIn, props.animatedIn, props.animatedOut]);
 
     let animateClassname = visible || !props.resetOnAnimationEnd ? `animate__animated animate__${isPlayIn ? props.animatedIn : props.animatedOut}` : "";
     if (props.isVisibleAfterAnimateOut === false) {

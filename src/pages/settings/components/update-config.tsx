@@ -1,15 +1,15 @@
 import { FunctionComponent, useState } from "react";
-import { ConfigType, ConfigTypeStatus } from "../../../services";
-import { Input, InputValidators, Switch, TextArea } from "../../../components";
+import { ConfigResource, ConfigTypeStatus } from "../../../services";
+import { Input, InputValidators, Switch, TagsInput, TextArea } from "../../../components";
 
 export type ConfigInputProps = {
-    [key in keyof ConfigType]?: { placeholder?: string; tooltip?: string; idPrefix: string; };
+    [key in keyof ConfigResource]?: { placeholder?: string; tooltip?: string; idPrefix: string; };
 };
 
 interface UpdateConfigProps {
-    details: ConfigType;
+    details: ConfigResource;
     inputProps: ConfigInputProps;
-    onUpdate (details: ConfigType): void;
+    onUpdate (details: ConfigResource): void;
     onCancel (): void;
 }
 
@@ -17,19 +17,21 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
     const [name, setName] = useState(props.details.name);
     const [color, setColor] = useState(props.details.color || "");
     const [description, setDescription] = useState(props.details.description);
-    const [status, setStatus] = useState(props.details.status === ConfigTypeStatus.enable);
+    const [status, setStatus] = useState(props.details.status === ConfigTypeStatus.Enable);
+    const [tags, setTags] = useState(props.details.tags);
 
     const validateName = InputValidators.nameValidator();
 
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
-        const configData: ConfigType = {
+        const configData: ConfigResource = {
             ...props.details,
             name,
             value: name,
             color,
             description,
-            status: status ? ConfigTypeStatus.enable : ConfigTypeStatus.disable
+            status: status ? ConfigTypeStatus.Enable : ConfigTypeStatus.Disable,
+            tags
         };
         props.onUpdate(configData);
     };
@@ -88,10 +90,24 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
                             label="Description"
                             value={ description }
                             placeholder={ props.inputProps.description?.placeholder }
-                            maxlength={ 100 }
+                            maxlength={ 150 }
                             rows={ 2 }
                             cols={ 30 }
                             onChange={ setDescription }
+                        />
+                    </div>
+                </div>
+                <div className="columns">
+                    <div className="column">
+                        <TagsInput
+                            id="cfg-tags"
+                            label="Tags: "
+                            defaultValue={ tags }
+                            placeholder="Add Tags"
+                            onChange={ setTags }
+                            key={ "cfg-tags" }
+                            sourceValues={ [] }
+                            maxTags={ 10 }
                         />
                     </div>
                 </div>

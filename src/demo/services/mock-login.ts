@@ -1,8 +1,9 @@
 import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
-import { missingValidation, validateUuid } from "./common-validators";
-import { userSessionDetails } from "./userDetails";
+import { missingValidation, validateAuthorization, validateUuid } from "./common-validators";
+import { tokenSessionData, userSessionDetails } from "./userDetails";
 import { v4 as uuidv4 } from "uuid";
+import datetime from "date-and-time";
 
 const MockLogin = (demoMock: MockAdapter) => {
   const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#$%^&*])[\w!@#$%^&\(\)\=*]{8,25}$/;
@@ -12,99 +13,121 @@ const MockLogin = (demoMock: MockAdapter) => {
     return !emailId.endsWith("@demo.com");
   };
 
-  demoMock.onPost("/signup").reply((config) => {
+  demoMock.onPost("/user/signup").reply((config) => {
     const responseCreator = AxiosResponseCreator(config);
     if (!config.withCredentials) {
       return responseCreator.toForbiddenError("it is not secured");
     }
 
     const data = JSON.parse(config.data);
-    const missingErrors = missingValidation(data, ["emailId", "password", "firstName", "lastName"]);
+    const missingErrors = missingValidation(data, ["emailId", "password", "firstName", "lastName", "countryCode"]);
     if (missingErrors) {
       return responseCreator.toValidationError(missingErrors);
     }
-    if (!passwordRegex.test(data.password)) {
-      return responseCreator.toValidationError([{ loc: ["password"], msg: "pattern is not acceptable" }]);
+
+    if (!passwordRegex.test(atob(data.password))) {
+      return responseCreator.toValidationError([{ path: "password", message: "pattern is not acceptable" }]);
     }
+
     if (isInvalidDemoEmailId(data.emailId)) {
-      return responseCreator.toValidationError([
-        { loc: ["emailId"], msg: "invalid demo email id. email id must ends with '@demo.com'" },
-      ]);
+      return responseCreator.toValidationError([{ path: "emailId", message: "invalid demo email id. email id must ends with '@demo.com'" }]);
     }
 
     userSessionDetails(data);
-
-    return responseCreator.toCreateResponse({
-      ...data,
-      password: null,
+    const response = tokenSessionData({
       expiresIn: expiresInSec,
       accessToken: uuidv4(),
+      expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime(),
     });
+
+    return responseCreator.toCreateResponse(response);
   });
 
-  demoMock.onPost("/login").reply((config) => {
+  demoMock.onPost("/user/login").reply((config) => {
     const responseCreator = AxiosResponseCreator(config);
-    if (!config.withCredentials) {
-      return responseCreator.toForbiddenError("it is not secured");
-    }
 
     const data = JSON.parse(config.data);
     const missingErrors = missingValidation(data, ["emailId", "password"]);
-    if (missingErrors) {
+    if (missingErrors.length > 0) {
       return responseCreator.toValidationError(missingErrors);
     }
-    if (!passwordRegex.test(data.password)) {
-      return responseCreator.toValidationError([{ loc: ["password"], msg: "pattern is not acceptable" }]);
+
+    if (!passwordRegex.test(atob(data.password))) {
+      return responseCreator.toValidationError([{ path: "password", message: "pattern is not acceptable" }]);
     }
+
     if (isInvalidDemoEmailId(data.emailId)) {
-      return responseCreator.toValidationError([
-        { loc: ["emailId"], msg: "invalid demo email id. email id must ends with '@demo.com'" },
-      ]);
+      return responseCreator.toValidationError([{ path: "emailId", message: "invalid demo email id. email id must ends with '@demo.com'" }]);
     }
 
     const responseData = {
-      accessToken: uuidv4(),
       emailId: data.emailId,
-      isAuthenticated: true,
       firstName: data.emailId.replace("@demo.com", ""),
       lastName: "demo",
-      expiresIn: expiresInSec,
+      countryCode: "USA",
+      password: atob(data.password),
     };
 
-    userSessionDetails({ ...data, ...responseData });
+    userSessionDetails({ ...responseData });
+    const response = tokenSessionData({
+      expiresIn: expiresInSec,
+      accessToken: uuidv4(),
+      expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime(),
+    });
 
-    return responseCreator.toSuccessResponse(responseData);
+    return responseCreator.toSuccessResponse(response);
   });
 
-  demoMock.onPost("logout").reply((config) => {
+  demoMock.onPost("/user/logout").reply((config) => {
     const responseCreator = AxiosResponseCreator(config);
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
 
-    userSessionDetails({ emailId: " ", firstName: " ", lastName: " ", password: " " });
+    userSessionDetails({ emailId: "", firstName: "", lastName: "", password: "", countryCode: "" });
+    tokenSessionData({
+      expiresIn: expiresInSec,
+      accessToken: "",
+      expiryTime: -1,
+    });
 
     return responseCreator.toSuccessResponse("successfuly logged out");
   });
 
   demoMock.onPost("/user/refresh").reply((config) => {
     const responseCreator = AxiosResponseCreator(config);
-    const data = JSON.parse(config.data);
-
-    if (data.refreshToken && data.refreshToken.startsWith("Bearer ")) {
-      const validErrors = validateUuid(data.refreshToken.replace("Bearer ", ""), "refreshToken");
-      if (!validErrors) {
-        return responseCreator.toSuccessResponse({ expiresIn: expiresInSec, accessToken: uuidv4() });
-      }
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
     }
-    return responseCreator.toForbiddenError("You are not authorized");
+
+    const response = tokenSessionData({
+      expiresIn: expiresInSec,
+      accessToken: uuidv4(),
+      expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime(),
+    });
+    return responseCreator.toSuccessResponse(response);
   });
 
-  demoMock.onGet("/security/details").reply((config) => {
+  demoMock.onGet("/user/details").reply((config) => {
     const responseCreator = AxiosResponseCreator(config);
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
 
-    return responseCreator.toSuccessResponse(userSessionDetails());
+    const details = userSessionDetails();
+    return responseCreator.toSuccessResponse({ ...details, password: null });
   });
 
-  demoMock.onPost("/security/details").reply((config) => {
+  demoMock.onPost("/user/details").reply((config) => {
     const responseCreator = AxiosResponseCreator(config);
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+
     const data = JSON.parse(config.data);
     if (data.password) {
       // change password logic
@@ -113,28 +136,26 @@ const MockLogin = (demoMock: MockAdapter) => {
         return responseCreator.toValidationError(missingErrors);
       }
       if (!passwordRegex.test(data.password) || !passwordRegex.test(data.newPassword)) {
-        return responseCreator.toValidationError([{ loc: ["password", "newPassword"], msg: "incorrect value" }]);
+        return responseCreator.toValidationError([{ path: "password", message: "incorrect value" }]);
       }
 
       if (data.password !== userSessionDetails().password) {
-        return responseCreator.toValidationError([{ loc: ["password"], msg: "incorrect value" }]);
+        return responseCreator.toValidationError([{ path: "password", message: "incorrect value" }]);
       }
       if (data.password === data.newPassword) {
-        return responseCreator.toValidationError([{ loc: ["newPassword"], msg: "incorrect value" }]);
+        return responseCreator.toValidationError([{ path: "newPassword", message: "incorrect value" }]);
       }
       userSessionDetails({ password: data.newPassword });
       return responseCreator.toSuccessResponse("password changed");
     }
+
     const missingErrors = missingValidation(data, ["firstName", "lastName"]);
-    if (missingErrors && missingErrors.length === 1) {
+    if (missingErrors.length > 0) {
       return responseCreator.toValidationError(missingErrors);
     }
-    if (!missingErrors) {
-      userSessionDetails(data);
-      return responseCreator.toSuccessResponse("Name is changed");
-    }
 
-    return responseCreator.toUnknownError("request is not supported");
+    userSessionDetails(data);
+    return responseCreator.toSuccessResponse("Name is changed");
   });
 };
 

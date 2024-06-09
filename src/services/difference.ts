@@ -1,18 +1,15 @@
 import _ from "lodash";
 
-declare global {
-  interface Window {
-    difference(object: any, baseObject: any): any;
-  }
-}
+// declare global {
+//   interface Window {
+//     difference(object: any, baseObject: any): any;
+//   }
+// }
 
 const changes = (object: any, baseObj: any) => {
   return _.transform(object, (result: any, value: any, key: string) => {
     if (!_.isEqual(value, baseObj[key])) {
-      result[key] =
-        _.isObject(value) && _.isObject(baseObj[key])
-          ? changes(value, baseObj[key])
-          : { new: value, old: baseObj[key] };
+      result[key] = _.isObject(value) && _.isObject(baseObj[key]) ? changes(value, baseObj[key]) : { new: value, old: baseObj[key] };
     }
   });
 };
@@ -54,4 +51,4 @@ const hasDiff = (obj: any) => {
 
 export default difference;
 
-window.difference = difference;
+// window.difference = difference;

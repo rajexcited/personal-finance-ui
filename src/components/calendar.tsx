@@ -3,6 +3,7 @@ import 'bulma-calendar/dist/css/bulma-calendar.min.css';
 import './calendar.css';
 import bulmaCalendar from "bulma-calendar";
 import dateutils from "date-and-time";
+import { getLogger } from '../services';
 
 export interface CalendarProps extends bulmaCalendar.Options {
     id: string;
@@ -32,8 +33,10 @@ const Calendar: FunctionComponent<CalendarProps> = (props) => {
     const [calState, setCalState] = useState('notready');
 
     useEffect(() => {
-        if (!calendarRef.current)
+        const logger = getLogger("FC.calendar.useEffect.dep[calendarRef.current]");
+        if (!calendarRef.current || calendarInstance)
             return;
+
         const options: bulmaCalendar.Options = {
             ...defaultOptions,
             ...props
@@ -45,15 +48,21 @@ const Calendar: FunctionComponent<CalendarProps> = (props) => {
             setCalState('ready');
         };
 
+        logger.log(calendarRef.current, props);
         const calendar = bulmaCalendar.attach(`input[type="date"]#${props.id}`, options)[0];
+        logger.log(calendar);
         setCalendarInstance(calendar);
-        // bulmaCalendar instance is available as element.bulmaCalendar
-        calendar.on('select', (datepicker: bulmaCalendar.Event) => {
-            props.onSelect(datepicker.data.date);
-        });
 
         // todo destroy calendar instance. and remove document event listeners. can cause leaking issues.
-    }, []);
+    }, [calendarRef.current]);
+
+    useEffect(() => {
+        if (!calendarInstance) return;
+        // bulmaCalendar instance is available as element.bulmaCalendar
+        calendarInstance.on('select', (datepicker: bulmaCalendar.Event) => {
+            props.onSelect(datepicker.data.date);
+        });
+    }, [calendarInstance]);
 
     if (calendarRef.current && calendarInstance && calState === "ready") {
         const todayFooterClassList = calendarRef.current.querySelector(".datetimepicker-footer-today.button")?.classList;

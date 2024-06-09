@@ -1,9 +1,10 @@
-import { FunctionComponent, useEffect, useState, useCallback, useMemo } from "react";
+import { FunctionComponent, useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PAGE_URL } from "../../../root";
-import { TagsInput, Input, InputValidateResponse, TextArea, DropDown, InputValidators } from "../../../../components";
-import { ConfigType, PymtAccountFields } from "../../services";
+import { TagsInput, Input, TextArea, DropDown, InputValidators } from "../../../../components";
+import { ConfigResource, PymtAccountFields, PymtAccStatus } from "../../services";
 import { faBank } from "@fortawesome/free-solid-svg-icons";
+
 
 
 export interface AccountFormProps {
@@ -15,18 +16,17 @@ export interface AccountFormProps {
     // may be I can allow user to load old tags and store it as settings and 
     // can setup a rest api to retrieve tags
     sourceTags: string[];
-    categoryTypes: ConfigType[];
+    categoryTypes: ConfigResource[];
     details?: PymtAccountFields;
     accountId: string;
 }
 
 const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
     const [shortName, setShortName] = useState(props.details?.shortName || "");
-    const [accountName, setAccountName] = useState(props.details?.accountName || "");
+    const [accountIdNum, setAccountIdNum] = useState(props.details?.accountIdNum || "");
     const [institutionName, setInstitutionName] = useState(props.details?.institutionName || "");
-    const [accountNumber, setAccountNumber] = useState(props.details?.accountNumber || "");
     const [description, setDescription] = useState(props.details?.description || "");
-    const [tags, setTags] = useState(props.details?.tags || "");
+    const [tags, setTags] = useState(props.details?.tags || []);
     const [typeName, setTypeName] = useState(props.details?.typeName?.toString() || "");
     // const [accountTypeMap, setAccountTypeMap] = useState(new Map<string, ConfigType>());
     // how to set this value? if I collect values from displayed paymentAccounts, 
@@ -59,14 +59,16 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
         event.preventDefault();
         // const acctype = AccountType[type as keyof typeof AccountType];
         const data: PymtAccountFields = {
-            ...props,
+            id: props.accountId,
             shortName,
-            accountName,
+            accountIdNum,
             institutionName,
-            accountNumber,
             description,
             tags,
-            typeName
+            typeName,
+            typeId: "",
+            auditDetails: { createdOn: "", updatedOn: "" },
+            status: PymtAccStatus.Enable
         };
         props.onSubmit(data);
         // return data;
@@ -127,31 +129,15 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                             <div className="column">
                                 <div className="mr-4 pr-4">
                                     <Input
-                                        id="account-name"
-                                        label="Account Name: "
+                                        id="account-name-number"
+                                        label="Account Name / Number: "
                                         type="text"
-                                        placeholder="Enter Account name"
+                                        placeholder="Enter Account name / number"
                                         size={ 50 }
                                         maxlength={ 50 }
-                                        initialValue={ accountName }
-                                        tooltip="The account you want to add. give full name of account"
-                                        onChange={ setAccountName }
-                                        required={ true }
-                                        validate={ validateName }
-                                    />
-                                </div>
-                            </div>
-                            <div className="column">
-                                <div className="ml-2 pl-2">
-                                    <Input
-                                        id="account-number"
-                                        label="Account Number/Id: "
-                                        type="text"
-                                        placeholder="Enter Account number"
-                                        size={ 25 }
-                                        maxlength={ 25 }
-                                        initialValue={ accountNumber }
-                                        onChange={ setAccountNumber }
+                                        initialValue={ accountIdNum }
+                                        tooltip="The account you want to add. give full name of account. this is for you to recognise account details."
+                                        onChange={ setAccountIdNum }
                                         validate={ validateName }
                                     />
                                 </div>
@@ -165,6 +151,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                     items={ accountTypes }
                                     onSelect={ (selected: string) => setTypeName(selected) }
                                     direction="down"
+                                    required={ true }
                                     selectedItem={ typeName }
                                 />
                             </div>

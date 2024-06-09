@@ -1,33 +1,23 @@
-import { openDB } from "idb";
-import { axios, IDATABASE_TRACKER, convertAuditFields, handleRestErrors, ConfigType } from "../../../services";
+import { axios, handleRestErrors, convertAuditFieldsToDateInstance, getLogger, MyLocalDatabase, LocalDBStore } from "../../../services";
 import AccountTypeService from "./account-type-service";
 import { PymtAccountFields } from "./field-types";
 import pMemoize from "p-memoize";
 import ExpiryMap from "expiry-map";
 
-interface PymtAccountService {
-  getPymtAccounts(): Promise<PymtAccountFields[]>;
-  getPymtAccount(accountId: string): Promise<PymtAccountFields | null>;
-  addUpdatePymtAccount(accDetails: PymtAccountFields): Promise<void>;
-  removePymtAccount(accountId: string): Promise<void>;
-  getPymtAccountTags(): Promise<string[]>;
-  getPymtAccountTypes(): Promise<ConfigType[]>;
-  destroy(): void;
-}
-
-const PymtAccountServiceImpl = (): PymtAccountService => {
+const PymtAccountServiceImpl = () => {
   const accountTypeService = AccountTypeService();
-  const objectStoreName = IDATABASE_TRACKER.EXPENSE_DATABASE.PYMT_ACCOUNT_STORE.NAME;
-  const dbPromise = openDB(IDATABASE_TRACKER.EXPENSE_DATABASE.NAME, IDATABASE_TRACKER.EXPENSE_DATABASE.VERSION);
+  const paymentAccountDb = new MyLocalDatabase<PymtAccountFields>(LocalDBStore.PaymentAccount);
+  const rootPath = "/payment/accounts";
+  const _logger = getLogger("service.payment-account");
 
   const getAccountTypesEnum = pMemoize(
     async () => {
       const acctypes = await accountTypeService.getAccountTypes();
       const typeMap = new Map<string, string>();
       acctypes.forEach((at) => {
-        if (at.configId && at.name) {
-          typeMap.set(at.configId, at.name);
-          typeMap.set(at.name, at.configId);
+        if (at.id && at.name) {
+          typeMap.set(at.id, at.name);
+          typeMap.set(at.name, at.id);
         }
       });
       return typeMap;
@@ -36,123 +26,131 @@ const PymtAccountServiceImpl = (): PymtAccountService => {
   );
 
   const updateAccountType = (accountTypeMap: Map<string, string>, pymtAccount: PymtAccountFields) => {
-    if (pymtAccount.typeId) pymtAccount.typeName = accountTypeMap.get(pymtAccount.typeId);
-    else if (pymtAccount.typeName) pymtAccount.typeId = accountTypeMap.get(pymtAccount.typeName);
+    if (pymtAccount.typeId && accountTypeMap.has(pymtAccount.typeId)) {
+      pymtAccount.typeName = accountTypeMap.get(pymtAccount.typeId) as string;
+    } else if (pymtAccount.typeName) {
+      pymtAccount.typeId = accountTypeMap.get(pymtAccount.typeName) as string;
+    }
   };
 
   const getPymtAccounts = async () => {
-    const db = await dbPromise;
+    const logger = getLogger("getPymtAccounts", _logger);
+
     try {
-      if ((await db.count(objectStoreName)) === 0) {
-        const response = await axios.get("/accounts");
-        const accountsResponse = response.data as PymtAccountFields[];
-        const accountTypesEnum = await getAccountTypesEnum();
-        const dbAddPymtAccPromises = accountsResponse.map((pymtAccount) => {
-          updateAccountType(accountTypesEnum, pymtAccount);
-          convertAuditFields(pymtAccount);
-          return db.add(objectStoreName, pymtAccount);
-        });
-        await Promise.all(dbAddPymtAccPromises);
+      const pymtAccounts = await paymentAccountDb.getAll();
+      if (pymtAccounts.length > 0) {
+        return pymtAccounts;
       }
 
-      const pymtAccounts = (await db.getAll(objectStoreName)) as PymtAccountFields[];
-      if (pymtAccounts) return pymtAccounts;
+      const response = await axios.get(rootPath);
+      const accountsResponse = response.data as PymtAccountFields[];
+      const accountTypesEnum = await getAccountTypesEnum();
+      const dbAddPymtAccPromises = accountsResponse.map((pymtAccount) => {
+        updateAccountType(accountTypesEnum, pymtAccount);
+        convertAuditFieldsToDateInstance(pymtAccount.auditDetails);
+        return paymentAccountDb.addItem(pymtAccount);
+      });
+      await Promise.all(dbAddPymtAccPromises);
 
-      return [];
+      return accountsResponse;
     } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
     }
   };
 
   const getPymtAccount = async (accountId: string) => {
-    const db = await dbPromise;
-    try {
-      if ((await db.count(objectStoreName, accountId)) === 0) {
-        const pymtAccounts = (await getPymtAccounts()) as PymtAccountFields[];
-        const pymtAccount = pymtAccounts.find((val) => val.accountId === accountId);
-        if (pymtAccount) return pymtAccount;
-      }
+    const logger = getLogger("getPymtAccount", _logger);
 
-      const pymtAccount = (await db.get(objectStoreName, accountId)) as PymtAccountFields;
-      if (pymtAccount) return pymtAccount;
-      return null;
+    try {
+      const pymtAccount = await paymentAccountDb.getItem(accountId);
+      if (pymtAccount) {
+        return pymtAccount;
+      }
+      const pymtAccounts = await getPymtAccounts();
+      const foundPymtAccount = pymtAccounts.find((pymtacc) => pymtacc.id === accountId);
+      return foundPymtAccount || null;
     } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
     }
   };
 
   const addUpdatePymtAccount = async (pymtAccount: PymtAccountFields) => {
-    const db = await dbPromise;
+    const logger = getLogger("addUpdatePymtAccount", _logger);
 
     try {
       const accountTypeMap = await getAccountTypesEnum();
       updateAccountType(accountTypeMap, pymtAccount);
-      if ((await db.count(objectStoreName, pymtAccount.accountId)) === 0) {
-        await addPymtAccount(pymtAccount);
-      } else {
-        await updatePymtAccount(pymtAccount);
-      }
+
+      const response = await axios.post(rootPath, pymtAccount);
+      const pymtAccountResponse = response.data as PymtAccountFields;
+      updateAccountType(accountTypeMap, pymtAccountResponse);
+      convertAuditFieldsToDateInstance(pymtAccountResponse.auditDetails);
+
+      await paymentAccountDb.addUpdateItem(pymtAccountResponse);
+
+      // if ((await db.count(objectStoreName, pymtAccount.accountId)) === 0) {
+      //   await addPymtAccount(pymtAccount);
+      // } else {
+      //   await updatePymtAccount(pymtAccount);
+      // }
     } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
     }
   };
 
-  const addPymtAccount = async (acc: PymtAccountFields) => {
-    const data: any = {
-      ...acc,
-      accountId: null,
-    };
-    const accountTypeMap = await getAccountTypesEnum();
-    updateAccountType(accountTypeMap, data);
-    const response = await axios.post("/accounts", data);
-    const pymtAccountResponse = response.data as PymtAccountFields;
-    updateAccountType(accountTypeMap, pymtAccountResponse);
-    convertAuditFields(pymtAccountResponse);
-    const db = await dbPromise;
-    await db.add(objectStoreName, pymtAccountResponse);
-  };
+  // const addPymtAccount = async (acc: PymtAccountFields) => {
+  //   const data: any = {
+  //     ...acc,
+  //     accountId: null,
+  //   };
+  //   const accountTypeMap = await getAccountTypesEnum();
+  //   updateAccountType(accountTypeMap, data);
+  //   const response = await axios.post("/accounts", data);
+  //   const pymtAccountResponse = response.data as PymtAccountFields;
+  //   updateAccountType(accountTypeMap, pymtAccountResponse);
+  //   convertAuditFieldsToDateInstance(pymtAccountResponse.auditDetails);
+  //   const db = await dbPromise;
+  //   await db.add(objectStoreName, pymtAccountResponse);
+  // };
 
-  const updatePymtAccount = async (acc: PymtAccountFields) => {
-    const data = { ...acc };
-    const accountTypeMap = await getAccountTypesEnum();
-    updateAccountType(accountTypeMap, data);
-    const response = await axios.post("/accounts", data);
-    const pymtAccountResponse = response.data as PymtAccountFields;
-    updateAccountType(accountTypeMap, pymtAccountResponse);
-    convertAuditFields(pymtAccountResponse);
-    const db = await dbPromise;
-    await db.put(objectStoreName, pymtAccountResponse);
-  };
+  // const updatePymtAccount = async (acc: PymtAccountFields) => {
+  //   const data = { ...acc };
+  //   const accountTypeMap = await getAccountTypesEnum();
+  //   updateAccountType(accountTypeMap, data);
+  //   const response = await axios.post("/accounts", data);
+  //   const pymtAccountResponse = response.data as PymtAccountFields;
+  //   updateAccountType(accountTypeMap, pymtAccountResponse);
+  //   convertAuditFieldsToDateInstance(pymtAccountResponse.auditDetails);
+  //   const db = await dbPromise;
+  //   await db.put(objectStoreName, pymtAccountResponse);
+  // };
 
   const removePymtAccount = async (accountId: string) => {
-    const db = await dbPromise;
-    try {
-      const response = await axios.delete("/accounts/" + accountId);
-      await db.delete(objectStoreName, accountId);
-    } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
-    }
-  };
+    const logger = getLogger("removePymtAccount", _logger);
 
-  const destroy = () => {
-    dbPromise.then((db) => db.close());
-    accountTypeService.destroy();
+    try {
+      const response = await axios.delete(`${rootPath}/id/${accountId}`);
+      await paymentAccountDb.delete(accountId);
+    } catch (e) {
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
+    }
   };
 
   const getPymtAccountTags = async () => {
     const pymtAccounts = await getPymtAccounts();
-    const tags = pymtAccounts
-      .map((acc) => acc.tags)
-      .join(",")
-      .split(",");
+    const tags = pymtAccounts.flatMap((acc) => acc.tags);
 
     return tags;
   };
@@ -168,7 +166,6 @@ const PymtAccountServiceImpl = (): PymtAccountService => {
     removePymtAccount,
     getPymtAccountTags,
     getPymtAccountTypes,
-    destroy,
   };
 };
 

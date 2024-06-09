@@ -5,3 +5,4 @@ export { default as RequireAuth } from "./components/require-auth";
 export { default as useAuth } from "./hooks/use-auth";
 export { default as AuthContextProvider } from "./context/auth-provider";
 export { AuthenticationService } from "./services";
+export type { UserDetailsResource } from "./services";

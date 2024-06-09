@@ -14,10 +14,11 @@ export interface DropDownProps {
     label: string;
     items: string[] | DropDownItemType[];
     selectedItem?: string | DropDownItemType;
-    defaultItem?: string;
+    defaultItem?: string | DropDownItemType;
     onSelect (item: string | DropDownItemType): void;
     direction?: "up" | "down";
     size?: "normal" | "small" | "medium" | "large";
+    required?: boolean;
 }
 
 const findUniqueElementId = (prefix: string) => {
@@ -79,8 +80,8 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
     }, [props.selectedItem]);
 
     useEffect(() => {
+        let ddItems: DropDownItemType[] = [];
         if (props.items && props.items.length) {
-            let ddItems: DropDownItemType[];
             if (typeof props.items[0] === "string") {
                 ddItems = props.items.map(item => ({
                     id: item,
@@ -91,7 +92,14 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
             }
             setItems(ddItems);
         }
-    }, [props.items]);
+        if (props.defaultItem) {
+            const defaultItemId = typeof props.defaultItem === "string" ? props.defaultItem : props.defaultItem.id;
+            if (ddItems.length === 0) {
+                ddItems = items;
+            }
+            setSelectedItem(ddItems.find(di => di.id === defaultItemId));
+        }
+    }, [props.items, props.defaultItem]);
 
     const toggleDropdownHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
@@ -113,7 +121,8 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
     if (selectedItem) {
         triggerItem = items.find(itm => itm.id === selectedItem.id)?.content;
     }
-    const selectedTriggerContent = triggerItem || props.defaultItem || "Select";
+    const selectedTriggerContent = triggerItem || "Select";
+
     const paddingLength = (Math.max(...contentsLength, 20) / 2) + 2 - selectedTriggerContent.length;
     const triggerItemPaddingBefore = [];
     const triggerItemPaddingAfter = [];
@@ -161,6 +170,23 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
                     </div>
                 </div>
             </div>
+            {
+                props.required &&
+                <>
+                    <input
+                        type="text"
+                        name={ props.id + "dropdown" }
+                        id={ props.id + "dropdown" }
+                        value={ selectedItem?.id }
+                        disabled={ true }
+                        required={ props.required }
+                        className="input-hidden"
+                    />
+                    { !selectedItem?.id &&
+                        <p className="help is-danger"> Please select an item from dropdown. </p>
+                    }
+                </>
+            }
         </div>
     );
 };

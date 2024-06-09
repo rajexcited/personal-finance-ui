@@ -1,12 +1,14 @@
+import { parseTimestamp } from "./utils";
+
 export interface AuditFields {
   createdBy?: string;
   updatedBy?: string;
-  createdOn?: Date;
-  updatedOn?: Date;
+  createdOn: Date | string;
+  updatedOn: Date | string;
 }
 
-export const convertAuditFields = (fields: AuditFields) => {
-  if (fields.createdOn) fields.createdOn = new Date(String(fields.createdOn));
-  if (fields.updatedOn) fields.updatedOn = new Date(String(fields.updatedOn));
+export const convertAuditFieldsToDateInstance = (fields: AuditFields) => {
+  if (typeof fields.createdOn === "string") fields.createdOn = parseTimestamp(fields.createdOn);
+  if (typeof fields.updatedOn === "string") fields.updatedOn = parseTimestamp(fields.updatedOn);
   return fields;
 };

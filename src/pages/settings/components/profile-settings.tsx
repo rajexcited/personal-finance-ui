@@ -1,20 +1,25 @@
 import { FormEventHandler, FunctionComponent, MouseEventHandler, useEffect, useState } from "react";
-import { Input } from "../../../components";
-import { useLoaderData, useSubmit } from "react-router-dom";
-import { SecurityDetailType } from "../../auth/services/field-types";
+import { Animated, Input } from "../../../components";
+import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
 import { PAGE_URL } from "../../root";
-
+import { UpdateUserDetailsResource } from "../../auth/services";
+import { RouteHandlerResponse } from "../../../services";
+import { ProfileDetailsLoaderResource } from "../route-handlers/profile-loader-action";
+import ReactMarkdown from "react-markdown";
 
 const ProfileSettings: FunctionComponent = () => {
-    const loaderData = useLoaderData() as SecurityDetailType;
+    const loaderData = useLoaderData() as RouteHandlerResponse<ProfileDetailsLoaderResource>;
+    const actionData = useActionData() as RouteHandlerResponse<any> | null;
     const [updateNameRequest, setUpdateNameRequest] = useState(false);
-    const [firstName, setFirstName] = useState(loaderData.firstName || "");
-    const [lastName, setLastName] = useState(loaderData.lastName || "");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const submit = useSubmit();
 
     useEffect(() => {
-        if (loaderData.firstName && loaderData.firstName !== firstName) setFirstName(loaderData.firstName);
-        if (loaderData.lastName && loaderData.lastName !== lastName) setLastName(loaderData.lastName);
+        if (loaderData.type === "success") {
+            setFirstName(loaderData.data.nameDetails.firstName);
+            setLastName(loaderData.data.nameDetails.lastName);
+        }
     }, [loaderData]);
 
     const onClickChangeNameHandler: MouseEventHandler<HTMLButtonElement> = event => {
@@ -25,19 +30,45 @@ const ProfileSettings: FunctionComponent = () => {
     const onClickChangeNameCancelHandler: MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
         setUpdateNameRequest(false);
-        setFirstName(loaderData.firstName || "");
-        setLastName(loaderData.lastName || "");
+        setFirstName(loaderData.data.nameDetails.firstName);
+        setLastName(loaderData.data.nameDetails.lastName);
     };
 
     const onSubmitNameChangeHandler: FormEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
-        submit({ firstName, lastName }, { action: PAGE_URL.profileSettings.fullUrl, method: "post" });
+        if (firstName !== loaderData.data.nameDetails.firstName || lastName !== loaderData.data.nameDetails.lastName) {
+            const nameDetails: UpdateUserDetailsResource = {
+                firstName: firstName,
+                lastName: lastName
+            };
+            submit({ nameDetails }, { method: "post", action: PAGE_URL.profileSettings.fullUrl, encType: "application/json" });
+        }
         setUpdateNameRequest(false);
     };
 
 
     return (
         <section className="profile-settings">
+            {
+                loaderData.type === "error" &&
+                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
+                    <article className="message is-danger">
+                        <div className="message-body">
+                            <ReactMarkdown children={ loaderData.errorMessage } />
+                        </div>
+                    </article>
+                </Animated>
+            }
+            {
+                actionData?.type === "error" &&
+                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
+                    <article className="message is-danger">
+                        <div className="message-body">
+                            <ReactMarkdown children={ actionData.errorMessage } />
+                        </div>
+                    </article>
+                </Animated>
+            }
             <div className="columns">
                 <div className="column is-offset-1">
                     <h2 className="title">Personal Details</h2>
@@ -98,19 +129,23 @@ const ProfileSettings: FunctionComponent = () => {
             </div>
             <div className="columns">
                 <div className="column is-offset-1">
-                    <h2 className="title">Currency Profile</h2>
+                    <h2 className="title">Currency Profiles</h2>
                 </div>
             </div>
-            <div className="columns">
-                <div className="column is-narrow">
-                    <label className="label">Country: </label>
-                    <span> United States of America </span>
-                </div>
-                <div className="column">
-                    <label className="label">Currency: </label>
-                    <span> Dollar ( $ ) </span>
-                </div>
-            </div>
+            {
+                loaderData.data.currencyProfiles.map(currencyProfile =>
+                    <div className="columns" key={ currencyProfile.id }>
+                        <div className="column is-narrow">
+                            <label className="label">Country: </label>
+                            <span> { currencyProfile.country.name } </span>
+                        </div>
+                        <div className="column">
+                            <label className="label">Currency: </label>
+                            <span> { currencyProfile.currency.name + " ( " + currencyProfile.currency.symbol + " )" } </span>
+                        </div>
+                    </div>
+                )
+            }
         </section>
     );
 };

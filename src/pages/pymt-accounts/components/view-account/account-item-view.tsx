@@ -23,12 +23,12 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
 
     const onClickUpdateHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        navigate(PAGE_URL.updatePymAccount.shortUrl.replace(":accountId", props.details.accountId));
+        navigate(PAGE_URL.updatePymAccount.shortUrl.replace(":accountId", props.details.id));
     };
 
     const onClickDeleteHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        props.onDeleteRequest(props.details.accountId);
+        props.onDeleteRequest(props.details.id);
     };
 
     return (
@@ -55,16 +55,12 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                         <div className="content">
                             <div className="columns is-variable">
                                 <div className="column">
-                                    <label className="label">Account Name: </label>
-                                    <span>{ props.details.accountName }</span>
+                                    <label className="label">Account Name / Number: </label>
+                                    <span>{ props.details.accountIdNum }</span>
                                 </div>
                                 <div className="column">
                                     <label className="label">Institution Name: </label>
                                     <span>{ props.details.institutionName }</span>
-                                </div>
-                                <div className="column">
-                                    <label className="label">Account Number: </label>
-                                    <span>{ props.details.accountNumber }</span>
                                 </div>
                             </div>
                             <div className="columns is-variable">
@@ -77,7 +73,7 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                                     <div className="tags">
                                         {
                                             props.details.tags &&
-                                            props.details.tags.split(",").map(
+                                            props.details.tags.map(
                                                 tag => <span
                                                     className="tag is-link"
                                                     key={ tag + "-tag-key" }

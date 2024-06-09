@@ -1,185 +1,337 @@
 import "./interceptors";
-import { axios, ConfigTypeService, ConfigTypeStatus, handleRestErrors } from "../../../services";
-import dateutils from "date-and-time";
-import { LoginDataType, UserDetailType, SignupDetailType, AuthDetailType, SecurityDetailType } from "./field-types";
-import { authTokenSessionKey, authUserSessionKey } from "./refresh-token";
-import { ConfigTypeBelongsTo } from "../../../services/config-type-service";
+import { LoggerBase, axios, getLogger, handleRestErrors, isBlank, subtractDates } from "../../../services";
+import {
+  AccessTokenResource,
+  UpdateUserDetailsResource,
+  UpdateUserPasswordResource,
+  UserDetailsResource,
+  UserLoginResource,
+  UserSignupResource,
+} from "./field-types";
+import _ from "lodash";
 
-interface AuthenticationService {
-  login(details: LoginDataType): Promise<void>;
-  isAuthenticated(): boolean;
-  logout(): void;
-  isAuthorized(pageid: string): Promise<boolean>;
-  destroy(): void;
-  getUserDetails(): UserDetailType;
-  signup(details: SignupDetailType): Promise<void>;
-  ping(): void;
-  getSecutiyDetails(): Promise<SecurityDetailType>;
-  updateSecurityDetails(details: SecurityDetailType): Promise<void>;
-}
+export const authTokenSessionKey = "fin-auth-tkn";
+const authUserSessionKey = "fin-auth-usr";
 
-const AuthenticationServiceImpl = (): AuthenticationService => {
-  const authRoleConfigService = ConfigTypeService(ConfigTypeBelongsTo.Auth);
+const AuthenticationServiceImpl = () => {
+  const rootPath = "/user";
+  /** 10 min */
+  const MIN_SESSION_TIME_IN_SEC = 10 * 60;
+  const _logger = getLogger("service.auth");
 
-  const login = async (details: LoginDataType) => {
+  const login = async (details: UserLoginResource) => {
+    const logger = getLogger("login", _logger);
     try {
-      const data = { emailId: details.emailId, password: details.password };
-      const response = await axios.post("/login", data);
-      if (!(response.data.accessToken && response.data.expiresIn)) {
+      if (isAuthenticated(logger)) {
+        logger.debug("already logged in");
+        throw new Error("You are already logged in.");
+      }
+
+      const data = {
+        emailId: details.emailId,
+        password: btoa(details.password),
+      };
+
+      const response = await axios.post(`${rootPath}/login`, data);
+      const tokenResponse = response.data as AccessTokenResource;
+      logger.debug("received token response from api call");
+
+      if (
+        !tokenResponse.accessToken ||
+        tokenResponse.expiresIn < MIN_SESSION_TIME_IN_SEC ||
+        subtractDates(tokenResponse.expiryTime).toSeconds() < MIN_SESSION_TIME_IN_SEC
+      ) {
+        logger.debug("incorrect auth response", tokenResponse, ", subtractDates.toSeconds() =", subtractDates(tokenResponse.expiryTime).toSeconds());
         throw Error("user login unauthorized");
       }
-      sessionStorage.setItem(
-        authTokenSessionKey,
-        JSON.stringify({ accessToken: response.data.accessToken, expiresIn: response.data.expiresIn })
-      );
-      const authResponse: AuthDetailType = {
-        ...response.data,
-        accessToken: undefined,
-        fullName: response.data.firstName + " " + response.data.lastName,
-        expiryDate: dateutils.addSeconds(new Date(), response.data.expiresIn),
-      };
 
-      const authDetails = {
-        ...authResponse,
-        expiryDate: authResponse.expiryDate.getTime(),
-      };
-      sessionStorage.setItem(authUserSessionKey, JSON.stringify(authDetails));
+      sessionStorage.setItem(authTokenSessionKey, JSON.stringify(tokenResponse));
+      logger.debug("stored token session");
     } catch (e) {
       const err = e as Error;
-      handleRestErrors(err);
-      console.error("not rest error", e);
-      const msg = err.message || e;
-      throw Error(msg as string);
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
     }
   };
 
-  const getValidAuthSessionDetails = () => {
-    const sessionDetails = sessionStorage.getItem(authUserSessionKey);
-    if (sessionDetails) {
-      const parsedDetails = JSON.parse(sessionDetails);
-      if (parsedDetails.expiryDate > new Date()) {
-        const authDetails: AuthDetailType = {
-          ...parsedDetails,
-          expiryDate: new Date(parsedDetails.expiryDate),
-        };
-        return authDetails;
-      }
-    }
-    sessionStorage.removeItem(authUserSessionKey);
-    return null;
-  };
-
-  const isAuthenticated = (): boolean => {
-    try {
-      const authDetails = getValidAuthSessionDetails();
-      return !!authDetails;
-    } catch (e) {
-      console.error("unknown error", e);
-    }
-    return false;
-  };
-
-  const logout = () => {
-    sessionStorage.removeItem(authUserSessionKey);
-    sessionStorage.removeItem(authTokenSessionKey);
-    axios.post("/logout");
-  };
-
-  const getUserDetails = (): UserDetailType => {
-    const authDetails = getValidAuthSessionDetails();
-    if (authDetails) {
-      return {
-        fullName: authDetails.fullName,
-        isAuthenticated: authDetails.isAuthenticated,
-        emailId: authDetails.emailId,
-        expiryDate: authDetails.expiryDate,
-      };
-    }
-    return {
-      fullName: "",
-      emailId: "",
-      isAuthenticated: false,
-      expiryDate: dateutils.parse("1/1/1000", "M/D/YYYY"),
-    };
-  };
-
-  const isAuthorized = async (pageid: string): Promise<boolean> => {
-    const authDetails = getValidAuthSessionDetails();
-    if (authDetails) {
-      const authConfigs = await authRoleConfigService.getConfigTypes([ConfigTypeStatus.enable]);
-      const authRoleCfgs = authConfigs.filter((cfg) => cfg.relations.includes("auth-roles"));
-      // const authRoleMatched = authRoleCfgs
-      //   .filter((cfg) => cfg.value === pageid)
-      //   .find((cfg) => authDetails.roles.includes(cfg.name));
-      // return !!authRoleMatched;
+  const isTokenSessionValid = (loggerBase: LoggerBase) => {
+    const logger = getLogger("isTokenSessionValid", loggerBase);
+    const tokenSessionDetails = sessionStorage.getItem(authTokenSessionKey);
+    // logger.debug("token session data =", tokenSessionDetails);
+    // scenario 1 - tokenSessionDetails is null - when session gets invalidated
+    // scenario 2 - session time is expired
+    if (!tokenSessionDetails) {
+      cleanupSession();
       return false;
     }
+
+    const tokenSessionResource = JSON.parse(tokenSessionDetails) as AccessTokenResource;
+    // assuming margin error in seconds to validate session expiry
+    const MARGIN_ERROR_TIME_IN_SEC = 1;
+
+    const validSessionSeconds = subtractDates(tokenSessionResource.expiryTime).toSeconds();
+    // logger.debug("validSessionSeconds =", validSessionSeconds, ", responding boolean result = ", !(validSessionSeconds <= MARGIN_ERROR_TIME_IN_SEC));
+    if (validSessionSeconds <= MARGIN_ERROR_TIME_IN_SEC) {
+      cleanupSession();
+      return false;
+    }
+
+    return true;
+  };
+
+  const cleanupSession = () => {
+    // clean up session to force user to re-login
+    sessionStorage.clear();
+  };
+
+  /**
+   * Intenal utility method for the service to validate session details
+   * if invalid or corrupted session is found, it will be deleted. forcing user to re-login
+   *
+   * @returns user session details if valid
+   */
+  const getValidAuthSessionDetails = (loggerBase: LoggerBase) => {
+    const logger = getLogger("getValidAuthSessionDetails", loggerBase);
+    if (!isTokenSessionValid(logger)) {
+      return null;
+    }
+
+    const userSessionDetails = sessionStorage.getItem(authUserSessionKey);
+    // scenario 2 - userSessionDetails is null - when session is corrupted, leaving partial details into session
+    if (!userSessionDetails) {
+      logger.debug("user session data not found. so clearing session data");
+      cleanupSession();
+      return null;
+    }
+
+    const userSessionResource = JSON.parse(userSessionDetails) as UserDetailsResource;
+    // logger.debug("user session data =", userSessionDetails);
+    if (!userSessionResource.isAuthenticated) {
+      cleanupSession();
+      return null;
+    }
+
+    return userSessionResource;
+  };
+
+  const isAuthenticated = (loggerBase?: LoggerBase): boolean => {
+    const logger = getLogger("isAuthenticated", loggerBase);
+    try {
+      const authDetails = getValidAuthSessionDetails(logger);
+      if (authDetails?.isAuthenticated) {
+        // logger.debug("authen is true");
+        return true;
+      }
+    } catch (e) {
+      logger.warn("unknown error", e);
+    }
+    logger.debug("authen is false");
     return false;
   };
 
-  const signup = async (details: SignupDetailType) => {
-    if (isAuthenticated()) {
-      throw new Error("You are already logged in. Cannot sing you up.");
-    }
+  const logout = async () => {
+    const logger = getLogger("logout", _logger);
+    cleanupSession();
+    logger.debug("session is cleared. calling api");
+    await axios.post(`${rootPath}/logout`);
+    logger.debug("api successful");
+  };
+
+  /**
+   * build full name based on hard coded name template pattern.
+   *
+   * pattern is "LastName, FirstName"
+   *
+   * @param firstName
+   * @param lastName
+   * @returns full name including last name and first name
+   */
+  const getFullName = (firstName: string, lastName: string) => {
+    return _.capitalize(lastName) + ", " + _.capitalize(firstName);
+  };
+
+  /**
+   * call api to get user details and store to session
+   * It first attempts to fetch user details from session. if not available, will fetch from api
+   *
+   *  @returns user details
+   */
+  const getUserDetails = async () => {
+    const logger = getLogger("getUserDetails", _logger);
     try {
-      const data = { ...details };
-      // default configs will be created with sign up
-      const response = await axios.post("/signup", data);
-      if (!(response.data.accessToken && response.data.expiresIn)) {
-        throw Error("user login unauthorized");
+      if (!isTokenSessionValid(logger)) {
+        logger.debug("invalid token");
+        throw new Error("token is not valid");
       }
-      sessionStorage.setItem(
-        authTokenSessionKey,
-        JSON.stringify({ accessToken: response.data.accessToken, expiresIn: response.data.expiresIn })
-      );
-      const authResponse: AuthDetailType = {
-        ...response.data,
-        accessToken: undefined,
-        fullName: response.data.firstName + " " + response.data.lastName,
-        expiryDate: dateutils.addSeconds(new Date(), response.data.expiresIn),
+
+      if (authUserSessionKey in sessionStorage) {
+        logger.debug("having session data");
+        const userSessionDetail = getValidAuthSessionDetails(logger);
+        if (userSessionDetail) {
+          return userSessionDetail;
+        }
+      }
+
+      logger.debug("calling api as details in session are null");
+      const response = await axios.get(`${rootPath}/details`);
+      const userDetailsResponse = response.data as UserDetailsResource;
+
+      logger.debug("api response =", userDetailsResponse);
+      if (isBlank(userDetailsResponse.emailId)) {
+        throw new Error("missing emailId in response");
+      }
+      if (isBlank(userDetailsResponse.firstName)) {
+        throw new Error("missing firstName in response");
+      }
+      if (isBlank(userDetailsResponse.lastName)) {
+        throw new Error("missing lastName in response");
+      }
+
+      const userSessionDetail: UserDetailsResource = {
+        emailId: userDetailsResponse.emailId,
+        firstName: userDetailsResponse.firstName,
+        lastName: userDetailsResponse.lastName,
+        isAuthenticated: true,
+        fullName: getFullName(userDetailsResponse.firstName, userDetailsResponse.lastName),
       };
 
-      const authDetails = {
-        ...authResponse,
-        isAuthenticated: true,
-        expiryDate: authResponse.expiryDate.getTime(),
-      };
-      sessionStorage.setItem(authUserSessionKey, JSON.stringify(authDetails));
+      sessionStorage.setItem(authUserSessionKey, JSON.stringify(userSessionDetail));
+      logger.debug("stored user data session");
+      return userSessionDetail;
     } catch (e) {
       const err = e as Error;
-      handleRestErrors(err);
-      console.error("not rest error", e);
-      const msg = err.message || e;
-      throw Error(msg as string);
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+    }
+    logger.debug("responding dummy user data");
+    const dummyUserDetail: UserDetailsResource = {
+      emailId: "",
+      firstName: "",
+      lastName: "",
+      isAuthenticated: false,
+      fullName: "",
+    };
+    return dummyUserDetail;
+  };
+
+  const signup = async (details: UserSignupResource) => {
+    const logger = getLogger("signup", _logger);
+    try {
+      if (isAuthenticated(logger)) {
+        logger.debug("logged in already");
+        throw new Error("You are already logged in.");
+      }
+
+      const data = { ...details, password: btoa(details.password) };
+      // default configs will be created with sign up
+      const response = await axios.post(`${rootPath}/signup`, data);
+      const tokenResponse = response.data as AccessTokenResource;
+      if (
+        !tokenResponse.accessToken ||
+        tokenResponse.expiresIn < MIN_SESSION_TIME_IN_SEC ||
+        subtractDates(tokenResponse.expiryTime).toSeconds() < MIN_SESSION_TIME_IN_SEC
+      ) {
+        logger.debug("token response is invalid. sign up unsuccessful");
+        throw Error("user signup unsuccessful");
+      }
+
+      sessionStorage.setItem(authTokenSessionKey, JSON.stringify(tokenResponse));
+      logger.debug("stored token session data");
+      const userSessionDetails: UserDetailsResource = {
+        emailId: details.emailId,
+        firstName: details.firstName,
+        lastName: details.lastName,
+        isAuthenticated: true,
+        fullName: getFullName(details.firstName, details.lastName),
+      };
+      logger.debug("stored user session data");
+      sessionStorage.setItem(authUserSessionKey, JSON.stringify(userSessionDetails));
+    } catch (e) {
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
     }
   };
 
-  const ping = async () => {
-    axios.get("/health/ping");
-  };
-
-  const destroy = () => {
-    authRoleConfigService.destroy();
-  };
-
-  const getSecutiyDetails = async () => {
+  const updateName = async (details: UpdateUserDetailsResource) => {
+    const logger = getLogger("updateName", _logger);
     try {
-      const response = await axios.get("/security/details");
-      return response.data as SecurityDetailType;
+      const response = await axios.post(`${rootPath}/details`, details);
+
+      logger.debug("overwriting user session data");
+      const sessionDetails = JSON.parse(sessionStorage.getItem(authUserSessionKey) as string) as UserDetailsResource;
+      const newSessionDetails: UserDetailsResource = {
+        emailId: sessionDetails.emailId,
+        firstName: details.firstName,
+        lastName: details.lastName,
+        isAuthenticated: sessionDetails.isAuthenticated,
+        fullName: getFullName(details.firstName, details.lastName),
+      };
+      sessionStorage.setItem(authUserSessionKey, JSON.stringify(newSessionDetails));
     } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
     }
   };
 
-  const updateSecurityDetails = async (details: SecurityDetailType) => {
+  const updatePassword = async (details: UpdateUserPasswordResource) => {
+    const logger = getLogger("updatePassword", _logger);
     try {
-      await axios.post("/security/details", details);
+      // encode before sending over api call
+      const data: UpdateUserPasswordResource = {
+        password: btoa(details.password),
+        newPassword: btoa(details.newPassword),
+      };
+      const response = await axios.post(`${rootPath}/details`, data);
     } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
+    }
+  };
+
+  const getTokenExpiryTime = () => {
+    const logger = getLogger("getTokenExpiryTime", _logger);
+    if (isTokenSessionValid(logger)) {
+      const tokenSessionResource = JSON.parse(sessionStorage.getItem(authTokenSessionKey) as string) as AccessTokenResource;
+      const subtractResult = subtractDates(tokenSessionResource.expiryTime);
+      // logger.debug("subtract diff =", subtractResult);
+      return subtractResult.toSeconds();
+    }
+    logger.debug("invalid token session, so time diff is negative");
+    return -1;
+  };
+
+  const refreshToken = async () => {
+    const logger = getLogger("refreshToken", _logger);
+    try {
+      const response = await axios.post(`${rootPath}/refresh`);
+
+      const tokenResponse = response.data as AccessTokenResource;
+      if (
+        !tokenResponse.accessToken ||
+        tokenResponse.expiresIn < MIN_SESSION_TIME_IN_SEC ||
+        subtractDates(tokenResponse.expiryTime).toSeconds() < MIN_SESSION_TIME_IN_SEC
+      ) {
+        logger.debug("invalid token response from api");
+        throw Error("user unauthorized");
+      }
+
+      sessionStorage.setItem(authTokenSessionKey, JSON.stringify(tokenResponse));
+      logger.debug("stored refreshed token data to session");
+    } catch (e) {
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      logger.debug("clearing session data");
+      sessionStorage.removeItem(authTokenSessionKey);
+      sessionStorage.removeItem(authUserSessionKey);
+      throw Error("unknown error");
     }
   };
 
@@ -187,13 +339,12 @@ const AuthenticationServiceImpl = (): AuthenticationService => {
     login,
     logout,
     isAuthenticated,
-    isAuthorized,
     getUserDetails,
-    destroy,
     signup,
-    ping,
-    getSecutiyDetails,
-    updateSecurityDetails,
+    getTokenExpiryTime,
+    refreshToken,
+    updateName,
+    updatePassword,
   };
 };
 

@@ -1,70 +1,68 @@
-import { LoaderFunctionArgs, json, redirect } from "react-router-dom";
-import { ConfigType, PymtAccountFields, PymtAccountService, descCompare } from "../services";
-import { AuthenticationService } from "../../auth";
-import { PAGE_URL } from "../../root";
+import { LoaderFunctionArgs } from "react-router-dom";
+import { ConfigResource, PymtAccountFields, PymtAccountService, descCompare } from "../services";
+import { RouteHandlerResponse, handleRouteActionError } from "../../../services";
 
 const accountService = PymtAccountService();
-const authenticationService = AuthenticationService();
 
-export interface PymtAccountDetailLoaderType {
+export interface PymtAccountDetailLoaderResource {
   pymtAccountDetail: PymtAccountFields | null;
-  categoryTypes: ConfigType[];
+  categoryTypes: ConfigResource[];
   pymtAccountTags: string[];
 }
 
 export const pymtAccountListLoaderHandler = async () => {
-  if (!authenticationService.isAuthenticated()) {
-    return redirect(PAGE_URL.loginPage.fullUrl);
-  }
   try {
     const pymtAccList = await accountService.getPymtAccounts();
-    pymtAccList.sort((a, b) => descCompare(a.updatedOn, b.updatedOn));
-    return pymtAccList;
+    pymtAccList.sort((a, b) => descCompare(a.auditDetails.updatedOn, b.auditDetails.updatedOn));
+    const response: RouteHandlerResponse<PymtAccountFields[]> = {
+      type: "success",
+      data: pymtAccList,
+    };
+    return response;
   } catch (e) {
-    const err = e as Error;
-    throw json({ type: "error", errorMessage: err.message }, { status: 500 });
+    console.error("in loader handler", e);
+    return handleRouteActionError(e);
   }
 };
 
-export const pymtAccountDetailLoaderHandler = async ({
-  params,
-}: LoaderFunctionArgs): Promise<Response | PymtAccountDetailLoaderType> => {
-  //
-  if (!authenticationService.isAuthenticated()) {
-    return redirect(PAGE_URL.loginPage.fullUrl);
-  }
+export const pymtAccountDetailLoaderHandler = async ({ params }: LoaderFunctionArgs) => {
   try {
     const pymtAccountDetail = await accountService.getPymtAccount(params.accountId as string);
     if (!pymtAccountDetail) throw Error("account details not found");
     const pymtAccountTags = await accountService.getPymtAccountTags();
     const categoryTypes = await accountService.getPymtAccountTypes();
 
-    return {
-      pymtAccountDetail,
-      pymtAccountTags,
-      categoryTypes,
+    const response: RouteHandlerResponse<PymtAccountDetailLoaderResource> = {
+      type: "success",
+      data: {
+        pymtAccountDetail,
+        pymtAccountTags,
+        categoryTypes,
+      },
     };
+    return response;
   } catch (e) {
-    const err = e as Error;
-    throw json({ errorMessage: err.message }, { status: 500 });
+    console.error("in loader handler", e);
+    return handleRouteActionError(e);
   }
 };
 
-export const pymtAccountDetailSupportingLoaderHandler = async (): Promise<Response | PymtAccountDetailLoaderType> => {
-  if (!authenticationService.isAuthenticated()) {
-    return redirect(PAGE_URL.loginPage.fullUrl);
-  }
+export const pymtAccountDetailSupportingLoaderHandler = async () => {
   try {
     const pymtAccountTags = await accountService.getPymtAccountTags();
     const categoryTypes = await accountService.getPymtAccountTypes();
 
-    return {
-      pymtAccountDetail: null,
-      pymtAccountTags,
-      categoryTypes,
+    const response: RouteHandlerResponse<PymtAccountDetailLoaderResource> = {
+      type: "success",
+      data: {
+        pymtAccountDetail: null,
+        pymtAccountTags,
+        categoryTypes,
+      },
     };
+    return response;
   } catch (e) {
-    const err = e as Error;
-    throw json({ errorMessage: err.message }, { status: 500 });
+    console.error("in loader handler", e);
+    return handleRouteActionError(e);
   }
 };

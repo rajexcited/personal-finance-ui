@@ -56,11 +56,11 @@ const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
         };
         if (isModalOpen) document.documentElement.classList.add("is-clipped");
         const carousell = new bulmaCaraosel(carouselRef.current, options);
-        const isImageType = props.receipts[0]?.fileType !== ReceiptType.PDF;
+        const isImageType = props.receipts[0]?.contentType !== ReceiptType.PDF;
         setActiveItemImage(isImageType);
 
         carousell.on("show", (carousel: bulmaCaraosel) => {
-            const isImageType = props.receipts[carousel.state.next].fileType !== ReceiptType.PDF;
+            const isImageType = props.receipts[carousel.state.next].contentType !== ReceiptType.PDF;
             setActiveItemImage(isImageType);
             setScaleValue(1);
         });
@@ -123,14 +123,14 @@ const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
                                 props.receipts.map((rct: ReceiptProps, ind: number) =>
                                     <div className={ `item-${ind + 1}` } key={ rct.id }>
                                         <div className="fullscreen-image-container">
-                                            { (rct.fileType === ReceiptType.JPEG || rct.fileType === ReceiptType.PNG) &&
+                                            { (rct.contentType === ReceiptType.JPEG || rct.contentType === ReceiptType.PNG) &&
                                                 <figure className="image">
-                                                    <img src={ rct.url } alt={ rct.fileName } style={ { transform: "scale(" + scaleValue + ")" } } />
+                                                    <img src={ rct.url } alt={ rct.name } style={ { transform: "scale(" + scaleValue + ")" } } />
                                                 </figure>
                                             }
                                             {
-                                                rct.fileType === ReceiptType.PDF &&
-                                                <embed src={ rct.url } type={ rct.fileType } height={ "99%" } width={ "93%" } />
+                                                rct.contentType === ReceiptType.PDF &&
+                                                <embed src={ rct.url } type={ rct.contentType } height={ "99%" } width={ "93%" } />
                                             }
                                         </div>
                                     </div>

@@ -23,9 +23,9 @@ const NavBar: FunctionComponent = () => {
 
     useEffect(() => {
         let navbarItemlist = navbarItems;
-        if (!navbarItems.length || navbarItems[0].isProtected !== auth.isAuthenticated) {
+        if (!navbarItems.length || navbarItems[0].isProtected !== auth.userDetails.isAuthenticated) {
             navbarItemlist = items
-                .filter(item => (auth.isAuthenticated === item.isProtected))
+                .filter(item => (auth.userDetails.isAuthenticated === item.isProtected))
                 .map(item => ({ ...item }));
         }
         let selectedNavbarItem = navbarItemlist.find(item => pathname === item.link);
@@ -71,7 +71,7 @@ const NavBar: FunctionComponent = () => {
         if (navbarItemlist !== navbarItems) {
             setNavbarItems(navbarItemlist);
         }
-    }, [pathname, navbarItems, auth.isAuthenticated]);
+    }, [pathname, navbarItems, auth.userDetails.isAuthenticated]);
 
     const toggleNavbar: React.MouseEventHandler<HTMLAnchorElement> = event => {
         event.preventDefault();
@@ -112,7 +112,7 @@ const NavBar: FunctionComponent = () => {
                         }
                     </div>
                     {
-                        auth.isAuthenticated &&
+                        auth.userDetails.isAuthenticated &&
                         <div className="navbar-end">
                             {
                                 <NavBarItem

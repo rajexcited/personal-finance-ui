@@ -1,49 +1,40 @@
-import { IDBPDatabase, openDB } from "idb";
-import { IDATABASE_TRACKER } from "./db";
-import { AuditFields, convertAuditFields } from "./audit-fields";
+import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
+import { AuditFields, convertAuditFieldsToDateInstance } from "./audit-fields";
 import { handleRestErrors } from "./utils";
 import axios from "./axios-proxy";
+import { getLogger } from "./logger";
 
-export interface ConfigType extends AuditFields {
-  configId: string;
+export interface ConfigResource {
+  id: string;
   value: string;
   name: string;
-  relations: string[];
   belongsTo: ConfigTypeBelongsTo;
   description: string;
   status: ConfigTypeStatus;
   color?: string;
-  icon?: string;
+  tags: string[];
+  auditDetails: AuditFields;
 }
 
+export type UpdateConfigStatusResource = Pick<ConfigResource, "status" | "id">;
+
 export enum ConfigTypeStatus {
-  enable = "enable",
-  disable = "disable",
-  deleted = "deleted",
+  Enable = "enable",
+  Disable = "disable",
+  Deleted = "deleted",
 }
 
 export enum ConfigTypeBelongsTo {
   ExpenseCategory = "expense-category",
-  Auth = "auth",
   PaymentAccountType = "pymt-account-type",
+  CurrencyProfile = "currency-profile",
 }
 
-interface ConfigTypeService {
-  getConfigTypes(filterByStatuses?: ConfigTypeStatus[]): Promise<ConfigType[]>;
-  addUpdateConfigType(details: ConfigType): Promise<void>;
-  deleteConfigType(configId: string): Promise<void>;
-  disableConfigType(details: ConfigType): Promise<void>;
-  destroy(): void;
-  db(): Promise<IDBPDatabase>;
-}
+const ConfigTypeServiceImpl = (belongsToParam: ConfigTypeBelongsTo) => {
+  const configDb = new MyLocalDatabase<ConfigResource>(LocalDBStore.Config);
 
-const ConfigTypeServiceImpl = (belongsToParam: ConfigTypeBelongsTo): ConfigTypeService => {
-  const objectStoreName = IDATABASE_TRACKER.EXPENSE_DATABASE.CONFIG_STORE.NAME;
-  const dbPromise = openDB(IDATABASE_TRACKER.EXPENSE_DATABASE.NAME, IDATABASE_TRACKER.EXPENSE_DATABASE.VERSION);
-
-  const destroy = () => {
-    dbPromise.then((db) => db.close());
-  };
+  const rootPath = "/config/types/belongs-to";
+  const _logger = getLogger("service.config-type");
 
   /**
    * retieves list of configType. filter configType list by given parameter
@@ -52,107 +43,105 @@ const ConfigTypeServiceImpl = (belongsToParam: ConfigTypeBelongsTo): ConfigTypeS
    * @returns list of config type
    */
   const getConfigTypes = async (filterByStatuses?: ConfigTypeStatus[]) => {
-    const db = await dbPromise;
+    const logger = getLogger("getConfigTypes", _logger);
     try {
-      let dbKeys, queyParams, indexName: string;
+      let dbKeys: string[] | string[][];
+      let queyParams: Record<string, string[]> | null = null;
+      let dbIndex: LocalDBStoreIndex;
+
       if (!filterByStatuses) {
         dbKeys = [belongsToParam];
-        queyParams = { belongsTo: belongsToParam };
-        indexName = IDATABASE_TRACKER.EXPENSE_DATABASE.CONFIG_STORE.INDEXES.BELONGS_TO_INDEX.NAME;
+        dbIndex = LocalDBStoreIndex.ConfigBelongsTo;
       } else {
         dbKeys = filterByStatuses.map((filterByStatus) => [belongsToParam, filterByStatus]);
-        queyParams = { belongsTo: belongsToParam, status: filterByStatuses };
-        // console.debug("queyParams: ", queyParams, "dbKeys: ", dbKeys);
-        indexName = IDATABASE_TRACKER.EXPENSE_DATABASE.CONFIG_STORE.INDEXES.STATUS_INDEX.NAME;
+        queyParams = { status: filterByStatuses };
+        dbIndex = LocalDBStoreIndex.ItemStatus;
       }
 
-      const countPromises = dbKeys.map(async (dbKey) => db.countFromIndex(objectStoreName, indexName, dbKey));
+      const countPromises = dbKeys.map(async (dbKey) => configDb.countFromIndex(dbIndex, dbKey));
       const totalCount = (await Promise.all(countPromises)).reduce((prev, curr) => curr + prev, 0);
       if (totalCount === 0) {
         // no records
-        const response = await axios.get("/config/types", { params: queyParams });
-        const configTypes = response.data as ConfigType[];
+        const response = await axios.get(`${rootPath}/${belongsToParam}`, { params: queyParams });
+        const configTypes = response.data as ConfigResource[];
         const dbAddPromises = configTypes.map(async (configType) => {
-          convertAuditFields(configType);
-          return db.add(objectStoreName, configType);
+          convertAuditFieldsToDateInstance(configType.auditDetails);
+          return await configDb.addItem(configType);
         });
         await Promise.all(dbAddPromises);
         return configTypes;
       }
 
-      const configTypePromises = dbKeys.map(async (dbKey) => db.getAllFromIndex(objectStoreName, indexName, dbKey));
-      const configTypes = (await Promise.all(configTypePromises)).flatMap((configType) => configType);
-
-      return configTypes as ConfigType[];
+      const configTypePromises = dbKeys.map(async (dbKey) => configDb.getAllFromIndex(dbIndex, dbKey));
+      const configTypesNested = await Promise.all(configTypePromises);
+      const configTypes = configTypesNested.flatMap((configType) => configType);
+      return configTypes;
     } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
     }
   };
 
-  const addUpdateConfigType = async (configType: ConfigType) => {
-    const db = await dbPromise;
+  const addUpdateConfigType = async (configData: ConfigResource) => {
+    const logger = getLogger("addUpdateConfigType", _logger);
     try {
-      if ((await db.count(objectStoreName, configType.configId)) === 0) {
-        await addConfigType(configType);
-      } else {
-        await updateConfigType(configType);
-      }
+      const data = { ...configData };
+      const response = await axios.post(`${rootPath}/${belongsToParam}`, data);
+      const configResponse: ConfigResource = {
+        ...response.data,
+      };
+      convertAuditFieldsToDateInstance(configResponse.auditDetails);
+
+      await configDb.addUpdateItem(configResponse);
     } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
     }
-  };
-
-  const addConfigType = async (configType: ConfigType) => {
-    const data: any = { ...configType };
-    delete data.configId;
-    const response = await axios.post("/config/types", data);
-    const configResponse = {
-      ...response.data,
-    } as ConfigType;
-    convertAuditFields(configResponse);
-    const db = await dbPromise;
-    await db.add(objectStoreName, configResponse);
-  };
-
-  const updateConfigType = async (configType: ConfigType) => {
-    const data = { ...configType };
-    const response = await axios.post("/config/types", data);
-    const configResponse = {
-      ...response.data,
-    } as ConfigType;
-    convertAuditFields(configResponse);
-    const db = await dbPromise;
-    await db.put(objectStoreName, configResponse);
   };
 
   const deleteConfigType = async (configId: string) => {
-    const db = await dbPromise;
+    const logger = getLogger("deleteConfigType", _logger);
+
     try {
-      const response = await axios.delete("/config/types/" + configId);
-      await db.delete(objectStoreName, response.data.configId);
+      const response = await axios.delete(`${rootPath}/${belongsToParam}/id/${configId}`);
+      const configResponse = response.data as ConfigResource;
+      await configDb.addUpdateItem(configResponse);
     } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
     }
   };
 
-  const disableConfigType = async (configType: ConfigType) => {
-    const cfgTyp = { ...configType, status: ConfigTypeStatus.disable };
-    addUpdateConfigType(cfgTyp);
+  const updateConfigTypeStatus = async (configstatusData: UpdateConfigStatusResource) => {
+    const logger = getLogger("updateConfigTypeStatus", _logger);
+
+    try {
+      const response = await axios.post(`${rootPath}/${belongsToParam}/id/${configstatusData.id}/status/${configstatusData.status}`);
+      const configResponse: ConfigResource = {
+        ...response.data,
+      };
+      convertAuditFieldsToDateInstance(configResponse.auditDetails);
+
+      await configDb.addUpdateItem(configResponse);
+    } catch (e) {
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
+    }
   };
 
   return {
     getConfigTypes,
     addUpdateConfigType,
     deleteConfigType,
-    disableConfigType,
-    destroy,
-    db: () => dbPromise,
+    updateConfigTypeStatus,
   };
 };
 

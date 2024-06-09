@@ -1,16 +1,21 @@
 import { AuditFields } from "../../../services";
 
-export interface PymtAccountFields extends AuditFields {
-  accountId: string;
+export enum PymtAccStatus {
+  Enable = "enable",
+  Deleted = "deleted",
+}
+
+export interface PymtAccountFields {
+  id: string;
   shortName: string;
-  accountName: string;
-  accountNumber: string;
-  typeId?: string;
-  typeName?: string;
-  tags: string;
-  institutionName: string;
+  accountIdNum?: string;
+  typeId: string;
+  typeName: string;
+  tags: string[];
+  institutionName?: string;
   description: string;
-  icon?: string;
+  status: PymtAccStatus;
+  auditDetails: AuditFields;
 }
 
 /**

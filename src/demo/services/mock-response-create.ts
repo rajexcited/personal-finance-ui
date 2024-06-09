@@ -1,4 +1,5 @@
 import { AxiosRequestConfig } from "axios";
+import { ValidationErrorResource } from "./common-validators";
 
 export const AxiosResponseCreator = (config: AxiosRequestConfig) => {
   const headers: any = config.headers;
@@ -10,8 +11,9 @@ export const AxiosResponseCreator = (config: AxiosRequestConfig) => {
     return toResponse(201, data);
   };
 
-  const toValidationError = (errors: { loc: string[]; msg: string }[]) => {
-    return toError(400, { validation_error: { body_params: errors } });
+  const toValidationError = (errors: ValidationErrorResource[]) => {
+    // return toError(400, { validation_error: { body_params: errors } });
+    return toError(400, errors);
   };
 
   const toForbiddenError = (error: any) => {

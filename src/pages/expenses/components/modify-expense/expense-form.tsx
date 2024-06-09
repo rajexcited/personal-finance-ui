@@ -12,8 +12,9 @@ import {
     DropDownItemType
 } from "../../../../components";
 import ExpenseBreakDown from "./expense-breakdown";
-import { ConfigType, ExpenseFields, ExpenseItemFields, ReceiptProps } from "../../services";
+import { ConfigResource, ExpenseFields, ExpenseItemFields, ReceiptProps } from "../../services";
 import UploadReceiptsModal from "./upload-receipts";
+import { formatTimestamp } from "../../../../services";
 
 
 export interface ExpenseFormProps {
@@ -21,22 +22,22 @@ export interface ExpenseFormProps {
     expenseId: string;
     onSubmit (fields: ExpenseFields, formData: FormData): void;
     details?: ExpenseFields;
-    categoryTypes: ConfigType[];
+    categoryTypes: ConfigResource[];
     paymentAccounts: Map<string, string>;
     sourceTags: string[];
 }
 
 const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
-    const [billName, setBillName] = useState(props.details?.billname || '');
+    const [billName, setBillName] = useState(props.details?.billName || '');
     const [amount, setAmount] = useState(props.details?.amount || '');
     const [pymtAccounts, setPymtAccounts] = useState<DropDownItemType[]>([]);
     const [selectedPymtAccount, setSelectedPymtAccount] = useState<DropDownItemType>();
     const [description, setDescription] = useState(props.details?.description || '');
-    const [purchasedDate, setPurchaseDate] = useState(props.details?.purchasedDate || new Date());
-    const [tags, setTags] = useState(props.details?.tags || '');
+    const [purchasedDate, setPurchaseDate] = useState(props.details?.purchasedDate as Date || new Date());
+    const [tags, setTags] = useState<string[]>(props.details?.tags || []);
     const [categories, setCategories] = useState<DropDownItemType[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<DropDownItemType>();
-    const [verifiedDateTime, setVerifiedDateTime] = useState(props.details?.verifiedDateTime);
+    const [verifiedDateTime, setVerifiedDateTime] = useState(props.details?.verifiedTimestamp as Date | undefined);
     const [expenseItems, setExpenseItems] = useState<ExpenseItemFields[]>(props.details?.expenseItems || []);
     const [receipts, setReceipts] = useState<ReceiptProps[]>(props.details?.receipts || []);
     const navigate = useNavigate();
@@ -45,17 +46,18 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
         event.preventDefault();
 
         const data: ExpenseFields = {
-            expenseId: props.expenseId,
-            billname: billName,
-            pymtaccName: selectedPymtAccount?.content,
+            id: props.expenseId,
+            billName: billName,
+            paymentAccountName: selectedPymtAccount?.content,
             amount,
             description,
             purchasedDate,
             tags,
-            verifiedDateTime,
+            verifiedTimestamp: verifiedDateTime,
             expenseItems,
-            categoryName: selectedCategory?.content || props.details?.categoryName,
+            expenseCategoryName: selectedCategory?.content || props.details?.expenseCategoryName,
             receipts,
+            auditDetails: { createdOn: "", updatedOn: "" },
         };
 
         // const formData = new FormData(document.createElement("form"));
@@ -68,7 +70,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
         Object.entries(data).forEach((entry) => {
             const key = entry[0];
             let value = entry[1];
-            if (value instanceof Date) value = String(value);
+            if (value instanceof Date) value = formatTimestamp(value);
             else if (typeof value === "object") value = JSON.stringify(value);
             formData.append(key, value);
         });
@@ -86,14 +88,14 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
     useEffect(() => {
         const myCategories = props.categoryTypes.map(ctg => {
             const itm: DropDownItemType = {
-                id: ctg.configId || "configIdNeverUsed",
+                id: ctg.id || "configIdNeverUsed",
                 content: ctg.name,
                 tooltip: ctg.description
             };
             return itm;
         });
         setCategories(myCategories);
-        const selectedCtg = myCategories.find(ctg => ctg.content === props.details?.categoryName);
+        const selectedCtg = myCategories.find(ctg => ctg.content === props.details?.expenseCategoryName);
         setSelectedCategory(selectedCtg);
 
         const myPymtAccounts: DropDownItemType[] = [];
@@ -105,7 +107,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
             myPymtAccounts.push(itm);
         });
         setPymtAccounts(myPymtAccounts);
-        const selectedAcc = myPymtAccounts.find(acc => acc.content === props.details?.pymtaccName);
+        const selectedAcc = myPymtAccounts.find(acc => acc.content === props.details?.paymentAccountName);
         setSelectedPymtAccount(selectedAcc);
 
     }, []);
@@ -160,7 +162,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 items={ pymtAccounts }
                                 onSelect={ (selected: DropDownItemType) => setSelectedPymtAccount(selected) }
                                 selectedItem={ selectedPymtAccount }
-                                defaultItem={ props.details?.pymtaccName }
+                                defaultItem={ props.details?.paymentAccountName }
                             />
                         </div>
                         <div className="column">
@@ -172,7 +174,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 onSelect={ (selected: DropDownItemType) => setSelectedCategory(selected) }
                                 direction="down"
                                 selectedItem={ selectedCategory }
-                                defaultItem={ props.details?.categoryName }
+                                defaultItem={ props.details?.expenseCategoryName }
                             />
 
                         </div>

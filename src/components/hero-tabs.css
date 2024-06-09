@@ -27,6 +27,7 @@
 
 .hero-tabs .hero .hero-body {
     flex-shrink: unset;
+    max-width: 80%;
 }
 
 .hero-tabs .hero .hero-body .tabs-content-wrap .tab-content {

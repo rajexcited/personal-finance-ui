@@ -23,7 +23,7 @@ interface UnSortableHeader {
 export type Header = SortableHeader | UnSortableHeader;
 
 export const rowHeaders: Header[] = [
-  { id: "pymt-acc", label: "Payment Account", sortable: true, datafieldKey: "pymtaccName" },
+  { id: "pymt-acc", label: "Payment Account", sortable: true, datafieldKey: "paymentAccountName" },
   {
     id: "prchs-dt",
     label: "Purchased Date",
@@ -38,7 +38,7 @@ export const rowHeaders: Header[] = [
     sortable: true,
     sortLevel: 2,
     sortDirection: "asc",
-    datafieldKey: "billname",
+    datafieldKey: "billName",
     type: "alpha",
   },
   {
@@ -50,7 +50,7 @@ export const rowHeaders: Header[] = [
     sortLevel: 3,
     type: "amount",
   },
-  { id: "ctgr", label: "Category", sortable: true, datafieldKey: "categoryName" },
+  { id: "ctgr", label: "Category", sortable: true, datafieldKey: "expenseCategoryName" },
   { id: "vrfd", label: "Verified", sortable: false },
   { id: "tags", label: "Tags", sortable: false },
   { id: "notes", label: "Description", sortable: false },

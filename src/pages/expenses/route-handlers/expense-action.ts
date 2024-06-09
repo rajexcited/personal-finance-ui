@@ -1,6 +1,7 @@
 import { ActionFunctionArgs, json, redirect } from "react-router-dom";
 import { PAGE_URL } from "../../root";
 import { ExpenseService, ReceiptProps } from "../services";
+import { HttpStatusCode, RouteHandlerResponse, handleRouteActionError } from "../../../services";
 
 const expenseService = ExpenseService();
 
@@ -10,41 +11,48 @@ export const expenseActionHandler = async ({ request }: ActionFunctionArgs) => {
   } else if (request.method === "DELETE") {
     return await expenseDeleteActionHandler(request);
   }
+  const error: RouteHandlerResponse<any> = {
+    type: "error",
+    errorMessage: "action not supported",
+    data: {
+      request: {
+        method: request.method,
+      },
+    },
+  };
+  return json(error, { status: HttpStatusCode.InternalServerError });
 };
 
 const expenseAddUpdateActionHandler = async (request: Request) => {
   try {
     // const data = await request.json();
     const formdata = await request.formData();
-    const purchasedDate = new Date(formdata.get("purchasedDate") as string);
-    const expenseItemsStr = formdata.get("expenseItems") as string;
-    const verifiedDateTime = formdata.get("verifiedDateTime") as string;
     const receipts: ReceiptProps[] = JSON.parse(formdata.get("receipts") as string);
-    receipts.forEach((rct) => {
-      rct.lastUpdatedDate = new Date(rct.lastUpdatedDate);
-      const file = formdata.get(rct.id) as File;
-      if (file) rct.file = file;
-    });
+    receipts.forEach((rct) => (rct.file = formdata.get(rct.id) as File));
+
+    const expenseId = formdata.get("expenseId") as string;
+    await expenseService.updateExpenseReceipts(receipts, expenseId);
 
     await expenseService.addUpdateExpense({
-      expenseId: formdata.get("expenseId") as string,
-      billname: formdata.get("billname") as string,
-      pymtaccName: formdata.get("pymtaccName") as string,
+      id: expenseId,
+      billName: formdata.get("billname") as string,
+      paymentAccountName: formdata.get("pymtaccName") as string,
       amount: formdata.get("amount") as string,
       description: formdata.get("description") as string,
-      purchasedDate,
-      tags: formdata.get("tags") as string,
-      verifiedDateTime: verifiedDateTime ? new Date(verifiedDateTime) : undefined,
-      expenseItems: JSON.parse(expenseItemsStr),
-      categoryName: formdata.get("categoryName") as string,
-      receipts,
+      purchasedDate: formdata.get("purchasedDate") as string,
+      tags: (formdata.get("tags") as string).split(","),
+      verifiedTimestamp: formdata.get("verifiedDateTime") as string,
+      expenseItems: JSON.parse(formdata.get("expenseItems") as string),
+      expenseCategoryName: formdata.get("categoryName") as string,
+      receipts: receipts,
+      auditDetails: { createdOn: new Date(), updatedOn: new Date() },
     });
-  } catch (e) {
-    const err = e as Error;
-    return { errorMessage: err.message };
-  }
 
-  return redirect(PAGE_URL.expenseJournalRoot.fullUrl);
+    return redirect(PAGE_URL.expenseJournalRoot.fullUrl);
+  } catch (e) {
+    console.error("in action handler", e);
+    return handleRouteActionError(e);
+  }
 };
 
 const expenseDeleteActionHandler = async (request: Request) => {
@@ -52,9 +60,13 @@ const expenseDeleteActionHandler = async (request: Request) => {
     const formdata = await request.formData();
     const expenseId = formdata.get("expenseId") as string;
     await expenseService.removeExpense(expenseId);
-    return "deleted";
+    const response: RouteHandlerResponse<string> = {
+      type: "success",
+      data: "expense is deleted",
+    };
+    return response;
   } catch (e) {
-    const err = e as Error;
-    return { errorMessage: err.message };
+    console.error("in action handler", e);
+    return handleRouteActionError(e);
   }
 };

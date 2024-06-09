@@ -2,11 +2,11 @@ import "./security.css";
 import { FormEventHandler, FunctionComponent, MouseEventHandler, useState, useEffect } from "react";
 import { Animated, Input, InputValidators } from "../../../components";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
-import { SignupDetailType } from "../../auth/services";
+import { UserDetailsResource } from "../../auth";
 import { faLock } from "@fortawesome/free-solid-svg-icons";
 import { PAGE_URL } from "../../root";
 import ReactMarkdown from "react-markdown";
-import { SecurityDetailType } from "../../auth/services/field-types";
+import { RouteHandlerResponse } from "../../../services";
 
 enum ActionState {
     NoAction = "NA",
@@ -15,8 +15,8 @@ enum ActionState {
 }
 
 const SecurityPage: FunctionComponent = () => {
-    const loaderData = useLoaderData() as SecurityDetailType;
-    const actionData = useActionData() as { errorMessage: string; };
+    const loaderData = useLoaderData() as RouteHandlerResponse<UserDetailsResource>;
+    const actionData = useActionData() as RouteHandlerResponse<any> | null;
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [changePasswordActionState, setChangePasswordActionState] = useState(ActionState.NoAction);
@@ -24,17 +24,21 @@ const SecurityPage: FunctionComponent = () => {
     const submit = useSubmit();
 
     useEffect(() => {
-        if (actionData?.errorMessage) {
+        if (actionData?.type === "error" && actionData.errorMessage !== errorMessage) {
             setChangePasswordActionState(ActionState.UserRequest);
             setErrorMessage(actionData.errorMessage);
+        } else if (loaderData.type === "error" && loaderData.errorMessage !== errorMessage) {
+            setErrorMessage(loaderData.errorMessage);
         }
-    }, [actionData]);
+    }, [errorMessage, actionData, loaderData]);
 
     useEffect(() => {
-        setChangePasswordActionState(ActionState.NoAction);
-        setCurrentPassword("");
-        setNewPassword("");
-        setErrorMessage("");
+        if (loaderData.type === "success") {
+            setChangePasswordActionState(ActionState.NoAction);
+            setCurrentPassword("");
+            setNewPassword("");
+            setErrorMessage("");
+        }
     }, [loaderData]);
 
     const onClickChangePasswordHandler: MouseEventHandler<HTMLButtonElement> = (event) => {
@@ -69,7 +73,7 @@ const SecurityPage: FunctionComponent = () => {
                 <div className="column">
                     <div className="email-primary">
                         <label className="label">Account Email Id (Primary): </label>
-                        <h4 className="content is-medium">{ loaderData.emailId }</h4>
+                        <h4 className="content is-medium">{ loaderData.data.emailId }</h4>
                     </div>
                 </div>
             </div>

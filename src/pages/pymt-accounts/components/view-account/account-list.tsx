@@ -1,20 +1,21 @@
-import { FunctionComponent, useState, useEffect } from "react";
+import { FunctionComponent, useState } from "react";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
 import AccountItemCard from "./account-item-view";
 import { PymtAccountFields } from "../../services";
 import { Animated, ConfirmDialog } from "../../../../components";
 import { PAGE_URL } from "../../../root";
 import ReactMarkdown from "react-markdown";
+import { RouteHandlerResponse } from "../../../../services";
 
 
 const AccountList: FunctionComponent = () => {
-    const pymtAccList = useLoaderData() as PymtAccountFields[];
-    const actionData = useActionData() as { errorMessage: string; };
+    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountFields[]>;
+    const actionData = useActionData() as RouteHandlerResponse<any> | null;
     const [deletingAccountId, setDeletingAccountId] = useState("");
     const submit = useSubmit();
 
     const onDeleteConfirmHandler = () => {
-        const deletingPymtAcc = pymtAccList.find(acc => acc.accountId === deletingAccountId);
+        const deletingPymtAcc = loaderData.data.find(acc => acc.id === deletingAccountId);
         // setPymtAccList(pymtAccList => pymtAccList.filter(acc => acc !== deletingPymtAcc));
         const data: any = { ...deletingPymtAcc };
         submit(data, { action: PAGE_URL.pymtAccountsRoot.fullUrl, method: "delete" });
@@ -24,7 +25,7 @@ const AccountList: FunctionComponent = () => {
     return (
         <section className="container">
             {
-                actionData && actionData.errorMessage &&
+                actionData?.type === "error" && actionData.errorMessage &&
                 <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
                     <div className="columns is-centered">
                         <div className="column is-four-fifths">
@@ -38,13 +39,13 @@ const AccountList: FunctionComponent = () => {
                 </Animated>
             }
             {
-                !pymtAccList.length &&
+                !loaderData.data.length &&
                 <p className="title">There are no accounts</p>
             }
-            { pymtAccList.map(acc =>
+            { loaderData.data.map(acc =>
                 <AccountItemCard
-                    key={ acc.accountId + "viewcard" }
-                    id={ acc.accountId + "viewcard" }
+                    key={ acc.id + "viewcard" }
+                    id={ acc.id + "viewcard" }
                     details={ acc }
                     onDeleteRequest={ setDeletingAccountId }
                 />)

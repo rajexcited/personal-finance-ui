@@ -3,16 +3,19 @@ import { faBan } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { NavBar } from "../navigation";
 import { useRouteError, isRouteErrorResponse } from "react-router-dom";
+import { getLogger } from "../../../../services";
 
 
 const ErrorPage: FunctionComponent = () => {
-
     const err = useRouteError();
+    const logger = getLogger("FC.ErrorPage");
     let errorMessage = "Could not find page. Please use navigation bar";
 
     if (isRouteErrorResponse(err) && err.status === 500) {
         errorMessage = err.data.errorMessage;
     }
+
+    logger.warn("error message =", errorMessage, ", route error =", err);
 
     return <div className="section">
         <h1 className="title is-1 has-text-centered has-text-danger">

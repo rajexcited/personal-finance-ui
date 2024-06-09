@@ -1,56 +1,60 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Input, LoadSpinner, Animated, InputValidateResponse, InputValidators } from "../../../components";
+import { Input, LoadSpinner, Animated, InputValidators } from "../../../components";
 import ReactMarkdown from "react-markdown";
 import useAuth from "../hooks/use-auth";
 import { PAGE_URL } from "../../root";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock, faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import "./login.css";
+import { getLogger } from "../../../services";
 
+enum LoginSubmitStatus {
+    NotStarted = "not-started",
+    InProgress = "in-progress",
+    CompletedSuccess = "success-response",
+    CompletedError = "error-response"
+}
 
 const LoginPage: FunctionComponent = () => {
     const [emailId, setEmailId] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
-    const [submitting, setSubmitting] = useState(false);
-    const [loginCompleted, setLoginCompleted] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState(LoginSubmitStatus.NotStarted);
 
     const location = useLocation();
     const navigate = useNavigate();
     const auth = useAuth();
 
     useEffect(() => {
-        if (auth.isAuthenticated) {
-            navigate(location.state?.from?.pathname || "/");
-        }
-    }, []);
+        const logger = getLogger("FC.loginPage.useEffect.dep[auth.userDetails.isAuthenticated, loginCompleted]");
+        logger.debug("submitting =", submitStatus, ", auth.userDetails.isAuthenticated =", auth.userDetails.isAuthenticated);
+        if (submitStatus === LoginSubmitStatus.InProgress) return;
 
-    useEffect(() => {
-        if (!loginCompleted) return;
-        setSubmitting(false);
-        if (auth.isAuthenticated) {
+        if (auth.userDetails.isAuthenticated) {
             navigate(location.state?.from?.pathname || "/");
-        } else {
+        } else if (!errorMessage && submitStatus !== LoginSubmitStatus.NotStarted) {
             setErrorMessage("We are unable to logging you in. please try later in new browser window");
         }
-    }, [auth.isAuthenticated, loginCompleted]);
+    }, [auth.userDetails.isAuthenticated, submitStatus]);
 
     const onSubmitLoginHandler: React.FormEventHandler<HTMLFormElement> = async event => {
         event.preventDefault();
         try {
-            setSubmitting(true);
+            setSubmitStatus(LoginSubmitStatus.InProgress);
             await auth.login(emailId, password);
-            navigate(location.state?.from?.pathname || "/");
+            setSubmitStatus(LoginSubmitStatus.CompletedSuccess);
+            // navigate(location.state?.from?.pathname || "/");
         } catch (e) {
             const err = e as Error;
             setErrorMessage(err.message);
-            setSubmitting(false);
+            setSubmitStatus(LoginSubmitStatus.CompletedError);
         }
     };
 
     const onClickSignupHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
+        setSubmitStatus(LoginSubmitStatus.NotStarted);
         navigate(PAGE_URL.signupPage.fullUrl);
     };
 
@@ -58,10 +62,10 @@ const LoginPage: FunctionComponent = () => {
 
     return (
         <section className="login-section">
-            <LoadSpinner loading={ submitting } />
+            <LoadSpinner loading={ submitStatus === LoginSubmitStatus.InProgress } />
 
             { !!errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ !submitting } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
+                <Animated animateOnMount={ true } isPlayIn={ submitStatus === LoginSubmitStatus.CompletedError } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
                     <div className="columns is-centered">
                         <div className="column is-half">
                             <article className="message is-danger mb-3">

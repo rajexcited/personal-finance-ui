@@ -13,12 +13,12 @@ import {
     pymtAccountDetailSupportingLoaderHandler
 } from '../../../pymt-accounts';
 import { AddExpense, ExpenseJournalPage, ExpenseList, UpdateExpense, expenseListLoaderHandler, expenseActionHandler, expenseDetailLoaderHandler, expenseDetailSupportingLoaderHandler } from '../../../expenses';
-import { ExpenseCategoryPage, ProfileSettingsPage, PymtAccountTypePage, SettingsRoot, expenseCategoryListActionHandler, expenseCategoryListLoaderHandler, paymentAccountTypeListLoaderHandler, pymtAccTypeListActionHandler, securityDetailsActionHandler, securityDetailsLoaderHandler } from "../../../settings";
+import { ExpenseCategoryPage, ProfileSettingsPage, PymtAccountTypePage, SettingsRoot, expenseCategoryListActionHandler, expenseCategoryListLoaderHandler, paymentAccountTypeListLoaderHandler, profileDetailsActionHandler, profileDetailsLoaderHandler, pymtAccTypeListActionHandler, securityDetailsActionHandler, securityDetailsLoaderHandler } from "../../../settings";
 import { LoginPage, RequireAuth, SignupPage, LogoutPage } from "../../../auth";
 import HomePage from "./home";
 import SecurityPage from "../../../settings/components/security";
 
-
+console.log("in router", "pathBaseName =", pathBaseName, ", rootPath =", PAGE_URL.rootPath);
 export const router = createBrowserRouter([
     {
         path: PAGE_URL.rootPath.fullUrl,
@@ -57,7 +57,7 @@ export const router = createBrowserRouter([
                     { path: PAGE_URL.expenseCategorySettings.shortUrl, element: <ExpenseCategoryPage />, loader: expenseCategoryListLoaderHandler, action: expenseCategoryListActionHandler },
                     { path: PAGE_URL.pymtAccountTypeSettings.shortUrl, element: <PymtAccountTypePage />, loader: paymentAccountTypeListLoaderHandler, action: pymtAccTypeListActionHandler },
                     { path: PAGE_URL.tagsSettings.shortUrl, element: <div> tags settings will be launched later. it is lower priority </div> },
-                    { path: PAGE_URL.profileSettings.shortUrl, element: <ProfileSettingsPage />, loader: securityDetailsLoaderHandler, action: securityDetailsActionHandler },
+                    { path: PAGE_URL.profileSettings.shortUrl, element: <ProfileSettingsPage />, loader: profileDetailsLoaderHandler, action: profileDetailsActionHandler },
                     { path: PAGE_URL.securitySettings.shortUrl, element: <SecurityPage />, loader: securityDetailsLoaderHandler, action: securityDetailsActionHandler },
                 ]
             }

@@ -5,25 +5,29 @@ import AccountForm from "./account-form";
 import { PAGE_URL } from "../../../root";
 import { useAuth } from "../../../auth";
 import ReactMarkdown from "react-markdown";
-import { PymtAccountDetailLoaderType } from "../../route-handlers/account-loader";
+import { PymtAccountDetailLoaderResource } from "../../route-handlers/account-loader";
+import { RouteHandlerResponse } from "../../../../services";
 
 
 const UpdateAccount: FunctionComponent = () => {
     const navigation = useNavigation();
     const submit = useSubmit();
-    const actionData: any = useActionData();
     const auth = useAuth();
     const [errorMessage, setErrorMessage] = useState("");
-    const loaderData = useLoaderData() as PymtAccountDetailLoaderType;
+    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountDetailLoaderResource>;
+    const actionData = useActionData() as RouteHandlerResponse<any> | null;
 
 
     useEffect(() => {
-        if (actionData?.errorMessage && actionData.errorMessage !== errorMessage)
+        if (actionData?.type === "error" && actionData.errorMessage !== errorMessage) {
             setErrorMessage(actionData.errorMessage);
-    }, [errorMessage, actionData?.errorMessage]);
+        } else if (loaderData.type === "error" && loaderData.errorMessage !== errorMessage) {
+            setErrorMessage(loaderData.errorMessage);
+        }
+    }, [errorMessage, actionData, loaderData]);
 
     const onUpdateAccount = (data: PymtAccountFields) => {
-        if (auth.isAuthenticated) {
+        if (auth.userDetails.isAuthenticated) {
             const formData: any = { ...data };
             submit(formData, { action: PAGE_URL.updatePymAccount.fullUrl, method: "post" });
         } else {
@@ -44,15 +48,15 @@ const UpdateAccount: FunctionComponent = () => {
             }
             <div className="columns">
                 <div className="column">
-                    { loaderData.pymtAccountDetail &&
+                    { loaderData.type === "success" && loaderData.data.pymtAccountDetail &&
                         <AccountForm
                             key="update-account-form"
-                            accountId={ loaderData.pymtAccountDetail.accountId }
+                            accountId={ loaderData.data.pymtAccountDetail.id }
                             submitLabel={ navigation.state === "submitting" ? "Saving Account details..." : "Update" }
                             onSubmit={ onUpdateAccount }
-                            details={ loaderData.pymtAccountDetail }
-                            sourceTags={ loaderData.pymtAccountTags }
-                            categoryTypes={ loaderData.categoryTypes }
+                            details={ loaderData.data.pymtAccountDetail }
+                            sourceTags={ loaderData.data.pymtAccountTags }
+                            categoryTypes={ loaderData.data.categoryTypes }
                         />
                     }
                 </div>

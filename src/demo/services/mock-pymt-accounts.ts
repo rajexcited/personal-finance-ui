@@ -1,40 +1,51 @@
 import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
-import { validateUuid } from "./common-validators";
+import { validateAuthorization, validateUuid } from "./common-validators";
 import { v4 as uuidv4 } from "uuid";
 import { configSessionData } from "./mock-config-type";
 import { auditData } from "./userDetails";
+import { PymtAccStatus, PymtAccountFields } from "../../pages/pymt-accounts/services";
 
 const MockPaymentAccounts = (demoMock: MockAdapter) => {
-  demoMock.onDelete(/\/accounts\/.+/).reply((config) => {
+  demoMock.onDelete(/\/payment\/accounts\/.+/).reply((config) => {
     const responseCreator = AxiosResponseCreator(config);
+
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+
     const accountId = (config.url || "").replace("/accounts/", "");
     const error = validateUuid(accountId, "accountId");
     if (error) {
-      return responseCreator.toValidationError(error);
+      return responseCreator.toValidationError([error]);
     }
     const result = PymtAccountsSessionData.deleteAccount(accountId);
     if (result.error) {
-      return responseCreator.toValidationError([
-        { loc: ["accountId"], msg: "payment account with given accountId does not exist." },
-      ]);
+      return responseCreator.toValidationError([{ path: "accountId", message: "payment account with given accountId does not exist." }]);
     }
     return responseCreator.toSuccessResponse(result.deleted);
   });
 
-  demoMock.onPost("/accounts").reply((config) => {
+  demoMock.onPost("/payment/accounts").reply((config) => {
     const responseCreator = AxiosResponseCreator(config);
+
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+
     const data = JSON.parse(config.data);
     let result: { added?: any; updated?: any };
     if ("accountId" in data && data.accountId) {
       // update
       const err = validateUuid(data.accountId, "accountId");
       if (err) {
-        return responseCreator.toValidationError(err);
+        return responseCreator.toValidationError([err]);
       }
-      result = PymtAccountsSessionData.addUpdateAccount({ ...data, ...auditData(data.createdBy, data.createdOn) });
+      result = PymtAccountsSessionData.addUpdateAccount({ ...data, auditDetails: auditData(data.createdBy, data.createdOn) });
     } else {
-      result = PymtAccountsSessionData.addUpdateAccount({ ...data, accountId: uuidv4(), ...auditData() });
+      result = PymtAccountsSessionData.addUpdateAccount({ ...data, accountId: uuidv4(), auditDetails: auditData() });
     }
 
     if (result.updated) return responseCreator.toSuccessResponse(result.updated);
@@ -42,8 +53,13 @@ const MockPaymentAccounts = (demoMock: MockAdapter) => {
     return responseCreator.toCreateResponse(result.added);
   });
 
-  demoMock.onGet("/accounts").reply((config) => {
+  demoMock.onGet("/payment/accounts").reply((config) => {
     const responseCreator = AxiosResponseCreator(config);
+
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
 
     const result = PymtAccountsSessionData.getAccounts();
     return responseCreator.toSuccessResponse(result.list);
@@ -51,29 +67,31 @@ const MockPaymentAccounts = (demoMock: MockAdapter) => {
 };
 
 function SessionData() {
-  const accounts: any[] = [];
+  const accounts: Partial<PymtAccountFields>[] = [];
 
   const init = () => {
-    const accTypeId = (accTypeName: string) =>
-      configSessionData.getPaymentAccountTypes().list.find((item: any) => item.name === accTypeName)?.configId;
+    const accTypeId = (accTypeName: string) => configSessionData.getPaymentAccountTypes().list.find((item: any) => item.name === accTypeName)?.id;
 
     accounts.push({
-      accountId: uuidv4(),
+      id: uuidv4(),
       shortName: "cash",
-      accountName: "cash",
+      accountIdNum: "cash",
       typeId: accTypeId("cash"),
-      tags: "cash",
+      tags: "cash".split(","),
       description: "my cash, notes or coins",
+      auditDetails: auditData(),
+      status: PymtAccStatus.Enable,
     });
     accounts.push({
-      accountId: uuidv4(),
+      id: uuidv4(),
       shortName: "bofa demo checking",
-      accountName: "checking 1",
-      accountNumber: "ch1234",
+      accountIdNum: "checking 1",
       typeId: accTypeId("checking"),
-      tags: "bank,primary",
+      tags: "bank,primary".split(","),
       institutionName: "bank of america",
       description: "Bank of America checking dummy account",
+      auditDetails: auditData(),
+      status: PymtAccStatus.Enable,
     });
   };
 
@@ -81,8 +99,8 @@ function SessionData() {
     return { list: accounts };
   };
 
-  const addUpdateAccount = (data: any) => {
-    const existingAccountIndex = accounts.findIndex((acc) => acc.accountId === data.accountId);
+  const addUpdateAccount = (data: PymtAccountFields) => {
+    const existingAccountIndex = accounts.findIndex((acc) => acc.id === data.id);
     if (existingAccountIndex !== -1) {
       accounts[existingAccountIndex] = data;
       return { updated: data };
@@ -92,12 +110,12 @@ function SessionData() {
   };
 
   const deleteAccount = (accountId: string) => {
-    const existingAccount = accounts.find((acc) => acc.accountId === accountId);
-    if (existingAccount !== -1) {
+    const existingAccount = accounts.find((acc) => acc.id === accountId);
+    if (existingAccount) {
       const newAcc = [...accounts];
       accounts.length = 0;
-      newAcc.filter((acc) => acc.accountId !== accountId).forEach((acc) => accounts.push(acc));
-      return { deleted: existingAccount };
+      newAcc.filter((acc) => acc.id !== accountId).forEach((acc) => accounts.push(acc));
+      return { deleted: { ...existingAccount, status: PymtAccStatus.Deleted } };
     }
     return { error: "payment account not found" };
   };

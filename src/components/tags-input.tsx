@@ -7,11 +7,11 @@ import "@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css";
 export interface TagsInputProps {
   id: string;
   label: string;
-  defaultValue?: string;
-  sourceValues?: string[];
+  defaultValue: string[];
+  sourceValues: string[];
   placeholder: string;
   maxTags?: number;
-  onChange?(value: string): void;
+  onChange?(value: string[]): void;
 }
 
 const defaultOptions: BulmaTagsInputOptions = {
@@ -64,21 +64,21 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
       // added item 
       if (props.onChange) {
         updateSourceValues(itemObj.item);
-        props.onChange(tagsInput.value);
+        props.onChange((tagsInput.value as string).split(","));
       }
       setTagCount(prev => prev + 1);
     });
     tagsInput.on("after.remove", (item) => {
       // removed item 
       if (props.onChange) {
-        props.onChange(tagsInput.value);
+        props.onChange((tagsInput.value as string).split(","));
       }
       setTagCount(prev => prev - 1);
     });
 
     const updateSourceValues = (item: string) => {
       const sourceValueSet = new Set(props.sourceValues);
-      props.defaultValue?.split(",").forEach(value => sourceValueSet.add(value));
+      props.defaultValue.forEach(value => sourceValueSet.add(value));
       if (!item) sourceValueSet.add(item);
 
       sourceValues.length = 0;
@@ -86,7 +86,7 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
     };
 
     updateSourceValues("");
-    if (props.defaultValue) setTagCount(props.defaultValue.split(",").length);
+    setTagCount(props.defaultValue.length);
 
     return () => {
       tagsInput.flush();
@@ -107,7 +107,7 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
           placeholder={ props.placeholder }
           className="input is-large"
           data-type="tags"
-          defaultValue={ props.defaultValue }
+          defaultValue={ props.defaultValue.join(",") }
         />
       </div>
       <p className="help is-info has-text-right">

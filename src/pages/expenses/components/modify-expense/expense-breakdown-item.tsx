@@ -1,8 +1,8 @@
 import { FunctionComponent, useEffect, useState } from "react";
-import { TagsInput, Input, DropDown, TextArea, DropDownItemType } from "../../../../components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import { faTrashAlt } from "@fortawesome/free-regular-svg-icons";
+import { TagsInput, Input, DropDown, TextArea, DropDownItemType } from "../../../../components";
 import { ExpenseItemFields } from "../../services";
 
 
@@ -15,7 +15,7 @@ export interface ExpenseItemProps {
 }
 
 const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
-    const [itemBillName, setItemBillName] = useState(props.itemDetail.billname || '');
+    const [itemBillName, setItemBillName] = useState(props.itemDetail.billName || '');
     const [itemAmount, setItemAmount] = useState(props.itemDetail.amount || '');
     const [itemCategory, setItemCategory] = useState<DropDownItemType>();
     const [itemTags, setItemTags] = useState(props.itemDetail.tags || '');
@@ -23,14 +23,14 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            const data = {
+            const data: ExpenseItemFields = {
                 ...props.itemDetail,
-                billname: itemBillName,
+                billName: itemBillName,
                 amount: itemAmount,
                 tags: itemTags,
                 description: itemDescription,
-                categoryName: itemCategory?.content || props.itemDetail.categoryName,
-                categoryId: undefined,
+                expenseCategoryName: itemCategory?.content || props.itemDetail.expenseCategoryName,
+                expenseCategoryId: undefined,
             };
             props.onChange(data);
         }, 500);
@@ -41,11 +41,11 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
     }, [itemBillName, itemAmount, itemCategory, itemTags, itemDescription]);
 
     useEffect(() => {
-        if (props.itemDetail.categoryName !== itemCategory?.content && props.categories) {
-            const ctgMatched = props.categories.find((ctg) => ctg.content === props.itemDetail.categoryName);
+        if (props.itemDetail.expenseCategoryName !== itemCategory?.content && props.categories) {
+            const ctgMatched = props.categories.find((ctg) => ctg.content === props.itemDetail.expenseCategoryName);
             if (ctgMatched) setItemCategory(ctgMatched);
         }
-    }, [props.itemDetail.categoryName, props.categories]);
+    }, [props.itemDetail.expenseCategoryName, props.categories]);
 
     const onCLickRemoveHandler: React.MouseEventHandler<HTMLSpanElement> = event => {
         event.preventDefault();
@@ -101,7 +101,7 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
                     direction="down"
                     selectedItem={ itemCategory }
                     size="medium"
-                    defaultItem={ props.itemDetail.categoryName }
+                    defaultItem={ props.itemDetail.expenseCategoryName }
                 />
             </div>
             <div className="column">

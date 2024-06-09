@@ -1,252 +1,257 @@
-import { openDB } from "idb";
-import { axios, IDATABASE_TRACKER, convertAuditFields, handleRestErrors } from "../../../services";
-import { ExpenseFields, ExpenseItemFields, ReceiptProps } from "./field-types";
+import {
+  axios,
+  convertAuditFieldsToDateInstance,
+  handleRestErrors,
+  getLogger,
+  MyLocalDatabase,
+  LocalDBStore,
+  LocalDBStoreIndex,
+  parseTimestamp,
+  formatTimestamp,
+  subtractDates,
+} from "../../../services";
+import { ExpenseFields, ExpenseItemFields, ExpenseStatus, ReceiptProps } from "./field-types";
 import ExpenseCategoryService from "./expense-category-service";
 import { PymtAccountService } from "../../pymt-accounts";
 import pMemoize from "p-memoize";
 import ExpiryMap from "expiry-map";
-import { difference } from "../../../services";
 
 const pymtAccService = PymtAccountService();
 
-interface ExpenseService {
-  getExpenses(): Promise<ExpenseFields[]>;
-  addUpdateExpense(details: ExpenseFields): Promise<void>;
-  removeExpense(expenseId: string): Promise<void>;
-  getExpense(expenseId: string): Promise<ExpenseFields | null>;
-  getPaymentAccountMap(): Promise<Map<string, string>>;
-  getExpenseTags(): Promise<string[]>;
-  destroy(): void;
-}
-
-const ExpenseServiceImpl = (): ExpenseService => {
+const ExpenseServiceImpl = () => {
   const expenseCategoryService = ExpenseCategoryService();
-  const objectStoreName = IDATABASE_TRACKER.EXPENSE_DATABASE.EXPENSE_ITEMS_STORE.NAME;
-  const dbPromise = openDB(IDATABASE_TRACKER.EXPENSE_DATABASE.NAME, IDATABASE_TRACKER.EXPENSE_DATABASE.VERSION);
+  const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
+  const rootPath = "/expenses";
+  const _logger = getLogger("service.expense");
 
   const getCategoryEnum = pMemoize(
     async () => {
+      const logger = getLogger("getCategoryEnum");
+      const startTime = new Date();
+      logger.info("cache miss. calling service to get expense categories");
       const categories = await expenseCategoryService.getCategories();
       const categoryMap = new Map<string, string>();
       categories.forEach((ctg) => {
-        categoryMap.set(ctg.configId, ctg.name);
-        categoryMap.set(ctg.name, ctg.configId);
+        categoryMap.set(ctg.id, ctg.name);
+        categoryMap.set(ctg.name, ctg.id);
       });
+      logger.info("transformed to category Map, ", categoryMap, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
       return categoryMap;
     },
-    { cache: new ExpiryMap(2 * 1000) }
+    { cache: new ExpiryMap(10 * 1000) }
   );
 
   const getPaymentAccountMap = async () => {
-    const pymtAccs = await pymtAccService.getPymtAccounts();
-    const pymtAccMap = new Map<string, string>();
-    pymtAccs.forEach((acc) => {
-      pymtAccMap.set(acc.shortName, acc.accountId);
-    });
-    return pymtAccMap;
+    return await getPymtAccEnum();
   };
 
   const getPymtAccEnum = pMemoize(
     async () => {
+      const logger = getLogger("getPymtAccEnum");
+      const startTime = new Date();
+      logger.info("cache miss. calling service to get pymt accs");
       const pymtAccs = await pymtAccService.getPymtAccounts();
       const pymtAccMap = new Map<string, string>();
       pymtAccs.forEach((acc) => {
-        pymtAccMap.set(acc.accountId, acc.shortName);
-        pymtAccMap.set(acc.shortName, acc.accountId);
+        pymtAccMap.set(acc.id, acc.shortName);
+        pymtAccMap.set(acc.shortName, acc.id);
       });
+      logger.info("transformed to pymt acc Map, ", pymtAccMap, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
       return pymtAccMap;
     },
-    { cache: new ExpiryMap(1500) }
+    { cache: new ExpiryMap(10 * 1000) }
   );
 
   const updateCategory = (categoryMap: Map<string, string>, item: ExpenseFields | ExpenseItemFields) => {
-    if (item.categoryId) item.categoryName = categoryMap.get(item.categoryId);
-    else if (item.categoryName) item.categoryId = categoryMap.get(item.categoryName);
+    if (item.expenseCategoryId) item.expenseCategoryName = categoryMap.get(item.expenseCategoryId);
+    else if (item.expenseCategoryName) item.expenseCategoryId = categoryMap.get(item.expenseCategoryName);
   };
 
   const updatePymtAcc = (pymtAccMap: Map<string, string>, item: ExpenseFields) => {
-    if (item.pymtaccId) item.pymtaccName = pymtAccMap.get(item.pymtaccId);
-    else if (item.pymtaccName) item.pymtaccId = pymtAccMap.get(item.pymtaccName);
+    if (item.paymentAccountId) item.paymentAccountName = pymtAccMap.get(item.paymentAccountId);
+    else if (item.paymentAccountName) item.paymentAccountId = pymtAccMap.get(item.paymentAccountName);
   };
 
   const updateCategoryAndPymtAccName = async (expenseItem: ExpenseFields) => {
+    const logger = getLogger("updateCategoryAndPymtAccName");
+    let startTime = new Date();
     const categoryMap = await getCategoryEnum();
     const pymtAccMap = await getPymtAccEnum();
     updateCategory(categoryMap, expenseItem);
     updatePymtAcc(pymtAccMap, expenseItem);
-    if (expenseItem.expenseItems)
+    if (expenseItem.expenseItems) {
       expenseItem.expenseItems.forEach((itemBreakdown) => {
         updateCategory(categoryMap, itemBreakdown);
       });
+    }
+    logger.info("execution time =", subtractDates(null, startTime).toSeconds(), " sec");
   };
 
-  const updateExpenseReceipts = async (expense: ExpenseFields) => {
-    const uploadedReceiptsPromises = expense.receipts.map(async (rct) => {
+  const updateExpenseReceipts = async (receipts: ReceiptProps[], expenseId: string) => {
+    const logger = getLogger("updateExpenseReceipts", _logger);
+    const uploadedReceiptsPromises = receipts.map(async (rct) => {
       try {
         if (!rct.file) return { ...rct };
-        const formData = new FormData();
-        formData.append("file", rct.file);
-        formData.append("type", rct.file.type);
-        formData.append("name", rct.file.name);
-        const response = await axios.postForm("/expenses/" + expense.expenseId + "/receipts", formData);
+        // const formData = new FormData();
+        // formData.append("file", rct.file);
+        // formData.append("type", rct.file.type);
+        // formData.append("name", rct.file.name);
+        const response = await axios.post(`${rootPath}/id/${expenseId}/receipts/id/${rct.name}`, rct.file, {
+          headers: { "Content-Type": rct.contentType },
+        });
         const result: ReceiptProps = {
-          ...rct,
-          ...response.data,
-          file: undefined,
+          name: rct.name,
+          contentType: rct.contentType,
+          id: rct.id,
         };
         return result;
       } catch (e) {
+        let errorMessage: string = "";
         try {
-          handleRestErrors(e as Error);
-        } catch (e) {
-          return { ...rct, file: undefined, error: (e as Error).message };
+          const err = e as Error;
+          handleRestErrors(err, logger);
+          logger.warn("not rest error", e);
+          errorMessage = "unknown error";
+        } catch (ee) {
+          errorMessage = (ee as Error).message;
         }
-        throw { ...rct, file: undefined, error: (e as Error).message };
+        return { ...rct, error: errorMessage };
       }
     });
-    expense.receipts = await Promise.all(uploadedReceiptsPromises);
-    const errorReceipts = expense.receipts.filter((rct) => rct.error);
+    const uploadedReceipts = await Promise.all(uploadedReceiptsPromises);
+    const errorReceipts = receipts.filter((rct) => rct.error);
     if (errorReceipts.length > 0) throw new Error(JSON.stringify(errorReceipts));
+    return uploadedReceipts;
   };
 
   const getExpense = async (expenseId: string) => {
-    const db = await dbPromise;
+    const logger = getLogger("getExpense", _logger);
+
     try {
-      if ((await db.count(objectStoreName, expenseId)) === 0) {
-        const expenses = (await getExpenses()) as ExpenseFields[];
-        const expense = expenses.find((val) => val.expenseId === expenseId);
-        if (expense) return expense;
+      const dbExpense = await expenseDb.getItem(expenseId);
+
+      if (dbExpense && dbExpense.expenseItems) {
+        await updateCategoryAndPymtAccName(dbExpense);
+        return dbExpense;
       }
 
-      const expense = (await db.get(objectStoreName, expenseId)) as ExpenseFields;
-      if (!expense) return null;
-      await updateCategoryAndPymtAccName(expense);
-      return expense;
+      const response = await axios.get(`${rootPath}/id/${expenseId}`);
+      const expensesResponse = response.data as ExpenseFields;
+      expensesResponse.receipts.forEach((rct) => (rct.url = `${rootPath}/id/${expensesResponse.id}/receipts/id/${rct.id}`));
+      await updateCategoryAndPymtAccName(expensesResponse);
+      await expenseDb.addItem(expensesResponse);
+
+      return expensesResponse;
     } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
     }
   };
 
-  const getExpenses = async () => {
-    const db = await dbPromise;
+  const getExpenses = async (pageNo: number, status?: ExpenseStatus) => {
+    const logger = getLogger("getExpenses", _logger);
+
+    const startTime = new Date();
     try {
-      if ((await db.count(objectStoreName)) === 0) {
-        const response = await axios.get("/expenses");
-        const expensesResponse = response.data as ExpenseFields[];
-        const promises = expensesResponse.map(async (expenseItem) => {
-          await updateCategoryAndPymtAccName(expenseItem);
-        });
-        await Promise.all(promises);
-        const dbAddExpensePromises = expensesResponse.map((exp: any) => {
-          const expense = {
-            ...exp,
-            purchasedDate: new Date(exp.purchasedDate),
-          } as ExpenseFields;
-          convertAuditFields(expense);
-          return db.add(objectStoreName, expense);
-        });
-        await Promise.all(dbAddExpensePromises);
+      const dbExpenses = await expenseDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, status || ExpenseStatus.Enable);
+      logger.info("expenseDb.getAllFromIndex execution time =", subtractDates(null, startTime).toSeconds(), " sec.");
+      if (dbExpenses.length > 0) {
+        //todo filter all records by pageNo filter criteria
+        logger.info("db expenses =", [...dbExpenses]);
+        return [...dbExpenses];
       }
 
-      const expenses = (await db.getAll(objectStoreName)) as ExpenseFields[];
-      if (!expenses) return [];
-      // making sure that most recent names are mapped
-      const promises = expenses.map(async (xpns) => {
-        await updateCategoryAndPymtAccName(xpns);
-        return xpns;
+      // call api to refresh the list
+      let apiStartTime = new Date();
+      const queryParams: Record<string, string[]> = { pageNo: [String(pageNo)], status: [status || ExpenseStatus.Enable] };
+      const responsePromise = axios.get(rootPath, { params: queryParams });
+      getCategoryEnum();
+      getPymtAccEnum();
+
+      const expensesResponse = (await responsePromise).data as ExpenseFields[];
+      logger.info("from api, expensesResponse =", expensesResponse);
+      logger.info("api execution time =", subtractDates(null, apiStartTime).toSeconds(), " sec");
+      apiStartTime = new Date();
+      const promises = expensesResponse.map(async (expenseItem) => {
+        const transformStart = new Date();
+        const expense: ExpenseFields = {
+          ...expenseItem,
+          purchasedDate: parseTimestamp(expenseItem.purchasedDate as string),
+          verifiedTimestamp: expenseItem.verifiedTimestamp ? parseTimestamp(expenseItem.verifiedTimestamp as string) : undefined,
+        };
+        await updateCategoryAndPymtAccName(expense);
+        convertAuditFieldsToDateInstance(expense.auditDetails);
+        expense.receipts.forEach((rct) => (rct.url = `${rootPath}/id/${expense.id}/receipts/id/${rct.id}`));
+
+        logger.info("transforming execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
+        await expenseDb.addItem(expense);
+        logger.info("expense added to DB, ", expense, " execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
+        return expense;
       });
+      logger.info("transformed expense resources, execution time =", subtractDates(null, apiStartTime).toSeconds(), " sec");
       return await Promise.all(promises);
     } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
+    } finally {
+      logger.info("execution time =", subtractDates(null, startTime).toSeconds(), " sec");
     }
   };
 
   const addUpdateExpense = async (expense: ExpenseFields) => {
-    const db = await dbPromise;
+    const logger = getLogger("addUpdateExpense", _logger);
 
     try {
-      // deleting properties to populated the correct value
-      delete expense.categoryId;
-      delete expense.pymtaccId;
       await updateCategoryAndPymtAccName(expense);
-      await updateExpenseReceipts(expense);
-      if ((await db.count(objectStoreName, expense.expenseId)) === 0) {
-        await addExpense(expense);
-      } else {
-        await updateExpense(expense);
-      }
+      // await updateExpenseReceipts(expense);
+      const data: ExpenseFields = {
+        ...expense,
+        purchasedDate: expense.purchasedDate instanceof Date ? formatTimestamp(expense.purchasedDate) : expense.purchasedDate,
+        verifiedTimestamp: expense.verifiedTimestamp instanceof Date ? formatTimestamp(expense.verifiedTimestamp) : expense.verifiedTimestamp,
+        receipts: [...expense.receipts],
+      };
+      const response = await axios.post(rootPath, data);
+      const expenseResponse: ExpenseFields = { ...response.data };
+      convertAuditFieldsToDateInstance(expenseResponse.auditDetails);
+      expenseResponse.receipts.forEach((rct) => (rct.url = `${rootPath}/id/${expense.id}/receipts/id/${rct.id}`));
+      await expenseDb.addUpdateItem(expenseResponse);
+      // if ((await db.count(objectStoreName, expense.id)) === 0) {
+      //         await addExpense(expense);
+      //       } else {
+      //         await updateExpense(expense);
+      //       }
     } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
     }
   };
 
-  const addExpense = async (exp: ExpenseFields) => {
-    const data: any = {
-      ...exp,
-      tags: exp.tags,
-      expenseId: null,
-    };
-    const response = await axios.post("/expenses", data);
-    const expensesResponse = response.data as ExpenseFields;
-    await updateCategoryAndPymtAccName(expensesResponse);
-    const expense = {
-      ...expensesResponse,
-      purchasedDate: new Date(expensesResponse.purchasedDate),
-    } as ExpenseFields;
-    convertAuditFields(expense);
-    const db = await dbPromise;
-    await db.add(objectStoreName, expense);
-  };
-
-  const updateExpense = async (exp: ExpenseFields) => {
-    const data: any = {
-      ...exp,
-    };
-    const dbExp: any = await getExpense(exp.expenseId);
-    // console.debug("updateExpense", exp.expenseId, exp, JSON.stringify(difference(data, dbExp)));
-    const response = await axios.post("/expenses", data);
-    const expensesResponse = response.data as ExpenseFields;
-    await updateCategoryAndPymtAccName(expensesResponse);
-    const expense = {
-      ...expensesResponse,
-      purchasedDate: new Date(expensesResponse.purchasedDate),
-    } as ExpenseFields;
-    convertAuditFields(expense);
-    const db = await dbPromise;
-    await db.put(objectStoreName, expense);
-  };
-
   const removeExpense = async (expenseId: string) => {
-    const db = await dbPromise;
+    const logger = getLogger("removeExpense", _logger);
+
     try {
-      const response = await axios.delete("/expenses/" + expenseId);
-      await db.delete(objectStoreName, expenseId);
+      const response = await axios.delete(`${rootPath}/id/${expenseId}`);
+      const expenseResponse: ExpenseFields = { ...response.data };
+      await expenseDb.addUpdateItem(expenseResponse);
     } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
+      const err = e as Error;
+      handleRestErrors(err, logger);
+      logger.warn("not rest error", e);
+      throw Error("unknown error");
     }
   };
 
   const getExpenseTags = async () => {
-    const expenses = await getExpenses();
-    const tags = expenses
-      .map((xpns) => xpns.tags)
-      .join(",")
-      .split(",");
+    const expenses = await getExpenses(1);
+    const tags = expenses.flatMap((xpns) => xpns.tags);
 
     return tags;
-  };
-
-  const destroy = () => {
-    dbPromise.then((db) => db.close());
-    expenseCategoryService.destroy();
   };
 
   return {
@@ -256,7 +261,7 @@ const ExpenseServiceImpl = (): ExpenseService => {
     removeExpense,
     getPaymentAccountMap,
     getExpenseTags,
-    destroy,
+    updateExpenseReceipts,
   };
 };
 

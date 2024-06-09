@@ -37,7 +37,7 @@ const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
     useEffect(() => {
         // initialize
         props.expenseItems.forEach((item, ind) => {
-            item.id = item.id || item.expenseId || (idPrefix + ind);
+            item.id = item.id || (idPrefix + ind);
         });
         const items = addItem(props.expenseItems);
         setExpenseItems(items);
@@ -46,13 +46,11 @@ const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
     const getEmptyExpenseItem = (parentExpenseId: string, ind: number): ExpenseItemFields => {
         return {
             id: idPrefix + ind,
-            expenseId: idPrefix + ind,
-            parentExpenseId: parentExpenseId,
             amount: '',
-            categoryName: '',
+            expenseCategoryName: '',
             description: '',
-            billname: '',
-            tags: '',
+            billName: '',
+            tags: [],
         };
     };
 
@@ -67,11 +65,11 @@ const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
             console.error("item with id [ '" + item.id + "' ] not found.");
             return;
         }
-        itemToUpdate.billname = item.billname;
+        itemToUpdate.billName = item.billName;
         itemToUpdate.amount = item.amount;
-        itemToUpdate.categoryName = item.categoryName;
+        itemToUpdate.expenseCategoryName = item.expenseCategoryName;
         itemToUpdate.description = item.description;
-        itemToUpdate.tags = item.tags;
+        itemToUpdate.tags = [...item.tags];
 
         const emptyItem = expenseItems?.find(isEmptyItemRow);
         if (!emptyItem) {
@@ -81,7 +79,7 @@ const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
         updateItemizeTotalAmount(expenseItems);
     };
 
-    const isEmptyItemRow = (item: ExpenseItemFields) => (!item.amount && !item.categoryName && !item.description && !item.billname && !item.tags);
+    const isEmptyItemRow = (item: ExpenseItemFields) => (!item.amount && !item.expenseCategoryName && !item.description && !item.billName && !item.tags.length);
 
     const onRemoveItemHandler = (id: string) => {
         setExpenseItems(oldList => {
