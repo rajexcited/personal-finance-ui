@@ -1,19 +1,20 @@
 import { IDBPDatabase, openDB } from "idb";
-import { LoggerBase, getLogger } from "./logger";
 import datetime from "date-and-time";
+import { LoggerBase, getLogger } from "../../services";
 
 export enum LocalDBStore {
+  Receipt = "receipt-items-store",
   Expense = "expense-items-store",
   Config = "config-store",
   PaymentAccount = "pymt-account-store",
-  ReceiptFile = "receipt-file-store",
 }
 
 export enum LocalDBStoreIndex {
+  ExpenseReceiptName = "expense-receipt-name-index",
+  ExpenseId = "expenseId-index",
   AuditUpdatedOn = "audit-updatedOn-index",
   ItemStatus = "item-status-index",
   ConfigBelongsTo = "belongsTo-index",
-  ReceiptUrl = "receipt-url-index",
   CacheUpdatedOn = "cache-updatedOn-index",
 }
 
@@ -42,9 +43,9 @@ const CacheIndex: IndexDetailType = {
 };
 
 const DataBaseConfig: DBType = {
-  name: "expenseDb",
+  name: "mock-expenseDb",
   version: 1,
-  expireHour: 6,
+  expireHour: 12,
   stores: [
     {
       name: LocalDBStore.Expense,
@@ -90,50 +91,39 @@ const DataBaseConfig: DBType = {
       ],
     },
     {
-      name: LocalDBStore.ReceiptFile,
+      name: LocalDBStore.Receipt,
       keyPath: "id",
       indexes: [
         {
-          name: LocalDBStoreIndex.ReceiptUrl,
-          keyPath: "url",
+          name: LocalDBStoreIndex.ExpenseReceiptName,
+          keyPath: ["name", "expenseId"],
+        },
+        {
+          name: LocalDBStoreIndex.ExpenseId,
+          keyPath: "expenseId",
         },
       ],
     },
   ],
 };
 
-export const getUpperBound = (key: string, posFromEnd?: number) => {
-  posFromEnd = posFromEnd || 1;
-  posFromEnd = -1 * posFromEnd;
-  let upperKey = key.slice(posFromEnd);
-  upperKey = String.fromCharCode(upperKey.charCodeAt(0) + 1) + upperKey.slice(1);
-  return key.slice(0, posFromEnd) + upperKey;
-};
-
-export const getLowerBound = (key: string, posFromEnd?: number) => {
-  posFromEnd = posFromEnd || 1;
-  posFromEnd = -1 * posFromEnd;
-  let lowerKey = key.slice(posFromEnd);
-  lowerKey = String.fromCharCode(lowerKey.charCodeAt(0) - 1) + lowerKey.slice(1);
-  return key.slice(0, posFromEnd) + lowerKey;
-};
-
 const getItemKeyPath = (storeKeyPath: string | string[]) => {
   const prefixWithItem = (path: string) => "item." + path;
   if (Array.isArray(storeKeyPath)) {
-    return storeKeyPath.map(prefixWithItem);
+    const keyPathArray = storeKeyPath.map(prefixWithItem);
+    return keyPathArray;
   }
   return prefixWithItem(storeKeyPath);
 };
 
 const configureLocalDatabase = async () => {
-  const _logger = getLogger("configureLocalDatabase");
+  const _logger = getLogger("demo.configureLocalDatabase");
   _logger.debug("opening DB");
 
   // https://hackernoon.com/use-indexeddb-with-idb-a-1kb-library-that-makes-it-easy-8p1f3yqq
   const db = await openDB(DataBaseConfig.name, DataBaseConfig.version, {
     upgrade(db, oldVersion, newVersion, transaction, event) {
-      const logger = getLogger("upgrade", _logger);
+      const logger = getLogger("db.upgrade", _logger);
       logger.debug("db =", db, ", oldVersion =", oldVersion, ", newVersion =", newVersion, ", transaction =", transaction, ", event =", event);
       DataBaseConfig.stores.forEach((storeConfig) => {
         logger.debug("storeObj =", storeConfig);
@@ -165,18 +155,12 @@ interface DbItem<T> {
   updatedOn: number;
   createdOn: number;
 }
-type MyLocalDatabaseCallback<T> = (item: T) => Promise<void>;
-
-enum MyLocalDatabaseCallbackName {
-  OnBeforeExpired = "onBeforeExpiredCallback",
-}
 
 export class MyLocalDatabase<T> {
   private readonly _storeConfig: StoreConfigType;
   private readonly _logger: LoggerBase;
-  private readonly callbacks: Partial<Record<MyLocalDatabaseCallbackName, MyLocalDatabaseCallback<T>>>;
 
-  constructor(objectStoreName: LocalDBStore, onBeforeExpiredCallback?: MyLocalDatabaseCallback<T>) {
+  constructor(objectStoreName: LocalDBStore) {
     const storeConfig = DataBaseConfig.stores.find((s) => s.name === objectStoreName);
     if (!storeConfig) {
       throw Error("object store is not supported for Db");
@@ -187,11 +171,7 @@ export class MyLocalDatabase<T> {
       this._storeConfig.expireHoure = DataBaseConfig.expireHour;
     }
 
-    this._logger = getLogger("MyLocalDatabase." + objectStoreName, null, null, "INFO");
-    this.callbacks = {};
-    if (onBeforeExpiredCallback) {
-      this.callbacks[MyLocalDatabaseCallbackName.OnBeforeExpired] = onBeforeExpiredCallback;
-    }
+    this._logger = getLogger("MyLocalDatabase." + objectStoreName, null, null, "ERROR");
   }
 
   private validateKeyPath(logger: LoggerBase, key?: string | string[], index?: LocalDBStoreIndex) {
@@ -228,9 +208,9 @@ export class MyLocalDatabase<T> {
     }
   }
 
-  private async getCacheExpiryItems(db: IDBPDatabase, loggerBase: LoggerBase) {
+  private async validateCacheExpiry(db: IDBPDatabase, loggerBase: LoggerBase) {
     // delete all expired items
-    const logger = getLogger("getCacheExpiryItems", loggerBase);
+    const logger = getLogger("validateCacheExpiry", loggerBase);
 
     const cacheExpiryHour = this._storeConfig.expireHoure || 0;
     const expiredTime = datetime.addHours(new Date(), cacheExpiryHour * -1).getTime();
@@ -238,21 +218,10 @@ export class MyLocalDatabase<T> {
     const upperBoundQuery = IDBKeyRange.upperBound(expiredTime, true);
 
     const list = (await db.getAllFromIndex(this._storeConfig.name, CacheIndex.name, upperBoundQuery)) as DbItem<T>[];
-    return list;
-  }
-
-  private async validateCacheExpiry(db: IDBPDatabase, loggerBase: LoggerBase) {
-    // delete all expired items
-    const logger = getLogger("validateCacheExpiry", loggerBase);
-
-    const list = await this.getCacheExpiryItems(db, logger);
     logger.debug("deleting", list.length, "items");
     const deletePromises = list.map(async (o) => {
       const item = o.item as any;
       if (this._storeConfig.keyPath in item) {
-        if (this.callbacks.onBeforeExpiredCallback) {
-          await this.callbacks.onBeforeExpiredCallback(item);
-        }
         const key = item[this._storeConfig.keyPath];
         await db.delete(this._storeConfig.name, IDBKeyRange.only(key));
       } else {
@@ -398,20 +367,6 @@ export class MyLocalDatabase<T> {
       this.validateKeyPath(logger, key);
       await db.delete(this._storeConfig.name, key);
       logger.debug("item deleted with key [", key, "]");
-    } finally {
-      logger.debug("closing db");
-      db.close();
-      logger.debug("db is closed");
-    }
-  }
-
-  public async clearAll() {
-    const logger = getLogger("clearAll", this._logger);
-    const db = await openDB(DataBaseConfig.name, DataBaseConfig.version);
-    logger.debug("db is opened");
-    try {
-      await db.clear(this._storeConfig.name);
-      logger.debug("all items deleted");
     } finally {
       logger.debug("closing db");
       db.close();

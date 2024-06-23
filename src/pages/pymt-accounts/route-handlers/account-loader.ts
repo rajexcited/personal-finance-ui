@@ -1,6 +1,6 @@
 import { LoaderFunctionArgs } from "react-router-dom";
 import { ConfigResource, PymtAccountFields, PymtAccountService, descCompare } from "../services";
-import { RouteHandlerResponse, handleRouteActionError } from "../../../services";
+import { RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
 
 const accountService = PymtAccountService();
 
@@ -11,6 +11,7 @@ export interface PymtAccountDetailLoaderResource {
 }
 
 export const pymtAccountListLoaderHandler = async () => {
+  const logger = getLogger("route.pymtAccountListLoaderHandler");
   try {
     const pymtAccList = await accountService.getPymtAccounts();
     pymtAccList.sort((a, b) => descCompare(a.auditDetails.updatedOn, b.auditDetails.updatedOn));
@@ -20,12 +21,13 @@ export const pymtAccountListLoaderHandler = async () => {
     };
     return response;
   } catch (e) {
-    console.error("in loader handler", e);
+    logger.error("in loader handler", e);
     return handleRouteActionError(e);
   }
 };
 
 export const pymtAccountDetailLoaderHandler = async ({ params }: LoaderFunctionArgs) => {
+  const logger = getLogger("route.pymtAccountDetailLoaderHandler");
   try {
     const pymtAccountDetail = await accountService.getPymtAccount(params.accountId as string);
     if (!pymtAccountDetail) throw Error("account details not found");
@@ -42,12 +44,13 @@ export const pymtAccountDetailLoaderHandler = async ({ params }: LoaderFunctionA
     };
     return response;
   } catch (e) {
-    console.error("in loader handler", e);
+    logger.error("in loader handler", e);
     return handleRouteActionError(e);
   }
 };
 
 export const pymtAccountDetailSupportingLoaderHandler = async () => {
+  const logger = getLogger("route.pymtAccountDetailSupportingLoaderHandler");
   try {
     const pymtAccountTags = await accountService.getPymtAccountTags();
     const categoryTypes = await accountService.getPymtAccountTypes();
@@ -62,7 +65,7 @@ export const pymtAccountDetailSupportingLoaderHandler = async () => {
     };
     return response;
   } catch (e) {
-    console.error("in loader handler", e);
+    logger.error("in loader handler", e);
     return handleRouteActionError(e);
   }
 };

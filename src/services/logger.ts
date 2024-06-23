@@ -47,7 +47,7 @@ export class LoggerBase {
 
     this.id = convertedId;
 
-    const level = logLevel || baseLogger1?.getLogLevelType() || baseLogger2?.getLogLevelType() || defaultLogLevel;
+    const level = logLevel || baseLogger2?.getLogLevelType() || baseLogger1?.getLogLevelType() || defaultLogLevel;
     this.logLevel = LogLevel[level];
   }
 
@@ -105,14 +105,6 @@ export class LoggerBase {
 
 type ConsoleLogType = "trace" | "debug" | "log" | "error" | "warn" | "info";
 const consoleprint = (ctype: ConsoleLogType, ...args: any[]) => {
-  // const p = args.flatMap((a) => {
-  // if (a instanceof Error) {
-  //   return [JSON.stringify({ errorMessage: a.message, errorClassName: a.name }), a.stack];
-  // }
-  // if (a instanceof Date) return String(a);
-  // if (typeof a === "object") return JSON.stringify(a);
-  //   return a;
-  // });
   const p = args.flatMap((a) => a);
 
   if (p.length === 0) return;

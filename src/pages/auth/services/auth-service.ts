@@ -56,9 +56,9 @@ const AuthenticationServiceImpl = () => {
   };
 
   const isTokenSessionValid = (loggerBase: LoggerBase) => {
-    const logger = getLogger("isTokenSessionValid", loggerBase);
+    const logger = getLogger("isTokenSessionValid", loggerBase, null, "INFO");
     const tokenSessionDetails = sessionStorage.getItem(authTokenSessionKey);
-    // logger.debug("token session data =", tokenSessionDetails);
+    logger.debug("token session data =", tokenSessionDetails);
     // scenario 1 - tokenSessionDetails is null - when session gets invalidated
     // scenario 2 - session time is expired
     if (!tokenSessionDetails) {
@@ -71,7 +71,7 @@ const AuthenticationServiceImpl = () => {
     const MARGIN_ERROR_TIME_IN_SEC = 1;
 
     const validSessionSeconds = subtractDates(tokenSessionResource.expiryTime).toSeconds();
-    // logger.debug("validSessionSeconds =", validSessionSeconds, ", responding boolean result = ", !(validSessionSeconds <= MARGIN_ERROR_TIME_IN_SEC));
+    logger.debug("validSessionSeconds =", validSessionSeconds, ", responding boolean result = ", !(validSessionSeconds <= MARGIN_ERROR_TIME_IN_SEC));
     if (validSessionSeconds <= MARGIN_ERROR_TIME_IN_SEC) {
       cleanupSession();
       return false;
@@ -92,7 +92,7 @@ const AuthenticationServiceImpl = () => {
    * @returns user session details if valid
    */
   const getValidAuthSessionDetails = (loggerBase: LoggerBase) => {
-    const logger = getLogger("getValidAuthSessionDetails", loggerBase);
+    const logger = getLogger("getValidAuthSessionDetails", loggerBase, null, "INFO");
     if (!isTokenSessionValid(logger)) {
       return null;
     }
@@ -106,7 +106,7 @@ const AuthenticationServiceImpl = () => {
     }
 
     const userSessionResource = JSON.parse(userSessionDetails) as UserDetailsResource;
-    // logger.debug("user session data =", userSessionDetails);
+    logger.debug("user session data =", userSessionDetails);
     if (!userSessionResource.isAuthenticated) {
       cleanupSession();
       return null;
@@ -120,7 +120,7 @@ const AuthenticationServiceImpl = () => {
     try {
       const authDetails = getValidAuthSessionDetails(logger);
       if (authDetails?.isAuthenticated) {
-        // logger.debug("authen is true");
+        logger.debug("authen is true");
         return true;
       }
     } catch (e) {
@@ -296,11 +296,11 @@ const AuthenticationServiceImpl = () => {
   };
 
   const getTokenExpiryTime = () => {
-    const logger = getLogger("getTokenExpiryTime", _logger);
+    const logger = getLogger("getTokenExpiryTime", _logger, null, "INFO");
     if (isTokenSessionValid(logger)) {
       const tokenSessionResource = JSON.parse(sessionStorage.getItem(authTokenSessionKey) as string) as AccessTokenResource;
       const subtractResult = subtractDates(tokenSessionResource.expiryTime);
-      // logger.debug("subtract diff =", subtractResult);
+      logger.debug("subtract diff =", subtractResult);
       return subtractResult.toSeconds();
     }
     logger.debug("invalid token session, so time diff is negative");

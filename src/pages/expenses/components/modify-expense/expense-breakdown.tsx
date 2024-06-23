@@ -6,6 +6,7 @@ import { ExpenseItemFields } from "../../services";
 import { DropDownItemType } from "../../../../components";
 import _ from "lodash";
 import { formatAmount } from "../../../../formatters";
+import { getLogger } from "../../../../services";
 
 
 export interface ExpenseBreakDownProps {
@@ -60,9 +61,10 @@ const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
     };
 
     const onChangeItemHandler = (item: ExpenseItemFields) => {
+        const logger = getLogger("FC.ExpenseBreakDown.onChangeItemHandler");
         const itemToUpdate = expenseItems?.find(it => item.id === it.id);
         if (!itemToUpdate) {
-            console.error("item with id [ '" + item.id + "' ] not found.");
+            logger.error("item with id [ '" + item.id + "' ] not found.");
             return;
         }
         itemToUpdate.billName = item.billName;

@@ -90,18 +90,18 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
             // scenario 6 session is refreshed
             // scenario 7 session is about to expire
             intervalId = setInterval(async () => {
-                // const startTime = Date.now();
-                // const logger = getLogger("authenticated.setInterval", _logger);
-                // logger.debug("periodic execution. verify and update context");
+                const startTime = Date.now();
+                const logger = getLogger("authenticated.setInterval", _logger, null, "INFO");
+                logger.debug("periodic execution. verify and update context");
                 if (authService.isAuthenticated()) {
-                    // logger.debug("authen true from session/api. so update the context if required");
+                    logger.debug("authen true from session/api. so update the context if required");
                     await setAuthenNotExpired();
                     setAboutToExpire();
                 } else {
-                    // logger.debug("authen false from session/api. so update the context if required");
+                    logger.debug("authen false from session/api. so update the context if required");
                     setAuthenExpire();
                 }
-                // logger.debug("execution time for interval function is ", (Date.now() - startTime), " ms");
+                logger.debug("execution time for interval function is ", (Date.now() - startTime), " ms");
             }, ONE_SECOND_IN_MILLI);
         }
 

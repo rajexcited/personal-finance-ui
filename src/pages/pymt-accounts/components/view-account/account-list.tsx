@@ -16,9 +16,8 @@ const AccountList: FunctionComponent = () => {
 
     const onDeleteConfirmHandler = () => {
         const deletingPymtAcc = loaderData.data.find(acc => acc.id === deletingAccountId);
-        // setPymtAccList(pymtAccList => pymtAccList.filter(acc => acc !== deletingPymtAcc));
         const data: any = { ...deletingPymtAcc };
-        submit(data, { action: PAGE_URL.pymtAccountsRoot.fullUrl, method: "delete" });
+        submit(data, { action: PAGE_URL.pymtAccountsRoot.fullUrl, method: "delete", encType: "application/json" });
         setDeletingAccountId("");
     };
 

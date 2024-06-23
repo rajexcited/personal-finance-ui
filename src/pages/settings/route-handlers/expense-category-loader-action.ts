@@ -1,10 +1,11 @@
 import { ActionFunctionArgs, json } from "react-router-dom";
 import { ExpenseCategoryService } from "../../expenses";
-import { ConfigResource, HttpStatusCode, RouteHandlerResponse, handleRouteActionError } from "../../../services";
+import { ConfigResource, HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
 
 const expenseCategoryService = ExpenseCategoryService();
 
 export const expenseCategoryListLoaderHandler = async () => {
+  const logger = getLogger("route.expenseCategoryListLoaderHandler");
   try {
     const expenseCategoryList = await expenseCategoryService.getCategories();
     const response: RouteHandlerResponse<ConfigResource[]> = {
@@ -14,7 +15,7 @@ export const expenseCategoryListLoaderHandler = async () => {
 
     return response;
   } catch (e) {
-    console.error("in loader handler", e);
+    logger.error("in loader handler", e);
     return handleRouteActionError(e);
   }
 };
@@ -38,6 +39,7 @@ export const expenseCategoryListActionHandler = async ({ request }: ActionFuncti
 };
 
 const expenseCategoryAddUpdateActionHandler = async (request: Request) => {
+  const logger = getLogger("route.expenseCategoryAddUpdateActionHandler");
   const data = await request.json();
 
   try {
@@ -69,12 +71,13 @@ const expenseCategoryAddUpdateActionHandler = async (request: Request) => {
     };
     return json(error, { status: HttpStatusCode.InternalServerError });
   } catch (e) {
-    console.error("in action handler", e);
+    logger.error("in action handler", e);
     return handleRouteActionError(e);
   }
 };
 
 const expenseCategoryDeleteActionHandler = async (request: Request) => {
+  const logger = getLogger("route.expenseCategoryDeleteActionHandler");
   const data: ConfigResource = await request.json();
 
   try {
@@ -85,7 +88,7 @@ const expenseCategoryDeleteActionHandler = async (request: Request) => {
     };
     return response;
   } catch (e) {
-    console.error("in action handler", e);
+    logger.error("in action handler", e);
     return handleRouteActionError(e);
   }
 };

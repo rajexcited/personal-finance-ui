@@ -41,7 +41,7 @@ const AddAccount: FunctionComponent = () => {
                 id: accountId,
             };
 
-            submit(formData, { action: PAGE_URL.addPymAccount.fullUrl, method: "post" });
+            submit(formData, { action: PAGE_URL.addPymAccount.fullUrl, method: "post", encType: "application/json" });
         } else {
             setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
         }

@@ -15,15 +15,10 @@ export interface CalendarProps extends bulmaCalendar.Options {
 const defaultOptions: bulmaCalendar.Options = {
     type: "date",
     color: "link",
-    // startDate: undefined,
-    // endDate: undefined,
     isRange: false,
     allowSameDayRange: false,
     showClearButton: false,
-    // maxDate: undefined,
-    // timeFormat: undefined,
     showButtons: false,
-    // toggleOnInputClick: false,
     displayMode: "inline"
 };
 

@@ -1,10 +1,11 @@
 import { ActionFunctionArgs, json } from "react-router-dom";
 import { PymtAccountTypeService } from "../../pymt-accounts";
-import { ConfigResource, HttpStatusCode, RouteHandlerResponse, handleRouteActionError } from "../../../services";
+import { ConfigResource, HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
 
 const pymtAccountTypeService = PymtAccountTypeService();
 
 export const paymentAccountTypeListLoaderHandler = async () => {
+  const logger = getLogger("route.paymentAccountTypeListLoaderHandler");
   try {
     const pymtAccTypeList = await pymtAccountTypeService.getAccountTypes();
     const response: RouteHandlerResponse<ConfigResource[]> = {
@@ -14,7 +15,7 @@ export const paymentAccountTypeListLoaderHandler = async () => {
 
     return response;
   } catch (e) {
-    console.error("in loader handler", e);
+    logger.error("in loader handler", e);
     return handleRouteActionError(e);
   }
 };
@@ -38,6 +39,7 @@ export const pymtAccTypeListActionHandler = async ({ request }: ActionFunctionAr
 };
 
 const pymtAccTypeAddUpdateActionHandler = async (request: Request) => {
+  const logger = getLogger("route.pymtAccTypeAddUpdateActionHandler");
   const data = await request.json();
 
   try {
@@ -69,12 +71,13 @@ const pymtAccTypeAddUpdateActionHandler = async (request: Request) => {
     };
     return json(error, { status: HttpStatusCode.InternalServerError });
   } catch (e) {
-    console.error("in action handler", e);
+    logger.error("in action handler", e);
     return handleRouteActionError(e);
   }
 };
 
 const pymtAccTypeDeleteActionHandler = async (request: Request) => {
+  const logger = getLogger("route.pymtAccTypeDeleteActionHandler");
   const data: ConfigResource = await request.json();
 
   try {
@@ -85,7 +88,7 @@ const pymtAccTypeDeleteActionHandler = async (request: Request) => {
     };
     return response;
   } catch (e) {
-    console.error("in action handler", e);
+    logger.error("in action handler", e);
     return handleRouteActionError(e);
   }
 };

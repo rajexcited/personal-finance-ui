@@ -17,15 +17,3 @@ export interface PymtAccountFields {
   status: PymtAccStatus;
   auditDetails: AuditFields;
 }
-
-/**
- * General category. this is usually broad types. any specifics user can add as tags
- */
-// export enum AccountType {
-//   checking,
-//   savings,
-//   creditCard,
-//   investment,
-//   ira,
-//   loan,
-// }

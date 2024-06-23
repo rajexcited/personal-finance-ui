@@ -23,8 +23,8 @@ const defaultOptions: BulmaTagsInputOptions = {
   freeInput: true,
   highlightDuplicate: true,
   highlightMatchesString: true,
-  maxChars: 20,
-  minChars: 1,
+  maxChars: 15,
+  minChars: 3,
   noResultsLabel: 'No results found',
   removable: true,
   searchMinChars: 1,
@@ -33,7 +33,7 @@ const defaultOptions: BulmaTagsInputOptions = {
   tagClass: 'is-rounded is-link',
   trim: true,
   itemText: "val",
-  maxTags: 30,
+  maxTags: 10,
 };
 
 /**

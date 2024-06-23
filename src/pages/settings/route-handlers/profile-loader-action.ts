@@ -1,6 +1,6 @@
 import { ActionFunctionArgs, json } from "react-router-dom";
 import { AuthenticationService } from "../../auth";
-import { HttpStatusCode, RouteHandlerResponse, handleRouteActionError } from "../../../services";
+import { HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
 import { CurrencyProfileResource, CurrencyProfileService } from "../services";
 import { UpdateUserDetailsResource } from "../../auth/services";
 
@@ -13,6 +13,7 @@ export interface ProfileDetailsLoaderResource {
 }
 
 export const profileDetailsLoaderHandler = async () => {
+  const logger = getLogger("route.profileDetailsLoaderHandler");
   try {
     const userDetails = await authenticationService.getUserDetails();
     const currencyProfiles = await currencyProfileService.getCurrencyProfiles();
@@ -28,7 +29,7 @@ export const profileDetailsLoaderHandler = async () => {
     };
     return response;
   } catch (e) {
-    console.error("in loader handler", e);
+    logger.error("in loader handler", e);
     return handleRouteActionError(e);
   }
 };
@@ -53,6 +54,7 @@ export const profileDetailsActionHandler = async ({ request }: ActionFunctionArg
 };
 
 const nameChangedActionHandler = async (request: Request, data: UpdateUserDetailsResource) => {
+  const logger = getLogger("route.nameChangedActionHandler");
   try {
     await authenticationService.updateName(data);
     const response: RouteHandlerResponse<string> = {
@@ -61,7 +63,7 @@ const nameChangedActionHandler = async (request: Request, data: UpdateUserDetail
     };
     return response;
   } catch (e) {
-    console.error("in action handler", e);
+    logger.error("in action handler", e);
     return handleRouteActionError(e);
   }
 };

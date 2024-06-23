@@ -1,5 +1,6 @@
 import { FunctionComponent, Children, isValidElement } from "react";
 import "./hero-tabs.css";
+import { getLogger } from "../services";
 
 
 
@@ -40,7 +41,8 @@ const HeroTabs: FunctionComponent<HeroTabsProps> = (props) => {
     let tabContentElement: JSX.Element | null = null;
     let onTabSelect: (tabId: string) => void;
     let activeTabHeadId: string = "";
-    console.log("props.children.type.name", props.children.type.name);
+    const logger = getLogger("FC.HeroTabs");
+    logger.log("props.children.type.name", props.children.type.name);
     if (props.children.type.name === "HeroTab" || props.children.type.name === "Tab") {
         const heroTabProps = props.children.props as HeroTabProps;
         onTabSelect = heroTabProps.onTabSelect;
@@ -66,7 +68,7 @@ const HeroTabs: FunctionComponent<HeroTabsProps> = (props) => {
             }
             return false;
         }) as JSX.Element;
-        console.log("tabHeadElememts", tabHeadElememts, "tabHeads", tabHeads, "tabContentElement", tabContentElement, "onTabSelect", onTabSelect);
+        logger.log("tabHeadElememts", tabHeadElememts, "tabHeads", tabHeads, "tabContentElement", tabContentElement, "onTabSelect", onTabSelect);
     }
 
     const onClickTabHeadHandler = (tabId: string, event: React.MouseEvent<HTMLLIElement, MouseEvent>) => {

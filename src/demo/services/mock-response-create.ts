@@ -11,13 +11,16 @@ export const AxiosResponseCreator = (config: AxiosRequestConfig) => {
     return toResponse(201, data);
   };
 
-  const toValidationError = (errors: ValidationErrorResource[]) => {
-    // return toError(400, { validation_error: { body_params: errors } });
+  const toValidationError = <T>(errors: ValidationErrorResource<T>[]) => {
     return toError(400, errors);
   };
 
   const toForbiddenError = (error: any) => {
     return toError(401, error);
+  };
+
+  const toNotFoundError = (error: any) => {
+    return toError(404, error);
   };
 
   const toUnknownError = (errors: any) => {
@@ -36,6 +39,7 @@ export const AxiosResponseCreator = (config: AxiosRequestConfig) => {
     toValidationError,
     toUnknownError,
     toForbiddenError,
+    toNotFoundError,
     toError,
     toResponse,
     toSuccessResponse,

@@ -93,12 +93,6 @@ const PymtAccountServiceImpl = () => {
       convertAuditFieldsToDateInstance(pymtAccountResponse.auditDetails);
 
       await paymentAccountDb.addUpdateItem(pymtAccountResponse);
-
-      // if ((await db.count(objectStoreName, pymtAccount.accountId)) === 0) {
-      //   await addPymtAccount(pymtAccount);
-      // } else {
-      //   await updatePymtAccount(pymtAccount);
-      // }
     } catch (e) {
       const err = e as Error;
       handleRestErrors(err, logger);
@@ -106,33 +100,6 @@ const PymtAccountServiceImpl = () => {
       throw Error("unknown error");
     }
   };
-
-  // const addPymtAccount = async (acc: PymtAccountFields) => {
-  //   const data: any = {
-  //     ...acc,
-  //     accountId: null,
-  //   };
-  //   const accountTypeMap = await getAccountTypesEnum();
-  //   updateAccountType(accountTypeMap, data);
-  //   const response = await axios.post("/accounts", data);
-  //   const pymtAccountResponse = response.data as PymtAccountFields;
-  //   updateAccountType(accountTypeMap, pymtAccountResponse);
-  //   convertAuditFieldsToDateInstance(pymtAccountResponse.auditDetails);
-  //   const db = await dbPromise;
-  //   await db.add(objectStoreName, pymtAccountResponse);
-  // };
-
-  // const updatePymtAccount = async (acc: PymtAccountFields) => {
-  //   const data = { ...acc };
-  //   const accountTypeMap = await getAccountTypesEnum();
-  //   updateAccountType(accountTypeMap, data);
-  //   const response = await axios.post("/accounts", data);
-  //   const pymtAccountResponse = response.data as PymtAccountFields;
-  //   updateAccountType(accountTypeMap, pymtAccountResponse);
-  //   convertAuditFieldsToDateInstance(pymtAccountResponse.auditDetails);
-  //   const db = await dbPromise;
-  //   await db.put(objectStoreName, pymtAccountResponse);
-  // };
 
   const removePymtAccount = async (accountId: string) => {
     const logger = getLogger("removePymtAccount", _logger);

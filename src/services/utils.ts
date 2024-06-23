@@ -6,12 +6,14 @@ import { LoggerBase, getLogger } from "./logger";
 
 export { HttpStatusCode } from "axios";
 
-export class UnauthorizedError extends Error {
+export class RestError extends Error {}
+
+export class UnauthorizedError extends RestError {
   public readonly name = "UnauthorizedError";
   public readonly httpStatusCode = axios.HttpStatusCode.Unauthorized;
 }
 
-export class NotFoundError extends Error {
+export class NotFoundError extends RestError {
   public readonly name = "NotFoundError";
   public readonly httpStatusCode = axios.HttpStatusCode.NotFound;
 }
@@ -21,7 +23,7 @@ interface ValidationErrorData {
   message: string;
 }
 
-class BadRequestError extends Error {
+class BadRequestError extends RestError {
   public readonly name = "BadRequestError";
   public readonly httpStatusCode = axios.HttpStatusCode.BadRequest;
   public readonly jsonData: ValidationErrorData[];
@@ -56,7 +58,6 @@ export const handleRestErrors = (e: Error, loggerBase: LoggerBase) => {
       logger.debug("throwing error", err);
       throw err;
     } else if (e.response?.status === axios.HttpStatusCode.Unauthorized || e.response?.status === axios.HttpStatusCode.Forbidden) {
-      // const msg = e.response.data;
       const msg = "unauthorized user access";
       const err = new UnauthorizedError(msg);
 

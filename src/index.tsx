@@ -4,10 +4,6 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider } from 'react-router-dom';
 import { AuthContextProvider, router } from './pages';
 import { LoadSpinner } from './components';
-import axiosMock from "./demo";
-
-
-console.debug(axiosMock.history);
 
 
 const App = () => {

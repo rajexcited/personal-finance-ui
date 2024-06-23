@@ -1,7 +1,7 @@
 import { ActionFunctionArgs, json, redirect } from "react-router-dom";
 import { PAGE_URL } from "../../root";
-import { ExpenseService, ReceiptProps } from "../services";
-import { HttpStatusCode, RouteHandlerResponse, handleRouteActionError } from "../../../services";
+import { ExpenseFields, ExpenseService, ReceiptProps, ReceiptUploadError } from "../services";
+import { HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
 
 const expenseService = ExpenseService();
 
@@ -23,42 +23,76 @@ export const expenseActionHandler = async ({ request }: ActionFunctionArgs) => {
   return json(error, { status: HttpStatusCode.InternalServerError });
 };
 
-const expenseAddUpdateActionHandler = async (request: Request) => {
-  try {
-    // const data = await request.json();
-    const formdata = await request.formData();
-    const receipts: ReceiptProps[] = JSON.parse(formdata.get("receipts") as string);
-    receipts.forEach((rct) => (rct.file = formdata.get(rct.id) as File));
+type ExpenseResourceKey = keyof ExpenseFields;
+const getFormData = (formData: FormData, formKey: ExpenseResourceKey) => {
+  const formValue = formData.get(formKey);
 
-    const expenseId = formdata.get("expenseId") as string;
-    await expenseService.updateExpenseReceipts(receipts, expenseId);
+  if (formValue) {
+    try {
+      const jsonstr = formValue.toString();
+      const jsonObj = JSON.parse(jsonstr);
+      if (typeof jsonObj === "object") {
+        return jsonObj;
+      }
+      return formValue.toString();
+    } catch (ignore) {
+      return formValue.toString();
+    }
+  }
+  return null;
+};
+
+const expenseAddUpdateActionHandler = async (request: Request) => {
+  const logger = getLogger("expenseAddUpdateActionHandler");
+  try {
+    const formdata = await request.formData();
+
+    let modifiedReceipts: ReceiptProps[] = [];
+    try {
+      const receipts: ReceiptProps[] = getFormData(formdata, "receipts");
+      logger.info("receipts without files =", receipts);
+      receipts.forEach((rct) => (rct.file = formdata.get(rct.id) as File));
+      logger.info(
+        "receipt files to upload =",
+        receipts.map((r) => r.file).filter((f) => f)
+      );
+      modifiedReceipts = await expenseService.updateExpenseReceipts(receipts);
+    } catch (e) {
+      if (e instanceof ReceiptUploadError) {
+        return e.getRouteActionErrorResponse();
+      }
+      return handleRouteActionError(e);
+    }
 
     await expenseService.addUpdateExpense({
-      id: expenseId,
-      billName: formdata.get("billname") as string,
-      paymentAccountName: formdata.get("pymtaccName") as string,
-      amount: formdata.get("amount") as string,
-      description: formdata.get("description") as string,
-      purchasedDate: formdata.get("purchasedDate") as string,
-      tags: (formdata.get("tags") as string).split(","),
-      verifiedTimestamp: formdata.get("verifiedDateTime") as string,
-      expenseItems: JSON.parse(formdata.get("expenseItems") as string),
-      expenseCategoryName: formdata.get("categoryName") as string,
-      receipts: receipts,
+      id: getFormData(formdata, "id"),
+      billName: getFormData(formdata, "billName"),
+      paymentAccountId: getFormData(formdata, "paymentAccountId"),
+      paymentAccountName: getFormData(formdata, "paymentAccountName"),
+      amount: getFormData(formdata, "amount"),
+      description: getFormData(formdata, "description"),
+      purchasedDate: getFormData(formdata, "purchasedDate"),
+      tags: getFormData(formdata, "tags"),
+      verifiedTimestamp: getFormData(formdata, "verifiedTimestamp"),
+      expenseItems: getFormData(formdata, "expenseItems"),
+      expenseCategoryName: getFormData(formdata, "expenseCategoryName"),
+      expenseCategoryId: getFormData(formdata, "expenseCategoryId"),
+      receipts: modifiedReceipts,
       auditDetails: { createdOn: new Date(), updatedOn: new Date() },
     });
 
     return redirect(PAGE_URL.expenseJournalRoot.fullUrl);
   } catch (e) {
-    console.error("in action handler", e);
+    logger.error("in action handler", e);
     return handleRouteActionError(e);
   }
 };
 
 const expenseDeleteActionHandler = async (request: Request) => {
+  const logger = getLogger("expenseDeleteActionHandler");
   try {
     const formdata = await request.formData();
-    const expenseId = formdata.get("expenseId") as string;
+    const expenseId = getFormData(formdata, "id");
     await expenseService.removeExpense(expenseId);
     const response: RouteHandlerResponse<string> = {
       type: "success",
@@ -66,7 +100,7 @@ const expenseDeleteActionHandler = async (request: Request) => {
     };
     return response;
   } catch (e) {
-    console.error("in action handler", e);
+    logger.error("in action handler", e);
     return handleRouteActionError(e);
   }
 };

@@ -28,9 +28,14 @@ export interface ReceiptProps {
   name: string;
   id: string;
   contentType: ReceiptType;
-  error?: string;
   url?: string;
+  expenseId: string;
 }
+
+export type ErrorReceiptProps = ReceiptProps & { error: Error };
+type DownloadReceiptResourceError = Pick<ReceiptProps, "id" | "expenseId"> & { error: string; status: "fail" };
+type DownloadReceiptResourceSuccess = Required<Pick<ReceiptProps, "id" | "expenseId" | "url"> & { status: "success" }>;
+export type DownloadReceiptResource = DownloadReceiptResourceSuccess | DownloadReceiptResourceError;
 
 export interface ExpenseFields extends BaseExpenseFields {
   paymentAccountId?: string;

@@ -29,7 +29,7 @@ const UpdateAccount: FunctionComponent = () => {
     const onUpdateAccount = (data: PymtAccountFields) => {
         if (auth.userDetails.isAuthenticated) {
             const formData: any = { ...data };
-            submit(formData, { action: PAGE_URL.updatePymAccount.fullUrl, method: "post" });
+            submit(formData, { action: PAGE_URL.updatePymAccount.fullUrl, method: "post", encType: "application/json" });
         } else {
             setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
         }

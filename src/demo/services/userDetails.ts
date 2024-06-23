@@ -1,4 +1,4 @@
-import { formatTimestamp } from "../../services";
+import { formatTimestamp, getLogger } from "../../services";
 
 type UserDataType = { firstName: string; lastName: string; emailId: string; password: string; countryCode: string };
 const UserSessionDetails: UserDataType = {
@@ -26,12 +26,11 @@ export const fullName = () => {
   return "-";
 };
 
-export const auditData = (createdBy?: string, createdOn?: Date) => {
-  const created = new Date(createdOn || "");
+export const auditData = (createdBy?: string, createdOn?: Date | string) => {
   return {
     createdBy: createdBy || fullName(),
     updatedBy: fullName(),
-    createdOn: isNaN(created.getTime()) ? formatTimestamp(new Date()) : formatTimestamp(created),
+    createdOn: typeof createdOn === "string" ? createdOn : formatTimestamp(createdOn || new Date()),
     updatedOn: formatTimestamp(new Date()),
   };
 };
@@ -52,9 +51,10 @@ export const tokenSessionData = (data?: TokenDataType) => {
 const reloadHandlerWhileLoggedIn = () => {
   const usrkey = "fin-usr-demo";
   const tknkey = "fin-tkn-demo";
+  const logger = getLogger("mock.userDetails.reloadHandlerWhileLoggedIn");
   window.addEventListener("beforeunload", (event) => {
     const itemDetails = JSON.stringify(UserSessionDetails);
-    console.log("before reload, local storage item details", itemDetails);
+    logger.log("before reload, local storage item details", itemDetails);
     sessionStorage.setItem(usrkey, itemDetails);
 
     sessionStorage.setItem(tknkey, JSON.stringify(tokenData));
@@ -62,7 +62,7 @@ const reloadHandlerWhileLoggedIn = () => {
 
   const authUsr = sessionStorage.getItem(usrkey);
   if (authUsr) {
-    console.trace("after reload, local storage user details", authUsr);
+    logger.debug("after reload, local storage user details", authUsr);
     const authUsrSession = JSON.parse(authUsr) as UserDataType;
     if (authUsrSession.firstName) {
       UserSessionDetails.emailId = authUsrSession.emailId;
@@ -74,7 +74,7 @@ const reloadHandlerWhileLoggedIn = () => {
   }
   const authTkn = sessionStorage.getItem(tknkey);
   if (authTkn) {
-    console.trace("after reload, local storage token details", authTkn);
+    logger.debug("after reload, local storage token details", authTkn);
     const authTknSession = JSON.parse(authTkn) as TokenDataType;
     if (authTknSession.accessToken) {
       tokenSessionData({

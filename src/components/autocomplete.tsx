@@ -1,4 +1,5 @@
 import { FunctionComponent, useState } from "react";
+import { getLogger } from "../services";
 
 export interface AutocompleteProps {
     id: string;
@@ -16,7 +17,8 @@ const Autocomplete: FunctionComponent<AutocompleteProps> = (props) => {
 
     // https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
     const handleKeyPress: React.KeyboardEventHandler<HTMLInputElement> = (event) => {
-        console.log("keypress event", event);
+        const logger = getLogger("FC.Autocomplete.handleKeyPress");
+        logger.log("keypress event", event);
         switch (event.key) {
             case "Enter":
             case "Tab":
@@ -40,9 +42,9 @@ const Autocomplete: FunctionComponent<AutocompleteProps> = (props) => {
         }
     };
 
-    const handleSelection = (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
-        , selection: string) => {
-        console.log("handle selection click event");
+    const handleSelection = (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>, selection: string) => {
+        const logger = getLogger("FC.Autocomplete.handleSelection");
+        logger.log("handle selection click event");
         event.preventDefault();
 
         setActiveIndex(0);
@@ -52,12 +54,13 @@ const Autocomplete: FunctionComponent<AutocompleteProps> = (props) => {
     };
 
     const updateQuery: React.ChangeEventHandler<HTMLInputElement> = (event) => {
-        console.log("update query change event", event);
+        const logger = getLogger("FC.Autocomplete.updateQuery");
+        logger.log("update query change event", event);
         if (!selected) {
             const newMatches = props.data.filter(item => item.toUpperCase().includes(event.target.value.toUpperCase()));
             setMatches(newMatches);
             setQuery(event.target.value);
-            console.log(props.data, newMatches, event.target.value, event);
+            logger.log(props.data, newMatches, event.target.value, event);
         } else {
             const nativeEvent = event.nativeEvent as InputEvent;
             if (nativeEvent.inputType === "deleteContentBackward") {

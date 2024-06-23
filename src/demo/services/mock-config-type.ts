@@ -1,84 +1,85 @@
 import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
-import { validateAuthorization, validateUuid } from "./common-validators";
+import { missingValidation, validateAuthorization, validateDataType } from "./common-validators";
 import { v4 as uuidv4 } from "uuid";
 import { auditData } from "./userDetails";
 import { AxiosRequestConfig } from "axios";
-import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus } from "../../services";
+import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, getLogger } from "../../services";
 import { CurrencyProfileResource } from "../../pages/settings/services";
-
-const belongsToAccType = "pymt-account-type";
-const belongsToExpenseCategory = "expense-category";
+import { addUpdateConfigTypes, deleteConfigType, getConfigTypes } from "../mock-db/config-type-db";
 
 const MockConfigType = (demoMock: MockAdapter) => {
-  demoMock.onDelete(/\/config\/types\/belongs-to\/.+\/id\/.+/).reply((config) => {
-    // const deleteConfigType = (belongsTo: string, config: AxiosRequestConfig) => {
+  demoMock.onDelete(/\/config\/types\/belongs-to\/.+\/id\/.+/).reply(async (config) => {
+    const logger = getLogger("mock.config-type.delete");
+
     const responseCreator = AxiosResponseCreator(config);
     const isAuthorized = validateAuthorization(config.headers);
     if (!isAuthorized) {
       return responseCreator.toForbiddenError("not authorized");
     }
 
-    const configId = (config.url as string)
-      .replace("/config/types/belongs-to/" + belongsToExpenseCategory + "/id/", "")
-      .replace("/config/types/belongs-to/" + belongsToAccType + "/id/", "");
-    console.log("url", config.url, "configId", configId);
-    const error = validateUuid(configId, "configId");
-    if (error) {
-      return responseCreator.toValidationError([error]);
+    const url = config.url as string;
+    const configId = url.split("/").slice(-1)[0];
+
+    logger.log("url", config.url, "configId", configId);
+    const validationErrors = validateDataType({ configId }, ["configId"], "uuid");
+    if (validationErrors.length > 0) {
+      return responseCreator.toValidationError(validationErrors);
     }
-    const result = configSessionData.deleteConfigType(configId);
-    console.log("delete result", result);
+    const result = await deleteConfigType(configId);
+    logger.log("delete result", result);
     if (result.error) {
-      return responseCreator.toValidationError([{ path: "id", message: "config with given configId does not exist." }]);
+      return responseCreator.toNotFoundError(result.error);
     }
 
     return responseCreator.toSuccessResponse(result.deleted);
   });
 
-  const addUpdateConfigType = (belongsTo: string, config: AxiosRequestConfig) => {
+  const addUpdateConfigType = async (belongsTo: ConfigTypeBelongsTo, config: AxiosRequestConfig) => {
+    const logger = getLogger("mock.config-type.addUpdate");
     const responseCreator = AxiosResponseCreator(config);
     const isAuthorized = validateAuthorization(config.headers);
     if (!isAuthorized) {
       return responseCreator.toForbiddenError("not authorized");
     }
 
-    const data = JSON.parse(config.data);
-    let result: { added?: any; updated?: any };
-    console.log("add update config", data);
-    if ("id" in data) {
-      // update
-      const err = validateUuid(data.id, "id");
-      if (err) {
-        return responseCreator.toValidationError([err]);
-      }
+    const data = JSON.parse(config.data) as ConfigResource;
+    logger.log("add update config", data);
 
-      result = configSessionData.addUpdateConfigTypes({ ...data, auditDetails: auditData(data.createdBy, data.createdOn) });
-    } else {
-      result = configSessionData.addUpdateConfigTypes({ ...data, id: uuidv4(), auditDetails: auditData() });
+    const missingErrors = missingValidation(data, ["id", "name", "value", "tags"]);
+    const notUuidErrors = validateDataType(data, ["id"], "uuid");
+    const notStringErrors = validateDataType(data, ["description", "belongsTo", "status"], "string");
+    const notArrayErrors = validateDataType(data, ["tags"], "array");
+    const validationErrors = [...missingErrors, ...notUuidErrors, ...notStringErrors, ...notArrayErrors];
+    if (validationErrors.length > 0) {
+      return responseCreator.toValidationError(validationErrors);
     }
-    console.log("result", result);
+
+    const result = await addUpdateConfigTypes({ ...data, belongsTo: belongsTo });
+    logger.log("result", result);
     if (result.updated) return responseCreator.toSuccessResponse(result.updated);
     // add
     return responseCreator.toCreateResponse(result.added);
   };
 
-  demoMock.onPost("/config/types/belongs-to/" + belongsToExpenseCategory).reply((config) => {
-    return addUpdateConfigType(belongsToExpenseCategory, config);
+  demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.ExpenseCategory).reply((config) => {
+    return addUpdateConfigType(ConfigTypeBelongsTo.ExpenseCategory, config);
   });
-  demoMock.onPost("/config/types/belongs-to/" + belongsToAccType).reply((config) => {
-    return addUpdateConfigType(belongsToAccType, config);
+  demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType).reply((config) => {
+    return addUpdateConfigType(ConfigTypeBelongsTo.PaymentAccountType, config);
   });
 
-  const getConfigTypes = (belongsTo: string, config: AxiosRequestConfig) => {
+  const getConfigTypeList = async (belongsTo: string, config: AxiosRequestConfig) => {
+    const logger = getLogger("mock.config-types." + belongsTo + ".getList");
     const responseCreator = AxiosResponseCreator(config);
     const isAuthorized = validateAuthorization(config.headers);
     if (!isAuthorized) {
       return responseCreator.toForbiddenError("not authorized");
     }
 
-    const result = configSessionData.getConfigTypes(belongsTo);
+    const result = await getConfigTypes(belongsTo);
     let responselist = result.list;
+    logger.debug("config", config, ", params =", config.params);
     if (config.params.status) {
       let invalidStatuses: string[] = [];
       if (!Array.isArray(config.params.status)) {
@@ -98,22 +99,23 @@ const MockConfigType = (demoMock: MockAdapter) => {
     return responseCreator.toSuccessResponse(responselist);
   };
 
-  demoMock.onGet("/config/types/belongs-to/" + belongsToExpenseCategory).reply((config) => {
-    return getConfigTypes(belongsToExpenseCategory, config);
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.ExpenseCategory).reply(async (config) => {
+    return await getConfigTypeList(ConfigTypeBelongsTo.ExpenseCategory, config);
   });
 
-  demoMock.onGet("/config/types/belongs-to/" + belongsToAccType).reply((config) => {
-    return getConfigTypes(belongsToAccType, config);
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType).reply(async (config) => {
+    return await getConfigTypeList(ConfigTypeBelongsTo.PaymentAccountType, config);
   });
 
-  demoMock.onGet("/config/types/belongs-to/currency-profile").reply((config) => {
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.CurrencyProfile).reply((config) => {
+    const logger = getLogger("mock.config-types." + ConfigTypeBelongsTo.CurrencyProfile + ".getList");
     const responseCreator = AxiosResponseCreator(config);
     const isAuthorized = validateAuthorization(config.headers);
     if (!isAuthorized) {
       return responseCreator.toForbiddenError("not authorized");
     }
-    const belongsTo = "currency-profile";
 
+    logger.debug("config", config, ", params =", config.params);
     const paramConfigStatus = Array.isArray(config.params.status) ? config.params.status : [config.params.status || ConfigTypeStatus.Enable];
 
     const invalidStatuses = paramConfigStatus.filter(
@@ -150,114 +152,5 @@ const MockConfigType = (demoMock: MockAdapter) => {
     return responseCreator.toSuccessResponse(responselist);
   });
 };
-
-function SessionData() {
-  const configTypes: ConfigResource[] = [];
-
-  const randomStatus = () => {
-    const statuses = [ConfigTypeStatus.Enable, ConfigTypeStatus.Disable];
-    const randomIndex = Math.floor(Math.random() * statuses.length);
-    return statuses[randomIndex];
-  };
-
-  const init = () => {
-    const defaultAccTypes = ["checking", "savings", "credit card", "loan", "cash", "gift card"];
-
-    const accTypes = defaultAccTypes.map((type) => {
-      return {
-        belongsTo: belongsToAccType,
-        id: uuidv4(),
-        name: type,
-        value: type,
-        status: randomStatus(),
-        tags: [],
-        description: type + " account type",
-        auditDetails: auditData(),
-      } as ConfigResource;
-    });
-    // making sure at least 1 enable
-    accTypes[0].status = ConfigTypeStatus.Enable;
-    // having only 1 with deleted status
-    accTypes[accTypes.length - 1].status = ConfigTypeStatus.Deleted;
-
-    const defaultCategories = [
-      "fee",
-      "commute",
-      "food shopping",
-      "health",
-      "home stuffs",
-      "investment",
-      "maintenance",
-      "nri transfer",
-      "hangout",
-      "gift",
-      "shopping",
-    ];
-
-    const categories = defaultCategories.map((category) => {
-      return {
-        belongsTo: belongsToExpenseCategory,
-        id: uuidv4(),
-        name: category,
-        value: category,
-        status: randomStatus(),
-        tags: [],
-        description: "Expense category is " + category + ". Used to tag expense transactions.",
-        auditDetails: auditData(),
-      } as ConfigResource;
-    });
-    categories[categories.length - 1].status = ConfigTypeStatus.Deleted;
-
-    configTypes.push(...accTypes, ...categories);
-  };
-
-  const getConfigTypes = (belongsTo: string) => {
-    return { list: configTypes.filter((cfg) => cfg.belongsTo === belongsTo) };
-  };
-
-  const getPaymentAccountTypes = () => {
-    return getConfigTypes(belongsToAccType);
-  };
-
-  const getExpenseCategories = () => {
-    return getConfigTypes(belongsToExpenseCategory);
-  };
-
-  const addUpdateConfigTypes = (data: any) => {
-    const existingConfigTypeIndex = configTypes.findIndex((cfg: any) => cfg.configId === data.configId && data.belongsTo === cfg.belongsTo);
-    if (existingConfigTypeIndex !== -1) {
-      console.log("updating data", data);
-      configTypes[existingConfigTypeIndex] = data;
-      return { updated: data };
-    }
-    configTypes.push(data);
-    return { added: data };
-  };
-
-  const deleteConfigType = (configId: string) => {
-    const existingConfigTypeIndex = configTypes.findIndex((cfg) => cfg.id === configId);
-    if (existingConfigTypeIndex !== -1) {
-      const existingConfigType = configTypes[existingConfigTypeIndex];
-      configTypes[existingConfigTypeIndex] = {
-        ...existingConfigType,
-        status: ConfigTypeStatus.Deleted,
-        auditDetails: auditData(existingConfigType.auditDetails.createdBy, existingConfigType.auditDetails.createdOn as Date),
-      };
-      return { deleted: { ...configTypes[existingConfigTypeIndex] } };
-    }
-    return { error: "config not found" };
-  };
-
-  init();
-  return {
-    getConfigTypes,
-    addUpdateConfigTypes,
-    deleteConfigType,
-    getPaymentAccountTypes,
-    getExpenseCategories,
-  };
-}
-
-export const configSessionData = SessionData();
 
 export default MockConfigType;

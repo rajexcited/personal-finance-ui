@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCoins, faGear, faMoneyBills, faTags, faUserAlt, faUserSecret } from "@fortawesome/free-solid-svg-icons";
 import { HeroTabs } from "../../../components";
 import { pathBaseName } from "../../root/components/navigation";
+import { getLogger } from "../../../services";
 
 
 const SettingsRootPage: FunctionComponent = () => {
@@ -22,7 +23,8 @@ const SettingsRootPage: FunctionComponent = () => {
     const [activeTabId, setActiveTabId] = useState("");
 
     useEffect(() => {
-        console.log("pathBaseName", pathBaseName,
+        const logger = getLogger("FC.SettingsRootPage.useEffect.dep[location.pathname]");
+        logger.log("pathBaseName", pathBaseName,
             "location.pathname", location.pathname,
             "location.hash", location.hash,
             "location.state", JSON.stringify(location.state),
@@ -32,12 +34,13 @@ const SettingsRootPage: FunctionComponent = () => {
     }, [location.pathname]);
 
     const onTabSelectHandler = (tabId: string) => {
+        const logger = getLogger("FC.SettingsRootPage.onTabSelectHandler");
         const tabHeadSelected = TAB_HEADS.find(thd => thd.id === tabId);
         if (tabHeadSelected) {
-            console.log("tabHeadSelected", { ...tabHeadSelected }, "tabId", tabId);
+            logger.log("tabHeadSelected", { ...tabHeadSelected }, "tabId", tabId);
             navigate(tabHeadSelected.url);
         } else {
-            console.error("tab head not found, tabId", tabId);
+            logger.error("tab head not found, tabId", tabId);
         }
     };
 
@@ -58,7 +61,7 @@ const SettingsRootPage: FunctionComponent = () => {
         </HeroTabs.TabContent>
     );
 
-    console.log(new Date(), "activeTabId", activeTabId, "tabChildren.length", tabChildren.length);
+    // logger.log(new Date(), "activeTabId", activeTabId, "tabChildren.length", tabChildren.length);
     return (
         <HeroTabs.Wrapper>
             <HeroTabs.Tab onTabSelect={ onTabSelectHandler }>

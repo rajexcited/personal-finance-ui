@@ -38,7 +38,7 @@ const AddExpense: FunctionComponent = () => {
 
     const onExpenseAdded = (data: ExpenseFields, formData: FormData) => {
         if (auth.userDetails.isAuthenticated) {
-            // console.log("expense added", data.expenseId, data);
+            // logger.log("expense added", data.expenseId, data);
             submit(formData, { action: PAGE_URL.addExpense.fullUrl, method: "post", encType: "multipart/form-data" });
         } else {
             setErrorMessage("you have been logged out. please (login)[/login] to add payment account");

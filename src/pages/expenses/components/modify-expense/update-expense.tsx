@@ -29,7 +29,7 @@ const UpdateExpense: FunctionComponent = () => {
 
     const onExpenseUpdated = (data: ExpenseFields, formData: FormData) => {
         if (auth.userDetails.isAuthenticated) {
-            // console.log("expense updated", data.expenseId, data, data.expenseItems, "same as loader expense? ", loaderData.expenseDetail?.expenseId === data.expenseId, "object difference = ", JSON.stringify(difference(data, loaderData.expenseDetail)));
+            // logger.log("expense updated", data.expenseId, data, data.expenseItems, "same as loader expense? ", loaderData.expenseDetail?.expenseId === data.expenseId, "object difference = ", JSON.stringify(difference(data, loaderData.expenseDetail)));
             submit(formData, { action: PAGE_URL.updateExpense.fullUrl.replace(":expenseId", data.id), method: "post", encType: "multipart/form-data" });
         } else {
             setErrorMsg("you have been logged out. please (login)[/login] to add payment account");

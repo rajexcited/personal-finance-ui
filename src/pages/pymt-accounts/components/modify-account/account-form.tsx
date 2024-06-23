@@ -28,7 +28,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
     const [description, setDescription] = useState(props.details?.description || "");
     const [tags, setTags] = useState(props.details?.tags || []);
     const [typeName, setTypeName] = useState(props.details?.typeName?.toString() || "");
-    // const [accountTypeMap, setAccountTypeMap] = useState(new Map<string, ConfigType>());
+
     // how to set this value? if I collect values from displayed paymentAccounts, 
     // there are chances to missed the tags. 
     // if I set it as config type, I need to manage add/remove. tideous task.
@@ -38,26 +38,8 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
 
     const navigate = useNavigate();
 
-    useEffect(() => {
-        // const configureAccountTypes = async () => {
-        //     const list = await accountTypeService.getAccountTypes();
-        //     const map = new Map();
-        //     list.forEach(item => map.set(item.name, item));
-        //     setAccountTypeMap(map);
-        // };
-
-        // const init = async () => {
-        //     configureAccountTypes();
-        // };
-
-        // init();
-
-    }, []);
-
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = event => {
-        // const onSubmitHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        // const acctype = AccountType[type as keyof typeof AccountType];
         const data: PymtAccountFields = {
             id: props.accountId,
             shortName,
@@ -71,7 +53,6 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
             status: PymtAccStatus.Enable
         };
         props.onSubmit(data);
-        // return data;
     };
 
     const onCancelHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
@@ -99,6 +80,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                         placeholder="Enter Short name"
                                         size={ 20 }
                                         maxlength={ 20 }
+                                        minlength={ 2 }
                                         initialValue={ shortName }
                                         tooltip="This is a name that you can recognize the trascation. this will be displayed as payment account"
                                         onChange={ setShortName }
@@ -133,8 +115,8 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                         label="Account Name / Number: "
                                         type="text"
                                         placeholder="Enter Account name / number"
-                                        size={ 50 }
-                                        maxlength={ 50 }
+                                        size={ 25 }
+                                        maxlength={ 25 }
                                         initialValue={ accountIdNum }
                                         tooltip="The account you want to add. give full name of account. this is for you to recognise account details."
                                         onChange={ setAccountIdNum }
@@ -165,7 +147,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                         placeholder="Add Tags"
                                         onChange={ setTags }
                                         key={ "xpns-tags" }
-                                        maxTags={ 5 }
+                                        maxTags={ 10 }
                                     />
                                 </div>
                             </div>

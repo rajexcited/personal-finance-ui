@@ -14,7 +14,7 @@ import {
 import ExpenseBreakDown from "./expense-breakdown";
 import { ConfigResource, ExpenseFields, ExpenseItemFields, ReceiptProps } from "../../services";
 import UploadReceiptsModal from "./upload-receipts";
-import { formatTimestamp } from "../../../../services";
+import { formatTimestamp, getLogger } from "../../../../services";
 
 
 export interface ExpenseFormProps {
@@ -26,6 +26,8 @@ export interface ExpenseFormProps {
     paymentAccounts: Map<string, string>;
     sourceTags: string[];
 }
+
+const fcLogger = getLogger("FC.ExpenseForm", null, null, "ERROR");
 
 const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
     const [billName, setBillName] = useState(props.details?.billName || '');
@@ -44,10 +46,22 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
 
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = async event => {
         event.preventDefault();
+        const logger = getLogger("FC.ExpenseForm.onSubmitHandler");
+
+        const formData = new FormData();
+
+        const datareceipts: ReceiptProps[] = receipts.map(rct => {
+            if (rct.file) {
+                logger.info("receipt id=", rct.id, ", added file to formdata =", rct.file);
+                formData.append(rct.id, rct.file);
+            }
+            return { id: rct.id, name: rct.name, contentType: rct.contentType, expenseId: props.expenseId, url: rct.url };
+        });
 
         const data: ExpenseFields = {
             id: props.expenseId,
             billName: billName,
+            paymentAccountId: selectedPymtAccount?.id,
             paymentAccountName: selectedPymtAccount?.content,
             amount,
             description,
@@ -55,27 +69,22 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
             tags,
             verifiedTimestamp: verifiedDateTime,
             expenseItems,
-            expenseCategoryName: selectedCategory?.content || props.details?.expenseCategoryName,
-            receipts,
+            expenseCategoryId: selectedCategory?.id,
+            expenseCategoryName: selectedCategory?.content,
+            receipts: datareceipts,
             auditDetails: { createdOn: "", updatedOn: "" },
         };
 
-        // const formData = new FormData(document.createElement("form"));
-        const formData = new FormData();
-        data.receipts.forEach(rct => {
-            if (!rct.file) return;
-            formData.append(rct.id, rct.file);
-            rct.file = undefined;
-        });
         Object.entries(data).forEach((entry) => {
             const key = entry[0];
             let value = entry[1];
             if (value instanceof Date) value = formatTimestamp(value);
             else if (typeof value === "object") value = JSON.stringify(value);
-            formData.append(key, value);
+            logger.info("added to form, key=", key, ", value =", value);
+            formData.append(key, value || "");
         });
 
-
+        logger.info("data =", data);
         props.onSubmit(data, formData);
     };
 
@@ -86,6 +95,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
     };
 
     useEffect(() => {
+        const logger = getLogger("useEffect.dep[]", fcLogger);
         const myCategories = props.categoryTypes.map(ctg => {
             const itm: DropDownItemType = {
                 id: ctg.id || "configIdNeverUsed",
@@ -96,10 +106,11 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
         });
         setCategories(myCategories);
         const selectedCtg = myCategories.find(ctg => ctg.content === props.details?.expenseCategoryName);
+        logger.info("props.categoryTypes =", props.categoryTypes, ", myCategories =", myCategories, ", selectedCategory =", selectedCtg, ", props.details?.expenseCategoryId =", props.details?.expenseCategoryId, ", props.details?.expenseCategoryName =", props.details?.expenseCategoryName);
         setSelectedCategory(selectedCtg);
 
         const myPymtAccounts: DropDownItemType[] = [];
-        props.paymentAccounts.forEach((id, name) => {
+        props.paymentAccounts.forEach((name, id) => {
             const itm: DropDownItemType = {
                 id: id,
                 content: name
@@ -107,8 +118,10 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
             myPymtAccounts.push(itm);
         });
         setPymtAccounts(myPymtAccounts);
-        const selectedAcc = myPymtAccounts.find(acc => acc.content === props.details?.paymentAccountName);
-        setSelectedPymtAccount(selectedAcc);
+        const selectedPaymentAcc = myPymtAccounts.find(acc => acc.content === props.details?.paymentAccountName);
+        setSelectedPymtAccount(selectedPaymentAcc);
+        logger.info("props.paymentAccounts =", props.paymentAccounts, ", myPymtAccounts =", myPymtAccounts, ", selectedPymtAccount =", selectedPaymentAcc, ", props.details?.paymentAccountId =", props.details?.paymentAccountId, ", props.details?.paymentAccountName =", props.details?.paymentAccountName);
+        logger.info("props.sourceTags =", props.sourceTags);
 
     }, []);
 
@@ -132,6 +145,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 onChange={ setBillName }
                                 required={ true }
                                 maxlength={ 50 }
+                                minlength={ 2 }
                             />
                         </div>
                     </div>
@@ -162,7 +176,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 items={ pymtAccounts }
                                 onSelect={ (selected: DropDownItemType) => setSelectedPymtAccount(selected) }
                                 selectedItem={ selectedPymtAccount }
-                                defaultItem={ props.details?.paymentAccountName }
+                                defaultItem={ selectedPymtAccount }
                             />
                         </div>
                         <div className="column">
@@ -174,7 +188,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 onSelect={ (selected: DropDownItemType) => setSelectedCategory(selected) }
                                 direction="down"
                                 selectedItem={ selectedCategory }
-                                defaultItem={ props.details?.expenseCategoryName }
+                                defaultItem={ selectedCategory }
                             />
 
                         </div>
@@ -228,6 +242,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                         <div className="column">
                             <UploadReceiptsModal
                                 receipts={ receipts }
+                                expenseId={ props.expenseId }
                                 onChange={ setReceipts }
                             />
                         </div>

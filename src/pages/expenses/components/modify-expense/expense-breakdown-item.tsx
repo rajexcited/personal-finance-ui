@@ -101,7 +101,7 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
                     direction="down"
                     selectedItem={ itemCategory }
                     size="medium"
-                    defaultItem={ props.itemDetail.expenseCategoryName }
+                    defaultItem={ itemCategory }
                 />
             </div>
             <div className="column">
@@ -112,7 +112,7 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
                     value={ itemDescription }
                     onChange={ setItemDescription }
                     key={ "xpns-item-desc" }
-                    maxlength={ 100 }
+                    maxlength={ 150 }
                 />
             </div>
             <div className="column">
@@ -124,7 +124,7 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
                     onChange={ setItemTags }
                     key={ "xpns-item-tags" }
                     sourceValues={ props.sourceTags }
-                    maxTags={ 3 }
+                    maxTags={ 10 }
                 />
             </div>
         </div>

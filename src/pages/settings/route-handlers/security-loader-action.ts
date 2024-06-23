@@ -1,10 +1,11 @@
 import { ActionFunctionArgs, json } from "react-router-dom";
 import { AuthenticationService, UserDetailsResource } from "../../auth";
-import { HttpStatusCode, RouteHandlerResponse, handleRouteActionError } from "../../../services";
+import { HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
 
 const authenticationService = AuthenticationService();
 
 export const securityDetailsLoaderHandler = async () => {
+  const logger = getLogger("route.securityDetailsLoaderHandler");
   try {
     const userDetails = await authenticationService.getUserDetails();
     const response: RouteHandlerResponse<UserDetailsResource> = {
@@ -13,7 +14,7 @@ export const securityDetailsLoaderHandler = async () => {
     };
     return response;
   } catch (e) {
-    console.error("in loader handler", e);
+    logger.error("in loader handler", e);
     return handleRouteActionError(e);
   }
 };
@@ -35,6 +36,7 @@ export const securityDetailsActionHandler = async ({ request }: ActionFunctionAr
 };
 
 const detailsChangedActionHandler = async (request: Request) => {
+  const logger = getLogger("route.detailsChangedActionHandler");
   try {
     const data = await request.json();
 
@@ -48,7 +50,7 @@ const detailsChangedActionHandler = async (request: Request) => {
     };
     return response;
   } catch (e) {
-    console.error("in action handler", e);
+    logger.error("in action handler", e);
     return handleRouteActionError(e);
   }
 };

@@ -47,7 +47,7 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
                 <div className="columns">
                     <div className="column">
                         <Input
-                            id={ props.inputProps.name?.idPrefix + "-ctgry-name" }
+                            id={ props.inputProps.name?.idPrefix + "-cfg-name" }
                             initialValue={ name }
                             type="text"
                             label="Name: "
@@ -64,7 +64,7 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
                 <div className="columns">
                     <div className="column">
                         <Switch
-                            id={ props.inputProps.status?.idPrefix + "-ctgry-status" }
+                            id={ props.inputProps.status?.idPrefix + "-cfg-status" }
                             initialStatus={ status }
                             labelWhenOn="Status is Enable"
                             labelWhenOff="Status is Disable"
@@ -75,7 +75,7 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
                 <div className="columns">
                     <div className="column is-2">
                         <Input
-                            id={ props.inputProps.name?.idPrefix + "-ctrgy-color" }
+                            id={ props.inputProps.name?.idPrefix + "-cfg-color" }
                             initialValue={ color }
                             type="color"
                             label="Color:"
@@ -86,11 +86,11 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
                 <div className="columns">
                     <div className="column">
                         <TextArea
-                            id={ props.inputProps.name?.idPrefix + "-ctrgy-description" }
+                            id={ props.inputProps.name?.idPrefix + "-cfg-description" }
                             label="Description"
                             value={ description }
                             placeholder={ props.inputProps.description?.placeholder }
-                            maxlength={ 150 }
+                            maxlength={ 400 }
                             rows={ 2 }
                             cols={ 30 }
                             onChange={ setDescription }

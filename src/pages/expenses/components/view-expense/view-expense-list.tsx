@@ -8,15 +8,9 @@ import { useDebounceState } from "../../../../hooks";
 import ExpenseTableRow from "./view-expense-item-tablerow";
 import ExpenseTableHead, { ExpenseTableHeadRefType } from "./expense-table-head";
 import "./view-expense-list.css";
-import { RouteHandlerResponse, difference } from "../../../../services";
+import { RouteHandlerResponse } from "../../../../services";
 import ViewReceipts from "./view-receipts";
 
-
-// declare global {
-//     interface Window {
-//         prevSortDetails: any;
-//     }
-// }
 
 const ExpenseList: FunctionComponent = () => {
     const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseFields[]>;
@@ -35,7 +29,7 @@ const ExpenseList: FunctionComponent = () => {
     useEffect(() => {
         if (loaderData.type === "success" && Array.isArray(loaderData.data) && loaderData.data.length !== expenseList.length) {
             setLoading(true);
-            // const sortDetails: ExpenseSortStateType = {};
+
             if (headerRef && headerRef.current && Object.keys(headerRef.current.sortDetails()).length) {
                 setExpenseList(getSortedExpenses(loaderData.data, headerRef.current.sortDetails()));
             } else {
@@ -59,8 +53,7 @@ const ExpenseList: FunctionComponent = () => {
     const getSortedExpenses = (expenses: ExpenseFields[], sortDetails: ExpenseSortStateType): ExpenseFields[] => {
         const sortedExpenses = [...expenses];
         sortedExpenses.sort(expenseComparator.bind(null, sortDetails));
-        // console.log("getSortedExpenses", new Date(), "sortDetails", JSON.stringify(sortDetails), "diff: ", difference(sortDetails, window.prevSortDetails || sortDetails));
-        // window.prevSortDetails = sortDetails;
+        // logger.log("getSortedExpenses", new Date(), "sortDetails", JSON.stringify(sortDetails), "diff: ", difference(sortDetails, window.prevSortDetails || sortDetails));
         return sortedExpenses;
     };
 
@@ -96,7 +89,7 @@ const ExpenseList: FunctionComponent = () => {
         setDeletingExpenseId("");
     };
 
-    // logger.log(new Date(), "view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billname));
+    // logger.debug(new Date(), "view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billname));
 
     return (
         <section>

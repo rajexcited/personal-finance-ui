@@ -4,21 +4,7 @@ import { authTokenSessionKey } from "./auth-service";
 import { AccessTokenResource } from "./field-types";
 import ExpiryMap from "expiry-map";
 
-// let's not refresh the token automatically. let user do manually.
 // adding and managing expenses should not take more than an hour, allotted active time.
-
-// axios.interceptors.response.use(
-//   (response) => response,
-//   async (error) => {
-//     const config = error?.config;
-//     if (error?.response?.status === 401 && config && !config?.sent) {
-//       config.sent = true;
-//       await refreshToken();
-//       return axios(config);
-//     }
-//     return Promise.reject(error);
-//   }
-// );
 
 const publicEndpoints = ["/user/login", "/user/signup"];
 
@@ -34,27 +20,6 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// axios.interceptors.request.use(
-//   async (config) => {
-//     if (config.url !== REFRESH_PATH) {
-//       const usrSessionStr = sessionStorage.getItem(authUserSessionKey);
-//       if (usrSessionStr) {
-//         const usrDetails = JSON.parse(usrSessionStr);
-//         if (
-//           "expiryDate" in usrDetails &&
-//           dateutils.subtract(new Date(usrDetails.expiryDate), new Date()).toSeconds() <= 30
-//         ) {
-//           refreshToken();
-//         }
-//       }
-//     } else {
-//       const cc = config as any;
-//       cc.sent = true;
-//     }
-//     return config;
-//   },
-//   (error) => Promise.reject(error)
-// );
 export const getAccessToken = pMemoize(
   async () => {
     const tokenSessionDetails = sessionStorage.getItem(authTokenSessionKey);

@@ -1,0 +1,85 @@
+import { PymtAccStatus, PymtAccountFields } from "../../pages/pymt-accounts/services";
+import { auditData } from "../services/userDetails";
+import { getPaymentAccountTypes } from "./config-type-db";
+import { LocalDBStore, MyLocalDatabase } from "./db";
+import { v4 as uuidv4 } from "uuid";
+
+const pymtAccDb = new MyLocalDatabase<PymtAccountFields>(LocalDBStore.PaymentAccount);
+
+const init = async () => {
+  const pymtAccTypes = (await getPaymentAccountTypes()).list;
+  const accTypeId = (accTypeName: string) => pymtAccTypes.find((item: any) => item.name === accTypeName)?.id as string;
+
+  const pymtAccs = await pymtAccDb.getAll();
+  if (pymtAccs.length > 0) {
+    return;
+  }
+
+  await pymtAccDb.addItem({
+    id: uuidv4(),
+    shortName: "cash",
+    accountIdNum: "cash",
+    typeId: accTypeId("cash"),
+    typeName: "",
+    tags: ["cash"],
+    description: "my cash, notes or coins",
+    auditDetails: auditData(),
+    status: PymtAccStatus.Enable,
+  });
+
+  await pymtAccDb.addItem({
+    id: uuidv4(),
+    shortName: "bofa demo checking",
+    accountIdNum: "checking 1",
+    typeId: accTypeId("checking"),
+    typeName: "",
+    tags: "bank,primary".split(","),
+    institutionName: "bank of america",
+    description: "Bank of America checking dummy account",
+    auditDetails: auditData(),
+    status: PymtAccStatus.Enable,
+  });
+};
+
+await init();
+
+export const getPymtAccounts = async () => {
+  const pymtAccList = await pymtAccDb.getAll();
+  return { list: pymtAccList.filter((pa) => pa.status === PymtAccStatus.Enable) };
+};
+
+export const addUpdatePymtAccount = async (data: PymtAccountFields) => {
+  const existingPymtAcc = await pymtAccDb.getItem(data.id);
+  if (existingPymtAcc) {
+    const updatingPymtAcc: PymtAccountFields = {
+      ...data,
+      status: PymtAccStatus.Enable,
+      auditDetails: auditData(existingPymtAcc.auditDetails.createdBy, existingPymtAcc.auditDetails.createdOn),
+    };
+    await pymtAccDb.addUpdateItem(updatingPymtAcc);
+    return { updated: updatingPymtAcc };
+  }
+  const addedPymtAcc: PymtAccountFields = {
+    ...data,
+    id: uuidv4(),
+    auditDetails: auditData(),
+    status: PymtAccStatus.Enable,
+  };
+  await pymtAccDb.addItem(addedPymtAcc);
+  return { added: addedPymtAcc };
+};
+
+export const deletePymtAccount = async (pymtAccountId: string) => {
+  const existingPymtAcc = await pymtAccDb.getItem(pymtAccountId);
+
+  if (existingPymtAcc) {
+    const deletingPymtAcc: PymtAccountFields = {
+      ...existingPymtAcc,
+      status: PymtAccStatus.Deleted,
+      auditDetails: auditData(existingPymtAcc.auditDetails.createdBy, existingPymtAcc.auditDetails.createdOn),
+    };
+    await pymtAccDb.addUpdateItem(deletingPymtAcc);
+    return { deleted: { ...deletingPymtAcc } };
+  }
+  return { error: "payment account not found" };
+};

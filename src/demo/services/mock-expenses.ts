@@ -1,19 +1,13 @@
 import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
-import { missingValidation, validateAuthorization, validateUuid } from "./common-validators";
-import { v4 as uuidv4 } from "uuid";
-import { configSessionData } from "./mock-config-type";
-import { auditData } from "./userDetails";
-import dateutil from "date-and-time";
-import { PymtAccountsSessionData } from "./mock-pymt-accounts";
-import { difference, formatTimestamp } from "../../services";
-import { Receipts } from "./expense-receipts-db";
+import { missingValidation, validateAuthorization, validateDataType } from "./common-validators";
 import { ExpenseFields } from "../../pages/expenses/services";
-import { PymtAccountFields } from "../../pages/pymt-accounts/services";
-import { ExpenseStatus } from "../../pages/expenses/services/field-types";
+import { getReceiptFileData, saveReceiptFileData } from "../mock-db/expense-receipts-db";
+import { addUpdateExpense, deleteExpense, getExpenseDetails, getExpenses } from "../mock-db/expense-db";
+import { getLogger } from "../../services";
 
 const MockExpenses = (demoMock: MockAdapter) => {
-  demoMock.onDelete(/\/expenses\/.+/).reply((config) => {
+  demoMock.onDelete(/\/expenses\/id\/.+/).reply(async (config) => {
     const responseCreator = AxiosResponseCreator(config);
 
     const isAuthorized = validateAuthorization(config.headers);
@@ -21,45 +15,50 @@ const MockExpenses = (demoMock: MockAdapter) => {
       return responseCreator.toForbiddenError("not authorized");
     }
 
-    const expenseId = (config.url || "").replace("/expenses/", "");
-    const error = validateUuid(expenseId, "expenseId");
-    if (error) {
-      return responseCreator.toValidationError([error]);
+    const expenseId = (config.url || "").split("/").slice(-1)[0];
+    const validationErrors = validateDataType({ id: expenseId }, ["id"], "uuid");
+    if (validationErrors.length > 0) {
+      return responseCreator.toValidationError(validationErrors);
     }
 
-    const result = expensesSessionData.deleteExpense(expenseId);
+    const result = await deleteExpense(expenseId);
     if (result.error) {
-      return responseCreator.toValidationError([{ path: "expenseId", message: "expense with given expenseId does not exist." }]);
+      return responseCreator.toNotFoundError("expense does not exist. cannot be deleted");
     }
 
     return responseCreator.toSuccessResponse(result.deleted);
   });
 
-  demoMock.onPost("/expenses").reply((config) => {
+  demoMock.onPost("/expenses").reply(async (config) => {
+    const logger = getLogger("mock.expenses.addUpdate");
     const responseCreator = AxiosResponseCreator(config);
     const isAuthorized = validateAuthorization(config.headers);
     if (!isAuthorized) {
       return responseCreator.toForbiddenError("not authorized");
     }
-    const data = JSON.parse(config.data);
+    const data = JSON.parse(config.data) as ExpenseFields;
 
-    let result: { added?: any; updated?: any };
-    if ("expenseId" in data && data.expenseId) {
-      // update
-      const err = validateUuid(data.expenseId, "expenseId");
-      if (err) {
-        return responseCreator.toValidationError([err]);
-      }
-      result = expensesSessionData.addUpdateExpense({ ...data, auditDetails: auditData(data.createdBy, data.createdOn) });
-    } else {
-      result = expensesSessionData.addUpdateExpense({ ...data, expenseId: uuidv4(), auditDetails: auditData() });
+    const missingErrors = missingValidation(data, ["id", "billName", "expenseItems", "purchasedDate", "receipts", "tags"]);
+    const notUuidErrors = validateDataType(data, ["id", "expenseCategoryId", "paymentAccountId"], "uuid");
+    const notStringErrors = validateDataType(data, ["billName", "amount", "description", "purchasedDate", "verifiedTimestamp"], "string");
+    const notArrayErrors = validateDataType(data, ["expenseItems", "receipts", "tags"], "array");
+    const validationErrors = [...missingErrors, ...notUuidErrors, ...notStringErrors, ...notArrayErrors];
+    logger.info("validationErrors =", validationErrors);
+    if (validationErrors.length > 0) {
+      logger.info("found validation errors for data =", data);
+      return responseCreator.toValidationError(validationErrors);
+    }
+
+    const result = await addUpdateExpense(data);
+    if (result.error) {
+      return responseCreator.toUnknownError(result.error);
     }
     if (result.updated) return responseCreator.toSuccessResponse(result.updated);
     // add
     return responseCreator.toCreateResponse(result.added);
   });
 
-  demoMock.onGet("/expenses").reply((config) => {
+  demoMock.onGet("/expenses").reply(async (config) => {
     const responseCreator = AxiosResponseCreator(config);
 
     const isAuthorized = validateAuthorization(config.headers);
@@ -67,11 +66,12 @@ const MockExpenses = (demoMock: MockAdapter) => {
       return responseCreator.toForbiddenError("not authorized");
     }
 
-    const result = expensesSessionData.getExpenses();
+    const result = await getExpenses();
+
     return responseCreator.toSuccessResponse(result.list);
   });
 
-  demoMock.onPost(/\/expenses.+\/receipts/).reply(async (config) => {
+  demoMock.onPost(/\/expenses\/id\/.+\/receipts\/id\/.+/).reply(async (config) => {
     const responseCreator = AxiosResponseCreator(config);
 
     const isAuthorized = validateAuthorization(config.headers);
@@ -79,155 +79,65 @@ const MockExpenses = (demoMock: MockAdapter) => {
       return responseCreator.toForbiddenError("not authorized");
     }
 
-    const formdata = config.data as FormData;
-    const data: any = {};
-    formdata.forEach((val, key) => {
-      data[key] = val;
-    });
+    const filedata = config.data as File;
 
-    const missingErrors = missingValidation(data, ["file", "type", "name"]);
-    if (missingErrors) {
-      return responseCreator.toValidationError(missingErrors);
+    const urlParts = config.url?.split("/") || [];
+    const expenseId = urlParts.slice(3, 4)[0];
+    const validationErrors = validateDataType({ expenseId: expenseId }, ["expenseId"], "uuid");
+    if (validationErrors.length > 0) {
+      return responseCreator.toValidationError(validationErrors);
     }
-    const file = data.file as File;
-    if (file.size >= 2 * 1024 * 1024) {
-      // 2 MB
-      return responseCreator.toValidationError([{ path: "file", message: "file cannot be larger than 2 MB" }]);
-    }
-    if (data.type !== "image/jpeg" && data.type !== "image/png" && data.type !== "application/pdf") {
-      return responseCreator.toValidationError([{ path: "type", message: "unsupported file type of receipt" }]);
-    }
-    const result = await Receipts.save(file);
+    const receiptName = urlParts.slice(-1)[0];
 
-    return responseCreator.toSuccessResponse({
-      id: result.id,
-      lastUpdatedDate: result.lastUpdatedDate,
-      fileName: result.file.name,
-      url: result.url,
-    });
+    await saveReceiptFileData(filedata, expenseId, receiptName);
+
+    return responseCreator.toSuccessResponse("saved");
+  });
+
+  demoMock.onGet(/\/expenses\/id\/.+\/receipts\/id\/.+/).reply(async (config) => {
+    const responseCreator = AxiosResponseCreator(config);
+
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+    const urlParts = config.url?.split("/") || [];
+    const expenseId = urlParts.slice(3, 4)[0];
+    const receiptId = urlParts.slice(-1)[0];
+
+    const validationErrors = validateDataType({ expenseId: expenseId, receiptId: receiptId }, ["expenseId", "receiptId"], "uuid");
+    if (validationErrors.length > 0) {
+      return responseCreator.toValidationError(validationErrors);
+    }
+
+    const result = await getReceiptFileData(expenseId, receiptId);
+    if (result.error) {
+      responseCreator.toUnknownError(result.error);
+    }
+
+    return responseCreator.toSuccessResponse(result.data);
+  });
+
+  demoMock.onGet(/\/expenses\/id\/.+/).reply(async (config) => {
+    const responseCreator = AxiosResponseCreator(config);
+
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+    const expenseId = (config.url || "").split("/").slice(-1)[0];
+    const validationErrors = validateDataType({ id: expenseId }, ["id"], "uuid");
+    if (validationErrors.length > 0) {
+      return responseCreator.toValidationError(validationErrors);
+    }
+
+    const result = await getExpenseDetails(expenseId);
+    if (result.error) {
+      return responseCreator.toNotFoundError("expense does not exist. cannot be retrieved");
+    }
+
+    return responseCreator.toSuccessResponse(result.getDetails);
   });
 };
-
-function SessionData() {
-  const expenses: ExpenseFields[] = [];
-
-  const init = () => {
-    const categoryId = (categoryName: string) => {
-      return configSessionData.getExpenseCategories().list.find((item) => item.name === categoryName)?.id;
-    };
-
-    const pymtAccId = (accname: string) => {
-      const pymtAccs = PymtAccountsSessionData.getAccounts().list as PymtAccountFields[];
-      return pymtAccs.find((acc) => acc.shortName.toLowerCase().includes(accname.toLowerCase()))?.id;
-    };
-
-    expenses.push({
-      id: uuidv4(),
-      billName: "burger restaurant",
-      amount: "21.20",
-      description: "this is dummy expense for demo purpose",
-      tags: "outdoor,dining,trip".split(","),
-      paymentAccountId: pymtAccId("checking"),
-      purchasedDate: formatTimestamp(dateutil.addDays(new Date(), -10)),
-      expenseCategoryId: categoryId("hangout"),
-      receipts: [],
-      expenseItems: [],
-      auditDetails: auditData(),
-      status: ExpenseStatus.Enable,
-    });
-
-    expenses.push({
-      id: uuidv4(),
-      billName: "grocery store",
-      amount: "63.80",
-      description: "this is dummy expense for demo purpose",
-      tags: "get2gethor,potluck".split(","),
-      paymentAccountId: pymtAccId("cash"),
-      purchasedDate: formatTimestamp(dateutil.addDays(new Date(), -1)),
-      expenseCategoryId: categoryId("food shopping"),
-      verifiedTimestamp: formatTimestamp(dateutil.addHours(new Date(), -1)),
-      receipts: [],
-      auditDetails: auditData(),
-      status: ExpenseStatus.Enable,
-      expenseItems: [
-        {
-          id: uuidv4(),
-          billName: "snacks",
-          amount: "14.34",
-          tags: "kids,breaktime,hangout".split(","),
-          description: "for breakfast, break time during play or evening hangout",
-          expenseCategoryId: categoryId("hangout"),
-        },
-        {
-          id: uuidv4(),
-          billName: "breakfast",
-          amount: "8.7",
-          tags: "breakfast,dairy".split(","),
-          description: "milk, bread, butter, jaam",
-        },
-        {
-          id: uuidv4(),
-          billName: "non stick pan",
-          amount: "39.7",
-          tags: "utensil,kitchen".split(","),
-          expenseCategoryId: categoryId("home stuffs"),
-          description: "",
-        },
-      ],
-    });
-  };
-
-  const getExpenses = () => {
-    console.debug(
-      "expense list",
-      expenses.map((xpns) => xpns.id),
-      expenses.length,
-      expenses
-    );
-    return { list: expenses };
-  };
-
-  const addUpdateExpense = (data: ExpenseFields) => {
-    const existingExpenseIndex = expenses.findIndex((xpns) => xpns.id === data.id);
-    data.expenseItems = data.expenseItems || [];
-    data.id = data.id || uuidv4();
-    data.expenseItems.forEach((item: any) => {
-      item.expenseId = (existingExpenseIndex !== -1 ? item.expenseId : "") || uuidv4();
-      item.parentExpenseId = data.id;
-      delete item.id;
-      delete item.categoryName;
-    });
-    delete data.paymentAccountName;
-    console.debug("add or update expense", data.id, data);
-
-    if (existingExpenseIndex !== -1) {
-      console.debug("difference", JSON.stringify(difference(data, expenses[existingExpenseIndex])));
-      expenses[existingExpenseIndex] = data;
-      return { updated: data };
-    }
-    expenses.push(data);
-    return { added: data };
-  };
-
-  const deleteExpense = (expenseId: string) => {
-    const existingExpense = expenses.find((xpns) => xpns.id === expenseId);
-    if (existingExpense) {
-      const newAcc = [...expenses];
-      expenses.length = 0;
-      newAcc.filter((xpns) => xpns.id !== expenseId).forEach((xpns) => expenses.push(xpns));
-      return { deleted: { ...existingExpense, status: ExpenseStatus.Deleted } };
-    }
-    return { error: "expense not found" };
-  };
-
-  init();
-  return {
-    getExpenses,
-    addUpdateExpense,
-    deleteExpense,
-  };
-}
-
-export const expensesSessionData = SessionData();
 
 export default MockExpenses;

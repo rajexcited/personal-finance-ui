@@ -1,6 +1,6 @@
 import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
-import { missingValidation, validateAuthorization, validateUuid } from "./common-validators";
+import { missingValidation, validateAuthorization } from "./common-validators";
 import { tokenSessionData, userSessionDetails } from "./userDetails";
 import { v4 as uuidv4 } from "uuid";
 import datetime from "date-and-time";

@@ -1,28 +1,50 @@
-import { AxiosHeaders, AxiosResponseHeaders } from "axios";
+import { AxiosResponseHeaders } from "axios";
 import { tokenSessionData } from "./userDetails";
 import datetime from "date-and-time";
+import { validate as uuidValidate, version as uuidVersion } from "uuid";
 
-export interface ValidationErrorResource {
-  path: string;
+export interface ValidationErrorResource<R> {
+  path: keyof R | "request";
   message: string;
 }
 
-export const missingValidation = (data: any, keys: string[]): ValidationErrorResource[] => {
+export const missingValidation = <T>(data: T | null | undefined, keys: (keyof T)[]): ValidationErrorResource<T>[] => {
   if (!data) {
-    return [{ path: "request", message: "invalid data" }];
+    return [{ path: "request", message: "missing request data" }];
   }
 
-  const errors = keys.filter((key) => !(data[key] || data[key].trim())).map((key) => ({ path: key, message: "missing " + key }));
+  const errors = keys.filter((key) => !data[key]).map((key) => ({ path: key, message: "missing value" }));
   return errors;
 };
 
-export const validateUuid = (uuid: string, key: string): ValidationErrorResource | null => {
-  const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-  if (!regex.test(uuid)) {
-    return { path: key, message: "invalid id" };
+export const validateDataType = <T>(data: T, keys: (keyof T)[], datatype: "string" | "uuid" | "array"): ValidationErrorResource<T>[] => {
+  const notmissingkeys = keys.filter((k) => data[k]);
+  if (datatype === "uuid") {
+    const errors = stringTypeValidation(data, notmissingkeys);
+    if (errors.length === 0) {
+      return notmissingkeys.filter((k) => !isValidUuid(data[k] as string)).map((k) => ({ path: k, message: "incorrect format" }));
+    }
+    return errors;
   }
-  return null;
+
+  if (datatype === "string") {
+    return stringTypeValidation(data, notmissingkeys);
+  }
+
+  if (datatype === "array") {
+    return notmissingkeys.filter((k) => !Array.isArray(data[k])).map((k) => ({ path: k, message: "incorrect format" }));
+  }
+
+  throw new Error("data type not supported");
+};
+
+const stringTypeValidation = <T>(data: T, keys: (keyof T)[]): ValidationErrorResource<T>[] => {
+  const errors = keys.filter((key) => typeof data[key] !== "string").map((key) => ({ path: key, message: "incorrect format" }));
+  return errors;
+};
+
+export const isValidUuid = (id: string | null | undefined) => {
+  return id && uuidValidate(id) && uuidVersion(id) === 4;
 };
 
 export const validateAuthorization = (headers?: any) => {

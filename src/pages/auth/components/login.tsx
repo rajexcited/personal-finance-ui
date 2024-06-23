@@ -44,7 +44,6 @@ const LoginPage: FunctionComponent = () => {
             setSubmitStatus(LoginSubmitStatus.InProgress);
             await auth.login(emailId, password);
             setSubmitStatus(LoginSubmitStatus.CompletedSuccess);
-            // navigate(location.state?.from?.pathname || "/");
         } catch (e) {
             const err = e as Error;
             setErrorMessage(err.message);
@@ -109,7 +108,7 @@ const LoginPage: FunctionComponent = () => {
                         />
                     </div>
                 </div>
-                <div className="p-5">&nbsp;</div>
+                <div className="p-5"> </div>
                 <div className="columns">
                     <div className="column">
                         <div className="buttons is-centered">

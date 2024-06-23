@@ -1,14 +1,20 @@
 import "./upload-receipts.css";
 import { faMagnifyingGlassMinus, faMagnifyingGlassPlus, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { FunctionComponent, useState, MouseEventHandler, useMemo } from "react";
+import { FunctionComponent, useState, MouseEventHandler, useMemo, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { ReceiptProps, ReceiptType } from "../../services";
+import { ExpenseService, ReceiptProps, ReceiptType } from "../../services";
+import { getLogger } from "../../../../services";
+import ReactMarkdown from "react-markdown";
+import { LoadSpinner } from "../../../../components";
 
 interface UploadReceiptsModalProps {
     receipts: ReceiptProps[],
+    expenseId: string;
     onChange (receipts: ReceiptProps[]): void;
 }
+
+const expenseService = ExpenseService();
 
 const allowedScales = [0.125, 0.25, 0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
 const findNextScaleValue = (scale: number, findBigger: boolean) => {
@@ -19,13 +25,22 @@ const findNextScaleValue = (scale: number, findBigger: boolean) => {
         return allowedScales[newScaleIndex];
     return scale;
 };
-
+const fcLogger = getLogger("FC.UploadReceiptsModal", null, null, "DEBUG");
 const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props) => {
     const [receipts, setReceipts] = useState<ReceiptProps[]>(props.receipts);
     const [isModalOpen, setModalOpen] = useState(false);
+    const [isReceiptLoading, setReceiptLoading] = useState(false);
     const [fullscreenReceipt, setFullscreenReceipt] = useState<ReceiptProps>();
     const [errorMessage, setErrorMessage] = useState("");
     const [scaleValue, setScaleValue] = useState(1);
+
+    useEffect(() => {
+        const logger = getLogger("useEffect.dep[]", fcLogger);
+        logger.debug("initialized component");
+        return () => {
+            logger.debug("destroyed along with temp blob urls, so file memory will not be leaked");
+        };
+    }, []);
 
     const nextScaleValue = useMemo(() => {
         const next = findNextScaleValue(scaleValue, true);
@@ -49,9 +64,11 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
         setScaleValue(prev => findNextScaleValue(prev, false));
     };
 
-    const preProcessUploadedReceipts = (files: FileList | null) => {
+    const preProcessUploadedReceipts = async (files: FileList | null) => {
+        const logger = getLogger("preProcessUploadedReceipts", fcLogger);
         const supportedReceipts: ReceiptProps[] = [];
         const unsupportedReceiptFiles: File[] = [];
+        logger.info("how many file? ", files?.length, ", files =", files);
         if (!!files?.length)
             for (const file of files) {
                 const fileType = Object.entries(ReceiptType).find(entry => entry[1] === file.type)?.[1];
@@ -60,19 +77,26 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
                         unsupportedReceiptFiles.push(file);
                         continue;
                     }
-                    const url = URL.createObjectURL(file);
-                    supportedReceipts.push({
+
+                    logger.info("fileType =", fileType, ", name =", file.name, "lastModified =", file.lastModified, "byte size =", file.size);
+                    const receipt: ReceiptProps = {
                         name: file.name,
                         id: uuidv4(),
-                        url,
                         file,
-                        contentType: fileType
+                        contentType: fileType,
+                        expenseId: props.expenseId
+                    };
+                    const cachedReceiptResponse = await expenseService.cacheReceiptFile(receipt, "AddUpdateGet");
+                    supportedReceipts.push({
+                        ...receipt,
+                        ...cachedReceiptResponse
                     });
                 } catch (e) {
-                    console.log("unsupported file", e);
+                    logger.log("unsupported file", e);
                     unsupportedReceiptFiles.push(file);
                 }
             }
+        logger.info("supportedReceipts =", supportedReceipts, ", unsupportedReceiptFiles =", unsupportedReceiptFiles);
         return {
             supportedReceipts,
             unsupportedReceiptFiles
@@ -81,14 +105,15 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
 
     const onChangeFileUploadHandler: React.ChangeEventHandler<HTMLInputElement> = async event => {
         event.preventDefault();
-        const processedReceipts = preProcessUploadedReceipts(event.target.files);
+        const logger = getLogger("onChangeFileUploadHandler", fcLogger);
+        logger.info("pre-processing upload receipt file", event, event.target, event.target.files);
+        const processedReceipts = await preProcessUploadedReceipts(event.target.files);
         setReceipts(prev => {
             const newReceipts = [...prev, ...processedReceipts.supportedReceipts];
             Promise.resolve(newReceipts)
                 .then(rcts => {
                     props.onChange(rcts.map(rct => {
-                        rct.url = undefined;
-                        return rct;
+                        return { ...rct };
                     }));
                 });
             return newReceipts;
@@ -104,18 +129,38 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
         setErrorMessage(msg);
     };
 
-    const onClickUploadFileRemoveHandler = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, receiptToBeRemoved: ReceiptProps) => {
+    const onClickUploadFileRemoveHandler = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, receiptToBeRemoved: ReceiptProps) => {
         event.preventDefault();
         setReceipts(prev => {
             const newReceipts = [...prev.filter(itm => itm.id !== receiptToBeRemoved.id)];
             props.onChange(newReceipts);
             return newReceipts;
         });
+        await expenseService.cacheReceiptFile(receiptToBeRemoved, "Remove");
     };
 
     const onClickModalOpenHandler: MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
+        expenseService.downloadReceipts(receipts).then((downloadedReceipts) => {
+            const failedMessages = downloadedReceipts.map(dr => dr.status === "fail" && dr.error || "").filter(r => r);
+            if (failedMessages.length > 0) {
+                setErrorMessage(failedMessages.join("\n"));
+            }
+            if (failedMessages.length !== downloadedReceipts.length) {
+                setReceipts(rcts => {
+                    return rcts.map(rct => {
+                        const downloaded = downloadedReceipts.find(dr => dr.id === rct.id);
+                        if (downloaded?.status === "success") {
+                            return { ...rct, url: downloaded.url };
+                        }
+                        return { ...rct };
+                    });
+                });
+            }
+            setReceiptLoading(false);
+        });
         setModalOpen(true);
+        setReceiptLoading(true);
         document.documentElement.classList.add("is-clipped");
     };
 
@@ -196,6 +241,7 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
                         <button className="delete" type="button" aria-label="close" onClick={ onClickModalCloseHandler }></button>
                     </header>
                     <section className="modal-card-body">
+                        <LoadSpinner loading={ isReceiptLoading } />
                         <div className={ `file ${!!errorMessage ? "is-danger" : ""}` }>
                             <label className="file-label">
                                 <input
@@ -218,7 +264,9 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
                             </label>
                             { !!errorMessage &&
                                 <article className="message is-danger error">
-                                    <div className="message-body">{ errorMessage }</div>
+                                    <div className="message-body">
+                                        <ReactMarkdown children={ errorMessage } />
+                                    </div>
                                 </article>
                             }
                         </div>
