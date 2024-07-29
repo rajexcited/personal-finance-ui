@@ -20,7 +20,7 @@ const CurrencyProfileServiceImpl = () => {
    * @returns list of currency profile
    */
   const getCurrencyProfiles = async () => {
-    const currencyProfiles = await configTypeService.getConfigTypes([ConfigTypeStatus.Enable]);
+    const currencyProfiles = await configTypeService.getConfigTypeList([ConfigTypeStatus.Enable]);
     return currencyProfiles as CurrencyProfileResource[];
   };
 

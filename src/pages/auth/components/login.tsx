@@ -6,8 +6,8 @@ import useAuth from "../hooks/use-auth";
 import { PAGE_URL } from "../../root";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock, faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
-import "./login.css";
 import { getLogger } from "../../../services";
+import "./login.css";
 
 enum LoginSubmitStatus {
     NotStarted = "not-started",
@@ -15,6 +15,8 @@ enum LoginSubmitStatus {
     CompletedSuccess = "success-response",
     CompletedError = "error-response"
 }
+
+const fcLogger = getLogger("FC.LoginPage", null, null, "INFO");
 
 const LoginPage: FunctionComponent = () => {
     const [emailId, setEmailId] = useState('');
@@ -27,7 +29,7 @@ const LoginPage: FunctionComponent = () => {
     const auth = useAuth();
 
     useEffect(() => {
-        const logger = getLogger("FC.loginPage.useEffect.dep[auth.userDetails.isAuthenticated, loginCompleted]");
+        const logger = getLogger("useEffect.dep[auth.userDetails.isAuthenticated, submitStatus]", fcLogger);
         logger.debug("submitting =", submitStatus, ", auth.userDetails.isAuthenticated =", auth.userDetails.isAuthenticated);
         if (submitStatus === LoginSubmitStatus.InProgress) return;
 

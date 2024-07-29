@@ -88,6 +88,10 @@ const DataBaseConfig: DBType = {
           name: LocalDBStoreIndex.AuditUpdatedOn,
           keyPath: "auditDetails.updatedOn",
         },
+        {
+          name: LocalDBStoreIndex.ItemStatus,
+          keyPath: "status",
+        },
       ],
     },
     {
@@ -106,7 +110,7 @@ const DataBaseConfig: DBType = {
     },
   ],
 };
-
+const rootLogger = getLogger("mock.demo.db", null, null, "DEBUG");
 const getItemKeyPath = (storeKeyPath: string | string[]) => {
   const prefixWithItem = (path: string) => "item." + path;
   if (Array.isArray(storeKeyPath)) {
@@ -117,13 +121,13 @@ const getItemKeyPath = (storeKeyPath: string | string[]) => {
 };
 
 const configureLocalDatabase = async () => {
-  const _logger = getLogger("demo.configureLocalDatabase");
+  const _logger = getLogger("configureLocalDatabase", rootLogger);
   _logger.debug("opening DB");
 
   // https://hackernoon.com/use-indexeddb-with-idb-a-1kb-library-that-makes-it-easy-8p1f3yqq
   const db = await openDB(DataBaseConfig.name, DataBaseConfig.version, {
     upgrade(db, oldVersion, newVersion, transaction, event) {
-      const logger = getLogger("db.upgrade", _logger);
+      const logger = getLogger("openDB.upgrade", _logger);
       logger.debug("db =", db, ", oldVersion =", oldVersion, ", newVersion =", newVersion, ", transaction =", transaction, ", event =", event);
       DataBaseConfig.stores.forEach((storeConfig) => {
         logger.debug("storeObj =", storeConfig);
@@ -171,7 +175,7 @@ export class MyLocalDatabase<T> {
       this._storeConfig.expireHoure = DataBaseConfig.expireHour;
     }
 
-    this._logger = getLogger("MyLocalDatabase." + objectStoreName, null, null, "ERROR");
+    this._logger = getLogger("MyLocalDatabase." + objectStoreName, rootLogger, null, "ERROR");
   }
 
   private validateKeyPath(logger: LoggerBase, key?: string | string[], index?: LocalDBStoreIndex) {

@@ -2,6 +2,7 @@ import "./tags-input.css";
 import { FunctionComponent, useRef, useEffect, useState } from "react";
 import BulmaTagsInput, { BulmaTagsInputOptions } from '@creativebulma/bulma-tagsinput';
 import "@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css";
+import { getLogger } from "../services";
 
 
 export interface TagsInputProps {
@@ -24,7 +25,7 @@ const defaultOptions: BulmaTagsInputOptions = {
   highlightDuplicate: true,
   highlightMatchesString: true,
   maxChars: 15,
-  minChars: 3,
+  minChars: 2,
   noResultsLabel: 'No results found',
   removable: true,
   searchMinChars: 1,
@@ -41,11 +42,19 @@ const defaultOptions: BulmaTagsInputOptions = {
  * https://wikiki.github.io/
  * 
  **/
+const fcLogger = getLogger("FC.TagsInput", null, null, "DEBUG");
+
 const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
   const tagsRef = useRef<HTMLInputElement>(null);
   const [tagCount, setTagCount] = useState(0);
 
   useEffect(() => {
+    const logger = getLogger("useEffect.dep[tagsRef.current]", fcLogger);
+    logger.debug("tagsRef.current =", tagsRef.current);
+    // this will never happen in useEffect
+    if (!tagsRef.current) {
+      return;
+    }
     const sourceValues: string[] = [];
 
     const options = {
@@ -53,11 +62,8 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
       ...props,
       source: sourceValues
     };
+    logger.debug("options =", options);
 
-    // this will never happen in useEffect
-    if (!tagsRef.current) {
-      return;
-    }
     const tagsInput = new BulmaTagsInput(tagsRef.current, options);
 
     tagsInput.on("after.add", (itemObj: { item: string; }) => {
@@ -79,7 +85,7 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
     const updateSourceValues = (item: string) => {
       const sourceValueSet = new Set(props.sourceValues);
       props.defaultValue.forEach(value => sourceValueSet.add(value));
-      if (!item) sourceValueSet.add(item);
+      if (item) sourceValueSet.add(item);
 
       sourceValues.length = 0;
       sourceValueSet.forEach(value => sourceValues.push(value));
@@ -89,8 +95,11 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
     setTagCount(props.defaultValue.length);
 
     return () => {
+      logger.debug("tagsRef.current =", tagsRef.current, ", tagsInput =", tagsInput, ", tagsInput.container =", tagsInput.container, ", html =", tagsInput.container.parentElement?.outerHTML);
       tagsInput.flush();
       tagsInput.destroy();
+
+      // tagsInput.container.remove();
       document.removeEventListener("click", tagsInput._onDocumentClick);
     };
 

@@ -6,7 +6,7 @@ import { auditData } from "./userDetails";
 import { AxiosRequestConfig } from "axios";
 import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, getLogger } from "../../services";
 import { CurrencyProfileResource } from "../../pages/settings/services";
-import { addUpdateConfigTypes, deleteConfigType, getConfigTypes } from "../mock-db/config-type-db";
+import { addUpdateConfigTypes, deleteConfigType, getConfigTypeDetails, getConfigTypes, updateConfigTypeStatus } from "../mock-db/config-type-db";
 
 const MockConfigType = (demoMock: MockAdapter) => {
   demoMock.onDelete(/\/config\/types\/belongs-to\/.+\/id\/.+/).reply(async (config) => {
@@ -33,6 +33,67 @@ const MockConfigType = (demoMock: MockAdapter) => {
     }
 
     return responseCreator.toSuccessResponse(result.deleted);
+  });
+
+  demoMock.onGet(/\/config\/types\/belongs-to\/.+\/id\/.+/).reply(async (config) => {
+    const logger = getLogger("mock.config-type.getDetails");
+
+    const responseCreator = AxiosResponseCreator(config);
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+
+    const urlParts = (config.url as string).split("/");
+    const configId = urlParts.slice(-1)[0];
+    const belongsTo = urlParts.slice(4, 5)[0];
+
+    logger.log("url =", config.url, ", configId =", configId, ", belongsTo =", belongsTo);
+    const validationErrors = validateDataType({ configId }, ["configId"], "uuid");
+    if (validationErrors.length > 0) {
+      return responseCreator.toValidationError(validationErrors);
+    }
+    const result = await getConfigTypeDetails(belongsTo, configId);
+    logger.log("get result", result);
+    if (result.error) {
+      return responseCreator.toNotFoundError(result.error);
+    }
+
+    return responseCreator.toSuccessResponse(result.get);
+  });
+
+  demoMock.onPost(/\/config\/types\/belongs-to\/.+\/id\/.+\/status\/.+/).reply(async (config) => {
+    const logger = getLogger("mock.config-type.updateStatus");
+    const responseCreator = AxiosResponseCreator(config);
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+
+    const urlParts = (config.url as string).split("/");
+    const configStatus = urlParts.slice(-1)[0];
+    const configId = urlParts.slice(6, 7)[0];
+    const belongsTo = urlParts.slice(4, 5)[0];
+
+    logger.log("url =", config.url, ", configId =", configId, ", belongsTo =", belongsTo, ", status =", configStatus);
+    const validationErrors = validateDataType({ configId }, ["configId"], "uuid");
+    if (validationErrors.length > 0) {
+      return responseCreator.toValidationError(validationErrors);
+    }
+    if (configStatus !== ConfigTypeStatus.Enable && configStatus !== ConfigTypeStatus.Disable) {
+      return responseCreator.toNotFoundError("invalid status update url");
+    }
+    if (belongsTo !== ConfigTypeBelongsTo.ExpenseCategory && belongsTo !== ConfigTypeBelongsTo.PaymentAccountType) {
+      return responseCreator.toNotFoundError("invalid belongsTo update url");
+    }
+
+    const result = await updateConfigTypeStatus(configId, belongsTo, configStatus);
+    logger.log("db update result", result);
+    if (result.error) {
+      return responseCreator.toNotFoundError(result.error);
+    }
+
+    return responseCreator.toSuccessResponse(result.updated);
   });
 
   const addUpdateConfigType = async (belongsTo: ConfigTypeBelongsTo, config: AxiosRequestConfig) => {
@@ -98,6 +159,35 @@ const MockConfigType = (demoMock: MockAdapter) => {
 
     return responseCreator.toSuccessResponse(responselist);
   };
+
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.ExpenseCategory + "/tags").reply(async (config) => {
+    const logger = getLogger("mock.config-types." + ConfigTypeBelongsTo.ExpenseCategory + ".getTags");
+    const responseCreator = AxiosResponseCreator(config);
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+
+    const result = await getConfigTypes(ConfigTypeBelongsTo.ExpenseCategory);
+    const responselist = result.list.flatMap((ec) => ec.tags);
+
+    logger.debug("categories size=", result.list.length, ", tags size =", responselist.length);
+    return responseCreator.toSuccessResponse(responselist);
+  });
+
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType + "/tags").reply(async (config) => {
+    const logger = getLogger("mock.config-types." + ConfigTypeBelongsTo.PaymentAccountType + ".getTags");
+    const responseCreator = AxiosResponseCreator(config);
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+
+    const result = await getConfigTypes(ConfigTypeBelongsTo.PaymentAccountType);
+    const responselist = result.list.flatMap((ec) => ec.tags);
+    logger.debug("categories size=", result.list.length, ", tags size =", responselist.length);
+    return responseCreator.toSuccessResponse(responselist);
+  });
 
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.ExpenseCategory).reply(async (config) => {
     return await getConfigTypeList(ConfigTypeBelongsTo.ExpenseCategory, config);

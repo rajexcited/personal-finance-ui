@@ -1,8 +1,9 @@
 import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
 import { missingValidation, validateAuthorization, validateDataType } from "./common-validators";
-import { addUpdatePymtAccount, deletePymtAccount, getPymtAccounts } from "../mock-db/pymt-acc-db";
-import { PymtAccountFields } from "../../pages/pymt-accounts/services";
+import { addUpdatePymtAccount, deletePymtAccount, getPymtAccountList } from "../mock-db/pymt-acc-db";
+import { PymtAccStatus, PymtAccountFields } from "../../pages/pymt-accounts/services";
+import { getLogger } from "../../services";
 
 const MockPaymentAccounts = (demoMock: MockAdapter) => {
   demoMock.onDelete(/\/payment\/accounts\/.+/).reply(async (config) => {
@@ -50,7 +51,8 @@ const MockPaymentAccounts = (demoMock: MockAdapter) => {
     return responseCreator.toCreateResponse(result.added);
   });
 
-  demoMock.onGet("/payment/accounts").reply(async (config) => {
+  demoMock.onGet("/payment/accounts/tags").reply(async (config) => {
+    const logger = getLogger("mock.pymtAcc.getTags", null, null, "DEBUG");
     const responseCreator = AxiosResponseCreator(config);
 
     const isAuthorized = validateAuthorization(config.headers);
@@ -58,7 +60,24 @@ const MockPaymentAccounts = (demoMock: MockAdapter) => {
       return responseCreator.toForbiddenError("not authorized");
     }
 
-    const result = await getPymtAccounts();
+    const result = await getPymtAccountList(undefined, logger);
+    const responseList = result.list.flatMap((pa) => pa.tags);
+    logger.debug("payment account size=", result.list.length, ", tags size =", responseList.length);
+    return responseCreator.toSuccessResponse(responseList);
+  });
+
+  demoMock.onGet("/payment/accounts").reply(async (config) => {
+    const logger = getLogger("mock.pymtAcc.getAccountList", null, null, "DEBUG");
+    const responseCreator = AxiosResponseCreator(config);
+    logger.debug("baseUrl =", config.baseURL, ", url=", config.url);
+
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+
+    const statusParams: PymtAccStatus[] = [config.params.status || ""].flatMap((st) => st).filter((st) => st);
+    const result = await getPymtAccountList(statusParams, logger);
     return responseCreator.toSuccessResponse(result.list);
   });
 };

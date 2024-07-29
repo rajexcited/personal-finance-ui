@@ -19,8 +19,8 @@ import HomePage from "./home";
 import SecurityPage from "../../../settings/components/security";
 import { getLogger } from "../../../../services";
 
-const logger = getLogger("router");
-logger.info("in router", "pathBaseName =", pathBaseName, ", rootPath =", PAGE_URL.rootPath);
+const logger = getLogger("CBR.router", null, null, "INFO");
+logger.debug("pathBaseName =", pathBaseName, ", rootPath =", PAGE_URL.rootPath);
 export const router = createBrowserRouter([
     {
         path: PAGE_URL.rootPath.fullUrl,

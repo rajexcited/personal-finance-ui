@@ -257,7 +257,7 @@ const Input: FunctionComponent<InputProps> = (props) => {
                         type={ props.type }
                         name={ props.id }
                         id={ props.id }
-                        value={ inputValue }
+                        value={ inputValue || "#000" }
                         className={ inputClasses }
                         onChange={ onChangeHandler }
                         onBlur={ onBlurHandler }

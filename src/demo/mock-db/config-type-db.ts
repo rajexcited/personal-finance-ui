@@ -84,6 +84,14 @@ export const getConfigTypes = async (belongsTo: string) => {
   return { list: allconfigs };
 };
 
+export const getConfigTypeDetails = async (belongsTo: string, configId: string) => {
+  const configItem = await configTypeDb.getItem(configId);
+  if (configItem?.belongsTo !== belongsTo) {
+    return { error: "config not found" };
+  }
+  return { get: configItem };
+};
+
 export const getPaymentAccountTypes = async () => {
   return await getConfigTypes(ConfigTypeBelongsTo.PaymentAccountType);
 };
@@ -125,8 +133,22 @@ export const deleteConfigType = async (configId: string) => {
       status: ConfigTypeStatus.Deleted,
       auditDetails: auditData(existingConfigType.auditDetails.createdBy, existingConfigType.auditDetails.createdOn),
     };
-    await configTypeDb.delete(configId);
-    return { deleted: { ...deleteConfigType } };
+    await configTypeDb.addUpdateItem(deletingConfigType);
+    return { deleted: { ...deletingConfigType } };
+  }
+  return { error: "config not found" };
+};
+
+export const updateConfigTypeStatus = async (configId: string, belongsTo: ConfigTypeBelongsTo, status: ConfigTypeStatus) => {
+  const existingConfigType = await configTypeDb.getItem(configId);
+  if (existingConfigType && existingConfigType.belongsTo === belongsTo && existingConfigType.status !== status) {
+    const updatingConfigTypeStatus: ConfigResource = {
+      ...existingConfigType,
+      status: status,
+      auditDetails: auditData(existingConfigType.auditDetails.createdBy, existingConfigType.auditDetails.createdOn),
+    };
+    await configTypeDb.addUpdateItem(updatingConfigTypeStatus);
+    return { updated: { ...updatingConfigTypeStatus } };
   }
   return { error: "config not found" };
 };

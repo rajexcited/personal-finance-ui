@@ -1,7 +1,7 @@
 import { FunctionComponent, useMemo, useState } from "react";
 import { Animated, ConfirmDialog, List, Switch } from "../../../components";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
-import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, RouteHandlerResponse, UpdateConfigStatusResource } from "../../../services";
+import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, DeleteConfigDetailsResource, RouteHandlerResponse, UpdateConfigDetailsResource, UpdateConfigStatusResource, getLogger } from "../../../services";
 import { Control, ListItem } from "../../../components/list";
 import { ActionId, TypeCategoryAction } from "../services";
 import ViewConfig from "./view-config";
@@ -10,19 +10,21 @@ import { faEdit, faEye, faRemove, faToggleOff, faToggleOn } from "@fortawesome/f
 import { PAGE_URL } from "../../root";
 import { v4 as uuidv4 } from "uuid";
 import ReactMarkdown from "react-markdown";
+import { PymtAccTypeLoaderResource } from "../route-handlers/pymt-acc-type-loader-action";
 
+const fcLogger = getLogger("FC.settings.PymtAccountTypePage", null, null, "DEBUG");
 
 const PymtAccountTypePage: FunctionComponent = () => {
-    const loaderData = useLoaderData() as RouteHandlerResponse<ConfigResource[]>;
-    const actionData = useActionData() as RouteHandlerResponse<any> | null;
+    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccTypeLoaderResource, null>;
+    const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
     const [enableFilter, setEnableFilter] = useState(true);
     const [action, setAction] = useState<TypeCategoryAction>();
     const [toggleUpdate, setToggleUpdate] = useState(false);
     const submit = useSubmit();
 
     const pymtAccountTypeItems: ListItem[] = useMemo(() => {
-        if (loaderData.type === "success" && Array.isArray(loaderData.data)) {
-            const list = loaderData.data.map(cfg => ({
+        if (loaderData.type === "success") {
+            const list = loaderData.data.pymtAccTypes.map(cfg => ({
                 id: cfg.id,
                 title: cfg.name + " - " + cfg.status,
                 description: cfg.description,
@@ -65,7 +67,7 @@ const PymtAccountTypePage: FunctionComponent = () => {
     };
 
     const onRequestListControlPymtAccTypeHandler = (item: ListItem, control: Control) => {
-        const cfgitem = loaderData.data.find(cfg => cfg.id === item.id);
+        const cfgitem = loaderData.type === "success" && loaderData.data.pymtAccTypes.find(cfg => cfg.id === item.id);
         if (!cfgitem) return;
 
         if (control.id === ActionId.View) {
@@ -78,32 +80,32 @@ const PymtAccountTypePage: FunctionComponent = () => {
         } else if (control.id === ActionId.ToggleEnable) {
             onAddUpdatePymtAccTypeHandler({
                 ...cfgitem,
-                status: ConfigTypeStatus.Enable
+                status: ConfigTypeStatus.Enable,
+                action: "updateStatus"
             });
         } else if (control.id === ActionId.ToggleDisable) {
             onAddUpdatePymtAccTypeHandler({
                 ...cfgitem,
-                status: ConfigTypeStatus.Disable
+                status: ConfigTypeStatus.Disable,
+                action: "updateStatus"
             });
         }
     };
 
     const onDeleteConfirmHandler = () => {
         if (action?.item) {
-            const data: any = {
-                ...action.item
+            const data: DeleteConfigDetailsResource = {
+                ...action.item,
+                action: "deleteDetails"
             };
             setAction(undefined);
-            submit(data, { method: "delete", action: PAGE_URL.pymtAccountTypeSettings.fullUrl, encType: "application/json" });
+            submit(data as any, { method: "delete", action: PAGE_URL.pymtAccountTypeSettings.fullUrl, encType: "application/json" });
         }
     };
 
-    const onAddUpdatePymtAccTypeHandler = (details: UpdateConfigStatusResource) => {
+    const onAddUpdatePymtAccTypeHandler = (details: UpdateConfigStatusResource | UpdateConfigDetailsResource) => {
         setAction(undefined);
-        const data: any = {
-            ...details
-        };
-        submit(data, { method: "post", action: PAGE_URL.pymtAccountTypeSettings.fullUrl, encType: "application/json" });
+        submit(details as any, { method: "post", action: PAGE_URL.pymtAccountTypeSettings.fullUrl, encType: "application/json" });
     };
 
     const controlsBeforeEllipsis: Control[] = [{ id: ActionId.View, content: "View", icon: faEye }];
@@ -126,6 +128,10 @@ const PymtAccountTypePage: FunctionComponent = () => {
             placeholder: "Enter Desription for Payment Account",
         }
     };
+
+    fcLogger.debug("loaderData= ", loaderData, ", actionData= ", actionData);
+    const pymtAccTags = loaderData.type === "success" ? loaderData.data.pymtAccTags : [];
+    const errorMessage = loaderData.type === "error" ? loaderData.errorMessage : actionData?.type === "error" ? actionData.errorMessage : null;
 
     return (
         <>
@@ -170,21 +176,11 @@ const PymtAccountTypePage: FunctionComponent = () => {
                     </section>
                     <section className="mt-4 pt-4 px-4">
                         {
-                            actionData?.type === "error" &&
+                            errorMessage &&
                             <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
                                 <article className="message is-danger">
                                     <div className="message-body">
-                                        <ReactMarkdown children={ actionData.errorMessage } />
-                                    </div>
-                                </article>
-                            </Animated>
-                        }
-                        {
-                            loaderData.type === "error" &&
-                            <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
-                                <article className="message is-danger">
-                                    <div className="message-body">
-                                        <ReactMarkdown children={ loaderData.errorMessage } />
+                                        <ReactMarkdown children={ errorMessage } />
                                     </div>
                                 </article>
                             </Animated>
@@ -198,6 +194,7 @@ const PymtAccountTypePage: FunctionComponent = () => {
                             <UpdateConfig
                                 details={ action.item }
                                 inputProps={ configInputProps }
+                                sourceTags={ pymtAccTags }
                                 onCancel={ () => setAction(undefined) }
                                 onUpdate={ onAddUpdatePymtAccTypeHandler }
                             />
@@ -207,6 +204,7 @@ const PymtAccountTypePage: FunctionComponent = () => {
                             <UpdateConfig
                                 details={ action.item }
                                 inputProps={ configInputProps }
+                                sourceTags={ pymtAccTags }
                                 onCancel={ () => setAction(undefined) }
                                 onUpdate={ onAddUpdatePymtAccTypeHandler }
                             />
@@ -216,6 +214,7 @@ const PymtAccountTypePage: FunctionComponent = () => {
                             <UpdateConfig
                                 details={ action.item }
                                 inputProps={ configInputProps }
+                                sourceTags={ pymtAccTags }
                                 onCancel={ () => setAction(undefined) }
                                 onUpdate={ onAddUpdatePymtAccTypeHandler }
                             />

@@ -1,40 +1,44 @@
-import { ConfigTypeService, ConfigResource, ConfigTypeStatus, ConfigTypeBelongsTo, UpdateConfigStatusResource } from "../../../services";
+import {
+  ConfigTypeService,
+  ConfigTypeStatus,
+  ConfigTypeBelongsTo,
+  UpdateConfigStatusResource,
+  UpdateConfigDetailsResource,
+  DeleteConfigDetailsResource,
+  TagsService,
+  TagBelongsTo,
+} from "../../../services";
 
-const ExpenseCategoryServiceImpl = () => {
+export const ExpenseCategoryService = () => {
   const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.ExpenseCategory);
+  const tagService = TagsService();
 
   /**
    * retrives undeleted categories
    * @returns list of category
    */
-  const getCategories = async () => {
-    const categories = await configTypeService.getConfigTypes([ConfigTypeStatus.Enable, ConfigTypeStatus.Disable]);
-    return categories;
+  const getCategories = async (status?: ConfigTypeStatus) => {
+    const paramStatuses = status ? [status] : [ConfigTypeStatus.Enable, ConfigTypeStatus.Disable];
+    const categoryListPromise = configTypeService.getConfigTypeList(paramStatuses);
+    await Promise.all([categoryListPromise, initializeCategoryTags()]);
+    return await categoryListPromise;
   };
 
   /**
-   * retrieves enabled / active categories
-   * @returns
+   * retrives category item
+   * @returns category item
    */
-  const getActiveCategories = async () => {
-    const categories = await configTypeService.getConfigTypes([ConfigTypeStatus.Enable]);
-    return categories;
-  };
-
-  /**
-   * retrieves deleted / archived categories
-   * @returns
-   */
-  const getDeletedCategories = async () => {
-    const categories = await configTypeService.getConfigTypes([ConfigTypeStatus.Deleted]);
-    return categories;
+  const getCategory = async (categoryId: string) => {
+    const categoryPromise = configTypeService.getConfigType(categoryId);
+    await Promise.all([categoryPromise, initializeCategoryTags()]);
+    return await categoryPromise;
   };
 
   /**
    * adds or updates the category
    * @param category
    */
-  const addUpdateCategory = async (category: ConfigResource) => {
+  const addUpdateCategory = async (category: UpdateConfigDetailsResource) => {
     await configTypeService.addUpdateConfigType(category);
   };
 
@@ -42,22 +46,35 @@ const ExpenseCategoryServiceImpl = () => {
    * deletes or archives a category
    * @param category
    */
-  const deleteCategory = async (categoryId: string) => {
-    await configTypeService.deleteConfigType(categoryId);
+  const deleteCategory = async (category: DeleteConfigDetailsResource) => {
+    await configTypeService.deleteConfigType(category.id);
   };
 
   const updateCategoryStatus = async (categoryStatusData: UpdateConfigStatusResource) => {
     await configTypeService.updateConfigTypeStatus(categoryStatusData);
   };
 
+  const initializeCategoryTags = async () => {
+    const tagCount = await tagService.getCount(TagBelongsTo.ExpenseCategoryConfig);
+    if (tagCount > 0) {
+      return;
+    }
+
+    const response = await configTypeService.getConfigTags();
+    await tagService.updateTags(TagBelongsTo.ExpenseCategoryConfig, response);
+  };
+
+  const getCategoryTags = async () => {
+    const tagList = await tagService.getTags(TagBelongsTo.ExpenseCategoryConfig);
+    return tagList;
+  };
+
   return {
     getCategories,
-    getActiveCategories,
-    getDeletedCategories,
+    getCategory,
     addUpdateCategory,
     deleteCategory,
     updateCategoryStatus,
+    getCategoryTags,
   };
 };
-
-export default ExpenseCategoryServiceImpl;

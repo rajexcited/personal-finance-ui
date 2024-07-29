@@ -11,7 +11,7 @@ export const expenseActionHandler = async ({ request }: ActionFunctionArgs) => {
   } else if (request.method === "DELETE") {
     return await expenseDeleteActionHandler(request);
   }
-  const error: RouteHandlerResponse<any> = {
+  const error: RouteHandlerResponse<null, any> = {
     type: "error",
     errorMessage: "action not supported",
     data: {
@@ -94,7 +94,7 @@ const expenseDeleteActionHandler = async (request: Request) => {
     const formdata = await request.formData();
     const expenseId = getFormData(formdata, "id");
     await expenseService.removeExpense(expenseId);
-    const response: RouteHandlerResponse<string> = {
+    const response: RouteHandlerResponse<string, null> = {
       type: "success",
       data: "expense is deleted",
     };

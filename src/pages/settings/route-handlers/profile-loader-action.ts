@@ -17,7 +17,7 @@ export const profileDetailsLoaderHandler = async () => {
   try {
     const userDetails = await authenticationService.getUserDetails();
     const currencyProfiles = await currencyProfileService.getCurrencyProfiles();
-    const response: RouteHandlerResponse<ProfileDetailsLoaderResource> = {
+    const response: RouteHandlerResponse<ProfileDetailsLoaderResource, null> = {
       type: "success",
       data: {
         nameDetails: {
@@ -36,12 +36,10 @@ export const profileDetailsLoaderHandler = async () => {
 
 export const profileDetailsActionHandler = async ({ request }: ActionFunctionArgs) => {
   if (request.method === "POST") {
-    const data = await request.json();
-    if ("nameDetails" in data) {
-      return await nameChangedActionHandler(request, data.nameDetails as UpdateUserDetailsResource);
-    }
+    const data = (await request.json()) as UpdateUserDetailsResource;
+    return await nameChangedActionHandler(request, data);
   }
-  const error: RouteHandlerResponse<any> = {
+  const error: RouteHandlerResponse<null, any> = {
     type: "error",
     errorMessage: "action not supported",
     data: {
@@ -57,7 +55,7 @@ const nameChangedActionHandler = async (request: Request, data: UpdateUserDetail
   const logger = getLogger("route.nameChangedActionHandler");
   try {
     await authenticationService.updateName(data);
-    const response: RouteHandlerResponse<string> = {
+    const response: RouteHandlerResponse<string, null> = {
       type: "success",
       data: "name of user is updated",
     };

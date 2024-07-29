@@ -50,7 +50,7 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                         </span>
                     </button>
                 </header>
-                <Animated animateOnMount={ false } isPlayIn={ isBodyOpen } animatedIn="fadeIn" animatedOut="zoomOut" isVisibleAfterAnimateOut={ false } >
+                <Animated animateOnMount={ false } isPlayIn={ isBodyOpen } animatedIn="fadeIn" animatedOut="fadeOut" isVisibleAfterAnimateOut={ false } >
                     <div className="card-content is-active">
                         <div className="content">
                             <div className="columns is-variable">

@@ -15,14 +15,17 @@ export {
   NotFoundError,
   UnauthorizedError,
   subtractDates,
+  getDefaultIfError,
 } from "./utils";
 
 export type { RouteHandlerResponse } from "./utils";
 
-export type { ConfigResource, UpdateConfigStatusResource } from "./config-type-service";
+export type { ConfigResource, UpdateConfigStatusResource, UpdateConfigDetailsResource, DeleteConfigDetailsResource } from "./config-type-service";
 export { default as ConfigTypeService, ConfigTypeStatus, ConfigTypeBelongsTo } from "./config-type-service";
 
 export { default as axios } from "./axios-proxy";
 export { default as difference } from "./difference";
 
 export { LoggerBase, getLogger } from "./logger";
+
+export { TagBelongsTo, TagsService } from "./tags-service";

@@ -1,7 +1,9 @@
 import { FunctionComponent, useEffect, useState, useCallback } from "react";
+import "./dropdown.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleUp, faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import DropDownItem from "./dropdown-item";
+import { getLogger } from "../services";
 
 export type DropDownItemType = {
     id: string;
@@ -31,6 +33,7 @@ const findUniqueElementId = (prefix: string) => {
     while (true);
     return id;
 };
+const fcLogger = getLogger("FC.DropDown", null, null, "DEBUG");
 
 const DropDown: FunctionComponent<DropDownProps> = (props) => {
     const [isOpen, setOpen] = useState(false);
@@ -64,6 +67,8 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
     }, [isOpen, closeDropdownHandler]);
 
     useEffect(() => {
+        const logger = getLogger("useEffect.dep[props.selectedItem]", fcLogger);
+        logger.info("props.selectedItem =", props.selectedItem);
         if (props.selectedItem) {
             if (typeof props.selectedItem === "string") {
                 if (props.selectedItem !== selectedItem?.content) {
@@ -80,8 +85,10 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
     }, [props.selectedItem]);
 
     useEffect(() => {
+        const logger = getLogger("useEffect.dep[props.selectedItem]", fcLogger);
+        logger.info("props.items =", props.items, ", props.defaultItem =", props.defaultItem);
         let ddItems: DropDownItemType[] = [];
-        if (props.items && props.items.length) {
+        if (props.items && props.items.length > 0) {
             if (typeof props.items[0] === "string") {
                 ddItems = props.items.map(item => ({
                     id: item,
@@ -93,11 +100,9 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
             setItems(ddItems);
         }
         if (props.defaultItem) {
-            const defaultItemId = typeof props.defaultItem === "string" ? props.defaultItem : props.defaultItem.id;
-            if (ddItems.length === 0) {
-                ddItems = items;
-            }
-            setSelectedItem(ddItems.find(di => di.id === defaultItemId));
+            const defaultItem: DropDownItemType = typeof props.defaultItem === "string" ? { id: props.defaultItem, content: props.defaultItem } : props.defaultItem;
+            const selectedDefaultItem = ddItems.find(di => di.id === defaultItem.id);
+            setSelectedItem(selectedDefaultItem || defaultItem);
         }
     }, [props.items, props.defaultItem]);
 
@@ -117,11 +122,8 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
     };
 
     const contentsLength = items.map(it => it.content.length);
-    let triggerItem;
-    if (selectedItem) {
-        triggerItem = items.find(itm => itm.id === selectedItem.id)?.content;
-    }
-    const selectedTriggerContent = triggerItem || "Select";
+    const selectedTriggerContent = selectedItem?.content || "Select";
+    fcLogger.debug("selectedTriggerContent =", selectedTriggerContent, ", selectedItem =", selectedItem, ", items.content =", items.map(itm => itm.content));
 
     const paddingLength = (Math.max(...contentsLength, 20) / 2) + 2 - selectedTriggerContent.length;
     const triggerItemPaddingBefore = [];
@@ -169,23 +171,21 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
                         <div className={ props.direction === "down" && isOpen ? "my-5 py-5" : "is-hidden" }>&nbsp;</div>
                     </div>
                 </div>
-            </div>
-            {
-                props.required &&
-                <>
+                {
+                    props.required &&
                     <input
                         type="text"
                         name={ props.id + "dropdown" }
                         id={ props.id + "dropdown" }
                         value={ selectedItem?.id }
-                        disabled={ true }
                         required={ props.required }
-                        className="input-hidden"
+                        className="dropdown-input-required"
                     />
-                    { !selectedItem?.id &&
-                        <p className="help is-danger"> Please select an item from dropdown. </p>
-                    }
-                </>
+                }
+            </div>
+            {
+                props.required && !selectedItem?.id &&
+                <p className="help is-danger"> Please select an item from dropdown. </p>
             }
         </div>
     );

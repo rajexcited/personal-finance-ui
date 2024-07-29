@@ -13,9 +13,9 @@ export interface PymtAccountDetailLoaderResource {
 export const pymtAccountListLoaderHandler = async () => {
   const logger = getLogger("route.pymtAccountListLoaderHandler");
   try {
-    const pymtAccList = await accountService.getPymtAccounts();
+    const pymtAccList = await accountService.getPymtAccountList();
     pymtAccList.sort((a, b) => descCompare(a.auditDetails.updatedOn, b.auditDetails.updatedOn));
-    const response: RouteHandlerResponse<PymtAccountFields[]> = {
+    const response: RouteHandlerResponse<PymtAccountFields[], null> = {
       type: "success",
       data: pymtAccList,
     };
@@ -34,7 +34,7 @@ export const pymtAccountDetailLoaderHandler = async ({ params }: LoaderFunctionA
     const pymtAccountTags = await accountService.getPymtAccountTags();
     const categoryTypes = await accountService.getPymtAccountTypes();
 
-    const response: RouteHandlerResponse<PymtAccountDetailLoaderResource> = {
+    const response: RouteHandlerResponse<PymtAccountDetailLoaderResource, null> = {
       type: "success",
       data: {
         pymtAccountDetail,
@@ -55,7 +55,7 @@ export const pymtAccountDetailSupportingLoaderHandler = async () => {
     const pymtAccountTags = await accountService.getPymtAccountTags();
     const categoryTypes = await accountService.getPymtAccountTypes();
 
-    const response: RouteHandlerResponse<PymtAccountDetailLoaderResource> = {
+    const response: RouteHandlerResponse<PymtAccountDetailLoaderResource, null> = {
       type: "success",
       data: {
         pymtAccountDetail: null,

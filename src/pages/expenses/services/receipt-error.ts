@@ -15,7 +15,7 @@ export class ReceiptUploadError extends Error {
     const promises = this.errorReceipts.map(async (er) => {
       const response = handleRouteActionError(er.error);
       if (response.status !== HttpStatusCode.Found) {
-        const body = (await response.json()) as RouteHandlerResponse<any>;
+        const body = (await response.json()) as RouteHandlerResponse<null, any>;
         if (body.type === "error") {
           return body.errorMessage;
         }
@@ -56,14 +56,14 @@ export class ReceiptUploadError extends Error {
 
     const messages = responses
       .map(async (r: Response) => {
-        const body = (await r.json()) as RouteHandlerResponse<any>;
+        const body = (await r.json()) as RouteHandlerResponse<null, any>;
         if (body.type === "error") {
           return body.errorMessage;
         }
         return "";
       })
       .filter((m) => m);
-    const response: RouteHandlerResponse<null> = { type: "error", errorMessage: messages.join("\n"), data: null };
+    const response: RouteHandlerResponse<null, null> = { type: "error", errorMessage: messages.join("\n"), data: null };
     return json(response, { status: httpStatus });
   }
 }

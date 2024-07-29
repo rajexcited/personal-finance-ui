@@ -46,7 +46,6 @@ export interface ExpenseFields extends BaseExpenseFields {
   receipts: ReceiptProps[];
   status?: ExpenseStatus;
   auditDetails: AuditFields;
-  deletedTimestamp?: Date | string;
 }
 
 export const ExpenseDataFilterItems = [

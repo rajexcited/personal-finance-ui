@@ -1,33 +1,26 @@
-import { ConfigResource, ConfigTypeService, ConfigTypeStatus, ConfigTypeBelongsTo, UpdateConfigStatusResource } from "../../../services";
+import {
+  ConfigResource,
+  ConfigTypeService,
+  ConfigTypeStatus,
+  ConfigTypeBelongsTo,
+  UpdateConfigStatusResource,
+  TagBelongsTo,
+  TagsService,
+} from "../../../services";
 
 const PymtAccountTypeServiceImpl = () => {
   const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.PaymentAccountType);
+  const tagService = TagsService();
 
   /**
    * retrives undeleted account types
    * @returns list of account type
    */
-  const getAccountTypes = async () => {
-    const accountTypes = await configTypeService.getConfigTypes([ConfigTypeStatus.Enable, ConfigTypeStatus.Disable]);
-    return accountTypes;
-  };
-
-  /**
-   * retrives enabled / active account types
-   * @returns list of account type
-   */
-  const getActiveAccountTypes = async () => {
-    const accountTypes = await configTypeService.getConfigTypes([ConfigTypeStatus.Enable]);
-    return accountTypes;
-  };
-
-  /**
-   * retrives deleted / archive account types
-   * @returns list of account type
-   */
-  const getDeletedAccountTypes = async () => {
-    const accountTypes = await configTypeService.getConfigTypes([ConfigTypeStatus.Deleted]);
-    return accountTypes;
+  const getAccountTypes = async (status?: ConfigTypeStatus) => {
+    const paramStatuses = status ? [status] : [ConfigTypeStatus.Enable, ConfigTypeStatus.Disable];
+    const accountTypeListPromise = configTypeService.getConfigTypeList(paramStatuses);
+    await Promise.all([accountTypeListPromise, initializePymtAccTypeTags()]);
+    return await accountTypeListPromise;
   };
 
   const addUpdateAccountType = async (accountType: ConfigResource) => {
@@ -42,13 +35,27 @@ const PymtAccountTypeServiceImpl = () => {
     await configTypeService.updateConfigTypeStatus(categoryStatusData);
   };
 
+  const initializePymtAccTypeTags = async () => {
+    const tagCount = await tagService.getCount(TagBelongsTo.PaymentAccountTypeConfig);
+    if (tagCount > 0) {
+      return;
+    }
+
+    const response = await configTypeService.getConfigTags();
+    await tagService.updateTags(TagBelongsTo.PaymentAccountTypeConfig, response);
+  };
+
+  const getPymtAccTypeTags = async () => {
+    const tagList = await tagService.getTags(TagBelongsTo.PaymentAccountTypeConfig);
+    return tagList;
+  };
+
   return {
     getAccountTypes,
-    getActiveAccountTypes,
-    getDeletedAccountTypes,
     addUpdateAccountType,
     deleteAccountType,
     updateAccountTypeStatus,
+    getPymtAccTypeTags,
   };
 };
 

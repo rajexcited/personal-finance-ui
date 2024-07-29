@@ -8,18 +8,19 @@ import { useDebounceState } from "../../../../hooks";
 import ExpenseTableRow from "./view-expense-item-tablerow";
 import ExpenseTableHead, { ExpenseTableHeadRefType } from "./expense-table-head";
 import "./view-expense-list.css";
-import { RouteHandlerResponse } from "../../../../services";
+import { RouteHandlerResponse, getLogger } from "../../../../services";
 import ViewReceipts from "./view-receipts";
 
+const fcLogger = getLogger("FC.expense.view.ExpenseList", null, null, "INFO");
 
 const ExpenseList: FunctionComponent = () => {
-    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseFields[]>;
-    const actionData = useActionData() as RouteHandlerResponse<any> | null;
+    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseFields[], null>;
+    const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
     const [expenseList, setExpenseList] = useState<ExpenseFields[]>([]);
     const [selectedExpenseId, setSelectedExpenseId] = useState("");
     const [deletingExpenseId, setDeletingExpenseId] = useState("");
     const [isViewReceiptsEnable, setViewReceiptsEnable] = useState(false);
-    const [errorMsg, setErrorMsg] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
     const submit = useSubmit();
     const [loading, setLoading] = useDebounceState(false, 500, true);
@@ -27,8 +28,9 @@ const ExpenseList: FunctionComponent = () => {
 
     // do I need this useeffect? can i not set loader data directly to expenseList state?
     useEffect(() => {
-        if (loaderData.type === "success" && Array.isArray(loaderData.data) && loaderData.data.length !== expenseList.length) {
+        if (loaderData.type === "success") {
             setLoading(true);
+            setErrorMessage("");
 
             if (headerRef && headerRef.current && Object.keys(headerRef.current.sortDetails()).length) {
                 setExpenseList(getSortedExpenses(loaderData.data, headerRef.current.sortDetails()));
@@ -41,12 +43,13 @@ const ExpenseList: FunctionComponent = () => {
                 });
                 setExpenseList(getSortedExpenses(loaderData.data, initialSortDetails));
             }
+        } else if (actionData?.type === "success") {
+            setErrorMessage("");
+        } else if (loaderData.type === "error") {
+            setErrorMessage(loaderData.errorMessage);
         }
-        if (actionData?.type === "error" && errorMsg !== actionData.errorMessage) {
-            // should i seperate the use effect since both have different outcomes?
-            setErrorMsg(actionData.errorMessage);
-        } else if (loaderData.type === "error" && errorMsg !== loaderData.errorMessage) {
-            setErrorMsg(loaderData.errorMessage);
+        else if (actionData?.type === "error") {
+            setErrorMessage(actionData.errorMessage);
         }
     }, [loaderData, actionData]);
 
@@ -89,18 +92,19 @@ const ExpenseList: FunctionComponent = () => {
         setDeletingExpenseId("");
     };
 
-    // logger.debug(new Date(), "view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billname));
+    fcLogger.debug(new Date(), "view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billName));
+    const selectedExpenseReceipts = (isViewReceiptsEnable && expenseList.find(xpns => xpns.id === selectedExpenseId)?.receipts) || [];
 
     return (
         <section>
             <LoadSpinner loading={ loading } />
 
-            <Animated animateOnMount={ false } isPlayIn={ !!errorMsg } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
+            <Animated animateOnMount={ false } isPlayIn={ !!errorMessage } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
                 <div className="columns is-centered">
                     <div className="column is-four-fifths">
                         <article className="message is-danger mb-3">
                             <div className="message-body">
-                                <ReactMarkdown children={ errorMsg } />
+                                <ReactMarkdown children={ errorMessage } />
                             </div>
                         </article>
                     </div>
@@ -149,7 +153,7 @@ const ExpenseList: FunctionComponent = () => {
             <ViewReceipts
                 key={ "view-receipts-" + (isViewReceiptsEnable ? selectedExpenseId : "dummy") }
                 isShow={ isViewReceiptsEnable }
-                receipts={ isViewReceiptsEnable && expenseList.find(xpns => xpns.id === selectedExpenseId)?.receipts || [] }
+                receipts={ selectedExpenseReceipts }
                 onHide={ () => setViewReceiptsEnable(false) }
             />
         </section>

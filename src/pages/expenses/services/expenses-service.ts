@@ -10,17 +10,19 @@ import {
   formatTimestamp,
   subtractDates,
   LoggerBase,
+  getDefaultIfError,
+  ConfigTypeStatus,
+  TagsService,
+  TagBelongsTo,
 } from "../../../services";
 import { DownloadReceiptResource, ErrorReceiptProps, ExpenseFields, ExpenseItemFields, ExpenseStatus, ReceiptProps } from "./field-types";
-import ExpenseCategoryService from "./expense-category-service";
+import { ExpenseCategoryService } from "./expense-category-service";
 import { PymtAccountService } from "../../pymt-accounts";
 import pMemoize from "p-memoize";
 import ExpiryMap from "expiry-map";
 import datetime from "date-and-time";
 import { ReceiptUploadError } from "./receipt-error";
 import { validate as isValidUuid, version as getUuidVersion } from "uuid";
-
-const pymtAccService = PymtAccountService();
 
 const ExpenseServiceImpl = () => {
   const onBeforeExpiredReceiptFileCallback = async (item: DownloadReceiptResource) => {
@@ -29,9 +31,13 @@ const ExpenseServiceImpl = () => {
     }
   };
 
-  const expenseCategoryService = ExpenseCategoryService();
   const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
   const receiptFileDb = new MyLocalDatabase<DownloadReceiptResource>(LocalDBStore.ReceiptFile, onBeforeExpiredReceiptFileCallback);
+
+  const pymtAccService = PymtAccountService();
+  const expenseCategoryService = ExpenseCategoryService();
+  const tagService = TagsService();
+
   const rootPath = "/expenses";
   const _logger = getLogger("service.expense");
 
@@ -40,7 +46,7 @@ const ExpenseServiceImpl = () => {
       const logger = getLogger("getCategoryEnum", _logger);
       const startTime = new Date();
       logger.info("cache miss. calling service to get expense categories");
-      const categories = await expenseCategoryService.getCategories();
+      const categories = await getDefaultIfError(expenseCategoryService.getCategories, []);
       const categoryMap = new Map<string, string>();
       categories.forEach((ctg) => {
         categoryMap.set(ctg.id, ctg.name);
@@ -49,14 +55,31 @@ const ExpenseServiceImpl = () => {
       logger.info("transformed to category Map, ", categoryMap, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
       return categoryMap;
     },
-    { cache: new ExpiryMap(10 * 1000) }
+    { cache: new ExpiryMap(15 * 1000) }
+  );
+
+  const getDeletedCategoryEnum = pMemoize(
+    async () => {
+      const logger = getLogger("getDeletedCategoryEnum", _logger);
+      const startTime = new Date();
+      logger.info("cache miss. calling service to get expense categories");
+      const categories = await getDefaultIfError(async () => await expenseCategoryService.getCategories(ConfigTypeStatus.Deleted), []);
+      const categoryMap = new Map<string, string>();
+      categories.forEach((ctg) => {
+        categoryMap.set(ctg.id, ctg.name);
+        categoryMap.set(ctg.name, ctg.id);
+      });
+      logger.info("transformed to category Map, ", categoryMap, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
+      return categoryMap;
+    },
+    { cache: new ExpiryMap(15 * 1000) }
   );
 
   const getPaymentAccountMap = async () => {
     const logger = getLogger("getPaymentAccountMap", _logger);
     const startTime = new Date();
 
-    const pymtAccs = await pymtAccService.getPymtAccounts();
+    const pymtAccs = await getDefaultIfError(pymtAccService.getPymtAccountList, []);
     const pymtAccMap = new Map<string, string>();
     pymtAccs.forEach((acc) => {
       pymtAccMap.set(acc.id, acc.shortName);
@@ -91,26 +114,14 @@ const ExpenseServiceImpl = () => {
   };
 
   const updateCategory = (categoryMap: Map<string, string>, item: ExpenseFields | ExpenseItemFields) => {
-    if (item.expenseCategoryId && categoryMap.get(item.expenseCategoryId) && isUuid(item.expenseCategoryId)) {
+    if (item.expenseCategoryId && isUuid(item.expenseCategoryId) && categoryMap.get(item.expenseCategoryId)) {
       item.expenseCategoryName = categoryMap.get(item.expenseCategoryId);
-    } else if (item.expenseCategoryName && categoryMap.get(item.expenseCategoryName) && !isUuid(item.expenseCategoryName)) {
-      item.expenseCategoryId = categoryMap.get(item.expenseCategoryName);
-    } else if (item.expenseCategoryId && !item.expenseCategoryName) {
-      item.expenseCategoryName = item.expenseCategoryId;
-    } else if (item.expenseCategoryName && !item.expenseCategoryId) {
-      item.expenseCategoryId = item.expenseCategoryName;
     }
   };
 
   const updatePymtAcc = (pymtAccMap: Map<string, string>, item: ExpenseFields) => {
-    if (item.paymentAccountId && pymtAccMap.get(item.paymentAccountId) && isUuid(item.paymentAccountId)) {
+    if (item.paymentAccountId && isUuid(item.paymentAccountId) && pymtAccMap.get(item.paymentAccountId)) {
       item.paymentAccountName = pymtAccMap.get(item.paymentAccountId);
-    } else if (item.paymentAccountName && pymtAccMap.get(item.paymentAccountName) && !isUuid(item.paymentAccountName)) {
-      item.paymentAccountId = pymtAccMap.get(item.paymentAccountName);
-    } else if (item.paymentAccountId && !item.paymentAccountName) {
-      item.paymentAccountName = item.paymentAccountId;
-    } else if (item.paymentAccountName && !item.paymentAccountId) {
-      item.paymentAccountId = item.paymentAccountName;
     }
   };
 
@@ -125,6 +136,23 @@ const ExpenseServiceImpl = () => {
       expenseItem.expenseItems.forEach((itemBreakdown) => {
         updateCategory(categoryMap, itemBreakdown);
       });
+    }
+
+    const shouldRetrieveDeletedCategories = (item: ExpenseFields | ExpenseItemFields) => item.expenseCategoryId && !item.expenseCategoryName;
+    if (shouldRetrieveDeletedCategories(expenseItem) || !!expenseItem.expenseItems?.find(shouldRetrieveDeletedCategories)) {
+      const deletedCategoryMap: Map<string, string> = await getDeletedCategoryEnum();
+      if (shouldRetrieveDeletedCategories(expenseItem)) {
+        updateCategory(deletedCategoryMap, expenseItem);
+      }
+      expenseItem.expenseItems?.filter(shouldRetrieveDeletedCategories).forEach((itemBreakdown) => {
+        updateCategory(deletedCategoryMap, itemBreakdown);
+      });
+    }
+
+    if (expenseItem.paymentAccountId && !expenseItem.paymentAccountName) {
+      const pymtAccId = expenseItem.paymentAccountId;
+      const deletedPymtAcc = await getDefaultIfError(async () => await pymtAccService.getPymtAccount(pymtAccId), null);
+      expenseItem.paymentAccountName = deletedPymtAcc?.shortName;
     }
     logger.info("execution time =", subtractDates(null, startTime).toSeconds(), " sec");
   };
@@ -149,7 +177,7 @@ const ExpenseServiceImpl = () => {
         if (!rct.file) return { ...rct };
 
         logger.info("uploading receipt file, id =", rct.id, ", name =", rct.name, ", contenttype =", rct.contentType);
-        const response = await axios.post(`${rootPath}/id/${rct.expenseId}/receipts/id/${rct.name}`, rct.file, {
+        await axios.post(`${rootPath}/id/${rct.expenseId}/receipts/id/${rct.name}`, rct.file, {
           headers: { "Content-Type": rct.contentType },
         });
         const result: ReceiptProps = {
@@ -198,48 +226,63 @@ const ExpenseServiceImpl = () => {
     }
   };
 
-  const getExpenses = async (pageNo: number, status?: ExpenseStatus) => {
+  const getExpenseList = async (pageNo: number, status?: ExpenseStatus) => {
     const logger = getLogger("getExpenses", _logger);
 
     const startTime = new Date();
     try {
       const queryPageMonths = 3;
-      const dbExpenses = await expenseDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, status || ExpenseStatus.Enable);
-      logger.info("expenseDb.getAllFromIndex execution time =", subtractDates(null, startTime).toSeconds(), " sec.");
-
-      const rangeStartDate = datetime.addMonths(new Date(), queryPageMonths * -1 * pageNo);
-      const rangeEndDate = datetime.addMonths(new Date(), queryPageMonths * -1 * (pageNo - 1));
-      const filteredExpenses = dbExpenses.filter((xpns) => {
-        if (xpns.purchasedDate >= rangeStartDate && xpns.purchasedDate <= rangeEndDate) {
-          return true;
-        }
-        if (xpns.auditDetails.updatedOn >= rangeStartDate && xpns.auditDetails.updatedOn <= rangeEndDate) {
-          return true;
-        }
-        return false;
-      });
-      logger.info("db expenses =", [...filteredExpenses]);
-      if (filteredExpenses.length > 0) {
-        return filteredExpenses;
-      }
-
-      // call api to refresh the list
-      let apiStartTime = new Date();
       const queryParams: Record<string, string[]> = {
         pageNo: [String(pageNo)],
         status: [status || ExpenseStatus.Enable],
         pageMonths: [String(queryPageMonths)],
       };
+
+      if (status !== ExpenseStatus.Deleted) {
+        const countResponse = await axios.get(`${rootPath}/count`, { params: queryParams });
+        const dbExpenses = await expenseDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, status || ExpenseStatus.Enable);
+        logger.info("expenseDb.getAllFromIndex execution time =", subtractDates(null, startTime).toSeconds(), " sec.");
+
+        const rangeStartDate = datetime.addMonths(new Date(), queryPageMonths * -1 * pageNo);
+        const rangeEndDate = datetime.addMonths(new Date(), queryPageMonths * -1 * (pageNo - 1));
+        const filteredExpenses = dbExpenses.filter((xpns) => {
+          if (xpns.purchasedDate >= rangeStartDate && xpns.purchasedDate <= rangeEndDate) {
+            return true;
+          }
+          if (xpns.auditDetails.updatedOn >= rangeStartDate && xpns.auditDetails.updatedOn <= rangeEndDate) {
+            return true;
+          }
+          return false;
+        });
+        logger.info("db expenses =", [...filteredExpenses]);
+        if (filteredExpenses.length === countResponse.data) {
+          logger.info(
+            "filteredExpenses from DB, queryParams =",
+            queryParams,
+            ", filteredExpenses.length=",
+            filteredExpenses.length,
+            ", execution time =",
+            subtractDates(null, startTime).toSeconds(),
+            " sec"
+          );
+          return filteredExpenses;
+        }
+      }
+
+      // call api to refresh the list
+      let apiStartTime = new Date();
+
       const responsePromise = axios.get(rootPath, { params: queryParams });
+      logger.info("getExpenses api, queryParams =", queryParams, ", execution time =", subtractDates(null, apiStartTime).toSeconds(), " sec");
       await Promise.all([responsePromise, getCategoryEnum(), getPymtAccEnum()]);
       logger.info("api execution time =", subtractDates(null, apiStartTime).toSeconds(), " sec");
 
-      const response = await responsePromise;
       apiStartTime = new Date();
-      const promises: Promise<ExpenseFields>[] = response.data.map(async (expense: ExpenseFields) => await addUpdateDbExpense(expense, logger));
+      const responseData = (await responsePromise).data as ExpenseFields[];
+      const promises = responseData.map((expense) => addUpdateDbExpense(expense, logger));
       logger.info("transformed expense resources, execution time =", subtractDates(null, apiStartTime).toSeconds(), " sec");
 
-      return await Promise.all(promises);
+      return (await Promise.all(promises)).map((expense) => ({ ...expense, expenseItems: undefined }));
     } catch (e) {
       const err = e as Error;
       handleRestErrors(err, logger);
@@ -301,6 +344,7 @@ const ExpenseServiceImpl = () => {
       const deletingReceiptPromises = (response.data as ExpenseFields).receipts.map(async (rct) => {
         await cacheReceiptFile(rct, "Remove");
       });
+      await Promise.all(deletingReceiptPromises);
     } catch (e) {
       const err = e as Error;
       handleRestErrors(err, logger);
@@ -321,6 +365,8 @@ const ExpenseServiceImpl = () => {
     await updateCategoryAndPymtAccName(dbExpense);
     convertAuditFieldsToDateInstance(dbExpense.auditDetails);
     dbExpense.receipts = dbExpense.receipts.map((rct) => ({ ...rct, expenseId: expense.id }));
+    await initializeExpenseTags();
+    await tagService.updateExpenseTags(dbExpense);
 
     logger.info("transforming execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
     await expenseDb.addUpdateItem(dbExpense);
@@ -328,14 +374,23 @@ const ExpenseServiceImpl = () => {
     return dbExpense;
   };
 
+  const initializeExpenseTags = async () => {
+    const tagCount = await tagService.getCount(TagBelongsTo.Expenses);
+    if (tagCount > 0) {
+      return;
+    }
+
+    const thisYear = new Date().getFullYear();
+    const queryParams: Record<string, string[]> = {
+      purchasedYear: [String(thisYear), String(thisYear - 1)],
+    };
+    const response = await axios.get(`${rootPath}/tags`, { params: queryParams });
+    await tagService.updateTags(TagBelongsTo.Expenses, response.data);
+  };
+
   const getExpenseTags = async () => {
-    const promises = [1, 2, 3, 4].map(async (pageNo) => await getExpenses(pageNo));
-    const expenses = await Promise.all(promises);
-
-    const tags = expenses.flatMap((xpns) => xpns).flatMap((xpns) => xpns.tags);
-    const uniqueTags = new Set(tags);
-
-    return [...uniqueTags];
+    const tagList = await tagService.getTags(TagBelongsTo.Expenses);
+    return tagList;
   };
 
   const downloadReceipts = async (receipts: ReceiptProps[]) => {
@@ -427,9 +482,13 @@ const ExpenseServiceImpl = () => {
     }
   };
 
+  const getExpenseCategories = () => {
+    return expenseCategoryService.getCategories(ConfigTypeStatus.Enable);
+  };
+
   return {
     getExpense,
-    getExpenses,
+    getExpenseList,
     addUpdateExpense,
     removeExpense,
     getPaymentAccountMap,
@@ -437,6 +496,7 @@ const ExpenseServiceImpl = () => {
     updateExpenseReceipts,
     downloadReceipts,
     cacheReceiptFile,
+    getExpenseCategories,
   };
 };
 

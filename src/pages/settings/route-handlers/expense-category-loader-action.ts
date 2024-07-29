@@ -1,16 +1,35 @@
 import { ActionFunctionArgs, json } from "react-router-dom";
 import { ExpenseCategoryService } from "../../expenses";
-import { ConfigResource, HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
+import {
+  ConfigResource,
+  DeleteConfigDetailsResource,
+  HttpStatusCode,
+  RouteHandlerResponse,
+  UpdateConfigDetailsResource,
+  UpdateConfigStatusResource,
+  getLogger,
+  handleRouteActionError,
+} from "../../../services";
 
 const expenseCategoryService = ExpenseCategoryService();
+
+export interface ExpenseCategoryTypeLoaderResource {
+  categoryTypes: ConfigResource[];
+  categoryTags: string[];
+}
 
 export const expenseCategoryListLoaderHandler = async () => {
   const logger = getLogger("route.expenseCategoryListLoaderHandler");
   try {
     const expenseCategoryList = await expenseCategoryService.getCategories();
-    const response: RouteHandlerResponse<ConfigResource[]> = {
+    const expenseCategoryTags = await expenseCategoryService.getCategoryTags();
+
+    const response: RouteHandlerResponse<ExpenseCategoryTypeLoaderResource, null> = {
       type: "success",
-      data: expenseCategoryList,
+      data: {
+        categoryTypes: expenseCategoryList,
+        categoryTags: expenseCategoryTags,
+      },
     };
 
     return response;
@@ -26,7 +45,7 @@ export const expenseCategoryListActionHandler = async ({ request }: ActionFuncti
   } else if (request.method === "DELETE") {
     return await expenseCategoryDeleteActionHandler(request);
   }
-  const error: RouteHandlerResponse<any> = {
+  const error: RouteHandlerResponse<null, any> = {
     type: "error",
     errorMessage: "action not supported",
     data: {
@@ -40,26 +59,26 @@ export const expenseCategoryListActionHandler = async ({ request }: ActionFuncti
 
 const expenseCategoryAddUpdateActionHandler = async (request: Request) => {
   const logger = getLogger("route.expenseCategoryAddUpdateActionHandler");
-  const data = await request.json();
+  const data = (await request.json()) as UpdateConfigDetailsResource | UpdateConfigStatusResource;
 
   try {
-    if ("name" in data) {
+    if (data.action === "addUpdateDetails") {
       await expenseCategoryService.addUpdateCategory(data);
-      const response: RouteHandlerResponse<string> = {
+      const response: RouteHandlerResponse<string, null> = {
         type: "success",
         data: "expense category updated",
       };
       return response;
     }
-    if ("status" in data) {
+    if (data.action === "updateStatus") {
       await expenseCategoryService.updateCategoryStatus(data);
-      const response: RouteHandlerResponse<string> = {
+      const response: RouteHandlerResponse<string, null> = {
         type: "success",
         data: `expense category status is updated to ${data.status}`,
       };
       return response;
     }
-    const error: RouteHandlerResponse<any> = {
+    const error: RouteHandlerResponse<null, any> = {
       type: "error",
       errorMessage: "structure of data not supported for updating expense category",
       data: {
@@ -78,11 +97,11 @@ const expenseCategoryAddUpdateActionHandler = async (request: Request) => {
 
 const expenseCategoryDeleteActionHandler = async (request: Request) => {
   const logger = getLogger("route.expenseCategoryDeleteActionHandler");
-  const data: ConfigResource = await request.json();
+  const data = (await request.json()) as DeleteConfigDetailsResource;
 
   try {
-    await expenseCategoryService.deleteCategory(data.id);
-    const response: RouteHandlerResponse<string> = {
+    await expenseCategoryService.deleteCategory(data);
+    const response: RouteHandlerResponse<string, null> = {
       type: "success",
       data: `expense category is deleted`,
     };

@@ -41,11 +41,19 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
     }, [itemBillName, itemAmount, itemCategory, itemTags, itemDescription]);
 
     useEffect(() => {
-        if (props.itemDetail.expenseCategoryName !== itemCategory?.content && props.categories) {
-            const ctgMatched = props.categories.find((ctg) => ctg.content === props.itemDetail.expenseCategoryName);
-            if (ctgMatched) setItemCategory(ctgMatched);
+        if (props.itemDetail.expenseCategoryId && props.itemDetail.expenseCategoryName) {
+            const ctgMatched = props.categories.find((ctg) => ctg.id === props.itemDetail.expenseCategoryId);
+            if (ctgMatched) { setItemCategory(ctgMatched); }
+            else {
+                setItemCategory({
+                    id: props.itemDetail.expenseCategoryId,
+                    content: props.itemDetail.expenseCategoryName
+                });
+            }
+        } else {
+            setItemCategory(undefined);
         }
-    }, [props.itemDetail.expenseCategoryName, props.categories]);
+    }, [props.itemDetail.expenseCategoryId, props.itemDetail.expenseCategoryName, props.categories]);
 
     const onCLickRemoveHandler: React.MouseEventHandler<HTMLSpanElement> = event => {
         event.preventDefault();

@@ -18,8 +18,8 @@ const AddExpense: FunctionComponent = () => {
     const submit = useSubmit();
     const auth = useAuth();
     // for error
-    const actionData = useActionData() as RouteHandlerResponse<any> | null;
-    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseDetailLoaderResource>;
+    const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
+    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseDetailLoaderResource, null>;
     const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
@@ -27,14 +27,14 @@ const AddExpense: FunctionComponent = () => {
     }, []);
 
     useEffect(() => {
-        if (actionData?.type === "error" && actionData.errorMessage !== errorMessage) {
+        if (loaderData.type === "error") {
+            setErrorMessage(loaderData.errorMessage);
+        } else if (actionData?.type === "error") {
             setErrorMessage(actionData.errorMessage);
+        } else if (auth.userDetails.isAuthenticated) {
+            setErrorMessage("");
         }
-        else
-            if (loaderData.type === "error" && loaderData.errorMessage !== errorMessage) {
-                setErrorMessage(loaderData.errorMessage);
-            }
-    }, [errorMessage, actionData]);
+    }, [loaderData, actionData, auth]);
 
     const onExpenseAdded = (data: ExpenseFields, formData: FormData) => {
         if (auth.userDetails.isAuthenticated) {
@@ -57,19 +57,21 @@ const AddExpense: FunctionComponent = () => {
                     </article>
                 </Animated>
             }
-            <div className="columns">
-                <div className="column">
-                    <ExpenseForm
-                        key="add-expense-form"
-                        expenseId={ expenseId }
-                        submitLabel={ navigation.state === "submitting" ? "Adding Expense details..." : "Add" }
-                        onSubmit={ onExpenseAdded }
-                        categoryTypes={ loaderData.data.categoryTypes }
-                        paymentAccounts={ loaderData.data.paymentAccounts }
-                        sourceTags={ loaderData.data.expenseTags }
-                    />
+            { loaderData.type === "success" &&
+                <div className="columns">
+                    <div className="column">
+                        <ExpenseForm
+                            key="add-expense-form"
+                            expenseId={ expenseId }
+                            submitLabel={ navigation.state === "submitting" ? "Adding Expense details..." : "Add" }
+                            onSubmit={ onExpenseAdded }
+                            categoryTypes={ loaderData.data.categoryTypes }
+                            paymentAccounts={ loaderData.data.paymentAccounts }
+                            sourceTags={ loaderData.data.expenseTags }
+                        />
+                    </div>
                 </div>
-            </div>
+            }
         </>
     );
 };

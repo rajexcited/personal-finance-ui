@@ -16,8 +16,8 @@ const AddAccount: FunctionComponent = () => {
     const submit = useSubmit();
     const auth = useAuth();
     // for error
-    const actionData = useActionData() as RouteHandlerResponse<any> | null;
-    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountDetailLoaderResource>;
+    const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
+    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountDetailLoaderResource, null>;
     const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
@@ -26,13 +26,15 @@ const AddAccount: FunctionComponent = () => {
     }, []);
 
     useEffect(() => {
-        if (actionData?.type === "error" && actionData.errorMessage !== errorMessage) {
-            setErrorMessage(actionData.errorMessage);
-        }
-        else if (loaderData.type === "error" && loaderData.errorMessage !== errorMessage) {
+        if (loaderData.type === "error") {
             setErrorMessage(loaderData.errorMessage);
         }
-    }, [errorMessage, actionData, loaderData]);
+        else if (actionData?.type === "error") {
+            setErrorMessage(actionData.errorMessage);
+        } else if (actionData?.type === "success" || loaderData.type === "success") {
+            setErrorMessage("");
+        }
+    }, [actionData, loaderData]);
 
     const onAddedAccount = (data: PymtAccountFields) => {
         if (auth.userDetails.isAuthenticated) {
@@ -58,18 +60,22 @@ const AddAccount: FunctionComponent = () => {
                 </article>
             }
 
-            <div className="columns">
-                <div className="column">
-                    <AccountForm
-                        key="add-account-form"
-                        accountId={ accountId }
-                        submitLabel={ navigation.state === "submitting" ? "Adding Account details..." : "Add" }
-                        onSubmit={ onAddedAccount }
-                        sourceTags={ loaderData.data.pymtAccountTags }
-                        categoryTypes={ loaderData.data.categoryTypes }
-                    />
+            {
+                loaderData.type === "success" &&
+
+                <div className="columns">
+                    <div className="column">
+                        <AccountForm
+                            key="add-account-form"
+                            accountId={ accountId }
+                            submitLabel={ navigation.state === "submitting" ? "Adding Account details..." : "Add" }
+                            onSubmit={ onAddedAccount }
+                            sourceTags={ loaderData.data.pymtAccountTags }
+                            categoryTypes={ loaderData.data.categoryTypes }
+                        />
+                    </div>
                 </div>
-            </div>
+            }
 
         </>
     );

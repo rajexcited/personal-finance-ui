@@ -1,5 +1,7 @@
 import { formatTimestamp, getLogger } from "../../services";
 
+const rootLogger = getLogger("mock.service.userDetails", null, null, "DEBUG");
+
 type UserDataType = { firstName: string; lastName: string; emailId: string; password: string; countryCode: string };
 const UserSessionDetails: UserDataType = {
   firstName: "",
@@ -51,10 +53,10 @@ export const tokenSessionData = (data?: TokenDataType) => {
 const reloadHandlerWhileLoggedIn = () => {
   const usrkey = "fin-usr-demo";
   const tknkey = "fin-tkn-demo";
-  const logger = getLogger("mock.userDetails.reloadHandlerWhileLoggedIn");
+  const logger = getLogger("reloadHandlerWhileLoggedIn", rootLogger);
   window.addEventListener("beforeunload", (event) => {
     const itemDetails = JSON.stringify(UserSessionDetails);
-    logger.log("before reload, local storage item details", itemDetails);
+    logger.debug("before reload, local storage item details", itemDetails);
     sessionStorage.setItem(usrkey, itemDetails);
 
     sessionStorage.setItem(tknkey, JSON.stringify(tokenData));

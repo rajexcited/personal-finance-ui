@@ -7,12 +7,13 @@ export enum LocalDBStore {
   Config = "config-store",
   PaymentAccount = "pymt-account-store",
   ReceiptFile = "receipt-file-store",
+  Tags = "tags-store",
 }
 
 export enum LocalDBStoreIndex {
   AuditUpdatedOn = "audit-updatedOn-index",
   ItemStatus = "item-status-index",
-  ConfigBelongsTo = "belongsTo-index",
+  BelongsTo = "belongsTo-index",
   ReceiptUrl = "receipt-url-index",
   CacheUpdatedOn = "cache-updatedOn-index",
 }
@@ -24,7 +25,7 @@ interface IndexDetailType {
 
 interface StoreConfigType {
   name: LocalDBStore;
-  keyPath: string;
+  keyPath: string | string[];
   expireHoure?: number;
   indexes: IndexDetailType[];
 }
@@ -66,7 +67,7 @@ const DataBaseConfig: DBType = {
       keyPath: "id",
       indexes: [
         {
-          name: LocalDBStoreIndex.ConfigBelongsTo,
+          name: LocalDBStoreIndex.BelongsTo,
           keyPath: "belongsTo",
         },
         {
@@ -87,6 +88,10 @@ const DataBaseConfig: DBType = {
           name: LocalDBStoreIndex.AuditUpdatedOn,
           keyPath: "auditDetails.updatedOn",
         },
+        {
+          name: LocalDBStoreIndex.ItemStatus,
+          keyPath: "status",
+        },
       ],
     },
     {
@@ -96,6 +101,17 @@ const DataBaseConfig: DBType = {
         {
           name: LocalDBStoreIndex.ReceiptUrl,
           keyPath: "url",
+        },
+      ],
+    },
+    {
+      name: LocalDBStore.Tags,
+      keyPath: ["belongsTo", "value"],
+      expireHoure: 24 * 30,
+      indexes: [
+        {
+          name: LocalDBStoreIndex.BelongsTo,
+          keyPath: "belongsTo",
         },
       ],
     },
@@ -127,19 +143,19 @@ const getItemKeyPath = (storeKeyPath: string | string[]) => {
 };
 
 const configureLocalDatabase = async () => {
-  const _logger = getLogger("configureLocalDatabase");
+  const _logger = getLogger("configureLocalDatabase", null, null, "INFO");
   _logger.debug("opening DB");
 
   // https://hackernoon.com/use-indexeddb-with-idb-a-1kb-library-that-makes-it-easy-8p1f3yqq
   const db = await openDB(DataBaseConfig.name, DataBaseConfig.version, {
     upgrade(db, oldVersion, newVersion, transaction, event) {
       const logger = getLogger("upgrade", _logger);
-      logger.debug("db =", db, ", oldVersion =", oldVersion, ", newVersion =", newVersion, ", transaction =", transaction, ", event =", event);
+      logger.info("db =", db, ", oldVersion =", oldVersion, ", newVersion =", newVersion, ", transaction =", transaction, ", event =", event);
       DataBaseConfig.stores.forEach((storeConfig) => {
         logger.debug("storeObj =", storeConfig);
 
         if (!db.objectStoreNames.contains(storeConfig.name)) {
-          const store = db.createObjectStore(storeConfig.name, { keyPath: getItemKeyPath(storeConfig.keyPath), autoIncrement: true });
+          const store = db.createObjectStore(storeConfig.name, { keyPath: getItemKeyPath(storeConfig.keyPath) });
           logger.debug("created store =", store);
 
           store.createIndex(CacheIndex.name, CacheIndex.keyPath);
@@ -187,7 +203,7 @@ export class MyLocalDatabase<T> {
       this._storeConfig.expireHoure = DataBaseConfig.expireHour;
     }
 
-    this._logger = getLogger("MyLocalDatabase." + objectStoreName, null, null, "INFO");
+    this._logger = getLogger("MyLocalDatabase." + objectStoreName, null, null, "DEBUG");
     this.callbacks = {};
     if (onBeforeExpiredCallback) {
       this.callbacks[MyLocalDatabaseCallbackName.OnBeforeExpired] = onBeforeExpiredCallback;
@@ -249,12 +265,24 @@ export class MyLocalDatabase<T> {
     logger.debug("deleting", list.length, "items");
     const deletePromises = list.map(async (o) => {
       const item = o.item as any;
-      if (this._storeConfig.keyPath in item) {
+      let storeKey: string | string[] | null = null;
+      if (Array.isArray(this._storeConfig.keyPath)) {
+        const invalidKey = this._storeConfig.keyPath.find((k) => !(k in item));
+        if (!invalidKey) {
+          storeKey = this._storeConfig.keyPath.map((k) => item[k]);
+        }
+      } else {
+        if (this._storeConfig.keyPath in item) {
+          storeKey = item[this._storeConfig.keyPath];
+        }
+      }
+
+      if (storeKey) {
         if (this.callbacks.onBeforeExpiredCallback) {
           await this.callbacks.onBeforeExpiredCallback(item);
         }
-        const key = item[this._storeConfig.keyPath];
-        await db.delete(this._storeConfig.name, IDBKeyRange.only(key));
+        logger.debug("deleting item with key =", storeKey);
+        await db.delete(this._storeConfig.name, storeKey);
       } else {
         logger.info("keypath [", this._storeConfig.keyPath, "] not found in item,", item);
       }
@@ -317,17 +345,27 @@ export class MyLocalDatabase<T> {
   public async addUpdateItem(item: T) {
     const db = await openDB(DataBaseConfig.name, DataBaseConfig.version);
     try {
-      const storeConfig = DataBaseConfig.stores.find((s) => s.name === this._storeConfig.name) as StoreConfigType;
+      // const storeConfig = DataBaseConfig.stores.find((s) => s.name === this._storeConfig.name) as StoreConfigType;
       const itm = item as any;
-      if (storeConfig.keyPath in itm) {
-        const key = itm[storeConfig.keyPath];
-        const dbRecord = (await db.get(this._storeConfig.name, key)) as DbItem<T> | undefined;
-        if (dbRecord) {
-          return await this.updateToDb(dbRecord, item, db);
+      let storeKey: string | string[];
+      if (Array.isArray(this._storeConfig.keyPath)) {
+        const invalidKey = this._storeConfig.keyPath.find((k) => !(k in itm));
+        if (invalidKey) {
+          throw new Error("invalid db item object");
         }
-        return await this.addToDb(item, db);
+        storeKey = this._storeConfig.keyPath.map((k) => itm[k]);
+      } else {
+        if (!(this._storeConfig.keyPath in itm)) {
+          throw new Error("invalid db item object");
+        }
+        storeKey = itm[this._storeConfig.keyPath];
       }
-      throw new Error("invalid db item object");
+
+      const dbRecord = (await db.get(this._storeConfig.name, storeKey)) as DbItem<T> | undefined;
+      if (dbRecord) {
+        return await this.updateToDb(dbRecord, item, db);
+      }
+      return await this.addToDb(item, db);
     } finally {
       db.close();
     }
@@ -383,6 +421,21 @@ export class MyLocalDatabase<T> {
         return dbRecord.item;
       }
       return null;
+    } finally {
+      logger.debug("closing db");
+      db.close();
+      logger.debug("db is closed");
+    }
+  }
+
+  public async count() {
+    const logger = getLogger("count", this._logger);
+    const db = await openDB(DataBaseConfig.name, DataBaseConfig.version);
+    logger.debug("db is opened");
+    try {
+      const size = await db.count(this._storeConfig.name);
+      logger.debug("there are", size, "items in db");
+      return size;
     } finally {
       logger.debug("closing db");
       db.close();

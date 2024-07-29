@@ -135,7 +135,7 @@ interface RouteHandlerSuccessResponse<T> {
   data: T;
 }
 
-export type RouteHandlerResponse<T> = RouteHandlerSuccessResponse<T> | RouteHandlerErrorResponse<T>;
+export type RouteHandlerResponse<S, E> = RouteHandlerSuccessResponse<S> | RouteHandlerErrorResponse<E>;
 
 export const handleRouteActionError = (e: unknown) => {
   if (e instanceof UnauthorizedError) {
@@ -154,4 +154,12 @@ export const handleRouteActionError = (e: unknown) => {
   const err = e as Error;
   const response: RouteHandlerErrorResponse<null> = { type: "error", errorMessage: err.message, data: null };
   return json(response, { status: axios.HttpStatusCode.InternalServerError });
+};
+
+export const getDefaultIfError = async <T>(fn: () => Promise<T>, defaultValue: T) => {
+  try {
+    return await fn();
+  } catch (ignore) {
+    return defaultValue;
+  }
 };

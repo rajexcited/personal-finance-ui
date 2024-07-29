@@ -3,13 +3,15 @@ import { Animated, Input } from "../../../components";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
 import { PAGE_URL } from "../../root";
 import { UpdateUserDetailsResource } from "../../auth/services";
-import { RouteHandlerResponse } from "../../../services";
+import { RouteHandlerResponse, getLogger } from "../../../services";
 import { ProfileDetailsLoaderResource } from "../route-handlers/profile-loader-action";
 import ReactMarkdown from "react-markdown";
 
+const fcLogger = getLogger("FC.settings.ProfileSettings", null, null, "INFO");
+
 const ProfileSettings: FunctionComponent = () => {
-    const loaderData = useLoaderData() as RouteHandlerResponse<ProfileDetailsLoaderResource>;
-    const actionData = useActionData() as RouteHandlerResponse<any> | null;
+    const loaderData = useLoaderData() as RouteHandlerResponse<ProfileDetailsLoaderResource, null>;
+    const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
     const [updateNameRequest, setUpdateNameRequest] = useState(false);
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -29,42 +31,39 @@ const ProfileSettings: FunctionComponent = () => {
 
     const onClickChangeNameCancelHandler: MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        setUpdateNameRequest(false);
-        setFirstName(loaderData.data.nameDetails.firstName);
-        setLastName(loaderData.data.nameDetails.lastName);
+        if (loaderData.type === "success") {
+            setUpdateNameRequest(false);
+
+            setFirstName(loaderData.data.nameDetails.firstName);
+            setLastName(loaderData.data.nameDetails.lastName);
+        }
     };
 
     const onSubmitNameChangeHandler: FormEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
-        if (firstName !== loaderData.data.nameDetails.firstName || lastName !== loaderData.data.nameDetails.lastName) {
-            const nameDetails: UpdateUserDetailsResource = {
-                firstName: firstName,
-                lastName: lastName
-            };
-            submit({ nameDetails }, { method: "post", action: PAGE_URL.profileSettings.fullUrl, encType: "application/json" });
+        if (loaderData.type === "success") {
+            if (firstName !== loaderData.data.nameDetails.firstName || lastName !== loaderData.data.nameDetails.lastName) {
+                const nameDetails: UpdateUserDetailsResource = {
+                    firstName: firstName,
+                    lastName: lastName
+                };
+                submit(nameDetails as any, { method: "post", action: PAGE_URL.profileSettings.fullUrl, encType: "application/json" });
+            }
+            setUpdateNameRequest(false);
         }
-        setUpdateNameRequest(false);
     };
 
+    fcLogger.debug("loaderData =", loaderData, ", actionData =", actionData);
+    const errorMessage = loaderData.type === "error" ? loaderData.errorMessage : actionData?.type === "error" ? actionData.errorMessage : null;
 
     return (
         <section className="profile-settings">
             {
-                loaderData.type === "error" &&
+                errorMessage &&
                 <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
                     <article className="message is-danger">
                         <div className="message-body">
-                            <ReactMarkdown children={ loaderData.errorMessage } />
-                        </div>
-                    </article>
-                </Animated>
-            }
-            {
-                actionData?.type === "error" &&
-                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
-                    <article className="message is-danger">
-                        <div className="message-body">
-                            <ReactMarkdown children={ actionData.errorMessage } />
+                            <ReactMarkdown children={ errorMessage } />
                         </div>
                     </article>
                 </Animated>
@@ -133,7 +132,7 @@ const ProfileSettings: FunctionComponent = () => {
                 </div>
             </div>
             {
-                loaderData.data.currencyProfiles.map(currencyProfile =>
+                loaderData.type === "success" && loaderData.data.currencyProfiles.map(currencyProfile =>
                     <div className="columns" key={ currencyProfile.id }>
                         <div className="column is-narrow">
                             <label className="label">Country: </label>

@@ -17,7 +17,7 @@ const AuthenticationServiceImpl = () => {
   const rootPath = "/user";
   /** 10 min */
   const MIN_SESSION_TIME_IN_SEC = 10 * 60;
-  const _logger = getLogger("service.auth");
+  const _logger = getLogger("service.auth", null, null, "INFO");
 
   const login = async (details: UserLoginResource) => {
     const logger = getLogger("login", _logger);

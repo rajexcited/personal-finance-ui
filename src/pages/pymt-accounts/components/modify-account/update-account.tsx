@@ -14,17 +14,19 @@ const UpdateAccount: FunctionComponent = () => {
     const submit = useSubmit();
     const auth = useAuth();
     const [errorMessage, setErrorMessage] = useState("");
-    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountDetailLoaderResource>;
-    const actionData = useActionData() as RouteHandlerResponse<any> | null;
+    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountDetailLoaderResource, null>;
+    const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
 
 
     useEffect(() => {
-        if (actionData?.type === "error" && actionData.errorMessage !== errorMessage) {
-            setErrorMessage(actionData.errorMessage);
-        } else if (loaderData.type === "error" && loaderData.errorMessage !== errorMessage) {
+        if (loaderData.type === "error") {
             setErrorMessage(loaderData.errorMessage);
+        } else if (actionData?.type === "error") {
+            setErrorMessage(actionData.errorMessage);
+        } else if (loaderData.type === "success" || actionData?.type === "success") {
+            setErrorMessage("");
         }
-    }, [errorMessage, actionData, loaderData]);
+    }, [actionData, loaderData]);
 
     const onUpdateAccount = (data: PymtAccountFields) => {
         if (auth.userDetails.isAuthenticated) {

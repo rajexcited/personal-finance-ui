@@ -27,7 +27,7 @@ export interface ExpenseFormProps {
     sourceTags: string[];
 }
 
-const fcLogger = getLogger("FC.ExpenseForm", null, null, "ERROR");
+const fcLogger = getLogger("FC.ExpenseForm", null, null, "DEBUG");
 
 const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
     const [billName, setBillName] = useState(props.details?.billName || '');
@@ -105,9 +105,15 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
             return itm;
         });
         setCategories(myCategories);
-        const selectedCtg = myCategories.find(ctg => ctg.content === props.details?.expenseCategoryName);
-        logger.info("props.categoryTypes =", props.categoryTypes, ", myCategories =", myCategories, ", selectedCategory =", selectedCtg, ", props.details?.expenseCategoryId =", props.details?.expenseCategoryId, ", props.details?.expenseCategoryName =", props.details?.expenseCategoryName);
-        setSelectedCategory(selectedCtg);
+        logger.info("props.categoryTypes =", props.categoryTypes, ", myCategories =", myCategories, ", props.details?.expenseCategoryId =", props.details?.expenseCategoryId, ", props.details?.expenseCategoryName =", props.details?.expenseCategoryName);
+        if (props.details?.expenseCategoryId) {
+            const selectedCtg: DropDownItemType = {
+                id: props.details.expenseCategoryId,
+                content: props.details.expenseCategoryName || ""
+            };
+            setSelectedCategory(selectedCtg);
+            logger.info("selectedCategory =", selectedCtg);
+        }
 
         const myPymtAccounts: DropDownItemType[] = [];
         props.paymentAccounts.forEach((name, id) => {
@@ -118,9 +124,15 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
             myPymtAccounts.push(itm);
         });
         setPymtAccounts(myPymtAccounts);
-        const selectedPaymentAcc = myPymtAccounts.find(acc => acc.content === props.details?.paymentAccountName);
-        setSelectedPymtAccount(selectedPaymentAcc);
-        logger.info("props.paymentAccounts =", props.paymentAccounts, ", myPymtAccounts =", myPymtAccounts, ", selectedPymtAccount =", selectedPaymentAcc, ", props.details?.paymentAccountId =", props.details?.paymentAccountId, ", props.details?.paymentAccountName =", props.details?.paymentAccountName);
+        logger.info("props.paymentAccounts =", props.paymentAccounts, ", myPymtAccounts =", myPymtAccounts, ", props.details?.paymentAccountId =", props.details?.paymentAccountId, ", props.details?.paymentAccountName =", props.details?.paymentAccountName);
+        if (props.details?.paymentAccountId) {
+            const selectedPaymentAcc: DropDownItemType = {
+                id: props.details.paymentAccountId,
+                content: props.details.paymentAccountName || ""
+            };
+            setSelectedPymtAccount(selectedPaymentAcc);
+            logger.info("selectedPymtAccount =", selectedPaymentAcc);
+        }
         logger.info("props.sourceTags =", props.sourceTags);
 
     }, []);

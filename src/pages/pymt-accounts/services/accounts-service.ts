@@ -1,12 +1,24 @@
-import { axios, handleRestErrors, convertAuditFieldsToDateInstance, getLogger, MyLocalDatabase, LocalDBStore } from "../../../services";
+import {
+  axios,
+  handleRestErrors,
+  convertAuditFieldsToDateInstance,
+  getLogger,
+  MyLocalDatabase,
+  LocalDBStore,
+  LocalDBStoreIndex,
+  ConfigTypeStatus,
+  TagsService,
+  TagBelongsTo,
+} from "../../../services";
 import AccountTypeService from "./account-type-service";
-import { PymtAccountFields } from "./field-types";
+import { PymtAccStatus, PymtAccountFields } from "./field-types";
 import pMemoize from "p-memoize";
 import ExpiryMap from "expiry-map";
 
 const PymtAccountServiceImpl = () => {
   const accountTypeService = AccountTypeService();
   const paymentAccountDb = new MyLocalDatabase<PymtAccountFields>(LocalDBStore.PaymentAccount);
+  const tagService = TagsService();
   const rootPath = "/payment/accounts";
   const _logger = getLogger("service.payment-account");
 
@@ -22,7 +34,7 @@ const PymtAccountServiceImpl = () => {
       });
       return typeMap;
     },
-    { cache: new ExpiryMap(2 * 1000) }
+    { cache: new ExpiryMap(15 * 1000) }
   );
 
   const updateAccountType = (accountTypeMap: Map<string, string>, pymtAccount: PymtAccountFields) => {
@@ -33,22 +45,29 @@ const PymtAccountServiceImpl = () => {
     }
   };
 
-  const getPymtAccounts = async () => {
-    const logger = getLogger("getPymtAccounts", _logger);
+  const getPymtAccountList = async (status?: PymtAccStatus) => {
+    const logger = getLogger("getPymtAccountList", _logger);
 
     try {
-      const pymtAccounts = await paymentAccountDb.getAll();
+      const pymtAccounts = await paymentAccountDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, status || PymtAccStatus.Enable);
       if (pymtAccounts.length > 0) {
+        await initializePymtAccountTags();
         return pymtAccounts;
       }
 
-      const response = await axios.get(rootPath);
+      const pymtAccListResponsePromise = axios.get(rootPath, { params: { status: status || PymtAccStatus.Enable } });
+      const accountTypesEnumPromise = getAccountTypesEnum();
+      const pymtAccTagPromise = initializePymtAccountTags();
+
+      await Promise.all([pymtAccListResponsePromise, accountTypesEnumPromise, pymtAccTagPromise]);
+      const response = await pymtAccListResponsePromise;
       const accountsResponse = response.data as PymtAccountFields[];
-      const accountTypesEnum = await getAccountTypesEnum();
+
+      const accountTypesEnum = await accountTypesEnumPromise;
       const dbAddPymtAccPromises = accountsResponse.map((pymtAccount) => {
         updateAccountType(accountTypesEnum, pymtAccount);
         convertAuditFieldsToDateInstance(pymtAccount.auditDetails);
-        return paymentAccountDb.addItem(pymtAccount);
+        return paymentAccountDb.addUpdateItem(pymtAccount);
       });
       await Promise.all(dbAddPymtAccPromises);
 
@@ -69,9 +88,26 @@ const PymtAccountServiceImpl = () => {
       if (pymtAccount) {
         return pymtAccount;
       }
-      const pymtAccounts = await getPymtAccounts();
-      const foundPymtAccount = pymtAccounts.find((pymtacc) => pymtacc.id === accountId);
-      return foundPymtAccount || null;
+      const count = await paymentAccountDb.count();
+
+      if (count === 0) {
+        const pymtAccountsPromise = getPymtAccountList();
+        const pymtAccounts = await pymtAccountsPromise;
+        const foundPymtAccount = pymtAccounts.find((pymtacc) => pymtacc.id === accountId);
+        if (foundPymtAccount) {
+          return foundPymtAccount;
+        }
+      }
+      const response = await axios.get(`${rootPath}/id/${accountId}`);
+      const pymtAccResponse = response.data as PymtAccountFields;
+      const accountTypesEnum = await getAccountTypesEnum();
+
+      updateAccountType(accountTypesEnum, pymtAccResponse);
+      convertAuditFieldsToDateInstance(pymtAccResponse.auditDetails);
+      await paymentAccountDb.addUpdateItem(pymtAccResponse);
+      await tagService.updateTags(TagBelongsTo.PaymentAccounts, pymtAccResponse.tags);
+
+      return pymtAccResponse;
     } catch (e) {
       const err = e as Error;
       handleRestErrors(err, logger);
@@ -93,6 +129,7 @@ const PymtAccountServiceImpl = () => {
       convertAuditFieldsToDateInstance(pymtAccountResponse.auditDetails);
 
       await paymentAccountDb.addUpdateItem(pymtAccountResponse);
+      await tagService.updateTags(TagBelongsTo.PaymentAccounts, pymtAccountResponse.tags);
     } catch (e) {
       const err = e as Error;
       handleRestErrors(err, logger);
@@ -106,7 +143,12 @@ const PymtAccountServiceImpl = () => {
 
     try {
       const response = await axios.delete(`${rootPath}/id/${accountId}`);
-      await paymentAccountDb.delete(accountId);
+      const pymtAccountResponse = response.data as PymtAccountFields;
+      const accountTypeMap = await getAccountTypesEnum();
+      updateAccountType(accountTypeMap, pymtAccountResponse);
+      convertAuditFieldsToDateInstance(pymtAccountResponse.auditDetails);
+
+      await paymentAccountDb.addUpdateItem(pymtAccountResponse);
     } catch (e) {
       const err = e as Error;
       handleRestErrors(err, logger);
@@ -115,19 +157,30 @@ const PymtAccountServiceImpl = () => {
     }
   };
 
-  const getPymtAccountTags = async () => {
-    const pymtAccounts = await getPymtAccounts();
-    const tags = pymtAccounts.flatMap((acc) => acc.tags);
-
-    return tags;
+  const getPymtAccountTypes = () => {
+    return accountTypeService.getAccountTypes(ConfigTypeStatus.Enable);
   };
 
-  const getPymtAccountTypes = () => {
-    return accountTypeService.getAccountTypes();
+  const initializePymtAccountTags = async () => {
+    const logger = getLogger("initializePymtAccountTags", _logger, null, "DEBUG");
+    const tagCount = await tagService.getCount(TagBelongsTo.PaymentAccounts);
+    logger.debug("tagCount =", tagCount);
+    if (tagCount > 0) {
+      return;
+    }
+
+    const response = await axios.get(`${rootPath}/tags`);
+    logger.debug("api call response", response);
+    await tagService.updateTags(TagBelongsTo.PaymentAccounts, response.data);
+  };
+
+  const getPymtAccountTags = async () => {
+    const tagList = await tagService.getTags(TagBelongsTo.PaymentAccounts);
+    return tagList;
   };
 
   return {
-    getPymtAccounts,
+    getPymtAccountList,
     getPymtAccount,
     addUpdatePymtAccount,
     removePymtAccount,

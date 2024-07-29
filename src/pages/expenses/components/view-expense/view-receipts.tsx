@@ -8,7 +8,7 @@ import { faMagnifyingGlassMinus, faMagnifyingGlassPlus } from "@fortawesome/free
 import { ReceiptType } from "../../services/field-types";
 import { LoadSpinner } from "../../../../components";
 import ReactMarkdown from "react-markdown";
-import { getLogger } from "../../../../services";
+import { getLogger, subtractDates } from "../../../../services";
 
 
 interface ViewReceiptsProps {
@@ -63,19 +63,30 @@ const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
 
         if (props.receipts.length > 0) {
             setReceiptLoading(true);
-            expenseService.downloadReceipts([props.receipts[0]])
+            logger.debug("downloading receipts");
+            const startTime = new Date();
+            expenseService.downloadReceipts(props.receipts)
                 .then(downloadReceipts => {
-                    logger.info("receipt is downloaded. downloadReceipts =", { ...downloadReceipts[0] });
-                    if (downloadReceipts[0].status === "success") {
-                        const propReceipts = [...props.receipts];
-                        propReceipts[0] = {
-                            ...propReceipts[0],
-                            url: downloadReceipts[0].url
-                        };
-                        setReceipts(propReceipts);
-                    } else {
-                        setErrorMessage(downloadReceipts[0].error);
-                    }
+                    logger.info("receipts are downloaded. downloadReceipts =", downloadReceipts, ". time taken:", subtractDates(new Date(), startTime).toSeconds(), "sec");
+                    const error = downloadReceipts.map(dr => dr.status === "fail" && dr.error).filter(dr => dr).join("\n\n");
+                    setErrorMessage(error);
+                    const receiptObj = props.receipts.reduce((obj: Record<string, ReceiptProps>, rct) => {
+                        obj[rct.id] = rct;
+                        return obj;
+                    }, {});
+
+                    const receiptsWithUrl = downloadReceipts.map(dr => {
+                        if (dr.status === "success") {
+                            return {
+                                ...receiptObj[dr.id],
+                                url: dr.url
+                            };
+                        }
+                        return undefined;
+                    })
+                        .filter(dr => dr);
+
+                    setReceipts(receiptsWithUrl as ReceiptProps[]);
                     setReceiptLoading(false);
                 });
         }
@@ -93,33 +104,19 @@ const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
         const logger = getLogger("useEffect.dep[receiptCarousel]", fcLogger);
         logger.info("initialized receiptCarousel", receiptCarousel);
 
-        receiptCarousel?.on("show", (carousel: bulmaCaraosel) => {
+        const onShowCarouselItemHandler = (carousel: bulmaCaraosel) => {
             logger.info("on show event is emitted, slide index =", carousel.state.next, ", receipt =", receipts[carousel.state.next]);
-            const isImageType = receipts[carousel.state.next].contentType !== ReceiptType.PDF;
+            const isImageType = receipts[carousel.state.next]?.contentType !== ReceiptType.PDF;
 
             logger.info("isImageType =", isImageType, ", scale = 1, receiptLoading = true, downloading receipt");
             setActiveItemImage(isImageType);
             setScaleValue(1);
-            setReceiptLoading(true);
-            setErrorMessage("");
-            const receiptToShow = receipts[carousel.state.next];
-            expenseService.downloadReceipts([receiptToShow])
-                .then(downloadReceipts => {
-                    const downloadedReceiptResult = downloadReceipts[0];
-                    logger.info("receipt is downloaded. downloadReceipts =", downloadedReceiptResult);
-                    if (downloadedReceiptResult.status === "success") {
-                        setReceipts(prev => {
-                            const unchangedList = prev.filter(r => r.id !== receiptToShow.id);
-                            const updatedReceipt = { ...receiptToShow, url: downloadedReceiptResult.url };
-                            return [...unchangedList, updatedReceipt];
-                        });
+        };
 
-                    } else {
-                        setErrorMessage(downloadedReceiptResult.error);
-                    }
-                    setReceiptLoading(false);
-                });
-        });
+        receiptCarousel?.on("show", onShowCarouselItemHandler);
+        if (receiptCarousel) {
+            onShowCarouselItemHandler(receiptCarousel);
+        }
 
         return () => {
             logger.info("destroyed, removed event");
@@ -195,34 +192,34 @@ const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
                             </div>
                         }
                         <LoadSpinner loading={ isReceiptLoading } insideModal={ true } />
+                        { !isReceiptLoading && !!errorMessage &&
+                            <article className="message is-danger error">
+                                <div className="message-body">
+                                    <ReactMarkdown children={ errorMessage } />
+                                </div>
+                            </article>
+                        }
+                        {
+                            isReceiptLoading &&
+                            <article className="message is-warning">
+                                <div className="message-body">
+                                    Please wait receipt is loading.
+                                </div>
+                            </article>
+                        }
                         <div className="carousel" ref={ carouselRef }>
                             {
                                 receipts.map((rct: ReceiptProps, ind: number) =>
                                     <div className={ `item-${ind + 1}` } key={ rct.id }>
                                         <div className="fullscreen-image-container">
-                                            { !isReceiptLoading && (rct.contentType === ReceiptType.JPEG || rct.contentType === ReceiptType.PNG) &&
+                                            { (rct.contentType === ReceiptType.JPEG || rct.contentType === ReceiptType.PNG) &&
                                                 <figure className="image">
                                                     <img src={ rct.url } alt={ rct.name } style={ { transform: "scale(" + scaleValue + ")" } } />
                                                 </figure>
                                             }
                                             {
-                                                !isReceiptLoading && rct.contentType === ReceiptType.PDF &&
+                                                rct.contentType === ReceiptType.PDF &&
                                                 <embed src={ rct.url } type={ rct.contentType } height={ "99%" } width={ "93%" } />
-                                            }
-                                            { !isReceiptLoading && !!errorMessage &&
-                                                <article className="message is-danger error">
-                                                    <div className="message-body">
-                                                        <ReactMarkdown children={ errorMessage } />
-                                                    </div>
-                                                </article>
-                                            }
-                                            {
-                                                isReceiptLoading &&
-                                                <article className="message is-info">
-                                                    <div className="message-body">
-                                                        Please wait receipt is loading.
-                                                    </div>
-                                                </article>
                                             }
                                         </div>
                                     </div>

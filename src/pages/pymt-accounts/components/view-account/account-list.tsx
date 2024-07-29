@@ -9,28 +9,33 @@ import { RouteHandlerResponse } from "../../../../services";
 
 
 const AccountList: FunctionComponent = () => {
-    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountFields[]>;
-    const actionData = useActionData() as RouteHandlerResponse<any> | null;
+    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountFields[], null>;
+    const actionData = useActionData() as RouteHandlerResponse<any, null> | null;
     const [deletingAccountId, setDeletingAccountId] = useState("");
     const submit = useSubmit();
 
     const onDeleteConfirmHandler = () => {
-        const deletingPymtAcc = loaderData.data.find(acc => acc.id === deletingAccountId);
-        const data: any = { ...deletingPymtAcc };
-        submit(data, { action: PAGE_URL.pymtAccountsRoot.fullUrl, method: "delete", encType: "application/json" });
-        setDeletingAccountId("");
+        if (loaderData.type === "success") {
+            const deletingPymtAcc = loaderData.data.find(acc => acc.id === deletingAccountId);
+            const data: any = { ...deletingPymtAcc };
+            submit(data, { action: PAGE_URL.pymtAccountsRoot.fullUrl, method: "delete", encType: "application/json" });
+            setDeletingAccountId("");
+        }
     };
+
+    const pymtAccList = loaderData.type === "success" ? loaderData.data : [];
+    const errorMessage = loaderData.type === "error" ? loaderData.errorMessage : actionData?.type === "error" ? actionData.errorMessage : null;
 
     return (
         <section className="container">
             {
-                actionData?.type === "error" && actionData.errorMessage &&
+                errorMessage &&
                 <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
                     <div className="columns is-centered">
                         <div className="column is-four-fifths">
                             <article className="message is-danger mb-3">
                                 <div className="message-body">
-                                    <ReactMarkdown children={ actionData.errorMessage } />
+                                    <ReactMarkdown children={ errorMessage } />
                                 </div>
                             </article>
                         </div>
@@ -38,10 +43,10 @@ const AccountList: FunctionComponent = () => {
                 </Animated>
             }
             {
-                !loaderData.data.length &&
+                !errorMessage && !pymtAccList.length &&
                 <p className="title">There are no accounts</p>
             }
-            { loaderData.data.map(acc =>
+            { pymtAccList.map(acc =>
                 <AccountItemCard
                     key={ acc.id + "viewcard" }
                     id={ acc.id + "viewcard" }

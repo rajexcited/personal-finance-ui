@@ -12,38 +12,41 @@ import { RouteHandlerResponse } from "../../../../services";
 
 
 const UpdateExpense: FunctionComponent = () => {
-    const [errorMsg, setErrorMsg] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
     const navigation = useNavigation();
     const submit = useSubmit();
-    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseDetailLoaderResource>;
-    const actionData = useActionData() as RouteHandlerResponse<any> | null;
+    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseDetailLoaderResource, null>;
+    const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
     const auth = useAuth();
 
     useEffect(() => {
-        if (actionData?.type === "error" && actionData.errorMessage !== errorMsg) {
-            setErrorMsg(actionData.errorMessage);
-        } else if (loaderData.type === "error" && loaderData.errorMessage !== errorMsg) {
-            setErrorMsg(loaderData.errorMessage);
+        if (loaderData.type === "error") {
+            setErrorMessage(loaderData.errorMessage);
         }
-    }, [errorMsg, actionData, loaderData]);
+        else if (actionData?.type === "error") {
+            setErrorMessage(actionData.errorMessage);
+        } else if (auth.userDetails.isAuthenticated) {
+            setErrorMessage("");
+        }
+    }, [actionData, loaderData, auth]);
 
     const onExpenseUpdated = (data: ExpenseFields, formData: FormData) => {
         if (auth.userDetails.isAuthenticated) {
             // logger.log("expense updated", data.expenseId, data, data.expenseItems, "same as loader expense? ", loaderData.expenseDetail?.expenseId === data.expenseId, "object difference = ", JSON.stringify(difference(data, loaderData.expenseDetail)));
             submit(formData, { action: PAGE_URL.updateExpense.fullUrl.replace(":expenseId", data.id), method: "post", encType: "multipart/form-data" });
         } else {
-            setErrorMsg("you have been logged out. please (login)[/login] to add payment account");
+            setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
         }
     };
 
     return (
         <>
             {
-                errorMsg &&
+                errorMessage &&
                 <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
                     <article className="message is-danger">
                         <div className="message-body">
-                            <ReactMarkdown children={ errorMsg } />
+                            <ReactMarkdown children={ errorMessage } />
                         </div>
                     </article>
                 </Animated >

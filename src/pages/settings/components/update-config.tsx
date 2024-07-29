@@ -1,5 +1,5 @@
 import { FunctionComponent, useState } from "react";
-import { ConfigResource, ConfigTypeStatus } from "../../../services";
+import { ConfigResource, ConfigTypeStatus, UpdateConfigDetailsResource } from "../../../services";
 import { Input, InputValidators, Switch, TagsInput, TextArea } from "../../../components";
 
 export type ConfigInputProps = {
@@ -9,7 +9,8 @@ export type ConfigInputProps = {
 interface UpdateConfigProps {
     details: ConfigResource;
     inputProps: ConfigInputProps;
-    onUpdate (details: ConfigResource): void;
+    sourceTags: string[];
+    onUpdate (details: UpdateConfigDetailsResource): void;
     onCancel (): void;
 }
 
@@ -24,14 +25,15 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
 
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
-        const configData: ConfigResource = {
+        const configData: UpdateConfigDetailsResource = {
             ...props.details,
             name,
             value: name,
             color,
             description,
             status: status ? ConfigTypeStatus.Enable : ConfigTypeStatus.Disable,
-            tags
+            tags,
+            action: "addUpdateDetails"
         };
         props.onUpdate(configData);
     };
@@ -106,7 +108,7 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
                             placeholder="Add Tags"
                             onChange={ setTags }
                             key={ "cfg-tags" }
-                            sourceValues={ [] }
+                            sourceValues={ props.sourceTags }
                             maxTags={ 10 }
                         />
                     </div>

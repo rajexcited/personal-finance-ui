@@ -4,13 +4,23 @@ import { ConfigResource, HttpStatusCode, RouteHandlerResponse, getLogger, handle
 
 const pymtAccountTypeService = PymtAccountTypeService();
 
+export interface PymtAccTypeLoaderResource {
+  pymtAccTypes: ConfigResource[];
+  pymtAccTags: string[];
+}
+
 export const paymentAccountTypeListLoaderHandler = async () => {
   const logger = getLogger("route.paymentAccountTypeListLoaderHandler");
   try {
     const pymtAccTypeList = await pymtAccountTypeService.getAccountTypes();
-    const response: RouteHandlerResponse<ConfigResource[]> = {
+    const pymtAccTags = await pymtAccountTypeService.getPymtAccTypeTags();
+
+    const response: RouteHandlerResponse<PymtAccTypeLoaderResource, null> = {
       type: "success",
-      data: pymtAccTypeList,
+      data: {
+        pymtAccTypes: pymtAccTypeList,
+        pymtAccTags: pymtAccTags,
+      },
     };
 
     return response;
@@ -26,7 +36,7 @@ export const pymtAccTypeListActionHandler = async ({ request }: ActionFunctionAr
   } else if (request.method === "DELETE") {
     return await pymtAccTypeDeleteActionHandler(request);
   }
-  const error: RouteHandlerResponse<any> = {
+  const error: RouteHandlerResponse<null, any> = {
     type: "error",
     errorMessage: "action not supported",
     data: {
@@ -45,7 +55,7 @@ const pymtAccTypeAddUpdateActionHandler = async (request: Request) => {
   try {
     if ("name" in data) {
       await pymtAccountTypeService.addUpdateAccountType(data);
-      const response: RouteHandlerResponse<string> = {
+      const response: RouteHandlerResponse<string, null> = {
         type: "success",
         data: "payment account updated",
       };
@@ -53,13 +63,13 @@ const pymtAccTypeAddUpdateActionHandler = async (request: Request) => {
     }
     if ("status" in data) {
       await pymtAccountTypeService.updateAccountTypeStatus(data);
-      const response: RouteHandlerResponse<string> = {
+      const response: RouteHandlerResponse<string, null> = {
         type: "success",
         data: `payment account status is updated to ${data.status}`,
       };
       return response;
     }
-    const error: RouteHandlerResponse<any> = {
+    const error: RouteHandlerResponse<null, any> = {
       type: "error",
       errorMessage: "structure of data not supported for updating expense category",
       data: {
@@ -82,7 +92,7 @@ const pymtAccTypeDeleteActionHandler = async (request: Request) => {
 
   try {
     await pymtAccountTypeService.deleteAccountType(data.id);
-    const response: RouteHandlerResponse<string> = {
+    const response: RouteHandlerResponse<string, null> = {
       type: "success",
       data: `payment account is deleted`,
     };

@@ -1,8 +1,8 @@
-export { default as CategoryService } from "./expense-category-service";
+export { ExpenseCategoryService } from "./expense-category-service";
 export { default as ExpenseService } from "./expenses-service";
 export { ReceiptUploadError } from "./receipt-error";
 export type { ExpenseItemFields, ExpenseFields, ExpenseFilterType, ReceiptProps, ErrorReceiptProps, DownloadReceiptResource } from "./field-types";
-export { ReceiptType } from "./field-types";
+export { ReceiptType, ExpenseStatus } from "./field-types";
 export type { ExpenseSortStateType, Header } from "./sort-headers";
 
 export { expenseComparator } from "./sort-comparator";

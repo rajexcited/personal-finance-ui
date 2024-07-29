@@ -1,9 +1,11 @@
 import { PymtAccStatus, PymtAccountFields } from "../../pages/pymt-accounts/services";
+import { LoggerBase, getLogger } from "../../services";
 import { auditData } from "../services/userDetails";
 import { getPaymentAccountTypes } from "./config-type-db";
-import { LocalDBStore, MyLocalDatabase } from "./db";
+import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { v4 as uuidv4 } from "uuid";
 
+const rootLogger = getLogger("mock.db.pymtAcc");
 const pymtAccDb = new MyLocalDatabase<PymtAccountFields>(LocalDBStore.PaymentAccount);
 
 const init = async () => {
@@ -43,9 +45,21 @@ const init = async () => {
 
 await init();
 
-export const getPymtAccounts = async () => {
-  const pymtAccList = await pymtAccDb.getAll();
-  return { list: pymtAccList.filter((pa) => pa.status === PymtAccStatus.Enable) };
+export const getPymtAccountList = async (statuses?: PymtAccStatus[], baseLogger?: LoggerBase) => {
+  const logger = getLogger("getlist", rootLogger, baseLogger);
+
+  const filterStatuses = !statuses || statuses.length === 0 ? [PymtAccStatus.Enable] : statuses;
+  const pymtAccPromises = filterStatuses.map(async (status) => {
+    return await pymtAccDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, status);
+  });
+  const pymtAccList = (await Promise.all(pymtAccPromises)).flatMap((pymtAcc) => pymtAcc);
+  logger.debug(
+    "pymtAcc Ids =",
+    pymtAccList.map((pymtAcc) => pymtAcc.id),
+    ", size=",
+    pymtAccList.length
+  );
+  return { list: pymtAccList };
 };
 
 export const addUpdatePymtAccount = async (data: PymtAccountFields) => {

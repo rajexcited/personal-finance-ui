@@ -1,6 +1,6 @@
 import { ActionFunctionArgs, json, redirect } from "react-router-dom";
 import { PAGE_URL } from "../../root";
-import { PymtAccStatus, PymtAccountFields, PymtAccountService } from "../services";
+import { PymtAccountFields, PymtAccountService } from "../services";
 import { HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
 
 const pymtAccountService = PymtAccountService();
@@ -11,7 +11,7 @@ export const pymtAccountActionHandler = async ({ request }: ActionFunctionArgs) 
   } else if (request.method === "DELETE") {
     return await pymtAccountDeleteActionHandler(request);
   }
-  const error: RouteHandlerResponse<any> = {
+  const error: RouteHandlerResponse<null, any> = {
     type: "error",
     errorMessage: "action not supported",
     data: {
@@ -43,7 +43,7 @@ const pymtAccountDeleteActionHandler = async (request: Request) => {
     const jsondata = (await request.json()) as PymtAccountFields;
     await pymtAccountService.removePymtAccount(jsondata.id);
 
-    const response: RouteHandlerResponse<string> = {
+    const response: RouteHandlerResponse<string, null> = {
       type: "success",
       data: "payment account is deleted",
     };

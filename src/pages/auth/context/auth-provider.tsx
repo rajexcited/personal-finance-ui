@@ -21,6 +21,8 @@ enum ExpireStatus {
 
 const ONE_SECOND_IN_MILLI = 1000;
 
+const fcLogger = getLogger("FC.AuthContextProvider", null, null, "INFO");
+
 const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ children }) => {
 
     const [userDetails, setUserDetails] = useState<UserDetailsResource>({ ...dummyUserDetails });
@@ -28,7 +30,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
 
     // first time - when component initilizes
     useEffect(() => {
-        const logger = getLogger("authContextProvider.useEffect.dep[]");
+        const logger = getLogger("useEffect.dep[]", fcLogger);
         const userDetailsPromise = authService.getUserDetails();
         userDetailsPromise.then(userDetails => {
             logger.debug("received userDetail =", userDetails, "setting to context if not null");
@@ -37,7 +39,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
     }, []);
 
     useEffect(() => {
-        const _logger = getLogger("authContextProvider.useEffect.dep[userDetails, expiringStatus]");
+        const _logger = getLogger("useEffect.dep[userDetails, expiringStatus]", fcLogger);
         let intervalId: NodeJS.Timer | undefined = undefined;
 
         const setAuthenExpire = () => {
@@ -91,9 +93,9 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
             // scenario 7 session is about to expire
             intervalId = setInterval(async () => {
                 const startTime = Date.now();
-                const logger = getLogger("authenticated.setInterval", _logger, null, "INFO");
+                const logger = getLogger("authenticated.setInterval", _logger);
                 logger.debug("periodic execution. verify and update context");
-                if (authService.isAuthenticated()) {
+                if (authService.isAuthenticated(logger)) {
                     logger.debug("authen true from session/api. so update the context if required");
                     await setAuthenNotExpired();
                     setAboutToExpire();
@@ -113,7 +115,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
     }, [userDetails, expiringStatus]);
 
     const login = async (emailId: string, password: string) => {
-        const logger = getLogger("authContextProvider.login");
+        const logger = getLogger("login", fcLogger);
         await authService.login({ emailId, password });
         logger.debug("after login api success, calling user details get api call");
         const userDetails = await authService.getUserDetails();
@@ -123,7 +125,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
     };
 
     const signup = async (details: UserSignupResource) => {
-        const logger = getLogger("authContextProvider.signup");
+        const logger = getLogger("signup", fcLogger);
         await authService.signup({ ...details });
         logger.debug("after signup api success, calling user details get api call");
         const userDetails = await authService.getUserDetails();
@@ -133,7 +135,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
     };
 
     const logout = async () => {
-        const logger = getLogger("authContextProvider.logout");
+        const logger = getLogger("logout", fcLogger);
         await authService.logout();
         logger.debug("after logout api success, updating context with dummy user data and expired status");
         setUserDetails({ ...dummyUserDetails });
@@ -143,7 +145,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
     const onClickRefreshHandler: React.MouseEventHandler<HTMLAnchorElement> = async event => {
         event.preventDefault();
         event.stopPropagation();
-        const logger = getLogger("authContextProvider.onClickRefreshHandler");
+        const logger = getLogger("onClickRefreshHandler", fcLogger);
         await authService.refreshToken();
         logger.debug("auth refresh api call is successful.");
     };
