@@ -132,10 +132,15 @@ const AuthenticationServiceImpl = () => {
 
   const logout = async () => {
     const logger = getLogger("logout", _logger);
-    cleanupSession();
     logger.debug("session is cleared. calling api");
-    await axios.post(`${rootPath}/logout`);
-    logger.debug("api successful");
+    try {
+      await axios.post(`${rootPath}/logout`);
+      logger.debug("api successful");
+    } catch (e) {
+      logger.debug("error logging out", e);
+    } finally {
+      cleanupSession();
+    }
   };
 
   /**

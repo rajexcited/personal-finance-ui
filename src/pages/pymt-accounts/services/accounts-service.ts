@@ -14,6 +14,8 @@ import AccountTypeService from "./account-type-service";
 import { PymtAccStatus, PymtAccountFields } from "./field-types";
 import pMemoize from "p-memoize";
 import ExpiryMap from "expiry-map";
+import pDebounce from "p-debounce";
+import ms from "ms";
 
 const PymtAccountServiceImpl = () => {
   const accountTypeService = AccountTypeService();
@@ -180,8 +182,8 @@ const PymtAccountServiceImpl = () => {
   };
 
   return {
-    getPymtAccountList,
-    getPymtAccount,
+    getPymtAccountList: pDebounce(getPymtAccountList, ms("1 sec")),
+    getPymtAccount: pDebounce(getPymtAccount, ms("1 sec")),
     addUpdatePymtAccount,
     removePymtAccount,
     getPymtAccountTags,

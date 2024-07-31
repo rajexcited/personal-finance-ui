@@ -118,6 +118,9 @@ const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
                     </span>
                 </p>
                 <button className="card-header-icon" aria-label="expand breakdown" onClick={ onClickBodyToggleHandler }>
+                    <span>
+                        { expenseItems.length } item { expenseItems.length === 1 ? "" : "s" }
+                    </span>
                     <span className="icon">
                         <FontAwesomeIcon icon={ isBodyOpen ? faAngleUp : faAngleDown } />
                     </span>
@@ -126,7 +129,7 @@ const ExpenseBreakDown: FunctionComponent<ExpenseBreakDownProps> = (props) => {
             <div className={ `card-content ${isBodyOpen ? "is-active" : "is-hidden"}` }>
                 <div className="content">
                     {
-                        expenseItems?.map(item =>
+                        expenseItems.map(item =>
                             <ExpenseBreakDownItem
                                 key={ item.id }
                                 itemDetail={ item }

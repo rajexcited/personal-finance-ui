@@ -23,6 +23,11 @@ import ExpiryMap from "expiry-map";
 import datetime from "date-and-time";
 import { ReceiptUploadError } from "./receipt-error";
 import { validate as isValidUuid, version as getUuidVersion } from "uuid";
+import ms from "ms";
+import pDebounce from "p-debounce";
+
+type ExpenseQueryParams = Record<"pageNo" | "status" | "pageMonths", string[]>;
+type ExpenseTagQueryParams = Record<"purchasedYear", string[]>;
 
 const ExpenseServiceImpl = () => {
   const onBeforeExpiredReceiptFileCallback = async (item: DownloadReceiptResource) => {
@@ -55,7 +60,7 @@ const ExpenseServiceImpl = () => {
       logger.info("transformed to category Map, ", categoryMap, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
       return categoryMap;
     },
-    { cache: new ExpiryMap(15 * 1000) }
+    { cache: new ExpiryMap(ms("15 sec")) }
   );
 
   const getDeletedCategoryEnum = pMemoize(
@@ -72,7 +77,7 @@ const ExpenseServiceImpl = () => {
       logger.info("transformed to category Map, ", categoryMap, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
       return categoryMap;
     },
-    { cache: new ExpiryMap(15 * 1000) }
+    { cache: new ExpiryMap(ms("15 sec")) }
   );
 
   const getPaymentAccountMap = async () => {
@@ -103,7 +108,7 @@ const ExpenseServiceImpl = () => {
       logger.info("transformed to pymt acc Map, ", pymtAccMap);
       return pymtAccMap;
     },
-    { cache: new ExpiryMap(15 * 1000) }
+    { cache: new ExpiryMap(ms("15 sec")) }
   );
 
   const isUuid = (id: string | null | undefined) => {
@@ -226,20 +231,27 @@ const ExpenseServiceImpl = () => {
     }
   };
 
+  const getExpenseCount = pMemoize(
+    async (queryParams: ExpenseQueryParams) => {
+      const countResponse = await axios.get(`${rootPath}/count`, { params: queryParams });
+      return Number(countResponse.data);
+    },
+    { cache: new ExpiryMap(ms("3 min")), cacheKey: JSON.stringify }
+  );
+
   const getExpenseList = async (pageNo: number, status?: ExpenseStatus) => {
     const logger = getLogger("getExpenses", _logger);
 
     const startTime = new Date();
     try {
       const queryPageMonths = 3;
-      const queryParams: Record<string, string[]> = {
+      const queryParams: ExpenseQueryParams = {
         pageNo: [String(pageNo)],
         status: [status || ExpenseStatus.Enable],
         pageMonths: [String(queryPageMonths)],
       };
 
       if (status !== ExpenseStatus.Deleted) {
-        const countResponse = await axios.get(`${rootPath}/count`, { params: queryParams });
         const dbExpenses = await expenseDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, status || ExpenseStatus.Enable);
         logger.info("expenseDb.getAllFromIndex execution time =", subtractDates(null, startTime).toSeconds(), " sec.");
 
@@ -255,7 +267,8 @@ const ExpenseServiceImpl = () => {
           return false;
         });
         logger.info("db expenses =", [...filteredExpenses]);
-        if (filteredExpenses.length === countResponse.data) {
+        const expenseCount = await getExpenseCount(queryParams);
+        if (filteredExpenses.length === expenseCount) {
           logger.info(
             "filteredExpenses from DB, queryParams =",
             queryParams,
@@ -381,7 +394,7 @@ const ExpenseServiceImpl = () => {
     }
 
     const thisYear = new Date().getFullYear();
-    const queryParams: Record<string, string[]> = {
+    const queryParams: ExpenseTagQueryParams = {
       purchasedYear: [String(thisYear), String(thisYear - 1)],
     };
     const response = await axios.get(`${rootPath}/tags`, { params: queryParams });
@@ -487,8 +500,8 @@ const ExpenseServiceImpl = () => {
   };
 
   return {
-    getExpense,
-    getExpenseList,
+    getExpense: pDebounce(getExpense, ms("1 sec")),
+    getExpenseList: pDebounce(getExpenseList, ms("1 sec")),
     addUpdateExpense,
     removeExpense,
     getPaymentAccountMap,

@@ -1,6 +1,9 @@
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { getLogger } from "./logger";
 import { ExpenseFields } from "../pages/expenses";
+import pMemoize from "p-memoize";
+import ExpiryMap from "expiry-map";
+import ms from "ms";
 
 export enum TagBelongsTo {
   Expenses = "expenses",
@@ -64,8 +67,8 @@ export const TagsService = () => {
   };
 
   return {
-    getCount,
-    getTags,
+    getCount: pMemoize(getCount, { cache: new ExpiryMap(ms("10 sec")), cacheKey: JSON.stringify }),
+    getTags: pMemoize(getTags, { cache: new ExpiryMap(ms("10 sec")), cacheKey: JSON.stringify }),
     updateTags,
     updateExpenseTags,
   };
