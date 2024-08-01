@@ -5,13 +5,13 @@
   "private": true,
   "homepage": "https://rajexcited.github.io/personal-finance-ui/",
   "scripts": {
-    "prestart": "move envlocal .env.local",
+    "prestart": "copy envlocal .env.local",
     "start": "react-scripts start",
-    "poststart": "move .env.local envlocal",
+    "clean": "del .env.local .env.production.local",
     "env-learn-link": "https://create-react-app.dev/docs/adding-custom-environment-variables/#what-other-env-files-can-be-used",
-    "prebuildlocalaws": "npm run build && move envaws .env.local",
+    "prebuildlocalaws": "npm run build && copy envaws .env.local",
     "buildlocalaws": "npm run buildwithoutmock",
-    "postbuildlocalaws": "move .env.local envaws",
+    "postbuildlocalaws": "del .env.local",
     "prebuildwithoutmock": "move src\\demo\\index.ts src\\demo\\mockindex.ts && move src\\demo\\dummyindex.ts src\\demo\\index.ts",
     "buildwithoutmock": "react-scripts build",
     "postbuildwithoutmock": "move src\\demo\\index.ts src\\demo\\dummyindex.ts && move src\\demo\\mockindex.ts src\\demo\\index.ts",
@@ -20,11 +20,11 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "prebuilddemo": "move demoenv .env.production.local",
+    "prebuilddemo": "copy demoenv .env.production.local",
     "builddemo": "react-scripts build",
     "predeploydemo": "npm run builddemo",
     "deploydemo": "gh-pages -d build",
-    "postdeploydemo": "move .env.production.local demoenv"
+    "postdeploydemo": "del .env.production.local"
   },
   "eslintConfig": {
     "extends": [
