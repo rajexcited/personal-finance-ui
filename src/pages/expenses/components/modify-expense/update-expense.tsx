@@ -4,7 +4,7 @@ import "bulma-extensions/bulma-tooltip/dist/css/bulma-tooltip.min.css";
 import ExpenseForm from "./expense-form";
 import { ExpenseFields } from "../../services";
 import { useAuth } from "../../../auth";
-import { PAGE_URL } from "../../../root";
+import { getFullPath } from "../../../root";
 import ReactMarkdown from "react-markdown";
 import { Animated } from "../../../../components";
 import { ExpenseDetailLoaderResource } from "../../route-handlers/expense-loader";
@@ -33,7 +33,7 @@ const UpdateExpense: FunctionComponent = () => {
     const onExpenseUpdated = (data: ExpenseFields, formData: FormData) => {
         if (auth.userDetails.isAuthenticated) {
             // logger.log("expense updated", data.expenseId, data, data.expenseItems, "same as loader expense? ", loaderData.expenseDetail?.expenseId === data.expenseId, "object difference = ", JSON.stringify(difference(data, loaderData.expenseDetail)));
-            submit(formData, { action: PAGE_URL.updateExpense.fullUrl.replace(":expenseId", data.id), method: "post", encType: "multipart/form-data" });
+            submit(formData, { action: getFullPath("updateExpense", data.id), method: "post", encType: "multipart/form-data" });
         } else {
             setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
         }

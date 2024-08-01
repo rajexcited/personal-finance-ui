@@ -1,8 +1,9 @@
 import axios from "axios";
 import datetime from "date-and-time";
 import { json, redirect } from "react-router-dom";
-import { PAGE_URL } from "../pages";
+import {} from "../pages";
 import { LoggerBase, getLogger } from "./logger";
+import { getFullPath } from "../pages/root";
 
 export { HttpStatusCode } from "axios";
 
@@ -139,7 +140,7 @@ export type RouteHandlerResponse<S, E> = RouteHandlerSuccessResponse<S> | RouteH
 
 export const handleRouteActionError = (e: unknown) => {
   if (e instanceof UnauthorizedError) {
-    return redirect(PAGE_URL.loginPage.fullUrl);
+    return redirect(getFullPath("loginPage"));
   }
   if (e instanceof BadRequestError) {
     const err = e as BadRequestError;

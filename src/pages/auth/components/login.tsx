@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Input, LoadSpinner, Animated, InputValidators } from "../../../components";
 import ReactMarkdown from "react-markdown";
 import useAuth from "../hooks/use-auth";
-import { PAGE_URL } from "../../root";
+import { getFullPath } from "../../root";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock, faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import { getLogger } from "../../../services";
@@ -56,7 +56,7 @@ const LoginPage: FunctionComponent = () => {
     const onClickSignupHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
         setSubmitStatus(LoginSubmitStatus.NotStarted);
-        navigate(PAGE_URL.signupPage.fullUrl);
+        navigate(getFullPath("signupPage"));
     };
 
     const validatePassword = InputValidators.passwordValidator();

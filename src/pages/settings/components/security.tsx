@@ -4,7 +4,7 @@ import { Animated, Input, InputValidators } from "../../../components";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
 import { UserDetailsResource } from "../../auth";
 import { faLock } from "@fortawesome/free-solid-svg-icons";
-import { PAGE_URL } from "../../root";
+import { getFullPath } from "../../root";
 import ReactMarkdown from "react-markdown";
 import { RouteHandlerResponse } from "../../../services";
 import { UpdateUserPasswordResource } from "../../auth/services";
@@ -58,7 +58,7 @@ const SecurityPage: FunctionComponent = () => {
     const onSubmitPasswordChangeHandler: FormEventHandler<HTMLFormElement> = event => {
         event.preventDefault();
         const data: UpdateUserPasswordResource = { password: currentPassword, newPassword: newPassword };
-        submit(data as any, { method: "post", action: PAGE_URL.securitySettings.fullUrl });
+        submit(data as any, { method: "post", action: getFullPath("securitySettings") });
         setChangePasswordActionState(ActionState.UserSubmit);
     };
 

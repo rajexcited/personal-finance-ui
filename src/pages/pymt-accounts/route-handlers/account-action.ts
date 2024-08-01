@@ -1,5 +1,5 @@
 import { ActionFunctionArgs, json, redirect } from "react-router-dom";
-import { PAGE_URL } from "../../root";
+import { getFullPath } from "../../root";
 import { PymtAccountFields, PymtAccountService } from "../services";
 import { HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
 
@@ -30,7 +30,7 @@ const pymtAccountAddUpdateActionHandler = async (request: Request) => {
 
     await pymtAccountService.addUpdatePymtAccount(jsondata);
 
-    return redirect(PAGE_URL.pymtAccountsRoot.fullUrl);
+    return redirect(getFullPath("pymtAccountsRoot"));
   } catch (e) {
     logger.error("in action handler", e);
     return handleRouteActionError(e);

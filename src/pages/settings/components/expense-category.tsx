@@ -7,7 +7,7 @@ import { ActionId, TypeCategoryAction } from "../services";
 import ViewConfig from "./view-config";
 import UpdateConfig, { ConfigInputProps } from "./update-config";
 import { faEdit, faEye, faRemove, faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
-import { PAGE_URL } from "../../root";
+import { getFullPath } from "../../root";
 import { v4 as uuidv4 } from "uuid";
 import ReactMarkdown from "react-markdown";
 import { ExpenseCategoryTypeLoaderResource } from "../route-handlers/expense-category-loader-action";
@@ -98,14 +98,14 @@ const ExpenseCategoryPage: FunctionComponent = () => {
                 action: "deleteDetails"
             };
             setAction(undefined);
-            submit(data as any, { method: "delete", action: PAGE_URL.expenseCategorySettings.fullUrl, encType: "application/json" });
+            submit(data as any, { method: "delete", action: getFullPath("expenseCategorySettings"), encType: "application/json" });
         }
     };
 
     const onAddUpdateExpenseCategoryHandler = (details: UpdateConfigDetailsResource | UpdateConfigStatusResource) => {
         setAction(undefined);
 
-        submit(details as any, { method: "post", action: PAGE_URL.expenseCategorySettings.fullUrl, encType: "application/json" });
+        submit(details as any, { method: "post", action: getFullPath("expenseCategorySettings"), encType: "application/json" });
     };
 
     const controlsBeforeEllipsis: Control[] = [{ id: ActionId.View, content: "View", icon: faEye }];

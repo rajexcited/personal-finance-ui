@@ -3,7 +3,7 @@ import { useNavigation, useSubmit, useActionData, useLoaderData } from "react-ro
 import { v4 as uuidv4 } from "uuid";
 import AccountForm from "./account-form";
 import { PymtAccountFields } from "../../services";
-import { PAGE_URL } from "../../../root";
+import { getFullPath } from "../../../root";
 import { useAuth } from "../../../auth";
 import ReactMarkdown from "react-markdown";
 import { PymtAccountDetailLoaderResource } from "../../route-handlers/account-loader";
@@ -43,7 +43,7 @@ const AddAccount: FunctionComponent = () => {
                 id: accountId,
             };
 
-            submit(formData, { action: PAGE_URL.addPymAccount.fullUrl, method: "post", encType: "application/json" });
+            submit(formData, { action: getFullPath("addPymAccount"), method: "post", encType: "application/json" });
         } else {
             setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
         }

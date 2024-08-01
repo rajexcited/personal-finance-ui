@@ -3,7 +3,7 @@ import { useActionData, useLoaderData, useNavigate, useSubmit } from "react-rout
 import ReactMarkdown from "react-markdown";
 import { Animated, ConfirmDialog, LoadSpinner } from "../../../../components";
 import { rowHeaders, ExpenseFields, expenseComparator, ExpenseSortStateType } from "../../services";
-import { PAGE_URL } from "../../../root";
+import { getFullPath } from "../../../root";
 import { useDebounceState } from "../../../../hooks";
 import ExpenseTableRow from "./view-expense-item-tablerow";
 import ExpenseTableHead, { ExpenseTableHeadRefType } from "./expense-table-head";
@@ -72,7 +72,7 @@ const ExpenseList: FunctionComponent = () => {
     };
 
     const onEditRequestExpenseHandler = (expenseId: string) => {
-        navigate(PAGE_URL.updateExpense.shortUrl.replace(":expenseId", expenseId));
+        navigate(getFullPath("updateExpense", expenseId));
     };
 
     const onRemoveRequestHandler = (expenseId: string) => {
@@ -88,7 +88,7 @@ const ExpenseList: FunctionComponent = () => {
     const onDeleteConfirmHandler = () => {
         const deletingExpense = expenseList.find(xpns => xpns.id === deletingExpenseId);
         const data: any = { ...deletingExpense };
-        submit(data, { action: PAGE_URL.expenseJournalRoot.fullUrl, method: "delete" });
+        submit(data, { action: getFullPath("expenseJournalRoot"), method: "delete" });
         setDeletingExpenseId("");
     };
 

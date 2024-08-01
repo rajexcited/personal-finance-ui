@@ -1,27 +1,28 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { PAGE_URL } from "../../root";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCoins, faGear, faMoneyBills, faUserAlt, faUserSecret } from "@fortawesome/free-solid-svg-icons";
+// importing from file to prevent circular dependency error.
+import { getFullPath, pathBaseName } from "../../root/components/navigation";
 import { HeroTabs } from "../../../components";
-import { pathBaseName } from "../../root/components/navigation";
 import { getLogger } from "../../../services";
 
 const fcLogger = getLogger("FC.SettingsRootPage", null, null, "INFO");
+
+const TAB_HEADS = [
+    { id: "root-stngs", title: "General Settings", url: getFullPath("settingsRoot"), icon: faGear },
+    { id: "xpns-ctgry-stngs", title: "Expense Category", url: getFullPath("expenseCategorySettings"), icon: faCoins },
+    { id: "pymt-acc-typ-stngs", title: "Payment Account Type", url: getFullPath("pymtAccountTypeSettings"), icon: faMoneyBills },
+    // { id: "tags-stngs", title: "Tags", url: PAGE_URL.tagsSettings.fullUrl, icon: faTags },
+    { id: "profile-stngs", title: "Profile", url: getFullPath("profileSettings"), icon: faUserAlt },
+    { id: "scrty-stngs", title: "Security", url: getFullPath("securitySettings"), icon: faUserSecret },
+];
 
 const SettingsRootPage: FunctionComponent = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
     const [activeTabId, setActiveTabId] = useState("");
-    const TAB_HEADS = [
-        { id: "root-stngs", title: "General Settings", url: PAGE_URL.settingsRoot.fullUrl, icon: faGear },
-        { id: "xpns-ctgry-stngs", title: "Expense Category", url: PAGE_URL.expenseCategorySettings.fullUrl, icon: faCoins },
-        { id: "pymt-acc-typ-stngs", title: "Payment Account Type", url: PAGE_URL.pymtAccountTypeSettings.fullUrl, icon: faMoneyBills },
-        // { id: "tags-stngs", title: "Tags", url: PAGE_URL.tagsSettings.fullUrl, icon: faTags },
-        { id: "profile-stngs", title: "Profile", url: PAGE_URL.profileSettings.fullUrl, icon: faUserAlt },
-        { id: "scrty-stngs", title: "Security", url: PAGE_URL.securitySettings.fullUrl, icon: faUserSecret },
-    ];
 
     useEffect(() => {
         const logger = getLogger("useEffect.dep[location.pathname]", fcLogger);

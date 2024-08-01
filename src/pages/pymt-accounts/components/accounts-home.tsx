@@ -1,6 +1,6 @@
 import { FunctionComponent } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../root";
+import { getFullPath } from "../../root";
 
 
 const AccountsHome: FunctionComponent = () => {
@@ -8,7 +8,7 @@ const AccountsHome: FunctionComponent = () => {
 
     const onClickNavigateAddPymtAccountHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        navigate(PAGE_URL.addPymAccount.shortUrl);
+        navigate(getFullPath("addPymAccount"));
     };
 
     return (

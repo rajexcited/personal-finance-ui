@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useState } from "react";
 import { PymtAccountFields } from "../../services";
 import { useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../../root";
+import { getFullPath } from "../../../root";
 import { Animated } from "../../../../components";
 
 export interface AccountItemProps {
@@ -23,7 +23,7 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
 
     const onClickUpdateHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        navigate(PAGE_URL.updatePymAccount.shortUrl.replace(":accountId", props.details.id));
+        navigate(getFullPath("updatePymAccount", props.details.id));
     };
 
     const onClickDeleteHandler: React.MouseEventHandler<HTMLButtonElement> = event => {

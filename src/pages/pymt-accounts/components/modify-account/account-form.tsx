@@ -1,6 +1,6 @@
 import { FunctionComponent, useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../../root";
+import { getFullPath } from "../../../root";
 import { TagsInput, Input, TextArea, DropDown, InputValidators } from "../../../../components";
 import { ConfigResource, PymtAccountFields, PymtAccStatus } from "../../services";
 import { faBank } from "@fortawesome/free-solid-svg-icons";
@@ -58,7 +58,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
     const onCancelHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
         event.stopPropagation();
-        navigate(PAGE_URL.pymtAccountsRoot.fullUrl);
+        navigate(getFullPath("pymtAccountsRoot"));
     };
 
     const accountTypes = useMemo(() => props.categoryTypes.map(ctg => ctg.name), [props.categoryTypes]);

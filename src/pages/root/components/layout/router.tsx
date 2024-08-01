@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import RootLayout from "./root";
 import ErrorPage from "./error";
-import { PAGE_URL, pathBaseName } from "../navigation";
+import { getShortPath, pathBaseName } from "../navigation";
 import {
     PymtAccountList,
     PymtAccountsRoot,
@@ -20,47 +20,48 @@ import SecurityPage from "../../../settings/components/security";
 import { getLogger } from "../../../../services";
 
 const logger = getLogger("CBR.router", null, null, "INFO");
-logger.debug("pathBaseName =", pathBaseName, ", rootPath =", PAGE_URL.rootPath);
+logger.debug("pathBaseName =", pathBaseName, ", rootPath =", getShortPath("rootPath"));
+
 export const router = createBrowserRouter([
     {
-        path: PAGE_URL.rootPath.fullUrl,
+        path: getShortPath("rootPath"),
         element: <RootLayout />,
         errorElement: <ErrorPage />,
         children: [
             { index: true, element: <HomePage /> },
-            { path: PAGE_URL.loginPage.shortUrl, element: <LoginPage /> },
-            { path: PAGE_URL.signupPage.shortUrl, element: <SignupPage /> },
-            { path: PAGE_URL.logoutPage.shortUrl, element: <LogoutPage /> },
+            { path: getShortPath("loginPage"), element: <LoginPage /> },
+            { path: getShortPath("signupPage"), element: <SignupPage /> },
+            { path: getShortPath("logoutPage"), element: <LogoutPage /> },
             {
-                path: PAGE_URL.expenseJournalRoot.shortUrl,
+                path: getShortPath("expenseJournalRoot"),
                 element: <RequireAuth><ExpenseJournalPage /></RequireAuth>,
                 action: expenseActionHandler,
                 children: [
                     { index: true, element: <ExpenseList />, loader: expenseListLoaderHandler, },
-                    { path: PAGE_URL.addExpense.shortUrl, element: <AddExpense />, loader: expenseDetailSupportingLoaderHandler, action: expenseActionHandler },
-                    { path: PAGE_URL.updateExpense.shortUrl, element: <UpdateExpense />, loader: expenseDetailLoaderHandler, action: expenseActionHandler },
+                    { path: getShortPath("addExpense"), element: <AddExpense />, loader: expenseDetailSupportingLoaderHandler, action: expenseActionHandler },
+                    { path: getShortPath("updateExpense"), element: <UpdateExpense />, loader: expenseDetailLoaderHandler, action: expenseActionHandler }
                 ]
             },
             {
-                path: PAGE_URL.pymtAccountsRoot.shortUrl,
+                path: getShortPath("pymtAccountsRoot"),
                 element: <RequireAuth><PymtAccountsRoot /></RequireAuth>,
                 action: pymtAccountActionHandler,
                 children: [
                     { index: true, element: <PymtAccountList />, loader: pymtAccountListLoaderHandler, },
-                    { path: PAGE_URL.addPymAccount.shortUrl, element: <AddPymtAccount />, loader: pymtAccountDetailSupportingLoaderHandler, action: pymtAccountActionHandler },
-                    { path: PAGE_URL.updatePymAccount.shortUrl, element: <UpdatePymtAccount />, loader: pymtAccountDetailLoaderHandler, action: pymtAccountActionHandler, },
+                    { path: getShortPath("addPymAccount"), element: <AddPymtAccount />, loader: pymtAccountDetailSupportingLoaderHandler, action: pymtAccountActionHandler },
+                    { path: getShortPath("updatePymAccount"), element: <UpdatePymtAccount />, loader: pymtAccountDetailLoaderHandler, action: pymtAccountActionHandler, },
                 ]
             },
             {
-                path: PAGE_URL.settingsRoot.shortUrl,
+                path: getShortPath("settingsRoot"),
                 element: <RequireAuth><SettingsRoot /></RequireAuth>,
                 children: [
                     { index: true, element: <div>Settings Home - General Settings</div> },
-                    { path: PAGE_URL.expenseCategorySettings.shortUrl, element: <ExpenseCategoryPage />, loader: expenseCategoryListLoaderHandler, action: expenseCategoryListActionHandler },
-                    { path: PAGE_URL.pymtAccountTypeSettings.shortUrl, element: <PymtAccountTypePage />, loader: paymentAccountTypeListLoaderHandler, action: pymtAccTypeListActionHandler },
-                    { path: PAGE_URL.tagsSettings.shortUrl, element: <div> tags settings will be launched later. it is lower priority </div> },
-                    { path: PAGE_URL.profileSettings.shortUrl, element: <ProfileSettingsPage />, loader: profileDetailsLoaderHandler, action: profileDetailsActionHandler },
-                    { path: PAGE_URL.securitySettings.shortUrl, element: <SecurityPage />, loader: securityDetailsLoaderHandler, action: securityDetailsActionHandler },
+                    { path: getShortPath("expenseCategorySettings"), element: <ExpenseCategoryPage />, loader: expenseCategoryListLoaderHandler, action: expenseCategoryListActionHandler },
+                    { path: getShortPath("pymtAccountTypeSettings"), element: <PymtAccountTypePage />, loader: paymentAccountTypeListLoaderHandler, action: pymtAccTypeListActionHandler },
+                    { path: getShortPath("tagsSettings"), element: <div> tags settings will be launched later. it is lower priority </div> },
+                    { path: getShortPath("profileSettings"), element: <ProfileSettingsPage />, loader: profileDetailsLoaderHandler, action: profileDetailsActionHandler },
+                    { path: getShortPath("securitySettings"), element: <SecurityPage />, loader: securityDetailsLoaderHandler, action: securityDetailsActionHandler },
                 ]
             }
         ]

@@ -2,17 +2,17 @@ import "./navbar.css";
 import { useState, FunctionComponent, useEffect } from "react";
 import { faCalculator, faMoneyBill, faBank, faGears, faUserPlus, faSignInAlt, faSignOut } from "@fortawesome/free-solid-svg-icons";
 import NavBarItem, { NavbarItemProp } from "./navbar-item";
-import { PAGE_URL } from "./page-url";
+import { getFullPath } from "./page-url";
 import { useAuth } from "../../../auth";
 import { useLocation } from "react-router-dom";
 
 
 const items: NavbarItemProp[] = [
-    { link: PAGE_URL.expenseJournalRoot.fullUrl, label: "Expenses", icon: faMoneyBill, id: "expenses", isProtected: true, isSelected: false },
-    { link: PAGE_URL.pymtAccountsRoot.fullUrl, label: "Accounts", icon: faBank, id: "accounts", isProtected: true, isSelected: false },
-    { link: PAGE_URL.settingsRoot.fullUrl, label: "Settings", icon: faGears, id: "settings", isProtected: true, isSelected: false },
-    { link: PAGE_URL.signupPage.fullUrl, label: "Signup", icon: faUserPlus, id: "signup", isProtected: false, isSelected: false },
-    { link: PAGE_URL.loginPage.fullUrl, label: "Login", icon: faSignInAlt, id: "Login", isProtected: false, isSelected: false },
+    { link: getFullPath("expenseJournalRoot"), label: "Expenses", icon: faMoneyBill, id: "expenses", isProtected: true, isSelected: false },
+    { link: getFullPath("pymtAccountsRoot"), label: "Accounts", icon: faBank, id: "accounts", isProtected: true, isSelected: false },
+    { link: getFullPath("settingsRoot"), label: "Settings", icon: faGears, id: "settings", isProtected: true, isSelected: false },
+    { link: getFullPath("signupPage"), label: "Signup", icon: faUserPlus, id: "signup", isProtected: false, isSelected: false },
+    { link: getFullPath("loginPage"), label: "Login", icon: faSignInAlt, id: "Login", isProtected: false, isSelected: false },
 ];
 
 const NavBar: FunctionComponent = () => {
@@ -29,7 +29,7 @@ const NavBar: FunctionComponent = () => {
                 .map(item => ({ ...item }));
         }
         let selectedNavbarItem = navbarItemlist.find(item => pathname === item.link);
-        if (pathname === PAGE_URL.rootPath.fullUrl) {
+        if (pathname === getFullPath("rootPath")) {
             selectedNavbarItem = undefined;
             const list: NavbarItemProp[] = [];
             let isPreviouslySelected = false;
@@ -78,6 +78,9 @@ const NavBar: FunctionComponent = () => {
         setActive(!isActive);
     };
 
+    const rootPath = getFullPath("rootPath");
+    const logoutPage = getFullPath("logoutPage");
+
     return (
         <section className="container">
             <nav className="navbar has-shadow is-white">
@@ -85,13 +88,13 @@ const NavBar: FunctionComponent = () => {
                     <NavBarItem
                         icon={ faCalculator }
                         label="Personal Finance"
-                        link={ PAGE_URL.rootPath.fullUrl }
+                        link={ rootPath }
                         id="brandfinance"
                         key={ "brandfinance" }
                         isProtected={ false }
-                        isSelected={ pathname === PAGE_URL.rootPath.fullUrl }
+                        isSelected={ pathname === rootPath }
                     />
-                    <a href={ "#" + PAGE_URL.rootPath.fullUrl } className="navbar-burger" onClick={ toggleNavbar }>
+                    <a href={ "#" + rootPath } className="navbar-burger" onClick={ toggleNavbar }>
                         { navbarItems.map((itemProp) => <span key={ itemProp.id + "burger" }></span>) }
                     </a>
                 </div>
@@ -118,7 +121,7 @@ const NavBar: FunctionComponent = () => {
                                 <NavBarItem
                                     icon={ faSignOut }
                                     label="Logout"
-                                    link={ PAGE_URL.logoutPage.fullUrl }
+                                    link={ logoutPage }
                                     id="logout"
                                     key="logout"
                                     isProtected={ true }

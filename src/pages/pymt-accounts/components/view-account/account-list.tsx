@@ -3,7 +3,7 @@ import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
 import AccountItemCard from "./account-item-view";
 import { PymtAccountFields } from "../../services";
 import { Animated, ConfirmDialog } from "../../../../components";
-import { PAGE_URL } from "../../../root";
+import { getFullPath } from "../../../root";
 import ReactMarkdown from "react-markdown";
 import { RouteHandlerResponse } from "../../../../services";
 
@@ -18,7 +18,7 @@ const AccountList: FunctionComponent = () => {
         if (loaderData.type === "success") {
             const deletingPymtAcc = loaderData.data.find(acc => acc.id === deletingAccountId);
             const data: any = { ...deletingPymtAcc };
-            submit(data, { action: PAGE_URL.pymtAccountsRoot.fullUrl, method: "delete", encType: "application/json" });
+            submit(data, { action: getFullPath("pymtAccountsRoot"), method: "delete", encType: "application/json" });
             setDeletingAccountId("");
         }
     };

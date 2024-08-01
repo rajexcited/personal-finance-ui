@@ -1,7 +1,7 @@
 import { FormEventHandler, FunctionComponent, MouseEventHandler, useEffect, useState } from "react";
 import { Animated, Input } from "../../../components";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
-import { PAGE_URL } from "../../root";
+import { getFullPath } from "../../root";
 import { UpdateUserDetailsResource } from "../../auth/services";
 import { RouteHandlerResponse, getLogger } from "../../../services";
 import { ProfileDetailsLoaderResource } from "../route-handlers/profile-loader-action";
@@ -47,7 +47,7 @@ const ProfileSettings: FunctionComponent = () => {
                     firstName: firstName,
                     lastName: lastName
                 };
-                submit(nameDetails as any, { method: "post", action: PAGE_URL.profileSettings.fullUrl, encType: "application/json" });
+                submit(nameDetails as any, { method: "post", action: getFullPath("profileSettings"), encType: "application/json" });
             }
             setUpdateNameRequest(false);
         }

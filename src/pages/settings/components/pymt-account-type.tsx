@@ -7,7 +7,7 @@ import { ActionId, TypeCategoryAction } from "../services";
 import ViewConfig from "./view-config";
 import UpdateConfig, { ConfigInputProps } from "./update-config";
 import { faEdit, faEye, faRemove, faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
-import { PAGE_URL } from "../../root";
+import { getFullPath } from "../../root";
 import { v4 as uuidv4 } from "uuid";
 import ReactMarkdown from "react-markdown";
 import { PymtAccTypeLoaderResource } from "../route-handlers/pymt-acc-type-loader-action";
@@ -99,13 +99,13 @@ const PymtAccountTypePage: FunctionComponent = () => {
                 action: "deleteDetails"
             };
             setAction(undefined);
-            submit(data as any, { method: "delete", action: PAGE_URL.pymtAccountTypeSettings.fullUrl, encType: "application/json" });
+            submit(data as any, { method: "delete", action: getFullPath("pymtAccountTypeSettings"), encType: "application/json" });
         }
     };
 
     const onAddUpdatePymtAccTypeHandler = (details: UpdateConfigStatusResource | UpdateConfigDetailsResource) => {
         setAction(undefined);
-        submit(details as any, { method: "post", action: PAGE_URL.pymtAccountTypeSettings.fullUrl, encType: "application/json" });
+        submit(details as any, { method: "post", action: getFullPath("pymtAccountTypeSettings"), encType: "application/json" });
     };
 
     const controlsBeforeEllipsis: Control[] = [{ id: ActionId.View, content: "View", icon: faEye }];

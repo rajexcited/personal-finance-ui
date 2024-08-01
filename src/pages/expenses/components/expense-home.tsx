@@ -1,6 +1,7 @@
 import { FunctionComponent } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../root/components/navigation";
+import { getFullPath } from "../../root";
+
 
 
 const ExpenseJournalPage: FunctionComponent = () => {
@@ -8,7 +9,7 @@ const ExpenseJournalPage: FunctionComponent = () => {
 
     const onClickNavigateAddExpenseHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
-        navigate(PAGE_URL.addExpense.shortUrl);
+        navigate(getFullPath("addExpense"));
     };
 
     return (

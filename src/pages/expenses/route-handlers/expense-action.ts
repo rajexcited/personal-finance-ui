@@ -1,5 +1,5 @@
 import { ActionFunctionArgs, json, redirect } from "react-router-dom";
-import { PAGE_URL } from "../../root";
+import { getFullPath } from "../../root";
 import { ExpenseFields, ExpenseService, ReceiptProps, ReceiptUploadError } from "../services";
 import { HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
 
@@ -81,7 +81,7 @@ const expenseAddUpdateActionHandler = async (request: Request) => {
       auditDetails: { createdOn: new Date(), updatedOn: new Date() },
     });
 
-    return redirect(PAGE_URL.expenseJournalRoot.fullUrl);
+    return redirect(getFullPath("expenseJournalRoot"));
   } catch (e) {
     logger.error("in action handler", e);
     return handleRouteActionError(e);

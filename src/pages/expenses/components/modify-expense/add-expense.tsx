@@ -3,7 +3,7 @@ import { useActionData, useLoaderData, useNavigation, useSubmit } from "react-ro
 import ReactMarkdown from "react-markdown";
 import { v4 as uuidv4 } from "uuid";
 import "bulma-extensions/bulma-tooltip/dist/css/bulma-tooltip.min.css";
-import { PAGE_URL } from "../../../root";
+import { getFullPath } from "../../../root";
 import ExpenseForm from "./expense-form";
 import { ExpenseFields } from "../../services";
 import { useAuth } from "../../../auth";
@@ -39,7 +39,7 @@ const AddExpense: FunctionComponent = () => {
     const onExpenseAdded = (data: ExpenseFields, formData: FormData) => {
         if (auth.userDetails.isAuthenticated) {
             // logger.log("expense added", data.expenseId, data);
-            submit(formData, { action: PAGE_URL.addExpense.fullUrl, method: "post", encType: "multipart/form-data" });
+            submit(formData, { action: getFullPath("addExpense"), method: "post", encType: "multipart/form-data" });
         } else {
             setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
         }

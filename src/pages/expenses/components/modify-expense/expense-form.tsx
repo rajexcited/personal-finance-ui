@@ -1,6 +1,6 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../../root/components/navigation";
+import { getFullPath } from "../../../root/components/navigation";
 import { faStore, faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import {
     TagsInput,
@@ -91,7 +91,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
     const onCancelHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
         event.stopPropagation();
-        navigate(PAGE_URL.expenseJournalRoot.fullUrl);
+        navigate(getFullPath("expenseJournalRoot"));
     };
 
     useEffect(() => {
