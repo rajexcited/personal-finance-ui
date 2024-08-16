@@ -2,7 +2,7 @@ import { FunctionComponent, useRef } from "react";
 import { faEdit, faTrash, faReceipt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { VerifyIndicator } from "../../../../components";
-import { ExpenseFields } from "../../services";
+import { PurchaseFields } from "../../services";
 import dateutil from "date-and-time";
 import { formatAmount } from "../../../../formatters";
 import { getLogger } from "../../../../services";
@@ -10,7 +10,7 @@ import { getLogger } from "../../../../services";
 
 interface ExpenseItemTableRowProps {
     id: string;
-    details: ExpenseFields;
+    details: PurchaseFields;
     onSelect (expenseId: string): void;
     isSelected: Boolean;
     onRemove (expenseId: string): void;
@@ -20,7 +20,7 @@ interface ExpenseItemTableRowProps {
 
 const fcLogger = getLogger("FC.expenseItemTableRow");
 
-const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props) => {
+export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props) => {
     const rowRef = useRef<HTMLTableRowElement>(null);
 
 
@@ -56,13 +56,13 @@ const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props)
         return text && text.length > 15 ? text.substring(0, 12).concat("...") : text;
     };
 
-    const updateExpenseAction = (<a className="is-link" onClick={ onClickonEditStartExpenseHandler } key={ "updt-xpns-action" + props.id }>
+    const updateExpenseAction = (<a className="is-link" onClick={ onClickonEditStartExpenseHandler } key={ "updt-purchase-action" + props.id }>
         <span className="icon tooltip" data-tooltip="Update Expense">
             <FontAwesomeIcon icon={ faEdit } />
         </span>
     </a>);
 
-    const removeExpenseAction = (<a className="is-link" onClick={ onClickTrashExpenseHandler } key={ "rmve-xpns-action" + props.id }>
+    const removeExpenseAction = (<a className="is-link" onClick={ onClickTrashExpenseHandler } key={ "rmve-purchase-action" + props.id }>
         <span className="icon tooltip" data-tooltip="Remove Expense">
             <FontAwesomeIcon icon={ faTrash } />
         </span>
@@ -88,10 +88,10 @@ const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props)
                 <td>{ dateutil.format(props.details.purchasedDate as Date, "MMM DD, YYYY") }</td>
                 <td>{ props.details.billName }</td>
                 <td>{ formatAmount(props.details.amount) }</td>
-                <td>{ props.details.expenseCategoryName || "-" }</td>
+                <td>{ props.details.paymentAccountName || "-" }</td>
                 <td> <VerifyIndicator
-                    id={ "xpns-verify-" + props.id }
-                    key={ "xpns-verify-" + props.id }
+                    id={ "purchase-verify-" + props.id }
+                    key={ "purchase-verify-" + props.id }
                     disabled={ true }
                     className="is-smaller"
                     verifiedDateTime={ props.details.verifiedTimestamp as Date }
@@ -106,4 +106,3 @@ const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props)
     );
 };
 
-export default ExpenseItemTableRow;

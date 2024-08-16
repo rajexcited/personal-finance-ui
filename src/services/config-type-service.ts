@@ -27,7 +27,7 @@ export enum ConfigTypeStatus {
 }
 
 export enum ConfigTypeBelongsTo {
-  ExpenseCategory = "expense-category",
+  PurchaseType = "purchase-type",
   PaymentAccountType = "pymt-account-type",
   CurrencyProfile = "currency-profile",
 }

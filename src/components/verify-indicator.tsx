@@ -1,8 +1,9 @@
-import { faCheckCircle, faCircleNodes, faTimesCircle, faWindowClose } from "@fortawesome/free-solid-svg-icons";
+import { faCheckCircle, faTimesCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useState } from "react";
 import ConfirmDialog from "./confirm-dialog";
 import "./verify-indicator.css";
+import { getLogger } from "../services";
 
 export interface VerifyIndicatorProps {
     id: string;
@@ -13,10 +14,14 @@ export interface VerifyIndicatorProps {
     className?: string;
 }
 
+
+const fcLogger = getLogger("FC.VerifyIndicator", null, null, "INFO");
 const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
     const [openModal, setOpenModal] = useState(false);
 
     const onClickVerifyHandler = () => {
+        const logger = getLogger("onClickVerifyHandler", fcLogger);
+        logger.debug("props.disabled? ", props.disabled, "openModal? ", openModal);
         if (props.disabled) {
             return;
         }
@@ -25,6 +30,12 @@ const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
             if (props.verifiedDateTime) props.onChange();
             else props.onChange(new Date());
         }
+    };
+
+    const onClickVerifyCancelHandler = () => {
+        const logger = getLogger("onClickVerifyCancelHandler", fcLogger);
+        logger.debug("openModal? ", openModal);
+        setOpenModal(false);
     };
 
     const onClickModalOpenHandler: React.MouseEventHandler<HTMLButtonElement | HTMLAnchorElement> = event => {
@@ -37,6 +48,8 @@ const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
     let verifiedConfirmDialogContent = props.verifiedDateTime ?
         "Really, Do you want to un-verify this expense?" :
         "Do you want to verify this expense manually?";
+
+    fcLogger.debug("openModal? ", openModal);
 
     return (
         <div className="field verify-indicator">
@@ -71,6 +84,7 @@ const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
                     content={ verifiedConfirmDialogContent }
                     yesButtonClassname={ props.verifiedDateTime ? "is-danger" : "is-success" }
                     onConfirm={ onClickVerifyHandler }
+                    onCancel={ onClickVerifyCancelHandler }
                 />
 
             </div>

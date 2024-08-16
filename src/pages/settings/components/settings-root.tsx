@@ -11,14 +11,14 @@ const fcLogger = getLogger("FC.SettingsRootPage", null, null, "INFO");
 
 const TAB_HEADS = [
     { id: "root-stngs", title: "General Settings", url: getFullPath("settingsRoot"), icon: faGear },
-    { id: "xpns-ctgry-stngs", title: "Expense Category", url: getFullPath("expenseCategorySettings"), icon: faCoins },
+    { id: "xpns-ctgry-stngs", title: "Purchase Type", url: getFullPath("purchaseTypeSettings"), icon: faCoins },
     { id: "pymt-acc-typ-stngs", title: "Payment Account Type", url: getFullPath("pymtAccountTypeSettings"), icon: faMoneyBills },
     // { id: "tags-stngs", title: "Tags", url: PAGE_URL.tagsSettings.fullUrl, icon: faTags },
     { id: "profile-stngs", title: "Profile", url: getFullPath("profileSettings"), icon: faUserAlt },
     { id: "scrty-stngs", title: "Security", url: getFullPath("securitySettings"), icon: faUserSecret },
 ];
 
-const SettingsRootPage: FunctionComponent = () => {
+export const SettingsRootPage: FunctionComponent = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -76,4 +76,3 @@ const SettingsRootPage: FunctionComponent = () => {
     );
 };
 
-export default SettingsRootPage;

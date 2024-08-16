@@ -1,15 +1,24 @@
 import { ActionFunctionArgs, json, redirect } from "react-router-dom";
-import { getFullPath } from "../../root";
-import { ExpenseFields, ExpenseService, ReceiptProps, ReceiptUploadError } from "../services";
-import { HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
+import { getFullPath } from "../../../root";
+import {
+  PurchaseService,
+  ReceiptProps,
+  ReceiptUploadError,
+  HttpStatusCode,
+  RouteHandlerResponse,
+  getLogger,
+  handleRouteActionError,
+  PurchaseFields,
+} from "../../services";
 
-const expenseService = ExpenseService();
+const purchaseService = PurchaseService();
+const rhLogger = getLogger("route.handler.purchase.action", null, null, "DEBUG");
 
-export const expenseActionHandler = async ({ request }: ActionFunctionArgs) => {
+export const purchaseActionHandler = async ({ request }: ActionFunctionArgs) => {
   if (request.method === "POST") {
-    return await expenseAddUpdateActionHandler(request);
+    return await purchaseAddUpdateActionHandler(request);
   } else if (request.method === "DELETE") {
-    return await expenseDeleteActionHandler(request);
+    return await purchaseDeleteActionHandler(request);
   }
   const error: RouteHandlerResponse<null, any> = {
     type: "error",
@@ -23,8 +32,8 @@ export const expenseActionHandler = async ({ request }: ActionFunctionArgs) => {
   return json(error, { status: HttpStatusCode.InternalServerError });
 };
 
-type ExpenseResourceKey = keyof ExpenseFields;
-const getFormData = (formData: FormData, formKey: ExpenseResourceKey) => {
+type PurchaseResourceKey = keyof PurchaseFields;
+const getFormData = (formData: FormData, formKey: PurchaseResourceKey) => {
   const formValue = formData.get(formKey);
 
   if (formValue) {
@@ -42,8 +51,8 @@ const getFormData = (formData: FormData, formKey: ExpenseResourceKey) => {
   return null;
 };
 
-const expenseAddUpdateActionHandler = async (request: Request) => {
-  const logger = getLogger("expenseAddUpdateActionHandler");
+const purchaseAddUpdateActionHandler = async (request: Request) => {
+  const logger = getLogger("purchaseAddUpdateActionHandler", rhLogger);
   try {
     const formdata = await request.formData();
 
@@ -56,15 +65,17 @@ const expenseAddUpdateActionHandler = async (request: Request) => {
         "receipt files to upload =",
         receipts.map((r) => r.file).filter((f) => f)
       );
-      modifiedReceipts = await expenseService.updateExpenseReceipts(receipts);
+      modifiedReceipts = await purchaseService.updatePurchaseReceipts(receipts);
     } catch (e) {
       if (e instanceof ReceiptUploadError) {
-        return e.getRouteActionErrorResponse();
+        const errorResponse = await e.getRouteActionErrorResponse();
+        logger.debug("errorResponse =", await e.getErrorMessagesOnly());
+        return errorResponse;
       }
       return handleRouteActionError(e);
     }
 
-    await expenseService.addUpdateExpense({
+    await purchaseService.addUpdatePurchase({
       id: getFormData(formdata, "id"),
       billName: getFormData(formdata, "billName"),
       paymentAccountId: getFormData(formdata, "paymentAccountId"),
@@ -74,9 +85,9 @@ const expenseAddUpdateActionHandler = async (request: Request) => {
       purchasedDate: getFormData(formdata, "purchasedDate"),
       tags: getFormData(formdata, "tags"),
       verifiedTimestamp: getFormData(formdata, "verifiedTimestamp"),
-      expenseItems: getFormData(formdata, "expenseItems"),
-      expenseCategoryName: getFormData(formdata, "expenseCategoryName"),
-      expenseCategoryId: getFormData(formdata, "expenseCategoryId"),
+      items: getFormData(formdata, "items"),
+      purchaseTypeId: getFormData(formdata, "purchaseTypeId"),
+      purchaseTypeName: getFormData(formdata, "purchaseTypeName"),
       receipts: modifiedReceipts,
       auditDetails: { createdOn: new Date(), updatedOn: new Date() },
     });
@@ -88,15 +99,15 @@ const expenseAddUpdateActionHandler = async (request: Request) => {
   }
 };
 
-const expenseDeleteActionHandler = async (request: Request) => {
-  const logger = getLogger("expenseDeleteActionHandler");
+const purchaseDeleteActionHandler = async (request: Request) => {
+  const logger = getLogger("purchaseDeleteActionHandler", rhLogger);
   try {
     const formdata = await request.formData();
-    const expenseId = getFormData(formdata, "id");
-    await expenseService.removeExpense(expenseId);
+    const purchaseId = getFormData(formdata, "id");
+    await purchaseService.removePurchase(purchaseId);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: "expense is deleted",
+      data: "purchase is deleted",
     };
     return response;
   } catch (e) {

@@ -9,7 +9,7 @@ import ReactMarkdown from "react-markdown";
 
 const fcLogger = getLogger("FC.settings.ProfileSettings", null, null, "INFO");
 
-const ProfileSettings: FunctionComponent = () => {
+export const ProfileSettingsPage: FunctionComponent = () => {
     const loaderData = useLoaderData() as RouteHandlerResponse<ProfileDetailsLoaderResource, null>;
     const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
     const [updateNameRequest, setUpdateNameRequest] = useState(false);
@@ -149,4 +149,3 @@ const ProfileSettings: FunctionComponent = () => {
     );
 };
 
-export default ProfileSettings;

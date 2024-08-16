@@ -8,7 +8,7 @@ import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, getLogger } from
 import { CurrencyProfileResource } from "../../pages/settings/services";
 import { addUpdateConfigTypes, deleteConfigType, getConfigTypeDetails, getConfigTypes, updateConfigTypeStatus } from "../mock-db/config-type-db";
 
-const MockConfigType = (demoMock: MockAdapter) => {
+export const MockConfigType = (demoMock: MockAdapter) => {
   demoMock.onDelete(/\/config\/types\/belongs-to\/.+\/id\/.+/).reply(async (config) => {
     const logger = getLogger("mock.config-type.delete");
 
@@ -83,7 +83,7 @@ const MockConfigType = (demoMock: MockAdapter) => {
     if (configStatus !== ConfigTypeStatus.Enable && configStatus !== ConfigTypeStatus.Disable) {
       return responseCreator.toNotFoundError("invalid status update url");
     }
-    if (belongsTo !== ConfigTypeBelongsTo.ExpenseCategory && belongsTo !== ConfigTypeBelongsTo.PaymentAccountType) {
+    if (belongsTo !== ConfigTypeBelongsTo.PurchaseType && belongsTo !== ConfigTypeBelongsTo.PaymentAccountType) {
       return responseCreator.toNotFoundError("invalid belongsTo update url");
     }
 
@@ -123,8 +123,8 @@ const MockConfigType = (demoMock: MockAdapter) => {
     return responseCreator.toCreateResponse(result.added);
   };
 
-  demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.ExpenseCategory).reply((config) => {
-    return addUpdateConfigType(ConfigTypeBelongsTo.ExpenseCategory, config);
+  demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.PurchaseType).reply((config) => {
+    return addUpdateConfigType(ConfigTypeBelongsTo.PurchaseType, config);
   });
   demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType).reply((config) => {
     return addUpdateConfigType(ConfigTypeBelongsTo.PaymentAccountType, config);
@@ -160,15 +160,15 @@ const MockConfigType = (demoMock: MockAdapter) => {
     return responseCreator.toSuccessResponse(responselist);
   };
 
-  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.ExpenseCategory + "/tags").reply(async (config) => {
-    const logger = getLogger("mock.config-types." + ConfigTypeBelongsTo.ExpenseCategory + ".getTags");
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PurchaseType + "/tags").reply(async (config) => {
+    const logger = getLogger("mock.config-types." + ConfigTypeBelongsTo.PurchaseType + ".getTags");
     const responseCreator = AxiosResponseCreator(config);
     const isAuthorized = validateAuthorization(config.headers);
     if (!isAuthorized) {
       return responseCreator.toForbiddenError("not authorized");
     }
 
-    const result = await getConfigTypes(ConfigTypeBelongsTo.ExpenseCategory);
+    const result = await getConfigTypes(ConfigTypeBelongsTo.PurchaseType);
     const responselist = result.list.flatMap((ec) => ec.tags);
 
     logger.debug("categories size=", result.list.length, ", tags size =", responselist.length);
@@ -189,8 +189,8 @@ const MockConfigType = (demoMock: MockAdapter) => {
     return responseCreator.toSuccessResponse(responselist);
   });
 
-  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.ExpenseCategory).reply(async (config) => {
-    return await getConfigTypeList(ConfigTypeBelongsTo.ExpenseCategory, config);
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PurchaseType).reply(async (config) => {
+    return await getConfigTypeList(ConfigTypeBelongsTo.PurchaseType, config);
   });
 
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType).reply(async (config) => {
@@ -242,5 +242,3 @@ const MockConfigType = (demoMock: MockAdapter) => {
     return responseCreator.toSuccessResponse(responselist);
   });
 };
-
-export default MockConfigType;

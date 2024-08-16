@@ -1,14 +1,13 @@
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { getLogger } from "./logger";
-import { ExpenseFields } from "../pages/expenses";
 import pMemoize from "p-memoize";
 import ExpiryMap from "expiry-map";
 import ms from "ms";
 
 export enum TagBelongsTo {
-  Expenses = "expenses",
+  Purchase = "purchase",
   PaymentAccounts = "pymt-acc",
-  ExpenseCategoryConfig = "expense-category-config",
+  PurchaseTypeConfig = "purchase-type-config",
   PaymentAccountTypeConfig = "pymt-acc-type-config",
 }
 
@@ -20,24 +19,6 @@ interface TagResource {
 export const TagsService = () => {
   const tagsDb = new MyLocalDatabase<TagResource>(LocalDBStore.Tags);
   const _logger = getLogger("service.tags");
-
-  const updateExpenseTags = async (expense: ExpenseFields) => {
-    const logger = getLogger("updateExpenseTag", _logger);
-    const expenseTags = expense.tags;
-    logger.debug("expense tags size: ", expenseTags.length);
-    const expenseItemTags = expense.expenseItems?.flatMap((ei) => ei.tags) || [];
-    logger.debug("expense item tags size: ", expenseTags.length);
-    const tags = [...expenseTags, ...expenseItemTags];
-    const promises = tags.map(async (tag) => {
-      const resource: TagResource = {
-        value: tag,
-        belongsTo: TagBelongsTo.Expenses,
-      };
-      await tagsDb.addUpdateItem(resource);
-    });
-    await Promise.all(promises);
-    logger.debug("add update tags completed");
-  };
 
   const updateTags = async (belongsTo: TagBelongsTo, tags: string | string[]) => {
     const logger = getLogger("updateTags." + belongsTo, _logger);
@@ -70,6 +51,22 @@ export const TagsService = () => {
     getCount: pMemoize(getCount, { cache: new ExpiryMap(ms("10 sec")), cacheKey: JSON.stringify }),
     getTags: pMemoize(getTags, { cache: new ExpiryMap(ms("10 sec")), cacheKey: JSON.stringify }),
     updateTags,
-    updateExpenseTags,
+    // updatePurchaseTags : async (purchase: PurchaseFields) => {
+    //   const logger = getLogger("updatePurchaseTags", _logger);
+    //   const purchaseTags = purchase.tags;
+    //   logger.debug("purchase tags size: ", purchaseTags.length);
+    //   const purchaseItemTags = purchase.items?.flatMap((ei) => ei.tags) || [];
+    //   logger.debug("purchase item tags size: ", purchaseItemTags.length);
+    //   const tags = [...purchaseTags, ...purchaseItemTags];
+    //   const promises = tags.map(async (tag) => {
+    //     const resource: TagResource = {
+    //       value: tag,
+    //       belongsTo: TagBelongsTo.Purchase,
+    //     };
+    //     await tagsDb.addUpdateItem(resource);
+    //   });
+    //   await Promise.all(promises);
+    //   logger.debug("add update tags completed");
+    // },
   };
 };

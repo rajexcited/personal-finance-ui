@@ -1,15 +1,14 @@
-import { ExpenseFields } from "../../pages/expenses/services";
-import { ExpenseItemFields, ExpenseStatus, ReceiptProps } from "../../pages/expenses";
-import { LoggerBase, difference, formatTimestamp, parseTimestamp, getLogger } from "../../services";
-import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { v4 as uuidv4 } from "uuid";
 import datetime from "date-and-time";
+import { PurchaseFields, PurchaseItemFields, ExpenseStatus, ReceiptProps } from "../../pages/expenses";
+import { LoggerBase, difference, formatTimestamp, parseTimestamp, getLogger } from "../../services";
+import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { auditData } from "../services/userDetails";
 import { deleteReceiptFileData, updateExpenseIdForReceipt } from "./expense-receipts-db";
 import { getExpenseCategories } from "./config-type-db";
 import { getPymtAccountList } from "./pymt-acc-db";
 
-const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
+const expenseDb = new MyLocalDatabase<PurchaseFields>(LocalDBStore.Expense);
 const _rootLogger = getLogger("mock.db.expenses", null, null, "DEBUG");
 
 // initialize on page load
@@ -45,9 +44,9 @@ const init = async () => {
     tags: "outdoor,dining,trip".split(","),
     paymentAccountId: pymtAccId("checking"),
     purchasedDate: formatTimestamp(datetime.addDays(new Date(), -10)),
-    expenseCategoryId: categoryId("hangout"),
+    purchaseTypeId: categoryId("hangout"),
     receipts: [],
-    expenseItems: [],
+    items: [],
     auditDetails: auditData(),
     status: ExpenseStatus.Enable,
   });
@@ -60,19 +59,19 @@ const init = async () => {
     tags: "get2gethor,potluck".split(","),
     paymentAccountId: pymtAccId("cash"),
     purchasedDate: formatTimestamp(datetime.addDays(new Date(), -1)),
-    expenseCategoryId: categoryId("food shopping"),
+    purchaseTypeId: categoryId("food shopping"),
     verifiedTimestamp: formatTimestamp(datetime.addHours(new Date(), -1)),
     receipts: [],
     auditDetails: auditData(),
     status: ExpenseStatus.Enable,
-    expenseItems: [
+    items: [
       {
         id: uuidv4(),
         billName: "snacks",
         amount: "14.34",
         tags: "kids,breaktime,hangout".split(","),
         description: "for breakfast, break time during play or evening hangout",
-        expenseCategoryId: categoryId("hangout"),
+        purchaseTypeId: categoryId("hangout"),
       },
       {
         id: uuidv4(),
@@ -86,7 +85,7 @@ const init = async () => {
         billName: "non stick pan",
         amount: "39.7",
         tags: "utensil,kitchen".split(","),
-        expenseCategoryId: categoryId("home stuffs"),
+        purchaseTypeId: categoryId("home stuffs"),
         description: "",
       },
     ],
@@ -164,7 +163,7 @@ export const getExpenses = async (filters: ExpenseFilter) => {
         ({
           ...xp,
           expenseItems: undefined,
-        } as ExpenseFields)
+        } as PurchaseFields)
     ),
   };
 };
@@ -172,7 +171,7 @@ export const getExpenses = async (filters: ExpenseFilter) => {
 export const getExpenseDetails = async (expenseId: string) => {
   const existingExpense = await expenseDb.getItem(expenseId);
   if (existingExpense) {
-    const details: ExpenseFields = {
+    const details: PurchaseFields = {
       ...existingExpense,
     };
     return { getDetails: details };
@@ -200,7 +199,7 @@ const getReceiptsForExpenseAddUpdate = async (
       if (receiptIdResult.error) {
         return { ...r, error: receiptIdResult.error };
       }
-      const rr: ReceiptProps = { ...r, expenseId: "", id: receiptIdResult.id as string, url: "", file: undefined };
+      const rr: ReceiptProps = { ...r, purchaseId: "", id: receiptIdResult.id as string, url: "", file: undefined };
       return rr;
     });
   const addedNewReceipts = await Promise.all(addedNewReceiptPromises);
@@ -227,7 +226,7 @@ const getReceiptsForExpenseAddUpdate = async (
   return { list: [...noChangeExistingReceipts, ...addedNewReceipts] };
 };
 
-export const addUpdateExpense = async (data: ExpenseFields) => {
+export const addUpdateExpense = async (data: PurchaseFields) => {
   const logger = getLogger("addUpdate", _rootLogger);
   const existingExpense = await expenseDb.getItem(data.id);
 
@@ -244,11 +243,11 @@ export const addUpdateExpense = async (data: ExpenseFields) => {
       return { error: receiptResult.error };
     }
 
-    const existingExpenseItems = (existingExpense.expenseItems || []).reduce((obj: Record<string, ExpenseItemFields>, ei) => {
+    const existingExpenseItems = (existingExpense.items || []).reduce((obj: Record<string, PurchaseItemFields>, ei) => {
       obj[ei.id] = ei;
       return obj;
     }, {});
-    const expenseItems = data.expenseItems || [];
+    const expenseItems = data.items || [];
     const updatedExistingExpenseIems = expenseItems
       .filter((ei) => existingExpenseItems[ei.id])
       .map((ei) => ({ ...ei, expenseCategoryName: undefined }));
@@ -256,14 +255,14 @@ export const addUpdateExpense = async (data: ExpenseFields) => {
       .filter((ei) => !existingExpenseItems[ei.id])
       .map((ei) => ({ ...ei, expenseCategoryName: undefined, id: uuidv4() }));
 
-    const updatedExpense: ExpenseFields = {
+    const updatedExpense: PurchaseFields = {
       ...data,
       status: ExpenseStatus.Enable,
       receipts: receiptResult.list || [],
-      expenseItems: [...updatedExistingExpenseIems, ...addedNewExpenseIems],
+      items: [...updatedExistingExpenseIems, ...addedNewExpenseIems],
       auditDetails: auditData(existingExpense.auditDetails.createdBy, existingExpense.auditDetails.createdOn),
     };
-    delete updatedExpense.expenseCategoryName;
+    delete updatedExpense.purchaseTypeName;
     delete updatedExpense.paymentAccountName;
     await expenseDb.addUpdateItem(updatedExpense);
     return { updated: updatedExpense };
@@ -274,12 +273,12 @@ export const addUpdateExpense = async (data: ExpenseFields) => {
   if (receiptResult.error) {
     return { error: receiptResult.error };
   }
-  const addedExpense: ExpenseFields = {
+  const addedExpense: PurchaseFields = {
     ...data,
     id: newExpenseId,
     status: ExpenseStatus.Enable,
     receipts: data.receipts.map((r) => ({ ...r, id: uuidv4(), expenseId: "", url: "" })),
-    expenseItems: data.expenseItems?.map((ei) => ({ ...ei, expenseCategoryName: undefined, id: uuidv4() })) || [],
+    items: data.items?.map((ei) => ({ ...ei, expenseCategoryName: undefined, id: uuidv4() })) || [],
     auditDetails: auditData(),
   };
 
@@ -296,7 +295,7 @@ export const deleteExpense = async (expenseId: string) => {
       auditDetails: auditData(existingExpense.auditDetails.createdBy, existingExpense.auditDetails.createdOn),
     };
     await expenseDb.addUpdateItem(deletingExpense);
-    return { deleted: { ...deletingExpense } as ExpenseFields };
+    return { deleted: { ...deletingExpense } as PurchaseFields };
   }
   return { error: "expense not found" };
 };

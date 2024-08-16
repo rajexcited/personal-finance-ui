@@ -12,11 +12,10 @@ import {
     pymtAccountListLoaderHandler,
     pymtAccountDetailSupportingLoaderHandler
 } from '../../../pymt-accounts';
-import { AddExpense, ExpenseJournalPage, ExpenseList, UpdateExpense, expenseListLoaderHandler, expenseActionHandler, expenseDetailLoaderHandler, expenseDetailSupportingLoaderHandler } from '../../../expenses';
-import { ExpenseCategoryPage, ProfileSettingsPage, PymtAccountTypePage, SettingsRoot, expenseCategoryListActionHandler, expenseCategoryListLoaderHandler, paymentAccountTypeListLoaderHandler, profileDetailsActionHandler, profileDetailsLoaderHandler, pymtAccTypeListActionHandler, securityDetailsActionHandler, securityDetailsLoaderHandler } from "../../../settings";
+import { AddPurchase, ExpenseJournalPage, ExpenseList, UpdatePurchase, expenseListLoaderHandler, purchaseActionHandler, purchaseDetailLoaderHandler, purchaseDetailSupportingLoaderHandler } from '../../../expenses';
+import { PurchaseTypePage, ProfileSettingsPage, PymtAccountTypePage, SettingsRootPage, purchaseTypeListActionHandler, purchaseTypeListLoaderHandler, paymentAccountTypeListLoaderHandler, profileDetailsActionHandler, profileDetailsLoaderHandler, pymtAccTypeListActionHandler, securityDetailsActionHandler, securityDetailsLoaderHandler, SecurityPage } from "../../../settings";
 import { LoginPage, RequireAuth, SignupPage, LogoutPage } from "../../../auth";
-import HomePage from "./home";
-import SecurityPage from "../../../settings/components/security";
+import { HomePage } from "./home";
 import { getLogger } from "../../../../services";
 
 const logger = getLogger("CBR.router", null, null, "INFO");
@@ -35,11 +34,11 @@ export const router = createBrowserRouter([
             {
                 path: getShortPath("expenseJournalRoot"),
                 element: <RequireAuth><ExpenseJournalPage /></RequireAuth>,
-                action: expenseActionHandler,
+                action: purchaseActionHandler,
                 children: [
                     { index: true, element: <ExpenseList />, loader: expenseListLoaderHandler, },
-                    { path: getShortPath("addExpense"), element: <AddExpense />, loader: expenseDetailSupportingLoaderHandler, action: expenseActionHandler },
-                    { path: getShortPath("updateExpense"), element: <UpdateExpense />, loader: expenseDetailLoaderHandler, action: expenseActionHandler }
+                    { path: getShortPath("addPurchase"), element: <AddPurchase />, loader: purchaseDetailSupportingLoaderHandler, action: purchaseActionHandler },
+                    { path: getShortPath("updatePurchase"), element: <UpdatePurchase />, loader: purchaseDetailLoaderHandler, action: purchaseActionHandler }
                 ]
             },
             {
@@ -54,10 +53,10 @@ export const router = createBrowserRouter([
             },
             {
                 path: getShortPath("settingsRoot"),
-                element: <RequireAuth><SettingsRoot /></RequireAuth>,
+                element: <RequireAuth><SettingsRootPage /></RequireAuth>,
                 children: [
                     { index: true, element: <div>Settings Home - General Settings</div> },
-                    { path: getShortPath("expenseCategorySettings"), element: <ExpenseCategoryPage />, loader: expenseCategoryListLoaderHandler, action: expenseCategoryListActionHandler },
+                    { path: getShortPath("purchaseTypeSettings"), element: <PurchaseTypePage />, loader: purchaseTypeListLoaderHandler, action: purchaseTypeListActionHandler },
                     { path: getShortPath("pymtAccountTypeSettings"), element: <PymtAccountTypePage />, loader: paymentAccountTypeListLoaderHandler, action: pymtAccTypeListActionHandler },
                     { path: getShortPath("tagsSettings"), element: <div> tags settings will be launched later. it is lower priority </div> },
                     { path: getShortPath("profileSettings"), element: <ProfileSettingsPage />, loader: profileDetailsLoaderHandler, action: profileDetailsActionHandler },

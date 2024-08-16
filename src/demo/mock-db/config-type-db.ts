@@ -40,7 +40,7 @@ const init = async () => {
     await Promise.all(pymtAccTypePromises);
   }
 
-  const expenseCategories = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.ConfigBelongsTo, ConfigTypeBelongsTo.ExpenseCategory);
+  const expenseCategories = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.ConfigBelongsTo, ConfigTypeBelongsTo.PurchaseType);
   if (expenseCategories.length === 0) {
     const defaultCategories = [
       "fee",
@@ -58,13 +58,13 @@ const init = async () => {
 
     const categories = defaultCategories.map((category) => {
       return {
-        belongsTo: ConfigTypeBelongsTo.ExpenseCategory,
+        belongsTo: ConfigTypeBelongsTo.PurchaseType,
         id: uuidv4(),
         name: category,
         value: category,
         status: randomStatus(),
         tags: [],
-        description: "Expense category is " + category + ". Used to tag expense transactions.",
+        description: "Purchase type is " + category + ". Used to tag expense transactions.",
         auditDetails: auditData(),
       } as ConfigResource;
     });
@@ -97,7 +97,7 @@ export const getPaymentAccountTypes = async () => {
 };
 
 export const getExpenseCategories = async () => {
-  return await getConfigTypes(ConfigTypeBelongsTo.ExpenseCategory);
+  return await getConfigTypes(ConfigTypeBelongsTo.PurchaseType);
 };
 
 export const addUpdateConfigTypes = async (data: ConfigResource) => {

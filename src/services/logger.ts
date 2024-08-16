@@ -98,7 +98,7 @@ export class LoggerBase {
   }
 
   private printToConsole(ctype: ConsoleLogType, ...args: any[]) {
-    const p = [this.id, ...args.flatMap((a) => a)];
+    const p = [new Date(), this.id, ...args.flatMap((a) => a)];
     consoleprint(ctype, ...p);
   }
 }

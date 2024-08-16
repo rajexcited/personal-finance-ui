@@ -3,18 +3,17 @@ import { faMagnifyingGlassMinus, faMagnifyingGlassPlus, faUpload } from "@fortaw
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useState, MouseEventHandler, useMemo, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { ExpenseService, ReceiptProps, ReceiptType } from "../../services";
-import { getLogger } from "../../../../services";
+import { getLogger, PurchaseService, ReceiptProps, ReceiptType } from "../../../services";
 import ReactMarkdown from "react-markdown";
-import { LoadSpinner } from "../../../../components";
+import { LoadSpinner } from "../../../../../components";
 
 interface UploadReceiptsModalProps {
     receipts: ReceiptProps[],
-    expenseId: string;
+    purchaseId: string;
     onChange (receipts: ReceiptProps[]): void;
 }
 
-const expenseService = ExpenseService();
+const purchaseService = PurchaseService();
 
 const allowedScales = [0.125, 0.25, 0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
 const findNextScaleValue = (scale: number, findBigger: boolean) => {
@@ -25,8 +24,10 @@ const findNextScaleValue = (scale: number, findBigger: boolean) => {
         return allowedScales[newScaleIndex];
     return scale;
 };
+
 const fcLogger = getLogger("FC.UploadReceiptsModal", null, null, "DEBUG");
-const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props) => {
+
+export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props) => {
     const [receipts, setReceipts] = useState<ReceiptProps[]>(props.receipts);
     const [isModalOpen, setModalOpen] = useState(false);
     const [isReceiptLoading, setReceiptLoading] = useState(false);
@@ -84,9 +85,9 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
                         id: uuidv4(),
                         file,
                         contentType: fileType,
-                        expenseId: props.expenseId
+                        purchaseId: props.purchaseId
                     };
-                    const cachedReceiptResponse = await expenseService.cacheReceiptFile(receipt, "AddUpdateGet");
+                    const cachedReceiptResponse = await purchaseService.cacheReceiptFile(receipt, "AddUpdateGet");
                     supportedReceipts.push({
                         ...receipt,
                         ...cachedReceiptResponse
@@ -136,12 +137,12 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
             props.onChange(newReceipts);
             return newReceipts;
         });
-        await expenseService.cacheReceiptFile(receiptToBeRemoved, "Remove");
+        await purchaseService.cacheReceiptFile(receiptToBeRemoved, "Remove");
     };
 
     const onClickModalOpenHandler: MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        expenseService.downloadReceipts(receipts).then((downloadedReceipts) => {
+        purchaseService.downloadReceipts(receipts).then((downloadedReceipts) => {
             const failedMessages = downloadedReceipts.map(dr => dr.status === "fail" && dr.error || "").filter(r => r);
             if (failedMessages.length > 0) {
                 setErrorMessage(failedMessages.join("\n"));
@@ -237,7 +238,7 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
                 <div className="modal-background"></div>
                 <div className="modal-card is-fullscreen">
                     <header className="modal-card-head">
-                        <p className="modal-card-title">View / Upload Expense Receipts</p>
+                        <p className="modal-card-title">View / Upload Purchase Receipts</p>
                         <button className="delete" type="button" aria-label="close" onClick={ onClickModalCloseHandler }></button>
                     </header>
                     <section className="modal-card-body">
@@ -311,5 +312,3 @@ const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props)
         </section >
     );
 };
-
-export default UploadReceiptsModal;

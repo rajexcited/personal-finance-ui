@@ -2,21 +2,28 @@ import { FunctionComponent, useState, useEffect, useRef } from "react";
 import { useActionData, useLoaderData, useNavigate, useSubmit } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { Animated, ConfirmDialog, LoadSpinner } from "../../../../components";
-import { rowHeaders, ExpenseFields, expenseComparator, ExpenseSortStateType } from "../../services";
+import { rowHeaders, PurchaseFields, expenseComparator, ExpenseSortStateType } from "../../services";
 import { getFullPath } from "../../../root";
 import { useDebounceState } from "../../../../hooks";
-import ExpenseTableRow from "./view-expense-item-tablerow";
-import ExpenseTableHead, { ExpenseTableHeadRefType } from "./expense-table-head";
+import { ExpenseItemTableRow } from "./view-expense-item-tablerow";
+import { ExpenseTableHead, ExpenseTableHeadRefType } from "./expense-table-head";
 import "./view-expense-list.css";
-import { RouteHandlerResponse, getLogger } from "../../../../services";
-import ViewReceipts from "./view-receipts";
+import { RouteHandlerResponse, difference, getLogger } from "../../../../services";
+import { ViewReceipts } from "./receipt/view-receipts";
 
 const fcLogger = getLogger("FC.expense.view.ExpenseList", null, null, "INFO");
+let prevSortDetails: ExpenseSortStateType | null = null;
+const getPrevSortDetails = (sortDetails: ExpenseSortStateType) => {
+    if (!prevSortDetails) {
+        prevSortDetails = sortDetails;
+    }
+    return prevSortDetails;
+};
 
-const ExpenseList: FunctionComponent = () => {
-    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseFields[], null>;
+export const ExpenseList: FunctionComponent = () => {
+    const loaderData = useLoaderData() as RouteHandlerResponse<PurchaseFields[], null>;
     const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
-    const [expenseList, setExpenseList] = useState<ExpenseFields[]>([]);
+    const [expenseList, setExpenseList] = useState<PurchaseFields[]>([]);
     const [selectedExpenseId, setSelectedExpenseId] = useState("");
     const [deletingExpenseId, setDeletingExpenseId] = useState("");
     const [isViewReceiptsEnable, setViewReceiptsEnable] = useState(false);
@@ -53,10 +60,11 @@ const ExpenseList: FunctionComponent = () => {
         }
     }, [loaderData, actionData]);
 
-    const getSortedExpenses = (expenses: ExpenseFields[], sortDetails: ExpenseSortStateType): ExpenseFields[] => {
+    const getSortedExpenses = (expenses: PurchaseFields[], sortDetails: ExpenseSortStateType): PurchaseFields[] => {
+        const logger = getLogger("getSortedExpenses", fcLogger);
         const sortedExpenses = [...expenses];
         sortedExpenses.sort(expenseComparator.bind(null, sortDetails));
-        // logger.log("getSortedExpenses", new Date(), "sortDetails", JSON.stringify(sortDetails), "diff: ", difference(sortDetails, window.prevSortDetails || sortDetails));
+        logger.debug("sortDetails", JSON.stringify(sortDetails), "diff: ", difference(sortDetails, getPrevSortDetails(sortDetails)));
         return sortedExpenses;
     };
 
@@ -72,7 +80,8 @@ const ExpenseList: FunctionComponent = () => {
     };
 
     const onEditRequestExpenseHandler = (expenseId: string) => {
-        navigate(getFullPath("updateExpense", expenseId));
+        fcLogger.info("debug - getFullPath=", getFullPath("updatePurchase", expenseId));
+        navigate(getFullPath("updatePurchase", expenseId));
     };
 
     const onRemoveRequestHandler = (expenseId: string) => {
@@ -119,7 +128,7 @@ const ExpenseList: FunctionComponent = () => {
                 <tbody>
                     {
                         expenseList.map(xpns =>
-                            <ExpenseTableRow
+                            <ExpenseItemTableRow
                                 key={ xpns.id + "-trow" }
                                 id={ xpns.id + "-trow" }
                                 details={ xpns }
@@ -160,4 +169,3 @@ const ExpenseList: FunctionComponent = () => {
     );
 };
 
-export default ExpenseList;

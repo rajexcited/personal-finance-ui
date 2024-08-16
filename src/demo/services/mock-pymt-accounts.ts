@@ -5,7 +5,7 @@ import { addUpdatePymtAccount, deletePymtAccount, getPymtAccountList } from "../
 import { PymtAccStatus, PymtAccountFields } from "../../pages/pymt-accounts/services";
 import { getLogger } from "../../services";
 
-const MockPaymentAccounts = (demoMock: MockAdapter) => {
+export const MockPaymentAccounts = (demoMock: MockAdapter) => {
   demoMock.onDelete(/\/payment\/accounts\/.+/).reply(async (config) => {
     const responseCreator = AxiosResponseCreator(config);
 
@@ -81,5 +81,3 @@ const MockPaymentAccounts = (demoMock: MockAdapter) => {
     return responseCreator.toSuccessResponse(result.list);
   });
 };
-
-export default MockPaymentAccounts;

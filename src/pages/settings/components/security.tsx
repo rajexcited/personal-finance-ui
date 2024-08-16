@@ -15,7 +15,7 @@ enum ActionState {
     UserSubmit = "userSubmit"
 }
 
-const SecurityPage: FunctionComponent = () => {
+export const SecurityPage: FunctionComponent = () => {
     const loaderData = useLoaderData() as RouteHandlerResponse<UserDetailsResource, null>;
     const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
     const [currentPassword, setCurrentPassword] = useState("");
@@ -148,4 +148,3 @@ const SecurityPage: FunctionComponent = () => {
 
 };
 
-export default SecurityPage;

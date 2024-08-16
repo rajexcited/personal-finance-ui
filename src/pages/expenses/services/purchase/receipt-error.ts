@@ -1,5 +1,5 @@
-import { json, redirect } from "react-router-dom";
-import { HttpStatusCode, RouteHandlerResponse, handleRouteActionError } from "../../../services";
+import { json } from "react-router-dom";
+import { HttpStatusCode, RouteHandlerResponse, handleRouteActionError } from "../../../../services";
 import { ErrorReceiptProps } from "./field-types";
 
 export class ReceiptUploadError extends Error {
@@ -38,7 +38,7 @@ export class ReceiptUploadError extends Error {
     return response.headers.get("Location");
   }
 
-  public getRouteActionErrorResponse() {
+  public async getRouteActionErrorResponse() {
     const redirectUrlReceipt = this.errorReceipts.find((er) => {
       const response = handleRouteActionError(er.error);
       return response.status === HttpStatusCode.Found;
@@ -54,15 +54,14 @@ export class ReceiptUploadError extends Error {
     responses.forEach((resp) => statusSet.add(resp.status));
     const httpStatus = statusSet.size > 1 ? HttpStatusCode.InternalServerError : [...statusSet.values()][0];
 
-    const messages = responses
-      .map(async (r: Response) => {
-        const body = (await r.json()) as RouteHandlerResponse<null, any>;
-        if (body.type === "error") {
-          return body.errorMessage;
-        }
-        return "";
-      })
-      .filter((m) => m);
+    const messagePromises = responses.map(async (r: Response) => {
+      const body = (await r.json()) as RouteHandlerResponse<null, any>;
+      if (body.type === "error") {
+        return body.errorMessage;
+      }
+      return "";
+    });
+    const messages = (await Promise.all(messagePromises)).filter((m) => m);
     const response: RouteHandlerResponse<null, null> = { type: "error", errorMessage: messages.join("\n"), data: null };
     return json(response, { status: httpStatus });
   }

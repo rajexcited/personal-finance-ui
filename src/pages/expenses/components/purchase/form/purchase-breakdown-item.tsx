@@ -2,35 +2,35 @@ import { FunctionComponent, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import { faTrashAlt } from "@fortawesome/free-regular-svg-icons";
-import { TagsInput, Input, DropDown, TextArea, DropDownItemType } from "../../../../components";
-import { ExpenseItemFields } from "../../services";
+import { TagsInput, Input, DropDown, TextArea, DropDownItemType } from "../../../../../components";
+import { PurchaseItemFields } from "../../../services";
 
 
-export interface ExpenseItemProps {
-    categories: DropDownItemType[];
-    onChange (item: ExpenseItemFields): void;
+export interface PurchaseSubItemProps {
+    onChange (item: PurchaseItemFields): void;
     onRemove (id: string): void;
+    dropdownPurchaseTypeItems: DropDownItemType[];
     sourceTags: string[];
-    itemDetail: ExpenseItemFields;
+    itemDetail: PurchaseItemFields;
 }
 
-const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
+export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (props) => {
     const [itemBillName, setItemBillName] = useState(props.itemDetail.billName || '');
     const [itemAmount, setItemAmount] = useState(props.itemDetail.amount || '');
-    const [itemCategory, setItemCategory] = useState<DropDownItemType>();
+    const [itemPurchaseType, setItemPurchaseType] = useState<DropDownItemType>();
     const [itemTags, setItemTags] = useState(props.itemDetail.tags || '');
     const [itemDescription, setItemDescription] = useState(props.itemDetail.description || '');
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            const data: ExpenseItemFields = {
+            const data: PurchaseItemFields = {
                 ...props.itemDetail,
                 billName: itemBillName,
                 amount: itemAmount,
                 tags: itemTags,
                 description: itemDescription,
-                expenseCategoryName: itemCategory?.content || props.itemDetail.expenseCategoryName,
-                expenseCategoryId: undefined,
+                purchaseTypeName: itemPurchaseType?.content || props.itemDetail.purchaseTypeName,
+                purchaseTypeId: undefined,
             };
             props.onChange(data);
         }, 500);
@@ -38,22 +38,22 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
         return () => {
             clearTimeout(timeoutId);
         };
-    }, [itemBillName, itemAmount, itemCategory, itemTags, itemDescription]);
+    }, [itemBillName, itemAmount, itemPurchaseType, itemTags, itemDescription]);
 
     useEffect(() => {
-        if (props.itemDetail.expenseCategoryId && props.itemDetail.expenseCategoryName) {
-            const ctgMatched = props.categories.find((ctg) => ctg.id === props.itemDetail.expenseCategoryId);
-            if (ctgMatched) { setItemCategory(ctgMatched); }
+        if (props.itemDetail.purchaseTypeId && props.itemDetail.purchaseTypeName) {
+            const purchaseTypeMatched = props.dropdownPurchaseTypeItems.find((purchaseType) => purchaseType.id === props.itemDetail.purchaseTypeId);
+            if (purchaseTypeMatched) { setItemPurchaseType(purchaseTypeMatched); }
             else {
-                setItemCategory({
-                    id: props.itemDetail.expenseCategoryId,
-                    content: props.itemDetail.expenseCategoryName
+                setItemPurchaseType({
+                    id: props.itemDetail.purchaseTypeId,
+                    content: props.itemDetail.purchaseTypeName
                 });
             }
         } else {
-            setItemCategory(undefined);
+            setItemPurchaseType(undefined);
         }
-    }, [props.itemDetail.expenseCategoryId, props.itemDetail.expenseCategoryName, props.categories]);
+    }, [props.itemDetail.purchaseTypeId, props.itemDetail.purchaseTypeName, props.dropdownPurchaseTypeItems]);
 
     const onCLickRemoveHandler: React.MouseEventHandler<HTMLSpanElement> = event => {
         event.preventDefault();
@@ -71,13 +71,13 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
             </div>
             <div className="column">
                 <Input
-                    id="xpns-item-bill-name"
+                    id="purchase-item-bill-name"
                     label="Item Name: "
                     type="text"
                     placeholder="Enter Items"
                     size={ 20 }
                     initialValue={ itemBillName }
-                    key={ "xpns-item-bill-name" }
+                    key={ "purchase-item-bill-name" }
                     onChange={ setItemBillName }
                     className="is-large"
                     maxlength={ 50 }
@@ -85,7 +85,7 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
             </div>
             <div className="column">
                 <Input
-                    id="xpns-item-amount"
+                    id="purchase-item-amount"
                     label="Amount: "
                     type="number"
                     placeholder="0.00"
@@ -94,43 +94,43 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
                     initialValue={ itemAmount }
                     leftIcon={ faDollarSign }
                     className="is-large"
-                    key={ "xpns-item-amount" }
+                    key={ "purchase-item-amount" }
                     onChange={ setItemAmount }
                     step={ 0.01 }
                 />
             </div>
             <div className="column">
                 <DropDown
-                    id="xpns-item-category"
-                    label="Item Category: "
-                    items={ props.categories }
-                    key={ "xpns-item-category" }
-                    onSelect={ (selected: DropDownItemType) => setItemCategory(selected) }
+                    id="purchase-item-type"
+                    label="Item Purchase Type: "
+                    items={ props.dropdownPurchaseTypeItems }
+                    key={ "purchase-item-type" }
+                    onSelect={ (selected: DropDownItemType) => setItemPurchaseType(selected) }
                     direction="down"
-                    selectedItem={ itemCategory }
+                    selectedItem={ itemPurchaseType }
                     size="medium"
-                    defaultItem={ itemCategory }
+                    defaultItem={ itemPurchaseType }
                 />
             </div>
             <div className="column">
                 <TextArea
-                    id="xpns-item-desc"
+                    id="purchase-item-desc"
                     label="Item Description: "
                     rows={ 2 }
                     value={ itemDescription }
                     onChange={ setItemDescription }
-                    key={ "xpns-item-desc" }
+                    key={ "purchase-item-desc" }
                     maxlength={ 150 }
                 />
             </div>
             <div className="column">
                 <TagsInput
-                    id="xpns-item-tags"
+                    id="purchase-item-tags"
                     label="Item Tags: "
                     defaultValue={ itemTags }
                     placeholder="Add Item Tags"
                     onChange={ setItemTags }
-                    key={ "xpns-item-tags" }
+                    key={ "purchase-item-tags" }
                     sourceValues={ props.sourceTags }
                     maxTags={ 10 }
                 />
@@ -138,5 +138,3 @@ const ExpenseBreakDownItem: FunctionComponent<ExpenseItemProps> = (props) => {
         </div>
     );
 };
-
-export default ExpenseBreakDownItem;

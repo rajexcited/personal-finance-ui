@@ -1,6 +1,6 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getFullPath } from "../../../root/components/navigation";
+import { getFullPath } from "../../../../root";
 import { faStore, faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import {
     TagsInput,
@@ -10,26 +10,25 @@ import {
     TextArea,
     VerifyIndicator,
     DropDownItemType
-} from "../../../../components";
-import ExpenseBreakDown from "./expense-breakdown";
-import { ConfigResource, ExpenseFields, ExpenseItemFields, ReceiptProps } from "../../services";
-import UploadReceiptsModal from "./upload-receipts";
-import { formatTimestamp, getLogger } from "../../../../services";
+} from "../../../../../components";
+import { PurchaseBreakDown } from "./purchase-breakdown";
+import { ConfigResource, PurchaseFields, PurchaseItemFields, formatTimestamp, getLogger, ReceiptProps } from "../../../services";
+import { UploadReceiptsModal } from "../receipt/upload-receipts";
 
 
-export interface ExpenseFormProps {
+export interface PurchaseFormProps {
     submitLabel: string;
-    expenseId: string;
-    onSubmit (fields: ExpenseFields, formData: FormData): void;
-    details?: ExpenseFields;
-    categoryTypes: ConfigResource[];
+    purchaseId: string;
+    onSubmit (fields: PurchaseFields, formData: FormData): void;
+    details?: PurchaseFields;
+    purchaseTypes: ConfigResource[];
     paymentAccounts: Map<string, string>;
     sourceTags: string[];
 }
 
-const fcLogger = getLogger("FC.ExpenseForm", null, null, "DEBUG");
+const fcLogger = getLogger("FC.PurchaseForm", null, null, "DEBUG");
 
-const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
+export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
     const [billName, setBillName] = useState(props.details?.billName || '');
     const [amount, setAmount] = useState(props.details?.amount || '');
     const [pymtAccounts, setPymtAccounts] = useState<DropDownItemType[]>([]);
@@ -37,16 +36,16 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
     const [description, setDescription] = useState(props.details?.description || '');
     const [purchasedDate, setPurchaseDate] = useState(props.details?.purchasedDate as Date || new Date());
     const [tags, setTags] = useState<string[]>(props.details?.tags || []);
-    const [categories, setCategories] = useState<DropDownItemType[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState<DropDownItemType>();
+    const [dropdownPurchaseTypeItems, setDropdownPurchaseTypeItems] = useState<DropDownItemType[]>([]);
+    const [selectedDropdownPurchaseType, setSelectedDropdownPurchaseType] = useState<DropDownItemType>();
     const [verifiedDateTime, setVerifiedDateTime] = useState(props.details?.verifiedTimestamp as Date | undefined);
-    const [expenseItems, setExpenseItems] = useState<ExpenseItemFields[]>(props.details?.expenseItems || []);
+    const [items, setItems] = useState<PurchaseItemFields[]>(props.details?.items || []);
     const [receipts, setReceipts] = useState<ReceiptProps[]>(props.details?.receipts || []);
     const navigate = useNavigate();
 
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = async event => {
         event.preventDefault();
-        const logger = getLogger("FC.ExpenseForm.onSubmitHandler");
+        const logger = getLogger("onSubmitHandler", fcLogger);
 
         const formData = new FormData();
 
@@ -55,11 +54,11 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                 logger.info("receipt id=", rct.id, ", added file to formdata =", rct.file);
                 formData.append(rct.id, rct.file);
             }
-            return { id: rct.id, name: rct.name, contentType: rct.contentType, expenseId: props.expenseId, url: rct.url };
+            return { id: rct.id, name: rct.name, contentType: rct.contentType, purchaseId: props.purchaseId, url: rct.url };
         });
 
-        const data: ExpenseFields = {
-            id: props.expenseId,
+        const data: PurchaseFields = {
+            id: props.purchaseId,
             billName: billName,
             paymentAccountId: selectedPymtAccount?.id,
             paymentAccountName: selectedPymtAccount?.content,
@@ -68,9 +67,9 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
             purchasedDate,
             tags,
             verifiedTimestamp: verifiedDateTime,
-            expenseItems,
-            expenseCategoryId: selectedCategory?.id,
-            expenseCategoryName: selectedCategory?.content,
+            items,
+            purchaseTypeId: selectedDropdownPurchaseType?.id,
+            purchaseTypeName: selectedDropdownPurchaseType?.content,
             receipts: datareceipts,
             auditDetails: { createdOn: "", updatedOn: "" },
         };
@@ -96,7 +95,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
 
     useEffect(() => {
         const logger = getLogger("useEffect.dep[]", fcLogger);
-        const myCategories = props.categoryTypes.map(ctg => {
+        const myDropdownPurchaseTypeItems = props.purchaseTypes.map(ctg => {
             const itm: DropDownItemType = {
                 id: ctg.id || "configIdNeverUsed",
                 content: ctg.name,
@@ -104,15 +103,15 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
             };
             return itm;
         });
-        setCategories(myCategories);
-        logger.info("props.categoryTypes =", props.categoryTypes, ", myCategories =", myCategories, ", props.details?.expenseCategoryId =", props.details?.expenseCategoryId, ", props.details?.expenseCategoryName =", props.details?.expenseCategoryName);
-        if (props.details?.expenseCategoryId) {
-            const selectedCtg: DropDownItemType = {
-                id: props.details.expenseCategoryId,
-                content: props.details.expenseCategoryName || ""
+        setDropdownPurchaseTypeItems(myDropdownPurchaseTypeItems);
+        logger.info("props.purchaseTypes =", props.purchaseTypes, ", myDropdownPurchaseTypeItems =", myDropdownPurchaseTypeItems, ", props.details?.purchaseTypeId =", props.details?.purchaseTypeId, ", props.details?.purchaseTypeName =", props.details?.purchaseTypeName);
+        if (props.details?.purchaseTypeId) {
+            const selectedDropdownPurchaseType: DropDownItemType = {
+                id: props.details.purchaseTypeId,
+                content: props.details.purchaseTypeName || ""
             };
-            setSelectedCategory(selectedCtg);
-            logger.info("selectedCategory =", selectedCtg);
+            setSelectedDropdownPurchaseType(selectedDropdownPurchaseType);
+            logger.info("selectedDropdownPurchaseType =", selectedDropdownPurchaseType);
         }
 
         const myPymtAccounts: DropDownItemType[] = [];
@@ -145,7 +144,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                     <div className="columns">
                         <div className="column">
                             <Input
-                                id="xpns-bill-name"
+                                id="purchase-bill-name"
                                 label="Bill Name: "
                                 type="text"
                                 placeholder="Enter Store name"
@@ -153,7 +152,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 initialValue={ billName }
                                 tooltip="It could be store name or online site. Have short name that you can recognize"
                                 leftIcon={ faStore }
-                                key={ "xpns-bill-name" }
+                                key={ "purchase-bill-name" }
                                 onChange={ setBillName }
                                 required={ true }
                                 maxlength={ 50 }
@@ -164,7 +163,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                     <div className="columns">
                         <div className="column">
                             <Input
-                                id="xpns-amount"
+                                id="purchase-amount"
                                 label="Bill Amount: "
                                 type="number"
                                 placeholder="0.00"
@@ -173,7 +172,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                                 initialValue={ amount }
                                 leftIcon={ faDollarSign }
                                 className="is-medium"
-                                key={ "xpns-amount" }
+                                key={ "purchase-amount" }
                                 onChange={ setAmount }
                                 step={ 0.01 }
                             />
@@ -182,8 +181,8 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                     <div className="columns">
                         <div className="column">
                             <DropDown
-                                id="xpns-pymt-acc"
-                                key={ "xpns-pymt-acc" }
+                                id="purchase-pymt-acc"
+                                key={ "purchase-pymt-acc" }
                                 label="Payment Account: "
                                 items={ pymtAccounts }
                                 onSelect={ (selected: DropDownItemType) => setSelectedPymtAccount(selected) }
@@ -193,14 +192,14 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                         </div>
                         <div className="column">
                             <DropDown
-                                id="xpns-category"
-                                label="Category: "
-                                items={ categories }
-                                key={ "xpns-category" }
-                                onSelect={ (selected: DropDownItemType) => setSelectedCategory(selected) }
+                                id="purchase-type"
+                                label="Purchase Type: "
+                                items={ dropdownPurchaseTypeItems }
+                                key={ "purchase-type" }
+                                onSelect={ (selected: DropDownItemType) => setSelectedDropdownPurchaseType(selected) }
                                 direction="down"
-                                selectedItem={ selectedCategory }
-                                defaultItem={ selectedCategory }
+                                selectedItem={ selectedDropdownPurchaseType }
+                                defaultItem={ selectedDropdownPurchaseType }
                             />
 
                         </div>
@@ -213,12 +212,12 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                     <div className="columns">
                         <div className="column">
                             <TextArea
-                                id="xpns-desc"
+                                id="purchase-desc"
                                 label="Description: "
                                 rows={ 2 }
                                 value={ description }
                                 onChange={ setDescription }
-                                key={ "xpns-desc" }
+                                key={ "purchase-desc" }
                                 maxlength={ 150 }
                             />
                         </div>
@@ -226,12 +225,12 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                     <div className="columns">
                         <div className="column">
                             <TagsInput
-                                id="xpns-tags"
+                                id="purchase-tags"
                                 label="Tags: "
                                 defaultValue={ tags }
                                 placeholder="Add Tags"
                                 onChange={ setTags }
-                                key={ "xpns-tags" }
+                                key={ "purchase-tags" }
                                 sourceValues={ props.sourceTags }
                                 maxTags={ 10 }
                             />
@@ -242,9 +241,9 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                     <div className="columns">
                         <div className="column">
                             <VerifyIndicator
-                                id="xpns-verify-indicator"
-                                key={ "xpns-verify-indicator" }
-                                labelPrefix="Expense "
+                                id="purchase-verify-indicator"
+                                key={ "purchase-verify-indicator" }
+                                labelPrefix="Purchase "
                                 onChange={ setVerifiedDateTime }
                                 verifiedDateTime={ verifiedDateTime }
                             />
@@ -254,7 +253,7 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                         <div className="column">
                             <UploadReceiptsModal
                                 receipts={ receipts }
-                                expenseId={ props.expenseId }
+                                purchaseId={ props.purchaseId }
                                 onChange={ setReceipts }
                             />
                         </div>
@@ -263,8 +262,8 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
                         <div className="column">
                             <div className="my-1 py-1">
                                 <Calendar
-                                    key={ "xpns-purchase-date" }
-                                    id="xpns-purchase-date"
+                                    key={ "purchase-purchase-date" }
+                                    id="purchase-purchase-date"
                                     label="Purchased Date: "
                                     startDate={ purchasedDate }
                                     onSelect={ (range) => { setPurchaseDate((prev) => (range.start || prev)); } }
@@ -276,14 +275,14 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
             </div>
             <div className="columns">
                 <div className="column">
-                    <ExpenseBreakDown
-                        categories={ categories }
-                        key={ "xpns-breakdown" }
+                    <PurchaseBreakDown
+                        dropdownPurchaseTypeItems={ dropdownPurchaseTypeItems }
+                        key={ "purchase-breakdown" }
                         billname={ billName }
                         amount={ amount }
-                        parentExpenseId={ props.expenseId }
-                        expenseItems={ expenseItems }
-                        onChange={ setExpenseItems }
+                        parentPurchaseId={ props.purchaseId }
+                        items={ items }
+                        onChange={ setItems }
                         sourceTags={ props.sourceTags }
                     />
                 </div>
@@ -303,5 +302,3 @@ const ExpenseForm: FunctionComponent<ExpenseFormProps> = (props) => {
         </form>
     );
 };
-
-export default ExpenseForm;

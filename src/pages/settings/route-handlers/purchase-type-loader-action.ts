@@ -1,5 +1,5 @@
 import { ActionFunctionArgs, json } from "react-router-dom";
-import { ExpenseCategoryService } from "../../expenses";
+import { PurchaseTypeService } from "../../expenses";
 import {
   ConfigResource,
   DeleteConfigDetailsResource,
@@ -11,24 +11,25 @@ import {
   handleRouteActionError,
 } from "../../../services";
 
-const expenseCategoryService = ExpenseCategoryService();
+const purchaseTypeService = PurchaseTypeService();
+const rhLogger = getLogger("route.handler.settings.purchaseType.loader", null, null, "INFO");
 
-export interface ExpenseCategoryTypeLoaderResource {
-  categoryTypes: ConfigResource[];
-  categoryTags: string[];
+export interface PurchaseTypeLoaderResource {
+  purchaseTypes: ConfigResource[];
+  purchaseTags: string[];
 }
 
-export const expenseCategoryListLoaderHandler = async () => {
-  const logger = getLogger("route.expenseCategoryListLoaderHandler");
+export const purchaseTypeListLoaderHandler = async () => {
+  const logger = getLogger("purchaseTypeListLoaderHandler", rhLogger);
   try {
-    const expenseCategoryList = await expenseCategoryService.getCategories();
-    const expenseCategoryTags = await expenseCategoryService.getCategoryTags();
+    const purchaseTypeList = await purchaseTypeService.getTypes();
+    const purchaseTypeTags = await purchaseTypeService.getTags();
 
-    const response: RouteHandlerResponse<ExpenseCategoryTypeLoaderResource, null> = {
+    const response: RouteHandlerResponse<PurchaseTypeLoaderResource, null> = {
       type: "success",
       data: {
-        categoryTypes: expenseCategoryList,
-        categoryTags: expenseCategoryTags,
+        purchaseTypes: purchaseTypeList,
+        purchaseTags: purchaseTypeTags,
       },
     };
 
@@ -39,11 +40,11 @@ export const expenseCategoryListLoaderHandler = async () => {
   }
 };
 
-export const expenseCategoryListActionHandler = async ({ request }: ActionFunctionArgs) => {
+export const purchaseTypeListActionHandler = async ({ request }: ActionFunctionArgs) => {
   if (request.method === "POST") {
-    return await expenseCategoryAddUpdateActionHandler(request);
+    return await purchaseTypeAddUpdateActionHandler(request);
   } else if (request.method === "DELETE") {
-    return await expenseCategoryDeleteActionHandler(request);
+    return await purchaseTypeDeleteActionHandler(request);
   }
   const error: RouteHandlerResponse<null, any> = {
     type: "error",
@@ -57,30 +58,30 @@ export const expenseCategoryListActionHandler = async ({ request }: ActionFuncti
   return json(error, { status: HttpStatusCode.InternalServerError });
 };
 
-const expenseCategoryAddUpdateActionHandler = async (request: Request) => {
-  const logger = getLogger("route.expenseCategoryAddUpdateActionHandler");
+const purchaseTypeAddUpdateActionHandler = async (request: Request) => {
+  const logger = getLogger("purchaseTypeAddUpdateActionHandler", rhLogger);
   const data = (await request.json()) as UpdateConfigDetailsResource | UpdateConfigStatusResource;
 
   try {
     if (data.action === "addUpdateDetails") {
-      await expenseCategoryService.addUpdateCategory(data);
+      await purchaseTypeService.addUpdateType(data);
       const response: RouteHandlerResponse<string, null> = {
         type: "success",
-        data: "expense category updated",
+        data: "purchase type updated",
       };
       return response;
     }
     if (data.action === "updateStatus") {
-      await expenseCategoryService.updateCategoryStatus(data);
+      await purchaseTypeService.updateTypeStatus(data);
       const response: RouteHandlerResponse<string, null> = {
         type: "success",
-        data: `expense category status is updated to ${data.status}`,
+        data: `purchase type status is updated to ${data.status}`,
       };
       return response;
     }
     const error: RouteHandlerResponse<null, any> = {
       type: "error",
-      errorMessage: "structure of data not supported for updating expense category",
+      errorMessage: "structure of data not supported for updating purchase type",
       data: {
         request: {
           method: request.method,
@@ -95,15 +96,15 @@ const expenseCategoryAddUpdateActionHandler = async (request: Request) => {
   }
 };
 
-const expenseCategoryDeleteActionHandler = async (request: Request) => {
-  const logger = getLogger("route.expenseCategoryDeleteActionHandler");
+const purchaseTypeDeleteActionHandler = async (request: Request) => {
+  const logger = getLogger("purchaseTypeDeleteActionHandler", rhLogger);
   const data = (await request.json()) as DeleteConfigDetailsResource;
 
   try {
-    await expenseCategoryService.deleteCategory(data);
+    await purchaseTypeService.deleteType(data);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: `expense category is deleted`,
+      data: `purchase type is deleted`,
     };
     return response;
   } catch (e) {

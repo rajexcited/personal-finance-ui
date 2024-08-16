@@ -14,7 +14,7 @@ import { PymtAccTypeLoaderResource } from "../route-handlers/pymt-acc-type-loade
 
 const fcLogger = getLogger("FC.settings.PymtAccountTypePage", null, null, "DEBUG");
 
-const PymtAccountTypePage: FunctionComponent = () => {
+export const PymtAccountTypePage: FunctionComponent = () => {
     const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccTypeLoaderResource, null>;
     const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
     const [enableFilter, setEnableFilter] = useState(true);
@@ -236,4 +236,3 @@ const PymtAccountTypePage: FunctionComponent = () => {
 
 };
 
-export default PymtAccountTypePage;

@@ -10,7 +10,7 @@ export interface ExpenseTableHeadRefType {
     sortDetails (): ExpenseSortStateType;
 }
 
-const ExpenseTableHead = forwardRef<ExpenseTableHeadRefType, ExpenseTableHeadProps>((props, ref) => {
+export const ExpenseTableHead = forwardRef<ExpenseTableHeadRefType, ExpenseTableHeadProps>((props, ref) => {
     const [sortDetails, setSortDetails] = useState<ExpenseSortStateType>({});
 
     useEffect(() => {
@@ -63,4 +63,3 @@ const ExpenseTableHead = forwardRef<ExpenseTableHeadRefType, ExpenseTableHeadPro
     );
 });
 
-export default ExpenseTableHead;

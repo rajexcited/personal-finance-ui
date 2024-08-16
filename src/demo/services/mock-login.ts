@@ -5,7 +5,7 @@ import { tokenSessionData, userSessionDetails } from "./userDetails";
 import { v4 as uuidv4 } from "uuid";
 import datetime from "date-and-time";
 
-const MockLogin = (demoMock: MockAdapter) => {
+export const MockLogin = (demoMock: MockAdapter) => {
   const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#$%^&*])[\w!@#$%^&\(\)\=*]{8,25}$/;
   const expiresInSec = 30 * 60;
 
@@ -158,5 +158,3 @@ const MockLogin = (demoMock: MockAdapter) => {
     return responseCreator.toSuccessResponse("Name is changed");
   });
 };
-
-export default MockLogin;

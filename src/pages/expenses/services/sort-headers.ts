@@ -50,7 +50,7 @@ export const rowHeaders: Header[] = [
     sortLevel: 3,
     type: "amount",
   },
-  { id: "ctgr", label: "Category", sortable: true, datafieldKey: "expenseCategoryName" },
+  { id: "ctgr", label: "Category", sortable: true, datafieldKey: "purchaseTypeName" },
   { id: "vrfd", label: "Verified", sortable: false },
   { id: "tags", label: "Tags", sortable: false },
   { id: "actions", label: "Actions", sortable: false },

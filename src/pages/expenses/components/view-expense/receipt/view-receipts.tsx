@@ -1,14 +1,13 @@
-import "bulma-carousel/dist/css/bulma-carousel.min.css";
-import "./view-receipts.css";
 import { FunctionComponent, MouseEventHandler, useEffect, useMemo, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import bulmaCaraosel, { BulmaCarouselOptions } from "bulma-carousel";
-import { ExpenseService, ReceiptProps } from "../../services";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlassMinus, faMagnifyingGlassPlus } from "@fortawesome/free-solid-svg-icons";
-import { ReceiptType } from "../../services/field-types";
-import { LoadSpinner } from "../../../../components";
-import ReactMarkdown from "react-markdown";
-import { getLogger, subtractDates } from "../../../../services";
+import { PurchaseService, ReceiptProps, ReceiptType } from "../../../services";
+import { LoadSpinner } from "../../../../../components";
+import { getLogger, subtractDates } from "../../../../../services";
+import "bulma-carousel/dist/css/bulma-carousel.min.css";
+import "./view-receipts.css";
 
 
 interface ViewReceiptsProps {
@@ -33,9 +32,11 @@ const findNextScaleValue = (scale: number, findBigger: boolean) => {
         return allowedScales[newScaleIndex];
     return scale;
 };
-const expenseService = ExpenseService();
+
+const purchaseService = PurchaseService();
 const fcLogger = getLogger("FC.ViewReceipts", null, null, "INFO");
-const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
+
+export const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
     const carouselRef = useRef<HTMLDivElement>(null);
     const [receipts, setReceipts] = useState(props.receipts);
     const [isModalOpen, setModalOpen] = useState(props.isShow);
@@ -65,7 +66,7 @@ const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
             setReceiptLoading(true);
             logger.debug("downloading receipts");
             const startTime = new Date();
-            expenseService.downloadReceipts(props.receipts)
+            purchaseService.downloadReceipts(props.receipts)
                 .then(downloadReceipts => {
                     logger.info("receipts are downloaded. downloadReceipts =", downloadReceipts, ". time taken:", subtractDates(new Date(), startTime).toSeconds(), "sec");
                     const error = downloadReceipts.map(dr => dr.status === "fail" && dr.error).filter(dr => dr).join("\n\n");
@@ -237,4 +238,3 @@ const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
     );
 };
 
-export default ViewReceipts;

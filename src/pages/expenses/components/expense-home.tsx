@@ -3,13 +3,20 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { getFullPath } from "../../root";
 
 
-
-const ExpenseJournalPage: FunctionComponent = () => {
+export const ExpenseJournalPage: FunctionComponent = () => {
     const navigate = useNavigate();
 
-    const onClickNavigateAddExpenseHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    const onClickNavigateAddPurchaseHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
-        navigate(getFullPath("addExpense"));
+        navigate(getFullPath("addPurchase"));
+    };
+    const onClickNavigateAddIncomeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+        event.preventDefault();
+        // navigate(getFullPath("addPurchase"));
+    };
+    const onClickNavigateAddInvestmentHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+        event.preventDefault();
+        // navigate(getFullPath("addPurchase"));
     };
 
     return (
@@ -17,7 +24,9 @@ const ExpenseJournalPage: FunctionComponent = () => {
             <div className="columns">
                 <div className="column">
                     <div className="buttons">
-                        <button className="button is-link" onClick={ onClickNavigateAddExpenseHandler }>Add Expense</button>
+                        <button className="button is-link" onClick={ onClickNavigateAddPurchaseHandler }>Add Purchase</button>
+                        <button className="button is-link" onClick={ onClickNavigateAddIncomeHandler }>Add Income</button>
+                        <button className="button is-link" onClick={ onClickNavigateAddInvestmentHandler }>Add Investment</button>
                     </div>
                 </div>
             </div>
@@ -28,4 +37,3 @@ const ExpenseJournalPage: FunctionComponent = () => {
     );
 };
 
-export default ExpenseJournalPage;

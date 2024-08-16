@@ -3,7 +3,7 @@ import { useAuth } from "../../../auth";
 
 
 
-const HomePage: FunctionComponent = () => {
+export const HomePage: FunctionComponent = () => {
     const auth = useAuth();
 
     return (
@@ -25,4 +25,3 @@ const HomePage: FunctionComponent = () => {
     );
 };
 
-export default HomePage;

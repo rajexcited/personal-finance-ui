@@ -1,4 +1,8 @@
+import { getLogger } from "../../../../services";
+
 export const pathBaseName = process.env.REACT_APP_BASE_PATH;
+
+const _logger = getLogger("navigation.pageurls", null, null, "INFO");
 
 interface PageRouteResource {
   shortUrl: string;
@@ -11,13 +15,13 @@ type RouteId =
   | "signupPage"
   | "logoutPage"
   | "expenseJournalRoot"
-  | "addExpense"
-  | "updateExpense"
+  | "addPurchase"
+  | "updatePurchase"
   | "pymtAccountsRoot"
   | "addPymAccount"
   | "updatePymAccount"
   | "settingsRoot"
-  | "expenseCategorySettings"
+  | "purchaseTypeSettings"
   | "pymtAccountTypeSettings"
   | "tagsSettings"
   | "profileSettings"
@@ -44,12 +48,12 @@ const PAGE_URL: Record<RouteId, PageRouteResource> = {
     shortUrl: "expense-journal",
     baseRouteId: "rootPath",
   },
-  addExpense: {
-    shortUrl: "expense/add",
+  addPurchase: {
+    shortUrl: "purchase/add",
     baseRouteId: "expenseJournalRoot",
   },
-  updateExpense: {
-    shortUrl: "expense/:expenseId/update",
+  updatePurchase: {
+    shortUrl: "purchase/:purchaseId/update",
     baseRouteId: "expenseJournalRoot",
   },
   pymtAccountsRoot: {
@@ -68,8 +72,8 @@ const PAGE_URL: Record<RouteId, PageRouteResource> = {
     shortUrl: "settings",
     baseRouteId: "rootPath",
   },
-  expenseCategorySettings: {
-    shortUrl: "expense-category",
+  purchaseTypeSettings: {
+    shortUrl: "purchase-type",
     baseRouteId: "settingsRoot",
   },
   pymtAccountTypeSettings: {
@@ -90,22 +94,28 @@ const PAGE_URL: Record<RouteId, PageRouteResource> = {
   },
 };
 
-const getParamKey = (routeResource: PageRouteResource, paramValue: string | undefined) => {
+const getParamKey = (routeResource: PageRouteResource) => {
+  const logger = getLogger("getParamKey", _logger);
   const parts = routeResource.shortUrl.split(":");
+  logger.debug("parts=", parts);
   let paramKey = null;
   if (parts.length === 2) {
-    paramKey = parts[1].split("/")[0];
+    paramKey = ":" + parts[1].split("/")[0];
   }
+  logger.debug("paramKey =", paramKey);
   return paramKey;
 };
 
 export const getFullPath = (routeId: RouteId | null, paramValue?: string) => {
+  const logger = getLogger("getFullPath", _logger);
+  logger.debug("routeId =", routeId, ", paramValue =", paramValue);
   if (!routeId) {
     return "";
   }
 
   const routeResource = PAGE_URL[routeId];
-  const paramKey = getParamKey(routeResource, paramValue);
+  const paramKey = getParamKey(routeResource);
+  logger.debug("routeResource =", routeResource, ", paramKey =", paramKey);
   if (paramKey && !paramValue) {
     throw new Error("param value must be given for param key [" + paramKey + "]");
   }
@@ -116,6 +126,8 @@ export const getFullPath = (routeId: RouteId | null, paramValue?: string) => {
   const parentFullPath: string = getFullPath(routeResource.baseRouteId);
   const slashMiddle = parentFullPath?.endsWith("/") || routeResource.shortUrl.startsWith("/") ? "" : "/";
   const baseFullPath = parentFullPath + slashMiddle;
+
+  logger.debug("baseFullPath =", baseFullPath);
   if (paramValue && paramKey) {
     return baseFullPath + routeResource.shortUrl.replace(paramKey, paramValue);
   }
@@ -126,7 +138,7 @@ export const getFullPath = (routeId: RouteId | null, paramValue?: string) => {
 export const getShortPath = (routeId: RouteId, paramValue?: string) => {
   const routeResource = PAGE_URL[routeId];
   if (paramValue) {
-    const paramKey = getParamKey(routeResource, paramValue);
+    const paramKey = getParamKey(routeResource);
     if (paramKey) {
       return routeResource.shortUrl.replace(paramKey, paramValue);
     }
