@@ -1,8 +1,13 @@
 import { ActionFunctionArgs, json } from "react-router-dom";
-import { AuthenticationService } from "../../auth";
-import { HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
-import { CurrencyProfileResource, CurrencyProfileService } from "../services";
-import { UpdateUserDetailsResource } from "../../auth/services";
+import { AuthenticationService, UpdateUserDetailsResource } from "../../auth";
+import {
+  HttpStatusCode,
+  RouteHandlerResponse,
+  getLogger,
+  handleRouteActionError,
+  CurrencyProfileResource,
+  CurrencyProfileService,
+} from "../services";
 
 const authenticationService = AuthenticationService();
 const currencyProfileService = CurrencyProfileService();

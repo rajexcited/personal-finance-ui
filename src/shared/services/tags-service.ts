@@ -1,5 +1,5 @@
-import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
-import { getLogger } from "./logger";
+import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "../db";
+import { getLogger } from "../utils";
 import pMemoize from "p-memoize";
 import ExpiryMap from "expiry-map";
 import ms from "ms";

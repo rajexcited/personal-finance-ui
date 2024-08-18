@@ -1,5 +1,5 @@
-import { AuditFields } from "../../../../services";
-import { ExpenseStatus } from "../field-types";
+import { AuditFields } from "../../../../shared";
+import { ExpenseBelongsTo, ExpenseStatus } from "../field-types";
 
 interface BasePurchaseFields {
   id: string;
@@ -42,4 +42,5 @@ export interface PurchaseFields extends BasePurchaseFields {
   receipts: ReceiptProps[];
   status?: ExpenseStatus;
   auditDetails: AuditFields;
+  belongsTo: ExpenseBelongsTo.Purchase;
 }

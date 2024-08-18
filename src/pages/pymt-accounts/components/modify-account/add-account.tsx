@@ -2,12 +2,11 @@ import { FunctionComponent, useState, useEffect } from "react";
 import { useNavigation, useSubmit, useActionData, useLoaderData } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import AccountForm from "./account-form";
-import { PymtAccountFields } from "../../services";
+import { PymtAccountFields, RouteHandlerResponse } from "../../services";
 import { getFullPath } from "../../../root";
 import { useAuth } from "../../../auth";
 import ReactMarkdown from "react-markdown";
 import { PymtAccountDetailLoaderResource } from "../../route-handlers/account-loader";
-import { RouteHandlerResponse } from "../../../../services";
 
 
 const AddAccount: FunctionComponent = () => {

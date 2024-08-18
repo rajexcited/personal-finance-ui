@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import AuthContext, { dummyUserDetails } from "./auth-context";
 import { AuthenticationService, UserDetailsResource, UserSignupResource } from "../services";
 import { Animated } from "../../../components";
-import { difference, getLogger } from "../../../services";
+import { ObjectDeepDifference, getLogger } from "../../../shared";
 
 
 const authService = AuthenticationService();
@@ -44,7 +44,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
 
         const setAuthenExpire = () => {
             const logger = getLogger("setAuthenExpire", _logger);
-            const diffUserDetails = difference(userDetails, dummyUserDetails);
+            const diffUserDetails = ObjectDeepDifference(userDetails, dummyUserDetails);
             if (Object.keys(diffUserDetails).length > 0) {
                 logger.debug("updating context to dummy user");
                 setUserDetails({ ...dummyUserDetails });
@@ -75,7 +75,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
             if (remainingExpiryTimeInSec <= 32) {
                 logger.debug("updating context to expiring soon status");
                 setExpiringStatus(ExpireStatus.ExpiringSoon);
-            } else if (ExpireStatus.ExpiringSoon) {
+            } else if (expiringStatus === ExpireStatus.ExpiringSoon) {
                 setExpiringStatus(ExpireStatus.NotExpire);
             }
         };

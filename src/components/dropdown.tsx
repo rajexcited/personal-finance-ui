@@ -3,7 +3,7 @@ import "./dropdown.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleUp, faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import DropDownItem from "./dropdown-item";
-import { getLogger } from "../services";
+import { getLogger } from "../shared";
 
 export type DropDownItemType = {
     id: string;

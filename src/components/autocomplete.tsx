@@ -1,5 +1,5 @@
 import { FunctionComponent, useState } from "react";
-import { getLogger } from "../services";
+import { getLogger } from "../shared";
 
 export interface AutocompleteProps {
     id: string;

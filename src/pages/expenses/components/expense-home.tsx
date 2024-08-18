@@ -18,6 +18,10 @@ export const ExpenseJournalPage: FunctionComponent = () => {
         event.preventDefault();
         // navigate(getFullPath("addPurchase"));
     };
+    const onClickNavigateAddNriTransferHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+        event.preventDefault();
+        // navigate(getFullPath("addPurchase"));
+    };
 
     return (
         <>
@@ -27,6 +31,7 @@ export const ExpenseJournalPage: FunctionComponent = () => {
                         <button className="button is-link" onClick={ onClickNavigateAddPurchaseHandler }>Add Purchase</button>
                         <button className="button is-link" onClick={ onClickNavigateAddIncomeHandler }>Add Income</button>
                         <button className="button is-link" onClick={ onClickNavigateAddInvestmentHandler }>Add Investment</button>
+                        <button className="button is-link" onClick={ onClickNavigateAddNriTransferHandler }>Add NRI Transfer</button>
                     </div>
                 </div>
             </div>

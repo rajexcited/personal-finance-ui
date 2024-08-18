@@ -9,16 +9,16 @@ import {
   ConfigTypeStatus,
   TagsService,
   TagBelongsTo,
-} from "../../../services";
-import AccountTypeService from "./account-type-service";
+} from "../../../shared";
+import { PymtAccountTypeService } from "./account-type-service";
 import { PymtAccStatus, PymtAccountFields } from "./field-types";
 import pMemoize from "p-memoize";
 import ExpiryMap from "expiry-map";
 import pDebounce from "p-debounce";
 import ms from "ms";
 
-const PymtAccountServiceImpl = () => {
-  const accountTypeService = AccountTypeService();
+export const PymtAccountService = () => {
+  const accountTypeService = PymtAccountTypeService();
   const paymentAccountDb = new MyLocalDatabase<PymtAccountFields>(LocalDBStore.PaymentAccount);
   const tagService = TagsService();
   const rootPath = "/payment/accounts";
@@ -190,5 +190,3 @@ const PymtAccountServiceImpl = () => {
     getPymtAccountTypes,
   };
 };
-
-export default PymtAccountServiceImpl;

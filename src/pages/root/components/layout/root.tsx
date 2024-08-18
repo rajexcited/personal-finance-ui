@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getFullPath, NavBar } from "../navigation";
 import { LoadSpinner } from "../../../../components";
 import axiosMock from "../../../../demo";
-import { getLogger } from "../../../../services";
+import { getLogger } from "../../services";
 
 const expenseJournalRoot = getFullPath("expenseJournalRoot");
 const pymtAccountsRoot = getFullPath("pymtAccountsRoot");

@@ -3,7 +3,7 @@ import { faBan } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { NavBar } from "../navigation";
 import { useRouteError, isRouteErrorResponse } from "react-router-dom";
-import { getLogger } from "../../../../services";
+import { getLogger } from "../../services";
 
 
 const ErrorPage: FunctionComponent = () => {

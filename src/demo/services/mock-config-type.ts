@@ -4,9 +4,9 @@ import { missingValidation, validateAuthorization, validateDataType } from "./co
 import { v4 as uuidv4 } from "uuid";
 import { auditData } from "./userDetails";
 import { AxiosRequestConfig } from "axios";
-import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, getLogger } from "../../services";
+import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, getLogger } from "../../shared";
 import { CurrencyProfileResource } from "../../pages/settings/services";
-import { addUpdateConfigTypes, deleteConfigType, getConfigTypeDetails, getConfigTypes, updateConfigTypeStatus } from "../mock-db/config-type-db";
+import { addUpdateConfigType, deleteConfigType, getConfigTypeDetails, getConfigTypes, updateConfigTypeStatus } from "../mock-db/config-type-db";
 
 export const MockConfigType = (demoMock: MockAdapter) => {
   demoMock.onDelete(/\/config\/types\/belongs-to\/.+\/id\/.+/).reply(async (config) => {
@@ -96,7 +96,7 @@ export const MockConfigType = (demoMock: MockAdapter) => {
     return responseCreator.toSuccessResponse(result.updated);
   });
 
-  const addUpdateConfigType = async (belongsTo: ConfigTypeBelongsTo, config: AxiosRequestConfig) => {
+  const addUpdate = async (belongsTo: ConfigTypeBelongsTo, config: AxiosRequestConfig) => {
     const logger = getLogger("mock.config-type.addUpdate");
     const responseCreator = AxiosResponseCreator(config);
     const isAuthorized = validateAuthorization(config.headers);
@@ -116,7 +116,7 @@ export const MockConfigType = (demoMock: MockAdapter) => {
       return responseCreator.toValidationError(validationErrors);
     }
 
-    const result = await addUpdateConfigTypes({ ...data, belongsTo: belongsTo });
+    const result = await addUpdateConfigType({ ...data, belongsTo: belongsTo });
     logger.log("result", result);
     if (result.updated) return responseCreator.toSuccessResponse(result.updated);
     // add
@@ -124,10 +124,10 @@ export const MockConfigType = (demoMock: MockAdapter) => {
   };
 
   demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.PurchaseType).reply((config) => {
-    return addUpdateConfigType(ConfigTypeBelongsTo.PurchaseType, config);
+    return addUpdate(ConfigTypeBelongsTo.PurchaseType, config);
   });
   demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType).reply((config) => {
-    return addUpdateConfigType(ConfigTypeBelongsTo.PaymentAccountType, config);
+    return addUpdate(ConfigTypeBelongsTo.PaymentAccountType, config);
   });
 
   const getConfigTypeList = async (belongsTo: string, config: AxiosRequestConfig) => {

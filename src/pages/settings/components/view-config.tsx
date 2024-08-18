@@ -1,6 +1,6 @@
 import "./view-config.css";
 import { FunctionComponent } from "react";
-import { ConfigResource } from "../../../services";
+import { ConfigResource } from "../services";
 import dateutil from "date-and-time";
 import { Input } from "../../../components";
 

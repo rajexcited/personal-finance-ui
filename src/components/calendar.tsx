@@ -3,7 +3,7 @@ import 'bulma-calendar/dist/css/bulma-calendar.min.css';
 import './calendar.css';
 import bulmaCalendar from "bulma-calendar";
 import dateutils from "date-and-time";
-import { getLogger } from '../services';
+import { getLogger } from '../shared';
 
 export interface CalendarProps extends bulmaCalendar.Options {
     id: string;

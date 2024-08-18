@@ -26,7 +26,7 @@ declare global {
 }
 * 
  */
-const difference = (object: any, baseObject: any) => {
+export const ObjectDeepDifference = (object: any, baseObject: any) => {
   const result1 = flattenObject(changes(object, baseObject));
   const result2 = flattenObject(changes(baseObject, object));
 
@@ -48,7 +48,5 @@ const flattenObject = (obj: any, prefix: string = ""): any => {
 const hasDiff = (obj: any) => {
   return _.isObject(obj) && "new" in obj && "old" in obj;
 };
-
-export default difference;
 
 // window.difference = difference;

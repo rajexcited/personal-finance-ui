@@ -1,5 +1,5 @@
 import { PymtAccStatus, PymtAccountFields } from "../../pages/pymt-accounts/services";
-import { LoggerBase, getLogger } from "../../services";
+import { LoggerBase, getLogger } from "../../shared";
 import { auditData } from "../services/userDetails";
 import { getPaymentAccountTypes } from "./config-type-db";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";

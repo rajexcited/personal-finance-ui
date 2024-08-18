@@ -1,5 +1,5 @@
 import { FunctionComponent, ReactNode, useEffect, useState } from "react";
-import { getLogger } from "../services";
+import { getLogger } from "../shared";
 
 
 interface ConfirmDialogProps {

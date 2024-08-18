@@ -1,4 +1,4 @@
-import { parseTimestamp } from "./utils";
+import { parseTimestamp } from "../utils";
 
 export interface AuditFields {
   createdBy?: string;

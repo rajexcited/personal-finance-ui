@@ -1,6 +1,6 @@
 import { IDBPDatabase, openDB } from "idb";
 import datetime from "date-and-time";
-import { LoggerBase, getLogger } from "../../services";
+import { LoggerBase, getLogger } from "../../shared";
 
 export enum LocalDBStore {
   Receipt = "receipt-items-store",
@@ -14,7 +14,7 @@ export enum LocalDBStoreIndex {
   ExpenseId = "expenseId-index",
   AuditUpdatedOn = "audit-updatedOn-index",
   ItemStatus = "item-status-index",
-  ConfigBelongsTo = "belongsTo-index",
+  BelongsTo = "belongsTo-index",
   CacheUpdatedOn = "cache-updatedOn-index",
 }
 
@@ -56,8 +56,12 @@ const DataBaseConfig: DBType = {
           keyPath: "auditDetails.updatedOn",
         },
         {
+          name: LocalDBStoreIndex.BelongsTo,
+          keyPath: "belongsTo",
+        },
+        {
           name: LocalDBStoreIndex.ItemStatus,
-          keyPath: "status",
+          keyPath: ["belongsTo", "status"],
         },
       ],
     },
@@ -67,7 +71,7 @@ const DataBaseConfig: DBType = {
       keyPath: "id",
       indexes: [
         {
-          name: LocalDBStoreIndex.ConfigBelongsTo,
+          name: LocalDBStoreIndex.BelongsTo,
           keyPath: "belongsTo",
         },
         {
@@ -178,7 +182,7 @@ export class MyLocalDatabase<T> {
     this._logger = getLogger("MyLocalDatabase." + objectStoreName, rootLogger, null, "ERROR");
   }
 
-  private validateKeyPath(logger: LoggerBase, key?: string | string[], index?: LocalDBStoreIndex) {
+  private validateKeyPath(logger: LoggerBase, key?: string | string[] | IDBKeyRange, index?: LocalDBStoreIndex) {
     let keyPath = undefined;
     if (index) {
       const foundIndex = this._storeConfig.indexes.find((si) => si.name === index);
@@ -191,11 +195,26 @@ export class MyLocalDatabase<T> {
       keyPath = this._storeConfig.keyPath;
       logger.debug("validating key for having keyPath [", keyPath, "] where given key [", key, "].");
     }
-    if (key) {
+
+    const isStringArray = (arg: unknown) => {
+      const arr = Array.isArray(arg) ? arg : null;
+      if (!arr) {
+        return false;
+      }
+
+      const invalidStringType = arr.find((ai) => typeof ai !== "string");
+      return invalidStringType === undefined;
+    };
+
+    const isStringType = (arg: unknown) => {
+      return typeof arg === "string";
+    };
+
+    if (key && (isStringType(key) || isStringArray(key))) {
       let isGivenKeyValid = false;
-      if (typeof keyPath === "string" && typeof key === "string") {
+      if (isStringType(keyPath) && isStringType(key)) {
         isGivenKeyValid = true;
-      } else if (Array.isArray(keyPath) && Array.isArray(key) && keyPath.length === key.length) {
+      } else if (Array.isArray(keyPath) && Array.isArray(key) && isStringArray(key) && keyPath.length === key.length) {
         isGivenKeyValid = true;
       }
       if (!isGivenKeyValid) {
@@ -306,7 +325,7 @@ export class MyLocalDatabase<T> {
     }
   }
 
-  public async getAllFromIndex(index: LocalDBStoreIndex, key?: string | string[]) {
+  public async getAllFromIndex(index: LocalDBStoreIndex, key?: string | string[] | IDBKeyRange) {
     const logger = getLogger("getAllFromIndex", this._logger);
     this.validateIndex(logger, index);
     const db = await openDB(DataBaseConfig.name, DataBaseConfig.version);

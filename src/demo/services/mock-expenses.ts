@@ -2,7 +2,7 @@ import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
 import { ValidationErrorResource, missingValidation, validateAuthorization, validateDataType } from "./common-validators";
 import { ExpenseFilter, getExpenses } from "../mock-db/expense-db";
-import { LoggerBase, getLogger } from "../../services";
+import { LoggerBase, getLogger } from "../../shared";
 import { ExpenseStatus } from "../../pages/expenses/services/field-types";
 
 type ExpenseParam = Partial<Pick<Record<string, string[]>, "status" | "pageNo" | "pageMonths" | "purchasedYear">>;

@@ -1,4 +1,4 @@
-import { getLogger } from "../../../../services";
+import { getLogger } from "../../services";
 
 export const pathBaseName = process.env.REACT_APP_BASE_PATH;
 

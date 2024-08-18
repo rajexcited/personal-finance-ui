@@ -8,7 +8,7 @@ import {
   DeleteConfigDetailsResource,
   TagsService,
   TagBelongsTo,
-} from "../../../../services";
+} from "../../../../shared";
 import ms from "ms";
 
 export const PurchaseTypeService = () => {

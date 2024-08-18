@@ -1,18 +1,18 @@
-import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, getLogger } from "../../services";
+import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, getLogger } from "../../shared";
 import { auditData } from "../services/userDetails";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { v4 as uuidv4 } from "uuid";
 
 const configTypeDb = new MyLocalDatabase<ConfigResource>(LocalDBStore.Config);
 
-const init = async () => {
-  const randomStatus = () => {
-    const statuses = [ConfigTypeStatus.Enable, ConfigTypeStatus.Disable];
-    const randomIndex = Math.floor(Math.random() * statuses.length);
-    return statuses[randomIndex];
-  };
+const randomStatus = () => {
+  const statuses = [ConfigTypeStatus.Enable, ConfigTypeStatus.Disable];
+  const randomIndex = Math.floor(Math.random() * statuses.length);
+  return statuses[randomIndex];
+};
 
-  const pymtAccTypes = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.ConfigBelongsTo, ConfigTypeBelongsTo.PaymentAccountType);
+const initializePymtAccTypes = async () => {
+  const pymtAccTypes = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ConfigTypeBelongsTo.PaymentAccountType);
   if (pymtAccTypes.length === 0) {
     const defaultAccTypes = ["checking", "savings", "credit card", "loan", "cash", "gift card"];
 
@@ -39,48 +39,55 @@ const init = async () => {
     });
     await Promise.all(pymtAccTypePromises);
   }
+};
 
-  const expenseCategories = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.ConfigBelongsTo, ConfigTypeBelongsTo.PurchaseType);
-  if (expenseCategories.length === 0) {
-    const defaultCategories = [
+const initializePurchaseTypes = async () => {
+  const purchaseTypes = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ConfigTypeBelongsTo.PurchaseType);
+  if (purchaseTypes.length === 0) {
+    const defaultPurchaseTypes = [
       "fee",
       "commute",
       "food shopping",
       "health",
       "home stuffs",
-      "investment",
+      // "investment",
       "maintenance",
-      "nri transfer",
+      // "nri transfer",
       "hangout",
       "gift",
       "shopping",
     ];
 
-    const categories = defaultCategories.map((category) => {
+    const purchaseTypes = defaultPurchaseTypes.map((ptype) => {
       return {
         belongsTo: ConfigTypeBelongsTo.PurchaseType,
         id: uuidv4(),
-        name: category,
-        value: category,
+        name: ptype,
+        value: ptype,
         status: randomStatus(),
         tags: [],
-        description: "Purchase type is " + category + ". Used to tag expense transactions.",
+        description: "Purchase type is " + ptype + ". Used to tag purchase transactions.",
         auditDetails: auditData(),
       } as ConfigResource;
     });
-    categories[categories.length - 1].status = ConfigTypeStatus.Deleted;
+    purchaseTypes[purchaseTypes.length - 1].status = ConfigTypeStatus.Deleted;
 
-    const categoryPromises = categories.map(async (expenseCategory) => {
-      await configTypeDb.addItem(expenseCategory);
+    const purchaseTypePromises = purchaseTypes.map(async (purchaseType) => {
+      await configTypeDb.addItem(purchaseType);
     });
-    await Promise.all(categoryPromises);
+
+    await Promise.all(purchaseTypePromises);
   }
+};
+
+const init = async () => {
+  await Promise.all([initializePurchaseTypes(), initializePymtAccTypes()]);
 };
 
 await init();
 
 export const getConfigTypes = async (belongsTo: string) => {
-  const allconfigs = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.ConfigBelongsTo, belongsTo);
+  const allconfigs = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, belongsTo);
   return { list: allconfigs };
 };
 
@@ -96,11 +103,11 @@ export const getPaymentAccountTypes = async () => {
   return await getConfigTypes(ConfigTypeBelongsTo.PaymentAccountType);
 };
 
-export const getExpenseCategories = async () => {
+export const getPurchaseTypes = async () => {
   return await getConfigTypes(ConfigTypeBelongsTo.PurchaseType);
 };
 
-export const addUpdateConfigTypes = async (data: ConfigResource) => {
+export const addUpdateConfigType = async (data: ConfigResource) => {
   const logger = getLogger("mock.db.config-type.addUpdate");
 
   const existingConfigType = await configTypeDb.getItem(data.id);

@@ -1,5 +1,5 @@
 import pMemoize from "p-memoize";
-import { axios, subtractDates, UnauthorizedError } from "../../../services";
+import { axios, subtractDates, UnauthorizedError } from "../../../shared";
 import { authTokenSessionKey } from "./auth-service";
 import { AccessTokenResource } from "./field-types";
 import ExpiryMap from "expiry-map";

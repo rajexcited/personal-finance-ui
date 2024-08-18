@@ -3,7 +3,7 @@ import { AxiosResponseCreator } from "./mock-response-create";
 import { missingValidation, validateAuthorization, validateDataType } from "./common-validators";
 import { addUpdatePymtAccount, deletePymtAccount, getPymtAccountList } from "../mock-db/pymt-acc-db";
 import { PymtAccStatus, PymtAccountFields } from "../../pages/pymt-accounts/services";
-import { getLogger } from "../../services";
+import { getLogger } from "../../shared";
 
 export const MockPaymentAccounts = (demoMock: MockAdapter) => {
   demoMock.onDelete(/\/payment\/accounts\/.+/).reply(async (config) => {

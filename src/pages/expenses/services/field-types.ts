@@ -6,4 +6,10 @@ export enum ExpenseStatus {
   Deleted = "deleted",
 }
 
+export enum ExpenseBelongsTo {
+  Purchase = "purchase",
+  Income = "income",
+  Investment = "investment",
+}
+
 export type ExpenseFields = PurchaseFields;

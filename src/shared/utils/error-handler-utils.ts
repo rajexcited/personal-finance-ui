@@ -1,11 +1,11 @@
 import axios from "axios";
-import datetime from "date-and-time";
 import { json, redirect } from "react-router-dom";
-import {} from "../pages";
 import { LoggerBase, getLogger } from "./logger";
-import { getFullPath } from "../pages/root";
+import { getFullPath } from "../../pages";
 
 export { HttpStatusCode } from "axios";
+
+export class InvalidError extends Error {}
 
 export class RestError extends Error {}
 
@@ -77,52 +77,6 @@ export const handleRestErrors = (e: Error, loggerBase: LoggerBase) => {
       throw err;
     }
   }
-};
-
-export const isBlank = (arg: string) => {
-  if (arg && arg.replaceAll(/\s/g, "").length > 0) {
-    return false;
-  }
-  return true;
-};
-
-const DEFAULT_FORMAT_PATTERN = "MM-DD-YYYY HH:mm:ss.SSS Z";
-export const parseTimestamp = (timestampStr: string, formatPattern?: string | null) => {
-  const format = formatPattern || DEFAULT_FORMAT_PATTERN;
-
-  return datetime.parse(timestampStr, format);
-};
-
-export const formatTimestamp = (timestamp: Date, formatPattern?: string | null) => {
-  const format = formatPattern || DEFAULT_FORMAT_PATTERN;
-
-  return datetime.format(timestamp, format);
-};
-
-type DateParamType = string | null | undefined | number | Date;
-/**
- *  Subtracting date2 from date1. date1 - date2
- *
- * @param date1 if string, will convert to date instance to subtract. if null or undefined, will use current time to subtract
- * @param date2 if string, will convert to date instance to subtract. if null or undefined, will use current time to subtract
- * @param format if not provided, will apply default
- * @returns subtracted instance
- */
-export const subtractDates = (date1: DateParamType, date2?: DateParamType, format?: string) => {
-  const getDate = (date: DateParamType) => {
-    let dd = new Date();
-    if (date instanceof Date) {
-      dd = date;
-    } else if (typeof date === "string") {
-      dd = parseTimestamp(date, format);
-    } else if (typeof date === "number") {
-      dd = new Date(date);
-    }
-
-    return dd;
-  };
-
-  return datetime.subtract(getDate(date1), getDate(date2));
 };
 
 interface RouteHandlerErrorResponse<T> {

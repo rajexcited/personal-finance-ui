@@ -1,5 +1,5 @@
 import { json } from "react-router-dom";
-import { HttpStatusCode, RouteHandlerResponse, handleRouteActionError } from "../../../../services";
+import { HttpStatusCode, RouteHandlerResponse, handleRouteActionError } from "../../../../shared";
 import { ErrorReceiptProps } from "./field-types";
 
 export class ReceiptUploadError extends Error {

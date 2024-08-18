@@ -1,6 +1,6 @@
 import { FunctionComponent, Children, isValidElement } from "react";
 import "./hero-tabs.css";
-import { getLogger } from "../services";
+import { getLogger } from "../shared";
 
 interface HeroType {
     propType: string;

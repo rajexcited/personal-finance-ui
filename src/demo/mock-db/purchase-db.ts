@@ -1,0 +1,250 @@
+import { v4 as uuidv4 } from "uuid";
+import datetime from "date-and-time";
+import { PurchaseFields, PurchaseItemFields, ExpenseStatus, ReceiptProps } from "../../pages/expenses";
+import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDate, getLogger } from "../../shared";
+import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
+import { auditData } from "../services/userDetails";
+import { deleteReceiptFileData, updatePurchaseIdForReceipt } from "./purchase-receipts-db";
+import { getPurchaseTypes } from "./config-type-db";
+import { getPymtAccountList } from "./pymt-acc-db";
+import { ExpenseBelongsTo } from "../../pages/expenses/services";
+import { ExpenseFilter } from "./expense-db";
+
+const purchaseDb = new MyLocalDatabase<PurchaseFields>(LocalDBStore.Expense);
+const _rootLogger = getLogger("mock.db.expense.purchase", null, null, "DEBUG");
+
+// initialize on page load
+const init = async () => {
+  const logger = getLogger("init", _rootLogger);
+
+  const expenseCategories = (await getPurchaseTypes()).list;
+  logger.debug("retrieved", expenseCategories.length, "expense categories");
+
+  const categoryId = (categoryName: string) => {
+    return expenseCategories.find((cat) => cat.name === categoryName)?.id;
+  };
+
+  const paymentAccounts = (await getPymtAccountList()).list;
+  logger.debug("retrieved", paymentAccounts.length, "payment accounts");
+  const pymtAccId = (accname: string) => {
+    return paymentAccounts.find((acc) => acc.shortName.toLowerCase().includes(accname.toLowerCase()))?.id;
+  };
+
+  const expenses = await purchaseDb.getAll();
+  logger.debug("retrieved", expenses.length, "expenses");
+
+  if (expenses.length > 0) {
+    return;
+  }
+
+  logger.debug("creating sample expenses");
+  await purchaseDb.addItem({
+    id: uuidv4(),
+    billName: "burger restaurant",
+    amount: "21.20",
+    description: "this is dummy expense for demo purpose",
+    tags: "outdoor,dining,trip".split(","),
+    paymentAccountId: pymtAccId("checking"),
+    purchasedDate: formatTimestamp(datetime.addDays(new Date(), -10)),
+    purchaseTypeId: categoryId("hangout"),
+    receipts: [],
+    items: [],
+    auditDetails: auditData(),
+    status: ExpenseStatus.Enable,
+    belongsTo: ExpenseBelongsTo.Purchase,
+  });
+
+  await purchaseDb.addItem({
+    id: uuidv4(),
+    billName: "grocery store",
+    amount: "63.80",
+    description: "this is dummy expense for demo purpose",
+    tags: "get2gethor,potluck".split(","),
+    paymentAccountId: pymtAccId("cash"),
+    purchasedDate: formatTimestamp(datetime.addDays(new Date(), -1)),
+    purchaseTypeId: categoryId("food shopping"),
+    verifiedTimestamp: formatTimestamp(datetime.addHours(new Date(), -1)),
+    receipts: [],
+    auditDetails: auditData(),
+    status: ExpenseStatus.Enable,
+    belongsTo: ExpenseBelongsTo.Purchase,
+    items: [
+      {
+        id: uuidv4(),
+        billName: "snacks",
+        amount: "14.34",
+        tags: "kids,breaktime,hangout".split(","),
+        description: "for breakfast, break time during play or evening hangout",
+        purchaseTypeId: categoryId("hangout"),
+      },
+      {
+        id: uuidv4(),
+        billName: "breakfast",
+        amount: "8.7",
+        tags: "breakfast,dairy".split(","),
+        description: "milk, bread, butter, jaam",
+      },
+      {
+        id: uuidv4(),
+        billName: "non stick pan",
+        amount: "39.7",
+        tags: "utensil,kitchen".split(","),
+        purchaseTypeId: categoryId("home stuffs"),
+        description: "",
+      },
+    ],
+  });
+};
+
+await init();
+
+export type PurchaseFilter = ExpenseFilter;
+
+export const getPurchaseTags = async (purchasedYears: number[]) => {
+  const logger = getLogger("getPurchaseTags", _rootLogger);
+
+  const purchaseList = await purchaseDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ExpenseBelongsTo.Purchase);
+  logger.debug("retrieved", purchaseList.length, "purchase. now filtering by purchase year");
+
+  logger.debug("purchasedYears =", purchasedYears, ", purchasedYearRanges =", purchasedYears);
+  const taglist = purchaseList
+    .filter((pi) => {
+      const purchasedYear = getDate(pi.purchasedDate).getFullYear();
+      return purchasedYears.includes(purchasedYear);
+    })
+    .flatMap((pi) => [...pi.tags, ...(pi.items?.flatMap((pii) => pii.tags) || [])]);
+
+  return { list: taglist };
+};
+
+export const getPurchaseDetails = async (purchaseId: string) => {
+  const existingPurchase = await purchaseDb.getItem(purchaseId);
+  if (existingPurchase && existingPurchase.belongsTo === ExpenseBelongsTo.Purchase) {
+    const details: PurchaseFields = {
+      ...existingPurchase,
+    };
+    return { getDetails: details };
+  }
+  return { error: "purchase not found" };
+};
+
+const getReceiptsForPurchaseAddUpdate = async (
+  oldPurchaseReceipts: ReceiptProps[],
+  newPurchaseReceipts: ReceiptProps[],
+  oldPurchaseId: string,
+  newPurchaseId: string,
+  logger: LoggerBase
+) => {
+  const existingPurchaseReceipts = oldPurchaseReceipts.reduce((obj: Record<string, ReceiptProps>, r) => {
+    obj[r.id] = r;
+    return obj;
+  }, {});
+  const noChangeExistingReceipts = newPurchaseReceipts.map((r) => existingPurchaseReceipts[r.id]).filter((r) => r);
+
+  const addedNewReceiptPromises = newPurchaseReceipts
+    .filter((r) => !existingPurchaseReceipts[r.id])
+    .map(async (r) => {
+      const receiptIdResult = await updatePurchaseIdForReceipt(newPurchaseId, oldPurchaseId, r.name);
+      if (receiptIdResult.error) {
+        return { ...r, error: receiptIdResult.error };
+      }
+      const rr: ReceiptProps = { ...r, purchaseId: "", id: receiptIdResult.id as string, url: "", file: undefined };
+      return rr;
+    });
+  const addedNewReceipts = await Promise.all(addedNewReceiptPromises);
+  const errorReceipt = addedNewReceipts.find((r) => "error" in r);
+  if (errorReceipt) {
+    return { error: "invalid receipt" };
+  }
+
+  const newExpenseReceiptIds = newPurchaseReceipts.map((r) => r.id);
+  const removingExistingReceipts = oldPurchaseReceipts.filter((r) => !newExpenseReceiptIds.includes(r.id));
+  const removingPromises = removingExistingReceipts.map(async (r) => {
+    return await deleteReceiptFileData(oldPurchaseId, r.id);
+  });
+  const removingResults = await Promise.all(removingPromises);
+  logger.log(
+    "removed receipts. ",
+    removingResults.filter((r) => r.deleted).flatMap((r) => r)
+  );
+  logger.warn(
+    "failed to removed receipts. errros: ",
+    removingResults.filter((r) => r.error)
+  );
+
+  return { list: [...noChangeExistingReceipts, ...addedNewReceipts] };
+};
+
+export const addUpdatePurchase = async (data: PurchaseFields) => {
+  const logger = getLogger("addUpdate", _rootLogger);
+  const existingPurchase = await purchaseDb.getItem(data.id);
+
+  if (existingPurchase) {
+    logger.info("updating existing expense found. difference (data-existingPurchase) =", ObjectDeepDifference(data, existingPurchase));
+    const receiptResult = await getReceiptsForPurchaseAddUpdate(
+      existingPurchase.receipts,
+      data.receipts,
+      existingPurchase.id,
+      existingPurchase.id,
+      logger
+    );
+    if (receiptResult.error) {
+      return { error: receiptResult.error };
+    }
+
+    const existingPurchaseItems = (existingPurchase.items || []).reduce((obj: Record<string, PurchaseItemFields>, ei) => {
+      obj[ei.id] = ei;
+      return obj;
+    }, {});
+    const purchaseItems = data.items || [];
+    const updatedExistingPurchaseIems = purchaseItems
+      .filter((ei) => existingPurchaseItems[ei.id])
+      .map((ei) => ({ ...ei, expenseCategoryName: undefined }));
+    const addedNewPurchaseIems = purchaseItems
+      .filter((ei) => !existingPurchaseItems[ei.id])
+      .map((ei) => ({ ...ei, expenseCategoryName: undefined, id: uuidv4() }));
+
+    const updatedPurchase: PurchaseFields = {
+      ...data,
+      status: ExpenseStatus.Enable,
+      receipts: receiptResult.list || [],
+      items: [...updatedExistingPurchaseIems, ...addedNewPurchaseIems],
+      auditDetails: auditData(existingPurchase.auditDetails.createdBy, existingPurchase.auditDetails.createdOn),
+    };
+    delete updatedPurchase.purchaseTypeName;
+    delete updatedPurchase.paymentAccountName;
+    await purchaseDb.addUpdateItem(updatedPurchase);
+    return { updated: updatedPurchase };
+  }
+
+  const newPurchaseId = uuidv4();
+  const receiptResult = await getReceiptsForPurchaseAddUpdate([], data.receipts, data.id, newPurchaseId, logger);
+  if (receiptResult.error) {
+    return { error: receiptResult.error };
+  }
+  const addedPurchase: PurchaseFields = {
+    ...data,
+    id: newPurchaseId,
+    status: ExpenseStatus.Enable,
+    receipts: data.receipts.map((r) => ({ ...r, id: uuidv4(), purchaseId: "", url: "" })),
+    items: data.items?.map((ei) => ({ ...ei, expenseCategoryName: undefined, id: uuidv4() })) || [],
+    auditDetails: auditData(),
+  };
+
+  await purchaseDb.addUpdateItem(addedPurchase);
+  return { added: addedPurchase };
+};
+
+export const deletePurchase = async (purchaseId: string) => {
+  const existingPurchase = await purchaseDb.getItem(purchaseId);
+  if (existingPurchase && existingPurchase.belongsTo === ExpenseBelongsTo.Purchase) {
+    const deletingPurchase = {
+      ...existingPurchase,
+      status: ExpenseStatus.Deleted,
+      auditDetails: auditData(existingPurchase.auditDetails.createdBy, existingPurchase.auditDetails.createdOn),
+    };
+    await purchaseDb.addUpdateItem(deletingPurchase);
+    return { deleted: { ...deletingPurchase } as PurchaseFields };
+  }
+  return { error: "purchase not found" };
+};

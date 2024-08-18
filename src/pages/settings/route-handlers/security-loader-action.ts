@@ -1,7 +1,6 @@
 import { ActionFunctionArgs, json } from "react-router-dom";
-import { AuthenticationService, UserDetailsResource } from "../../auth";
-import { HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
-import { UpdateUserPasswordResource } from "../../auth/services";
+import { AuthenticationService, UpdateUserPasswordResource, UserDetailsResource } from "../../auth";
+import { HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../services";
 
 const authenticationService = AuthenticationService();
 

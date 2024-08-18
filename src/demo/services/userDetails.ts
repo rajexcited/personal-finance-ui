@@ -1,4 +1,4 @@
-import { formatTimestamp, getLogger } from "../../services";
+import { formatTimestamp, getLogger } from "../../shared";
 
 const rootLogger = getLogger("mock.service.userDetails", null, null, "DEBUG");
 

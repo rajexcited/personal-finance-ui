@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useState } from "react";
 import ConfirmDialog from "./confirm-dialog";
 import "./verify-indicator.css";
-import { getLogger } from "../services";
+import { getLogger } from "../shared";
 
 export interface VerifyIndicatorProps {
     id: string;

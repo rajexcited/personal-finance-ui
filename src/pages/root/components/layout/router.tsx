@@ -16,7 +16,7 @@ import { AddPurchase, ExpenseJournalPage, ExpenseList, UpdatePurchase, expenseLi
 import { PurchaseTypePage, ProfileSettingsPage, PymtAccountTypePage, SettingsRootPage, purchaseTypeListActionHandler, purchaseTypeListLoaderHandler, paymentAccountTypeListLoaderHandler, profileDetailsActionHandler, profileDetailsLoaderHandler, pymtAccTypeListActionHandler, securityDetailsActionHandler, securityDetailsLoaderHandler, SecurityPage } from "../../../settings";
 import { LoginPage, RequireAuth, SignupPage, LogoutPage } from "../../../auth";
 import { HomePage } from "./home";
-import { getLogger } from "../../../../services";
+import { getLogger } from "../../services";
 
 const logger = getLogger("CBR.router", null, null, "INFO");
 logger.debug("pathBaseName =", pathBaseName, ", rootPath =", getShortPath("rootPath"));

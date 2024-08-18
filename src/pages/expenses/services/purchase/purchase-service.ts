@@ -13,7 +13,8 @@ import {
   ConfigTypeStatus,
   TagsService,
   TagBelongsTo,
-} from "../../../../services";
+  InvalidError,
+} from "../../../../shared";
 import { DownloadReceiptResource, ErrorReceiptProps, PurchaseFields, PurchaseItemFields, ReceiptProps } from "./field-types";
 import { PurchaseTypeService } from "./purchase-type-service";
 import { PymtAccountService } from "../../../pymt-accounts";
@@ -23,6 +24,7 @@ import ExpiryMap from "expiry-map";
 import { validate as isValidUuid, version as getUuidVersion } from "uuid";
 import ms from "ms";
 import pDebounce from "p-debounce";
+import { ExpenseBelongsTo } from "../field-types";
 
 type PurchaseTagQueryParams = Record<"purchasedYear", string[]>;
 type CacheAction = "AddUpdateGet" | "Remove";
@@ -34,7 +36,7 @@ export const PurchaseService = () => {
     }
   };
 
-  const expenseDb = new MyLocalDatabase<PurchaseFields>(LocalDBStore.Expense);
+  const purchaseDb = new MyLocalDatabase<PurchaseFields>(LocalDBStore.Expense);
   const receiptFileDb = new MyLocalDatabase<DownloadReceiptResource>(LocalDBStore.ReceiptFile, onBeforeExpiredReceiptFileCallback);
 
   const pymtAccService = PymtAccountService();
@@ -174,6 +176,9 @@ export const PurchaseService = () => {
   const addUpdateDbPurchase = async (purchase: PurchaseFields, loggerBase: LoggerBase) => {
     // here we don't have url or file prop in receipts
     const logger = getLogger("addUpdateDbPurchase", loggerBase);
+    if (purchase.belongsTo !== ExpenseBelongsTo.Purchase) {
+      throw new InvalidError("this is not purchase");
+    }
     const transformStart = new Date();
     const dbPurchase: PurchaseFields = {
       ...purchase,
@@ -187,7 +192,7 @@ export const PurchaseService = () => {
     await updatePurchaseTags(dbPurchase);
 
     logger.info("transforming execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
-    await expenseDb.addUpdateItem(dbPurchase);
+    await purchaseDb.addUpdateItem(dbPurchase);
     logger.info("dbPurchase =", dbPurchase, ", execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
     return dbPurchase;
   };
@@ -265,7 +270,7 @@ export const PurchaseService = () => {
       const logger = getLogger("getPurchase", _logger);
 
       try {
-        const dbPurchase = await expenseDb.getItem(purchaseId);
+        const dbPurchase = await purchaseDb.getItem(purchaseId);
 
         if (dbPurchase && dbPurchase.items) {
           return dbPurchase;
@@ -304,7 +309,7 @@ export const PurchaseService = () => {
         await Promise.all(updateReceiptIdPromises);
 
         // cleaning memory if receipt object is removed
-        const existing = await expenseDb.getItem(response.data.id);
+        const existing = await purchaseDb.getItem(response.data.id);
         if (existing) {
           const deleteReceiptPromises = existing.receipts.map(async (rct) => {
             if (!purchaseReceipts[rct.name]) {
@@ -443,11 +448,13 @@ export const PurchaseService = () => {
       return await Promise.all(promises);
     },
 
-    cacheReceiptFile,
-
     getPurchaseTypes: () => {
       return purchaseTypeService.getTypes(ConfigTypeStatus.Enable);
     },
+
+    cacheReceiptFile,
+
+    addUpdateDbPurchase,
   };
 };
 

@@ -10,6 +10,7 @@ import {
   handleRouteActionError,
   PurchaseFields,
 } from "../../services";
+import { ExpenseBelongsTo } from "../../services";
 
 const purchaseService = PurchaseService();
 const rhLogger = getLogger("route.handler.purchase.action", null, null, "DEBUG");
@@ -90,6 +91,7 @@ const purchaseAddUpdateActionHandler = async (request: Request) => {
       purchaseTypeName: getFormData(formdata, "purchaseTypeName"),
       receipts: modifiedReceipts,
       auditDetails: { createdOn: new Date(), updatedOn: new Date() },
+      belongsTo: ExpenseBelongsTo.Purchase,
     });
 
     return redirect(getFullPath("expenseJournalRoot"));

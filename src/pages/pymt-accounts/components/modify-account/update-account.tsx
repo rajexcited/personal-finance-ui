@@ -1,12 +1,11 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import { useActionData, useLoaderData, useNavigation, useSubmit } from "react-router-dom";
-import { PymtAccountFields } from "../../services";
+import { PymtAccountFields, RouteHandlerResponse } from "../../services";
 import AccountForm from "./account-form";
 import { getFullPath } from "../../../root";
 import { useAuth } from "../../../auth";
 import ReactMarkdown from "react-markdown";
 import { PymtAccountDetailLoaderResource } from "../../route-handlers/account-loader";
-import { RouteHandlerResponse } from "../../../../services";
 
 
 const UpdateAccount: FunctionComponent = () => {

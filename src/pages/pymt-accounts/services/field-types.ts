@@ -1,4 +1,4 @@
-import { AuditFields } from "../../../services";
+import { AuditFields } from "../../../shared";
 
 export enum PymtAccStatus {
   Enable = "enable",

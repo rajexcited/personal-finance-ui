@@ -6,9 +6,9 @@ import {
   UpdateConfigStatusResource,
   TagBelongsTo,
   TagsService,
-} from "../../../services";
+} from "../../../shared";
 
-const PymtAccountTypeServiceImpl = () => {
+export const PymtAccountTypeService = () => {
   const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.PaymentAccountType);
   const tagService = TagsService();
 
@@ -58,5 +58,3 @@ const PymtAccountTypeServiceImpl = () => {
     getPymtAccTypeTags,
   };
 };
-
-export default PymtAccountTypeServiceImpl;

@@ -1,5 +1,5 @@
 import { FunctionComponent, useState } from "react";
-import { ConfigResource, ConfigTypeStatus, UpdateConfigDetailsResource } from "../../../services";
+import { ConfigResource, ConfigTypeStatus, UpdateConfigDetailsResource } from "../services";
 import { Input, InputValidators, Switch, TagsInput, TextArea } from "../../../components";
 
 export type ConfigInputProps = {

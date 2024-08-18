@@ -2,10 +2,10 @@ import { FormEventHandler, FunctionComponent, MouseEventHandler, useEffect, useS
 import { Animated, Input } from "../../../components";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
 import { getFullPath } from "../../root";
-import { UpdateUserDetailsResource } from "../../auth/services";
-import { RouteHandlerResponse, getLogger } from "../../../services";
+import { RouteHandlerResponse, getLogger } from "../services";
 import { ProfileDetailsLoaderResource } from "../route-handlers/profile-loader-action";
 import ReactMarkdown from "react-markdown";
+import { UpdateUserDetailsResource } from "../../auth";
 
 const fcLogger = getLogger("FC.settings.ProfileSettings", null, null, "INFO");
 

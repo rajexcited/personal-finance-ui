@@ -3,9 +3,9 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCoins, faGear, faMoneyBills, faUserAlt, faUserSecret } from "@fortawesome/free-solid-svg-icons";
 // importing from file to prevent circular dependency error.
-import { getFullPath, pathBaseName } from "../../root/components/navigation";
+import { getFullPath, pathBaseName } from "../../root";
 import { HeroTabs } from "../../../components";
-import { getLogger } from "../../../services";
+import { getLogger } from "../services";
 
 const fcLogger = getLogger("FC.SettingsRootPage", null, null, "INFO");
 

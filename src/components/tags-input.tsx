@@ -2,7 +2,7 @@ import "./tags-input.css";
 import { FunctionComponent, useRef, useEffect, useState } from "react";
 import BulmaTagsInput, { BulmaTagsInputOptions } from '@creativebulma/bulma-tagsinput';
 import "@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css";
-import { getLogger } from "../services";
+import { getLogger } from "../shared";
 
 
 export interface TagsInputProps {

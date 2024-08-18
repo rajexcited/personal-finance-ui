@@ -12,8 +12,9 @@ import {
     DropDownItemType
 } from "../../../../../components";
 import { PurchaseBreakDown } from "./purchase-breakdown";
-import { ConfigResource, PurchaseFields, PurchaseItemFields, formatTimestamp, getLogger, ReceiptProps } from "../../../services";
+import { ConfigResource, PurchaseFields, PurchaseItemFields, formatTimestamp, getLogger, ReceiptProps, ExpenseBelongsTo } from "../../../services";
 import { UploadReceiptsModal } from "../receipt/upload-receipts";
+
 
 
 export interface PurchaseFormProps {
@@ -72,6 +73,7 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
             purchaseTypeName: selectedDropdownPurchaseType?.content,
             receipts: datareceipts,
             auditDetails: { createdOn: "", updatedOn: "" },
+            belongsTo: ExpenseBelongsTo.Purchase
         };
 
         Object.entries(data).forEach((entry) => {

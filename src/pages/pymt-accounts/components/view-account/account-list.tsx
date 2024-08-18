@@ -1,11 +1,10 @@
 import { FunctionComponent, useState } from "react";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
 import AccountItemCard from "./account-item-view";
-import { PymtAccountFields } from "../../services";
+import { PymtAccountFields, RouteHandlerResponse } from "../../services";
 import { Animated, ConfirmDialog } from "../../../../components";
 import { getFullPath } from "../../../root";
 import ReactMarkdown from "react-markdown";
-import { RouteHandlerResponse } from "../../../../services";
 
 
 const AccountList: FunctionComponent = () => {

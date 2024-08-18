@@ -6,7 +6,7 @@ import useAuth from "../hooks/use-auth";
 import { getFullPath } from "../../root";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock, faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
-import { getLogger } from "../../../services";
+import { getLogger } from "../../../shared";
 import "./login.css";
 
 enum LoginSubmitStatus {

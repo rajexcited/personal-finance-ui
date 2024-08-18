@@ -2,12 +2,12 @@ import "./security.css";
 import { FormEventHandler, FunctionComponent, MouseEventHandler, useState, useEffect } from "react";
 import { Animated, Input, InputValidators } from "../../../components";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
-import { UserDetailsResource } from "../../auth";
+import { UpdateUserPasswordResource, UserDetailsResource } from "../../auth";
 import { faLock } from "@fortawesome/free-solid-svg-icons";
 import { getFullPath } from "../../root";
 import ReactMarkdown from "react-markdown";
-import { RouteHandlerResponse } from "../../../services";
-import { UpdateUserPasswordResource } from "../../auth/services";
+import { RouteHandlerResponse } from "../services";
+
 
 enum ActionState {
     NoAction = "NA",

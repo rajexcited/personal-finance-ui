@@ -1,6 +1,13 @@
 import { LoaderFunctionArgs } from "react-router-dom";
-import { ConfigResource, PymtAccountFields, PymtAccountService, descCompare } from "../services";
-import { RouteHandlerResponse, getLogger, handleRouteActionError } from "../../../services";
+import {
+  ConfigResource,
+  PymtAccountFields,
+  PymtAccountService,
+  descCompare,
+  RouteHandlerResponse,
+  getLogger,
+  handleRouteActionError,
+} from "../services";
 
 const accountService = PymtAccountService();
 

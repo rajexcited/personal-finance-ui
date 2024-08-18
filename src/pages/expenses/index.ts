@@ -5,4 +5,4 @@ export { expenseListLoaderHandler } from "./route-handlers/expense-loader";
 export { purchaseDetailLoaderHandler, purchaseDetailSupportingLoaderHandler } from "./route-handlers/purchase/loader";
 
 export { PurchaseTypeService, ExpenseStatus } from "./services";
-export type { PurchaseFields, PurchaseItemFields, ReceiptProps } from "./services";
+export type { PurchaseFields, PurchaseItemFields, ReceiptProps, ExpenseFields } from "./services";

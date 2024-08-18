@@ -2,14 +2,14 @@ import { FunctionComponent, useState, useEffect, useRef } from "react";
 import { useActionData, useLoaderData, useNavigate, useSubmit } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { Animated, ConfirmDialog, LoadSpinner } from "../../../../components";
-import { rowHeaders, PurchaseFields, expenseComparator, ExpenseSortStateType } from "../../services";
+import { rowHeaders, PurchaseFields, expenseComparator, ExpenseSortStateType, getLogger, RouteHandlerResponse } from "../../services";
 import { getFullPath } from "../../../root";
 import { useDebounceState } from "../../../../hooks";
 import { ExpenseItemTableRow } from "./view-expense-item-tablerow";
 import { ExpenseTableHead, ExpenseTableHeadRefType } from "./expense-table-head";
 import "./view-expense-list.css";
-import { RouteHandlerResponse, difference, getLogger } from "../../../../services";
 import { ViewReceipts } from "./receipt/view-receipts";
+import { ObjectDeepDifference } from "../../../../shared";
 
 const fcLogger = getLogger("FC.expense.view.ExpenseList", null, null, "INFO");
 let prevSortDetails: ExpenseSortStateType | null = null;
@@ -64,7 +64,7 @@ export const ExpenseList: FunctionComponent = () => {
         const logger = getLogger("getSortedExpenses", fcLogger);
         const sortedExpenses = [...expenses];
         sortedExpenses.sort(expenseComparator.bind(null, sortDetails));
-        logger.debug("sortDetails", JSON.stringify(sortDetails), "diff: ", difference(sortDetails, getPrevSortDetails(sortDetails)));
+        logger.debug("sortDetails", JSON.stringify(sortDetails), "diff: ", ObjectDeepDifference(sortDetails, getPrevSortDetails(sortDetails)));
         return sortedExpenses;
     };
 

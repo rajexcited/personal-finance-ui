@@ -1,4 +1,4 @@
-import { ConfigResource } from "../../../services";
+import { ConfigResource } from "../../../shared";
 
 export enum ActionId {
   Add = "add",
@@ -18,7 +18,7 @@ export type { CurrencyProfileResource } from "./currency-profile-service";
 
 export { default as CurrencyProfileService } from "./currency-profile-service";
 
-export { ConfigTypeBelongsTo, ConfigTypeStatus, getLogger } from "../../../services";
+export { ConfigTypeBelongsTo, ConfigTypeStatus, getLogger, handleRouteActionError, HttpStatusCode } from "../../../shared";
 
 export type {
   UpdateConfigDetailsResource,
@@ -26,4 +26,4 @@ export type {
   ConfigResource,
   DeleteConfigDetailsResource,
   RouteHandlerResponse,
-} from "../../../services";
+} from "../../../shared";

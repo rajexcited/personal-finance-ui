@@ -1,5 +1,5 @@
 import { IDBPDatabase, openDB } from "idb";
-import { LoggerBase, getLogger } from "./logger";
+import { LoggerBase, getLogger } from "../utils";
 import datetime from "date-and-time";
 
 export enum LocalDBStore {

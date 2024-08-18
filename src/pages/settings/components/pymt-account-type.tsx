@@ -1,9 +1,8 @@
 import { FunctionComponent, useMemo, useState } from "react";
 import { Animated, ConfirmDialog, List, Switch } from "../../../components";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
-import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, DeleteConfigDetailsResource, RouteHandlerResponse, UpdateConfigDetailsResource, UpdateConfigStatusResource, getLogger } from "../../../services";
 import { Control, ListItem } from "../../../components/list";
-import { ActionId, TypeCategoryAction } from "../services";
+import { ActionId, ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, DeleteConfigDetailsResource, getLogger, RouteHandlerResponse, TypeCategoryAction, UpdateConfigDetailsResource, UpdateConfigStatusResource } from "../services";
 import ViewConfig from "./view-config";
 import UpdateConfig, { ConfigInputProps } from "./update-config";
 import { faEdit, faEye, faRemove, faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";

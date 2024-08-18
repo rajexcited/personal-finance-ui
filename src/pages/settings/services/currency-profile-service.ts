@@ -1,4 +1,4 @@
-import { ConfigTypeService, ConfigResource, ConfigTypeStatus, ConfigTypeBelongsTo, UpdateConfigStatusResource } from "../../../services";
+import { ConfigTypeService, ConfigResource, ConfigTypeStatus, ConfigTypeBelongsTo, UpdateConfigStatusResource } from "../../../shared";
 
 export interface CurrencyProfileResource extends ConfigResource {
   country: {

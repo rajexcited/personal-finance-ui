@@ -2,10 +2,9 @@ import { FunctionComponent, useRef } from "react";
 import { faEdit, faTrash, faReceipt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { VerifyIndicator } from "../../../../components";
-import { PurchaseFields } from "../../services";
+import { getLogger, PurchaseFields } from "../../services";
 import dateutil from "date-and-time";
 import { formatAmount } from "../../../../formatters";
-import { getLogger } from "../../../../services";
 
 
 interface ExpenseItemTableRowProps {

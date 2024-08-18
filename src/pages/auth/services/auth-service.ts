@@ -1,5 +1,5 @@
 import "./interceptors";
-import { LoggerBase, axios, getLogger, handleRestErrors, isBlank, subtractDates } from "../../../services";
+import { LoggerBase, axios, getLogger, handleRestErrors, isBlank, subtractDates } from "../../../shared";
 import {
   AccessTokenResource,
   UpdateUserDetailsResource,

@@ -9,7 +9,7 @@ import {
   UpdateConfigStatusResource,
   getLogger,
   handleRouteActionError,
-} from "../../../services";
+} from "../services";
 
 const purchaseTypeService = PurchaseTypeService();
 const rhLogger = getLogger("route.handler.settings.purchaseType.loader", null, null, "INFO");
