@@ -3,17 +3,20 @@ import { faMagnifyingGlassMinus, faMagnifyingGlassPlus, faUpload } from "@fortaw
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useState, MouseEventHandler, useMemo, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { getLogger, PurchaseService, ReceiptProps, ReceiptType } from "../../../services";
 import ReactMarkdown from "react-markdown";
-import { LoadSpinner } from "../../../../../components";
+import { LoadSpinner } from "../loading";
+import { CacheAction, DownloadReceiptResource, ReceiptProps, ReceiptType } from "./field-types";
+import { getLogger } from "../../shared";
+import { ExpenseBelongsTo } from "../../pages/expenses/services";
 
 interface UploadReceiptsModalProps {
     receipts: ReceiptProps[],
-    purchaseId: string;
+    relationId: string;
     onChange (receipts: ReceiptProps[]): void;
+    cacheReceiptFile (receipt: ReceiptProps, cacheAction: CacheAction): Promise<DownloadReceiptResource>;
+    downloadReceipts (receipts: ReceiptProps[]): Promise<DownloadReceiptResource[]>;
+    belongsTo: ExpenseBelongsTo;
 }
-
-const purchaseService = PurchaseService();
 
 const allowedScales = [0.125, 0.25, 0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
 const findNextScaleValue = (scale: number, findBigger: boolean) => {
@@ -85,9 +88,10 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                         id: uuidv4(),
                         file,
                         contentType: fileType,
-                        purchaseId: props.purchaseId
+                        relationId: props.relationId,
+                        belongsTo: props.belongsTo
                     };
-                    const cachedReceiptResponse = await purchaseService.cacheReceiptFile(receipt, "AddUpdateGet");
+                    const cachedReceiptResponse = await props.cacheReceiptFile(receipt, CacheAction.AddUpdateGet);
                     supportedReceipts.push({
                         ...receipt,
                         ...cachedReceiptResponse
@@ -137,12 +141,12 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
             props.onChange(newReceipts);
             return newReceipts;
         });
-        await purchaseService.cacheReceiptFile(receiptToBeRemoved, "Remove");
+        await props.cacheReceiptFile(receiptToBeRemoved, CacheAction.Remove);
     };
 
     const onClickModalOpenHandler: MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        purchaseService.downloadReceipts(receipts).then((downloadedReceipts) => {
+        props.downloadReceipts(receipts).then((downloadedReceipts) => {
             const failedMessages = downloadedReceipts.map(dr => dr.status === "fail" && dr.error || "").filter(r => r);
             if (failedMessages.length > 0) {
                 setErrorMessage(failedMessages.join("\n"));

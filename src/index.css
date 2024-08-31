@@ -36,3 +36,7 @@ tr.is-selected.is-light {
     background-color: #5f85f8;
     color: #fee;
 }
+
+.tooltip.is-tooltip-multiline::before {
+    white-space: pre-line;
+}
