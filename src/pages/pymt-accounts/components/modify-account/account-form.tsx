@@ -50,7 +50,8 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
             typeName,
             typeId: "",
             auditDetails: { createdOn: "", updatedOn: "" },
-            status: PymtAccStatus.Enable
+            status: PymtAccStatus.Enable,
+            dropdownTooltip: ""
         };
         props.onSubmit(data);
     };

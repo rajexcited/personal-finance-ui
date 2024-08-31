@@ -16,4 +16,5 @@ export interface PymtAccountFields {
   description: string;
   status: PymtAccStatus;
   auditDetails: AuditFields;
+  dropdownTooltip: string;
 }
