@@ -1,4 +1,4 @@
-import { FunctionComponent, useMemo, useState } from "react";
+import { FunctionComponent, useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
 import { faEdit, faEye, faRemove, faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
@@ -20,7 +20,21 @@ export const PurchaseTypePage: FunctionComponent = () => {
     const [enableFilter, setEnableFilter] = useState(true);
     const [action, setAction] = useState<TypeCategoryAction>();
     const [toggleUpdate, setToggleUpdate] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
     const submit = useSubmit();
+
+    useEffect(() => {
+        const logger = getLogger("useEffect.dep[loaderData, actionData]", fcLogger);
+        logger.debug("loaderData= ", loaderData, ", actionData= ", actionData);
+
+        if (loaderData.type === "error") {
+            setErrorMessage(loaderData.errorMessage);
+        } else if (actionData?.type === "error") {
+            setErrorMessage(actionData.errorMessage);
+        } else {
+            setErrorMessage("");
+        }
+    }, [loaderData, actionData]);
 
     const purchaseTypeItems: ListItem[] = useMemo(() => {
         if (loaderData.type === "success") {
@@ -38,6 +52,15 @@ export const PurchaseTypePage: FunctionComponent = () => {
         return [];
     }, [loaderData, enableFilter]);
 
+    const updateAction = (newAction?: TypeCategoryAction) => {
+        setAction(prev => {
+            if (newAction && prev?.type !== newAction.type) {
+                setErrorMessage("");
+            }
+            return newAction;
+        });
+    };
+
     const onClickRequestAddPurchaseTypeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
         const defaultAddConfig: ConfigResource = {
@@ -50,18 +73,18 @@ export const PurchaseTypePage: FunctionComponent = () => {
             auditDetails: { createdOn: "", updatedOn: "" },
             tags: []
         };
-        setAction({ item: defaultAddConfig, type: ActionId.Add });
+        updateAction({ item: defaultAddConfig, type: ActionId.Add });
     };
     const onClickRequestUpdatePurchaseTypeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
         if (action?.item) {
-            setAction({ item: action.item, type: ActionId.Update });
+            updateAction({ item: action.item, type: ActionId.Update });
             setToggleUpdate(prev => !prev);
         }
     };
     const onClickRequestDeletePurchaseTypeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
-        if (action?.item) setAction({ item: action.item, type: ActionId.Delete });
+        if (action?.item) updateAction({ item: action.item, type: ActionId.Delete });
     };
 
     const onRequestListControlPurchaseTypeHandler = (item: ListItem, control: Control) => {
@@ -69,12 +92,12 @@ export const PurchaseTypePage: FunctionComponent = () => {
         if (!cfgitem) return;
 
         if (control.id === ActionId.View) {
-            setAction({ item: cfgitem, type: ActionId.View });
+            updateAction({ item: cfgitem, type: ActionId.View });
         } else if (control.id === ActionId.Update) {
-            setAction({ item: cfgitem, type: ActionId.Update });
+            updateAction({ item: cfgitem, type: ActionId.Update });
             setToggleUpdate(prev => !prev);
         } else if (control.id === ActionId.Delete) {
-            setAction({ item: cfgitem, type: ActionId.Delete });
+            updateAction({ item: cfgitem, type: ActionId.Delete });
         } else if (control.id === ActionId.ToggleEnable) {
             onAddUpdatePurchaseTypeHandler({
                 ...cfgitem,
@@ -96,13 +119,13 @@ export const PurchaseTypePage: FunctionComponent = () => {
                 ...action.item,
                 action: "deleteDetails"
             };
-            setAction(undefined);
+            updateAction(undefined);
             submit(data as any, { method: "delete", action: getFullPath("purchaseTypeSettings"), encType: "application/json" });
         }
     };
 
     const onAddUpdatePurchaseTypeHandler = (details: UpdateConfigDetailsResource | UpdateConfigStatusResource) => {
-        setAction(undefined);
+        updateAction(undefined);
 
         submit(details as any, { method: "post", action: getFullPath("purchaseTypeSettings"), encType: "application/json" });
     };
@@ -128,8 +151,6 @@ export const PurchaseTypePage: FunctionComponent = () => {
         }
     };
 
-    fcLogger.info("loaderData= ", loaderData, ", actionData= ", actionData);
-    const errorMessage = loaderData.type === "error" ? loaderData.errorMessage : actionData?.type === "error" ? actionData.errorMessage : null;
     const purchaseTags = loaderData.type === "success" ? loaderData.data.purchaseTags : [];
 
     return (
@@ -195,7 +216,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
                                 details={ action.item }
                                 inputProps={ configInputProps }
                                 sourceTags={ purchaseTags }
-                                onCancel={ () => setAction(undefined) }
+                                onCancel={ () => updateAction(undefined) }
                                 onUpdate={ onAddUpdatePurchaseTypeHandler }
                             />
                         }
@@ -206,7 +227,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
                                 details={ action.item }
                                 inputProps={ configInputProps }
                                 sourceTags={ purchaseTags }
-                                onCancel={ () => setAction(undefined) }
+                                onCancel={ () => updateAction(undefined) }
                                 onUpdate={ onAddUpdatePurchaseTypeHandler }
                             />
                         }
@@ -217,7 +238,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
                                 details={ action.item }
                                 inputProps={ configInputProps }
                                 sourceTags={ purchaseTags }
-                                onCancel={ () => setAction(undefined) }
+                                onCancel={ () => updateAction(undefined) }
                                 onUpdate={ onAddUpdatePurchaseTypeHandler }
                             />
                         }
@@ -230,7 +251,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
                 title="Remove Purchase Type"
                 open={ action?.type === "delete" }
                 onConfirm={ onDeleteConfirmHandler }
-                onCancel={ () => setAction(undefined) }
+                onCancel={ () => updateAction(undefined) }
                 yesButtonClassname="is-danger"
             />
         </>

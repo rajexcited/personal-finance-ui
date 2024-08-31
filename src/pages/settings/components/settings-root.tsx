@@ -1,9 +1,9 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCoins, faGear, faMoneyBills, faUserAlt, faUserSecret } from "@fortawesome/free-solid-svg-icons";
+import { faCoins, faGear, faMoneyBills, faPersonCircleQuestion, faUserAlt, faUserSecret } from "@fortawesome/free-solid-svg-icons";
 // importing from file to prevent circular dependency error.
-import { getFullPath, pathBaseName } from "../../root";
+import { getFullPath, pathBaseName } from "../../root/components/navigation/page-url";
 import { HeroTabs } from "../../../components";
 import { getLogger } from "../services";
 
@@ -13,6 +13,7 @@ const TAB_HEADS = [
     { id: "root-stngs", title: "General Settings", url: getFullPath("settingsRoot"), icon: faGear },
     { id: "xpns-ctgry-stngs", title: "Purchase Type", url: getFullPath("purchaseTypeSettings"), icon: faCoins },
     { id: "pymt-acc-typ-stngs", title: "Payment Account Type", url: getFullPath("pymtAccountTypeSettings"), icon: faMoneyBills },
+    { id: "refund-reason-stngs", title: "Refund Reason", url: getFullPath("refundReasonSettings"), icon: faPersonCircleQuestion },
     // { id: "tags-stngs", title: "Tags", url: PAGE_URL.tagsSettings.fullUrl, icon: faTags },
     { id: "profile-stngs", title: "Profile", url: getFullPath("profileSettings"), icon: faUserAlt },
     { id: "scrty-stngs", title: "Security", url: getFullPath("securitySettings"), icon: faUserSecret },

@@ -1,20 +1,21 @@
 import { FunctionComponent, useEffect, useMemo, useState } from "react";
-import { Animated, ConfirmDialog, List, Switch } from "../../../components";
+import ReactMarkdown from "react-markdown";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
+import { faEdit, faEye, faRemove, faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
+import { v4 as uuidv4 } from "uuid";
+import { Animated, ConfirmDialog, List, Switch } from "../../../components";
+import { ActionId, ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, DeleteConfigDetailsResource, RouteHandlerResponse, TypeCategoryAction, UpdateConfigDetailsResource, UpdateConfigStatusResource, getLogger } from "../services";
 import { Control, ListItem } from "../../../components/list";
-import { ActionId, ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, DeleteConfigDetailsResource, getLogger, RouteHandlerResponse, TypeCategoryAction, UpdateConfigDetailsResource, UpdateConfigStatusResource } from "../services";
 import ViewConfig from "./view-config";
 import UpdateConfig, { ConfigInputProps } from "./update-config";
-import { faEdit, faEye, faRemove, faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
 import { getFullPath } from "../../root";
-import { v4 as uuidv4 } from "uuid";
-import ReactMarkdown from "react-markdown";
-import { PymtAccTypeLoaderResource } from "../route-handlers/pymt-acc-type-loader-action";
+import { RefundReasonLoaderResource } from "../route-handlers/refund-reason-loader-action";
 
-const fcLogger = getLogger("FC.settings.PymtAccountTypePage", null, null, "DEBUG");
 
-export const PymtAccountTypePage: FunctionComponent = () => {
-    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccTypeLoaderResource, null>;
+const fcLogger = getLogger("FC.settings.RefundReasonPage", null, null, "INFO");
+
+export const RefundReasonPage: FunctionComponent = () => {
+    const loaderData = useLoaderData() as RouteHandlerResponse<RefundReasonLoaderResource, null>;
     const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
     const [enableFilter, setEnableFilter] = useState(true);
     const [action, setAction] = useState<TypeCategoryAction>();
@@ -35,9 +36,9 @@ export const PymtAccountTypePage: FunctionComponent = () => {
         }
     }, [loaderData, actionData]);
 
-    const pymtAccountTypeItems: ListItem[] = useMemo(() => {
+    const refundReasonItems: ListItem[] = useMemo(() => {
         if (loaderData.type === "success") {
-            const list = loaderData.data.pymtAccTypes.map(cfg => ({
+            const list = loaderData.data.refundReasons.map(cfg => ({
                 id: cfg.id,
                 title: cfg.name + " - " + cfg.status,
                 description: cfg.description,
@@ -60,10 +61,10 @@ export const PymtAccountTypePage: FunctionComponent = () => {
         });
     };
 
-    const onClickRequestAddPymtAccTypeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    const onClickRequestAddRefundReasonHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
         const defaultAddConfig: ConfigResource = {
-            belongsTo: ConfigTypeBelongsTo.PaymentAccountType,
+            belongsTo: ConfigTypeBelongsTo.RefundReason,
             id: uuidv4(),
             description: "",
             name: "",
@@ -74,22 +75,20 @@ export const PymtAccountTypePage: FunctionComponent = () => {
         };
         updateAction({ item: defaultAddConfig, type: ActionId.Add });
     };
-
-    const onClickRequestUpdatePymtAccTypeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    const onClickRequestUpdateRefundReasonHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
         if (action?.item) {
             updateAction({ item: action.item, type: ActionId.Update });
             setToggleUpdate(prev => !prev);
         }
     };
-
-    const onClickRequestDeletePymtAccTypeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    const onClickRequestDeleteRefundReasonHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
         if (action?.item) updateAction({ item: action.item, type: ActionId.Delete });
     };
 
-    const onRequestListControlPymtAccTypeHandler = (item: ListItem, control: Control) => {
-        const cfgitem = loaderData.type === "success" && loaderData.data.pymtAccTypes.find(cfg => cfg.id === item.id);
+    const onRequestListControlRefundReasonHandler = (item: ListItem, control: Control) => {
+        const cfgitem = loaderData.type === "success" && loaderData.data.refundReasons.find(cfg => cfg.id === item.id);
         if (!cfgitem) return;
 
         if (control.id === ActionId.View) {
@@ -100,13 +99,13 @@ export const PymtAccountTypePage: FunctionComponent = () => {
         } else if (control.id === ActionId.Delete) {
             updateAction({ item: cfgitem, type: ActionId.Delete });
         } else if (control.id === ActionId.ToggleEnable) {
-            onAddUpdatePymtAccTypeHandler({
+            onAddUpdateRefundReasonHandler({
                 ...cfgitem,
                 status: ConfigTypeStatus.Enable,
                 action: "updateStatus"
             });
         } else if (control.id === ActionId.ToggleDisable) {
-            onAddUpdatePymtAccTypeHandler({
+            onAddUpdateRefundReasonHandler({
                 ...cfgitem,
                 status: ConfigTypeStatus.Disable,
                 action: "updateStatus"
@@ -121,13 +120,14 @@ export const PymtAccountTypePage: FunctionComponent = () => {
                 action: "deleteDetails"
             };
             updateAction(undefined);
-            submit(data as any, { method: "delete", action: getFullPath("pymtAccountTypeSettings"), encType: "application/json" });
+            submit(data as any, { method: "delete", action: getFullPath("refundReasonSettings"), encType: "application/json" });
         }
     };
 
-    const onAddUpdatePymtAccTypeHandler = (details: UpdateConfigStatusResource | UpdateConfigDetailsResource) => {
+    const onAddUpdateRefundReasonHandler = (details: UpdateConfigDetailsResource | UpdateConfigStatusResource) => {
         updateAction(undefined);
-        submit(details as any, { method: "post", action: getFullPath("pymtAccountTypeSettings"), encType: "application/json" });
+
+        submit(details as any, { method: "post", action: getFullPath("refundReasonSettings"), encType: "application/json" });
     };
 
     const controlsBeforeEllipsis: Control[] = [{ id: ActionId.View, content: "View", icon: faEye }];
@@ -140,24 +140,24 @@ export const PymtAccountTypePage: FunctionComponent = () => {
 
     const configInputProps: ConfigInputProps = {
         name: {
-            idPrefix: "pymt-acc",
-            placeholder: "Enter Account Type Name",
-            tooltip: "Payment Account type name by which you can attach the payment account while adding or updating payment account",
+            idPrefix: "refund-reason",
+            placeholder: "Enter Refund Reason",
+            tooltip: "Refund Reason name by which you can attach the reason while adding or updating refund",
         },
 
         description: {
-            idPrefix: "pymt-acc",
-            placeholder: "Enter Desription for Payment Account",
+            idPrefix: "refund-reason",
+            placeholder: "Enter Desription for Refund Reason",
         }
     };
 
-    const pymtAccTags = loaderData.type === "success" ? loaderData.data.pymtAccTags : [];
+    const reasonTags = loaderData.type === "success" ? loaderData.data.reasonTags : [];
 
     return (
         <>
             <div className="columns">
                 <div className="column has-text-centered">
-                    <h1 className="title">List of Payment Account Type</h1>
+                    <h1 className="title">List of Refund Reason</h1>
                 </div>
                 <div className="column"></div>
             </div>
@@ -166,16 +166,16 @@ export const PymtAccountTypePage: FunctionComponent = () => {
 
                     <Switch
                         initialStatus={ enableFilter }
-                        id="pymtAccTypEnableFilter"
+                        id="refundReasonEnableFilter"
                         labelWhenOn="Filtered by enabled"
-                        labelWhenOff="All Types"
+                        labelWhenOff="All Refund Reasons"
                         tooltip="Toggle to filter by status enable or show all"
                         onChange={ setEnableFilter }
                     />
 
                     <List
-                        items={ pymtAccountTypeItems }
-                        onControlRequest={ onRequestListControlPymtAccTypeHandler }
+                        items={ refundReasonItems }
+                        onControlRequest={ onRequestListControlRefundReasonHandler }
                         controlsInEllipsis={ controlsInEllipsis }
                         controlsBeforeEllipsis={ controlsBeforeEllipsis }
                     />
@@ -187,11 +187,11 @@ export const PymtAccountTypePage: FunctionComponent = () => {
                             {
                                 action && action.type === "view" &&
                                 <>
-                                    <button className="button is-link is-rounded" onClick={ onClickRequestDeletePymtAccTypeHandler }> &nbsp; &nbsp; Delete &nbsp; &nbsp; </button>
-                                    <button className="button is-link is-rounded" onClick={ onClickRequestUpdatePymtAccTypeHandler }> &nbsp; &nbsp; Edit &nbsp; &nbsp; </button>
+                                    <button className="button is-link is-rounded" onClick={ onClickRequestDeleteRefundReasonHandler }> &nbsp; &nbsp; Delete &nbsp; &nbsp; </button>
+                                    <button className="button is-link is-rounded" onClick={ onClickRequestUpdateRefundReasonHandler }> &nbsp; &nbsp; Edit &nbsp; &nbsp; </button>
                                 </>
                             }
-                            <button className="button is-link is-rounded" onClick={ onClickRequestAddPymtAccTypeHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
+                            <button className="button is-link is-rounded" onClick={ onClickRequestAddRefundReasonHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
                         </div>
                     </section>
                     <section className="mt-4 pt-4 px-4">
@@ -210,42 +210,45 @@ export const PymtAccountTypePage: FunctionComponent = () => {
                             <ViewConfig details={ action.item } />
                         }
                         {
+                            // condition to create new instance 
                             action?.type === ActionId.Update && toggleUpdate &&
                             <UpdateConfig
                                 details={ action.item }
                                 inputProps={ configInputProps }
-                                sourceTags={ pymtAccTags }
+                                sourceTags={ reasonTags }
                                 onCancel={ () => updateAction(undefined) }
-                                onUpdate={ onAddUpdatePymtAccTypeHandler }
+                                onUpdate={ onAddUpdateRefundReasonHandler }
                             />
                         }
                         {
+                            // condition to create new instance 
                             action?.type === ActionId.Update && !toggleUpdate &&
                             <UpdateConfig
                                 details={ action.item }
                                 inputProps={ configInputProps }
-                                sourceTags={ pymtAccTags }
+                                sourceTags={ reasonTags }
                                 onCancel={ () => updateAction(undefined) }
-                                onUpdate={ onAddUpdatePymtAccTypeHandler }
+                                onUpdate={ onAddUpdateRefundReasonHandler }
                             />
                         }
                         {
+                            // condition to create new instance 
                             action?.type === ActionId.Add &&
                             <UpdateConfig
                                 details={ action.item }
                                 inputProps={ configInputProps }
-                                sourceTags={ pymtAccTags }
+                                sourceTags={ reasonTags }
                                 onCancel={ () => updateAction(undefined) }
-                                onUpdate={ onAddUpdatePymtAccTypeHandler }
+                                onUpdate={ onAddUpdateRefundReasonHandler }
                             />
                         }
                     </section>
                 </div>
             </div>
             <ConfirmDialog
-                id="delete-pymt-acc-typ-confirm-dialog"
-                content="Are you sure that you want to delete payment account type?"
-                title="Remove Payment Account Type"
+                id="delete-refund-reason-confirm-dialog"
+                content="Are you sure that you want to delete refund reason?"
+                title="Remove Refund Reason"
                 open={ action?.type === "delete" }
                 onConfirm={ onDeleteConfirmHandler }
                 onCancel={ () => updateAction(undefined) }
