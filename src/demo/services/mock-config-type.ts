@@ -83,7 +83,11 @@ export const MockConfigType = (demoMock: MockAdapter) => {
     if (configStatus !== ConfigTypeStatus.Enable && configStatus !== ConfigTypeStatus.Disable) {
       return responseCreator.toNotFoundError("invalid status update url");
     }
-    if (belongsTo !== ConfigTypeBelongsTo.PurchaseType && belongsTo !== ConfigTypeBelongsTo.PaymentAccountType) {
+    if (
+      belongsTo !== ConfigTypeBelongsTo.PurchaseType &&
+      belongsTo !== ConfigTypeBelongsTo.PaymentAccountType &&
+      belongsTo !== ConfigTypeBelongsTo.RefundReason
+    ) {
       return responseCreator.toNotFoundError("invalid belongsTo update url");
     }
 
@@ -126,6 +130,11 @@ export const MockConfigType = (demoMock: MockAdapter) => {
   demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.PurchaseType).reply((config) => {
     return addUpdate(ConfigTypeBelongsTo.PurchaseType, config);
   });
+
+  demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.RefundReason).reply((config) => {
+    return addUpdate(ConfigTypeBelongsTo.RefundReason, config);
+  });
+
   demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType).reply((config) => {
     return addUpdate(ConfigTypeBelongsTo.PaymentAccountType, config);
   });
@@ -175,6 +184,21 @@ export const MockConfigType = (demoMock: MockAdapter) => {
     return responseCreator.toSuccessResponse(responselist);
   });
 
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.RefundReason + "/tags").reply(async (config) => {
+    const logger = getLogger("mock.config-types." + ConfigTypeBelongsTo.RefundReason + ".getTags");
+    const responseCreator = AxiosResponseCreator(config);
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+
+    const result = await getConfigTypes(ConfigTypeBelongsTo.RefundReason);
+    const responselist = result.list.flatMap((ec) => ec.tags);
+
+    logger.debug("categories size=", result.list.length, ", tags size =", responselist.length);
+    return responseCreator.toSuccessResponse(responselist);
+  });
+
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType + "/tags").reply(async (config) => {
     const logger = getLogger("mock.config-types." + ConfigTypeBelongsTo.PaymentAccountType + ".getTags");
     const responseCreator = AxiosResponseCreator(config);
@@ -191,6 +215,10 @@ export const MockConfigType = (demoMock: MockAdapter) => {
 
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PurchaseType).reply(async (config) => {
     return await getConfigTypeList(ConfigTypeBelongsTo.PurchaseType, config);
+  });
+
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.RefundReason).reply(async (config) => {
+    return await getConfigTypeList(ConfigTypeBelongsTo.RefundReason, config);
   });
 
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType).reply(async (config) => {

@@ -61,7 +61,7 @@ const DataBaseConfig: DBType = {
         },
         {
           name: LocalDBStoreIndex.ItemStatus,
-          keyPath: ["belongsTo", "status"],
+          keyPath: "status",
         },
       ],
     },

@@ -1,7 +1,8 @@
 import datetime from "date-and-time";
 import { ExpenseStatus, ExpenseFields } from "../../pages/expenses";
-import { parseTimestamp, getLogger } from "../../shared";
+import { parseTimestamp, getLogger, LoggerBase } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
+import { ExpenseBelongsTo, PurchaseFields } from "../../pages/expenses/services";
 
 const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
 const _rootLogger = getLogger("mock.db.expense", null, null, "DEBUG");
@@ -53,14 +54,25 @@ export const getExpenses = async (filters: ExpenseFilter) => {
     ", rangeEndDate =",
     rangeEndDate
   );
-  const filteredExpenses = expenses.filter((xpns) => {
-    logger.debug("expense id=", xpns.id, ", purchase date=", xpns.purchasedDate, ", updatedOn=", xpns.auditDetails.updatedOn);
-    const purchasedDate = getDateInstance(xpns.purchasedDate);
-    if (purchasedDate >= rangeStartDate && purchasedDate <= rangeEndDate) {
-      return true;
+
+  const isPurchaseWithinRange = (xpns: ExpenseFields, rangeStartDate: Date, rangeEndDate: Date, logger: LoggerBase) => {
+    logger.debug("expense id=", xpns.id, ", updatedOn=", xpns.auditDetails.updatedOn);
+    if (xpns.belongsTo === ExpenseBelongsTo.Purchase) {
+      const purchasedDate = getDateInstance(xpns.purchasedDate);
+      if (purchasedDate >= rangeStartDate && purchasedDate <= rangeEndDate) {
+        return true;
+      }
     }
+    return false;
+  };
+
+  const filteredExpenses = expenses.filter((xpns) => {
+    logger.debug("expense id=", xpns.id, ", updatedOn=", xpns.auditDetails.updatedOn);
     const updatedOn = getDateInstance(xpns.auditDetails.updatedOn);
     if (updatedOn >= rangeStartDate && updatedOn <= rangeEndDate) {
+      return true;
+    }
+    if (isPurchaseWithinRange(xpns, rangeStartDate, rangeEndDate, logger)) {
       return true;
     }
     return false;
@@ -78,12 +90,12 @@ export const getExpenses = async (filters: ExpenseFilter) => {
   );
 
   return {
-    list: filteredExpenses.map(
-      (xp) =>
-        ({
-          ...xp,
-          expenseItems: undefined,
-        } as ExpenseFields)
-    ),
+    list: filteredExpenses.map((xp) => {
+      if (xp.belongsTo === ExpenseBelongsTo.Purchase) {
+        const res = { ...xp, items: undefined };
+        return res as PurchaseFields;
+      }
+      return xp;
+    }),
   };
 };

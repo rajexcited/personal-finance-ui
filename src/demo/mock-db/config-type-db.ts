@@ -80,8 +80,35 @@ const initializePurchaseTypes = async () => {
   }
 };
 
+const initializeRefundReasons = async () => {
+  const refundReasons = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ConfigTypeBelongsTo.RefundReason);
+  if (refundReasons.length === 0) {
+    const defaultRefundReasons = ["price match", "costly", "no deal", "found better deal", "wanted to try", "dont like"];
+
+    const refundReasons = defaultRefundReasons.map((rfdrsn) => {
+      return {
+        belongsTo: ConfigTypeBelongsTo.RefundReason,
+        id: uuidv4(),
+        name: rfdrsn,
+        value: rfdrsn,
+        status: randomStatus(),
+        tags: [],
+        description: "Refund Reason is " + rfdrsn + ". Used to tag refund transactions.",
+        auditDetails: auditData(),
+      } as ConfigResource;
+    });
+    refundReasons[refundReasons.length - 1].status = ConfigTypeStatus.Deleted;
+
+    const refundReasonPromises = refundReasons.map(async (refundReason) => {
+      await configTypeDb.addItem(refundReason);
+    });
+
+    await Promise.all(refundReasonPromises);
+  }
+};
+
 const init = async () => {
-  await Promise.all([initializePurchaseTypes(), initializePymtAccTypes()]);
+  await Promise.all([initializePurchaseTypes(), initializePymtAccTypes(), initializeRefundReasons()]);
 };
 
 await init();
@@ -105,6 +132,10 @@ export const getPaymentAccountTypes = async () => {
 
 export const getPurchaseTypes = async () => {
   return await getConfigTypes(ConfigTypeBelongsTo.PurchaseType);
+};
+
+export const getRefundReasons = async () => {
+  return await getConfigTypes(ConfigTypeBelongsTo.RefundReason);
 };
 
 export const addUpdateConfigType = async (data: ConfigResource) => {

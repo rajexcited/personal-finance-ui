@@ -27,6 +27,7 @@ const init = async () => {
     description: "my cash, notes or coins",
     auditDetails: auditData(),
     status: PymtAccStatus.Enable,
+    dropdownTooltip: "",
   });
 
   await pymtAccDb.addItem({
@@ -40,6 +41,7 @@ const init = async () => {
     description: "Bank of America checking dummy account",
     auditDetails: auditData(),
     status: PymtAccStatus.Enable,
+    dropdownTooltip: "",
   });
 };
 

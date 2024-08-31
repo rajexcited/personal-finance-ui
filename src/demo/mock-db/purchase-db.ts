@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import datetime from "date-and-time";
-import { PurchaseFields, PurchaseItemFields, ExpenseStatus, ReceiptProps } from "../../pages/expenses";
+import { PurchaseFields, PurchaseItemFields, ExpenseStatus } from "../../pages/expenses";
 import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDate, getLogger } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { auditData } from "../services/userDetails";
@@ -9,6 +9,8 @@ import { getPurchaseTypes } from "./config-type-db";
 import { getPymtAccountList } from "./pymt-acc-db";
 import { ExpenseBelongsTo } from "../../pages/expenses/services";
 import { ExpenseFilter } from "./expense-db";
+import { ReceiptProps } from "../../components/receipt";
+import { JSONObject } from "../../shared/utils/deep-obj-difference";
 
 const purchaseDb = new MyLocalDatabase<PurchaseFields>(LocalDBStore.Expense);
 const _rootLogger = getLogger("mock.db.expense.purchase", null, null, "DEBUG");
@@ -148,7 +150,7 @@ const getReceiptsForPurchaseAddUpdate = async (
       if (receiptIdResult.error) {
         return { ...r, error: receiptIdResult.error };
       }
-      const rr: ReceiptProps = { ...r, purchaseId: "", id: receiptIdResult.id as string, url: "", file: undefined };
+      const rr: ReceiptProps = { ...r, relationId: "", id: receiptIdResult.id as string, url: "", file: undefined };
       return rr;
     });
   const addedNewReceipts = await Promise.all(addedNewReceiptPromises);
@@ -180,7 +182,10 @@ export const addUpdatePurchase = async (data: PurchaseFields) => {
   const existingPurchase = await purchaseDb.getItem(data.id);
 
   if (existingPurchase) {
-    logger.info("updating existing expense found. difference (data-existingPurchase) =", ObjectDeepDifference(data, existingPurchase));
+    logger.info(
+      "updating existing expense found. difference (data-existingPurchase) =",
+      ObjectDeepDifference(data as unknown as JSONObject, existingPurchase as unknown as JSONObject)
+    );
     const receiptResult = await getReceiptsForPurchaseAddUpdate(
       existingPurchase.receipts,
       data.receipts,
