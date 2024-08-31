@@ -1,9 +1,10 @@
 import React, { FunctionComponent, useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faInfoCircle, faCheck, faEdit, faEye, faEyeSlash, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { faInfoCircle, faCheck, faEdit, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import "./input.css";
 import { InputValidateResponse } from "./input-validators";
+import { getLogger } from "../../shared";
 
 
 interface BaseInputProps {
@@ -50,6 +51,8 @@ export type InputProps =
     | NumberInputProps
     | ColorInputProps;
 
+
+const fcLogger = getLogger("FC.Input", null, null, "DEBUG");
 
 const Input: FunctionComponent<InputProps> = (props) => {
     const [inputValue, setInputValue] = useState(props.initialValue);
