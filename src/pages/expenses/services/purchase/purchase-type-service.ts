@@ -13,19 +13,19 @@ import ms from "ms";
 
 export const PurchaseTypeService = () => {
   const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.PurchaseType);
-  const tagService = TagsService();
+  const tagService = TagsService(TagBelongsTo.PurchaseTypeConfig);
 
   /**
    *
    * @returns
    */
   const initializeTags = pDebounce(async () => {
-    const tagCount = await tagService.getCount(TagBelongsTo.PurchaseTypeConfig);
+    const tagCount = await tagService.getCount();
     if (tagCount > 0) {
       return;
     }
     const response = await configTypeService.getConfigTags();
-    await tagService.updateTags(TagBelongsTo.PurchaseTypeConfig, response);
+    await tagService.updateTags(response);
   }, ms("2 sec"));
 
   return {
@@ -75,7 +75,7 @@ export const PurchaseTypeService = () => {
      * Retrieves all tags associated to purchase types
      */
     getTags: async () => {
-      const tagList = await tagService.getTags(TagBelongsTo.PurchaseTypeConfig);
+      const tagList = await tagService.getTags();
       return tagList;
     },
   };

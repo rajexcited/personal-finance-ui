@@ -10,4 +10,4 @@ export {
   pymtAccountDetailSupportingLoaderHandler,
 } from "./route-handlers/account-loader";
 
-export { PymtAccountService, PymtAccountTypeService } from "./services";
+export { PymtAccountService, pymtAccountTypeService } from "./services";

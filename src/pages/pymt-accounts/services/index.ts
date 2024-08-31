@@ -1,4 +1,4 @@
-export { PymtAccountTypeService } from "./account-type-service";
+export * as pymtAccountTypeService from "./account-type-service";
 
 export { PymtAccountService } from "./accounts-service";
 

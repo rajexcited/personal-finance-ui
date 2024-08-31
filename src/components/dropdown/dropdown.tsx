@@ -3,7 +3,9 @@ import "./dropdown.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleUp, faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import DropDownItem from "./dropdown-item";
-import { getLogger } from "../shared";
+import { getLogger } from "../../shared";
+import { Input } from "../input";
+
 
 export type DropDownItemType = {
     id: string;
@@ -21,6 +23,8 @@ export interface DropDownProps {
     direction?: "up" | "down";
     size?: "normal" | "small" | "medium" | "large";
     required?: boolean;
+    allowSearch?: boolean;
+    loadMore?: () => Promise<void>;
 }
 
 const findUniqueElementId = (prefix: string) => {
@@ -40,6 +44,8 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
     const [selectedItem, setSelectedItem] = useState<DropDownItemType>();
     const [dropdownMenuId, setDropdownMenuId] = useState('');
     const [items, setItems] = useState<DropDownItemType[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isLoadingDropdownItems, setLoadingDropdownItems] = useState(true);
 
     const closeDropdownHandler = useCallback((event: MouseEvent) => {
         event.preventDefault();
@@ -98,6 +104,7 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
                 ddItems = [...props.items] as DropDownItemType[];
             }
             setItems(ddItems);
+            setLoadingDropdownItems(false);
         }
         if (props.defaultItem) {
             const defaultItem: DropDownItemType = typeof props.defaultItem === "string" ? { id: props.defaultItem, content: props.defaultItem } : props.defaultItem;
@@ -111,6 +118,14 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
         setOpen(active => !active);
     };
 
+    const loadMoreItemsHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
+        event.preventDefault();
+        if (props.loadMore) {
+            setLoadingDropdownItems(true);
+            props.loadMore();
+        }
+    };
+
     const onSelectHandler = (item: DropDownItemType, selectedId: string) => {
         setOpen(false);
         setSelectedItem(item);
@@ -121,9 +136,10 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
         }
     };
 
-    const contentsLength = items.map(it => it.content.length);
+    const filteredItems = items.filter(it => !searchTerm || it.content.includes(searchTerm) || !!it.tooltip?.includes(searchTerm));
+    const contentsLength = filteredItems.map(it => it.content.length);
     const selectedTriggerContent = selectedItem?.content || "Select";
-    fcLogger.debug("selectedTriggerContent =", selectedTriggerContent, ", selectedItem =", selectedItem, ", items.content =", items.map(itm => itm.content));
+    fcLogger.debug("selectedTriggerContent =", selectedTriggerContent, ", selectedItem =", selectedItem, ", filteredItems.content =", filteredItems.map(itm => itm.content));
 
     const paddingLength = (Math.max(...contentsLength, 20) / 2) + 2 - selectedTriggerContent.length;
     const triggerItemPaddingBefore = [];
@@ -132,6 +148,7 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
         triggerItemPaddingBefore.push(<span key={ "drpdwn-itm-pad-bfr" + i + props.id }>&nbsp;</span>);
         triggerItemPaddingAfter.push(<span key={ "drpdwn-itm-pad-aftr" + i + props.id }>&nbsp;</span>);
     }
+
 
     return (
         <div className="field">
@@ -150,22 +167,40 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
                     <div className="dropdown-menu" id={ dropdownMenuId } role="menu">
                         <div className="dropdown-content">
                             {
-                                items.map((itm) =>
+                                props.allowSearch &&
+                                <Input
+                                    id={ props.id + "search-items" }
+                                    className="search-items is-small"
+                                    type="text"
+                                    initialValue={ searchTerm }
+                                    maxlength={ 15 }
+                                    minlength={ 2 }
+                                    onChange={ val => setSearchTerm(val) }
+                                    disabled={ isLoadingDropdownItems }
+                                />
+                            }
+                            {
+                                filteredItems.map((itm) =>
                                     <DropDownItem
                                         key={ itm.id + "drpdwnitm" }
                                         id={ itm.id + "drpdwnitm" }
                                         content={ itm.content }
+                                        tooltip={ itm.tooltip }
                                         onSelect={ onSelectHandler.bind(null, itm) }
                                         type="text"
                                         selectedId={ selectedItem?.id + "drpdwnitm" } />
                                 )
                             }
                             {
-                                !items.length &&
+                                isLoadingDropdownItems &&
                                 <DropDownItem
                                     id="drpdwnitm-wait"
                                     type="wait"
                                 />
+                            }
+                            {
+                                (filteredItems.length === 0 || !isLoadingDropdownItems) && props.loadMore &&
+                                <button className="button" onClick={ loadMoreItemsHandler }>Load More</button>
                             }
                         </div>
                         <div className={ props.direction === "down" && isOpen ? "my-5 py-5" : "is-hidden" }>&nbsp;</div>

@@ -1,8 +1,8 @@
 import { FunctionComponent, useState } from "react";
-import Input from "./input";
+import { Input } from "../input";
 import './dropdown-item.css';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faInfoCircle, faSpinner } from "@fortawesome/free-solid-svg-icons";
 
 
 interface WaitDropDownItemPropBase {
@@ -19,6 +19,7 @@ interface NonwaitDropDownItemPropBase {
 interface TextDropDownItemProps extends NonwaitDropDownItemPropBase {
     type: "text";
     content: string;
+    tooltip?: string;
 }
 
 interface InputDropDownItemProps extends NonwaitDropDownItemPropBase {
@@ -60,7 +61,15 @@ const DropDownItem: FunctionComponent<DropDownItemProps> = (props) => {
                 className={ `dropdown-item ${isActive ? "is-active" : ""}` }
                 onClick={ (e) => selectItemHandler(e, props.id) } >
 
-                { props.type === "text" && <span>{ props.content }</span> }
+                { props.type === "text" &&
+                    <>
+                        <span>                        { props.content }                        </span>
+                        {
+                            props.tooltip &&
+                            <span className="icon has-text-info tooltip is-tooltip-multiline is-tooltip-right" data-tooltip={ props.tooltip.split(";").join("\n") }> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
+                        }
+                    </>
+                }
                 { props.type === "input" &&
                     <Input className="is-small"
                         type="text"

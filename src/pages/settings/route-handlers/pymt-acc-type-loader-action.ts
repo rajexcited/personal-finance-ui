@@ -1,8 +1,6 @@
 import { ActionFunctionArgs, json } from "react-router-dom";
-import { PymtAccountTypeService } from "../../pymt-accounts";
+import { pymtAccountTypeService } from "../../pymt-accounts";
 import { ConfigResource, HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../services";
-
-const pymtAccountTypeService = PymtAccountTypeService();
 
 export interface PymtAccTypeLoaderResource {
   pymtAccTypes: ConfigResource[];
