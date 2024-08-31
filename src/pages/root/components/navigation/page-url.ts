@@ -17,13 +17,15 @@ type RouteId =
   | "expenseJournalRoot"
   | "addPurchase"
   | "updatePurchase"
+  | "addPurchaseRefund"
+  | "updatePurchaseRefund"
   | "pymtAccountsRoot"
   | "addPymAccount"
   | "updatePymAccount"
   | "settingsRoot"
   | "purchaseTypeSettings"
   | "pymtAccountTypeSettings"
-  | "tagsSettings"
+  | "refundReasonSettings"
   | "profileSettings"
   | "securitySettings";
 
@@ -56,6 +58,14 @@ const PAGE_URL: Record<RouteId, PageRouteResource> = {
     shortUrl: "purchase/:purchaseId/update",
     baseRouteId: "expenseJournalRoot",
   },
+  addPurchaseRefund: {
+    shortUrl: "purchase/:purchaseId/refund/add",
+    baseRouteId: "expenseJournalRoot",
+  },
+  updatePurchaseRefund: {
+    shortUrl: "purchase/refund/:refundId/update",
+    baseRouteId: "expenseJournalRoot",
+  },
   pymtAccountsRoot: {
     shortUrl: "payment-accounts",
     baseRouteId: "rootPath",
@@ -80,8 +90,8 @@ const PAGE_URL: Record<RouteId, PageRouteResource> = {
     shortUrl: "pymt-account-type",
     baseRouteId: "settingsRoot",
   },
-  tagsSettings: {
-    shortUrl: "tags",
+  refundReasonSettings: {
+    shortUrl: "refund-reason",
     baseRouteId: "settingsRoot",
   },
   profileSettings: {
