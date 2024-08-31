@@ -10,6 +10,7 @@ import { ExpenseTableHead, ExpenseTableHeadRefType } from "./expense-table-head"
 import "./view-expense-list.css";
 import { ViewReceipts } from "./receipt/view-receipts";
 import { ObjectDeepDifference } from "../../../../shared";
+import { JSONObject } from "../../../../shared/utils/deep-obj-difference";
 
 const fcLogger = getLogger("FC.expense.view.ExpenseList", null, null, "INFO");
 let prevSortDetails: ExpenseSortStateType | null = null;
@@ -17,7 +18,7 @@ const getPrevSortDetails = (sortDetails: ExpenseSortStateType) => {
     if (!prevSortDetails) {
         prevSortDetails = sortDetails;
     }
-    return prevSortDetails;
+    return prevSortDetails as JSONObject;
 };
 
 export const ExpenseList: FunctionComponent = () => {
@@ -64,7 +65,7 @@ export const ExpenseList: FunctionComponent = () => {
         const logger = getLogger("getSortedExpenses", fcLogger);
         const sortedExpenses = [...expenses];
         sortedExpenses.sort(expenseComparator.bind(null, sortDetails));
-        logger.debug("sortDetails", JSON.stringify(sortDetails), "diff: ", ObjectDeepDifference(sortDetails, getPrevSortDetails(sortDetails)));
+        logger.debug("sortDetails", JSON.stringify(sortDetails), "diff: ", ObjectDeepDifference(sortDetails as JSONObject, getPrevSortDetails(sortDetails)));
         return sortedExpenses;
     };
 
@@ -77,11 +78,6 @@ export const ExpenseList: FunctionComponent = () => {
             }, 10);
             return newExp;
         });
-    };
-
-    const onEditRequestExpenseHandler = (expenseId: string) => {
-        fcLogger.info("debug - getFullPath=", getFullPath("updatePurchase", expenseId));
-        navigate(getFullPath("updatePurchase", expenseId));
     };
 
     const onRemoveRequestHandler = (expenseId: string) => {
@@ -134,7 +130,6 @@ export const ExpenseList: FunctionComponent = () => {
                                 details={ xpns }
                                 onSelect={ setSelectedExpenseId }
                                 isSelected={ selectedExpenseId === xpns.id }
-                                onEditRequest={ onEditRequestExpenseHandler }
                                 onRemove={ onRemoveRequestHandler }
                                 onViewReceipt={ onViewReceiptsRequestHandler }
                             />

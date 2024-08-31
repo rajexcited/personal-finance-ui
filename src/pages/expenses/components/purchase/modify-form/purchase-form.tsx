@@ -12,10 +12,12 @@ import {
     DropDownItemType
 } from "../../../../../components";
 import { PurchaseBreakDown } from "./purchase-breakdown";
-import { ConfigResource, PurchaseFields, PurchaseItemFields, formatTimestamp, getLogger, ReceiptProps, ExpenseBelongsTo } from "../../../services";
-import { UploadReceiptsModal } from "../receipt/upload-receipts";
+import { ConfigResource, PurchaseFields, PurchaseItemFields, formatTimestamp, getLogger, ExpenseBelongsTo, PurchaseService, receiptService } from "../../../services";
+import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../../components/receipt";
+import { PymtAccountFields } from "../../../../pymt-accounts/services";
 
 
+const purchaseService = PurchaseService();
 
 export interface PurchaseFormProps {
     submitLabel: string;
@@ -23,7 +25,7 @@ export interface PurchaseFormProps {
     onSubmit (fields: PurchaseFields, formData: FormData): void;
     details?: PurchaseFields;
     purchaseTypes: ConfigResource[];
-    paymentAccounts: Map<string, string>;
+    paymentAccounts: PymtAccountFields[];
     sourceTags: string[];
 }
 
@@ -32,8 +34,8 @@ const fcLogger = getLogger("FC.PurchaseForm", null, null, "DEBUG");
 export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
     const [billName, setBillName] = useState(props.details?.billName || '');
     const [amount, setAmount] = useState(props.details?.amount || '');
-    const [pymtAccounts, setPymtAccounts] = useState<DropDownItemType[]>([]);
-    const [selectedPymtAccount, setSelectedPymtAccount] = useState<DropDownItemType>();
+    const [dropdownPymtAccounts, setDropdownPymtAccounts] = useState<DropDownItemType[]>([]);
+    const [selectedDropdownPymtAccount, setSelectedDropdownPymtAccount] = useState<DropDownItemType>();
     const [description, setDescription] = useState(props.details?.description || '');
     const [purchasedDate, setPurchaseDate] = useState(props.details?.purchasedDate as Date || new Date());
     const [tags, setTags] = useState<string[]>(props.details?.tags || []);
@@ -50,19 +52,26 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
 
         const formData = new FormData();
 
-        const datareceipts: ReceiptProps[] = receipts.map(rct => {
+        const datareceipts = receipts.map(rct => {
             if (rct.file) {
                 logger.info("receipt id=", rct.id, ", added file to formdata =", rct.file);
                 formData.append(rct.id, rct.file);
             }
-            return { id: rct.id, name: rct.name, contentType: rct.contentType, purchaseId: props.purchaseId, url: rct.url };
+            const rctreturn: ReceiptProps = {
+                id: rct.id,
+                name: rct.name,
+                contentType: rct.contentType,
+                relationId: props.purchaseId,
+                url: rct.url,
+                belongsTo: ExpenseBelongsTo.Purchase
+            };
+            return rctreturn;
         });
 
         const data: PurchaseFields = {
             id: props.purchaseId,
             billName: billName,
-            paymentAccountId: selectedPymtAccount?.id,
-            paymentAccountName: selectedPymtAccount?.content,
+            paymentAccountId: selectedDropdownPymtAccount?.id,
             amount,
             description,
             purchasedDate,
@@ -116,28 +125,42 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
             logger.info("selectedDropdownPurchaseType =", selectedDropdownPurchaseType);
         }
 
-        const myPymtAccounts: DropDownItemType[] = [];
-        props.paymentAccounts.forEach((name, id) => {
-            const itm: DropDownItemType = {
-                id: id,
-                content: name
-            };
-            myPymtAccounts.push(itm);
-        });
-        setPymtAccounts(myPymtAccounts);
-        logger.info("props.paymentAccounts =", props.paymentAccounts, ", myPymtAccounts =", myPymtAccounts, ", props.details?.paymentAccountId =", props.details?.paymentAccountId, ", props.details?.paymentAccountName =", props.details?.paymentAccountName);
-        if (props.details?.paymentAccountId) {
-            const selectedPaymentAcc: DropDownItemType = {
-                id: props.details.paymentAccountId,
-                content: props.details.paymentAccountName || ""
-            };
-            setSelectedPymtAccount(selectedPaymentAcc);
-            logger.info("selectedPymtAccount =", selectedPaymentAcc);
+        const ddPymtAccList: DropDownItemType[] = props.paymentAccounts.map((pymtDetails) => ({
+            id: pymtDetails.id,
+            content: pymtDetails.shortName,
+            tooltip: pymtDetails.dropdownTooltip
+        }));
+        setDropdownPymtAccounts(ddPymtAccList);
+
+        logger.debug("props.paymentAccounts =", props.paymentAccounts,
+            ", props.refundDetails?.paymentAccountId =", props.details?.paymentAccountId,
+            ", props.refundDetails?.paymentAccountName =", props.details?.paymentAccountName);
+
+        if (props.details?.paymentAccountId && props.details.paymentAccountName) {
+            let mySelectedPaymentAcc = ddPymtAccList.find(pymtacc =>
+                (pymtacc.id === props.details?.paymentAccountId && pymtacc.content === props.details.paymentAccountName));
+            if (!mySelectedPaymentAcc) {
+                mySelectedPaymentAcc = {
+                    id: props.details.paymentAccountId,
+                    content: props.details.paymentAccountName
+                };
+            }
+            logger.debug("mySelectedPaymentAcc =", mySelectedPaymentAcc);
+            setSelectedDropdownPymtAccount(mySelectedPaymentAcc);
         }
+
         logger.info("props.sourceTags =", props.sourceTags);
 
     }, []);
 
+
+    function cacheReceiptFileHandler (receipt: ReceiptProps, cacheAction: CacheAction): Promise<DownloadReceiptResource> {
+        return receiptService.cacheReceiptFile(receipt, cacheAction) as Promise<DownloadReceiptResource>;
+    }
+
+    function downloadReceiptsHandler (receipts: ReceiptProps[]): Promise<DownloadReceiptResource[]> {
+        return receiptService.downloadReceipts(receipts);
+    }
 
     return (
         <form onSubmit={ onSubmitHandler }>
@@ -186,10 +209,10 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
                                 id="purchase-pymt-acc"
                                 key={ "purchase-pymt-acc" }
                                 label="Payment Account: "
-                                items={ pymtAccounts }
-                                onSelect={ (selected: DropDownItemType) => setSelectedPymtAccount(selected) }
-                                selectedItem={ selectedPymtAccount }
-                                defaultItem={ selectedPymtAccount }
+                                items={ dropdownPymtAccounts }
+                                onSelect={ (selected: DropDownItemType) => setSelectedDropdownPymtAccount(selected) }
+                                selectedItem={ selectedDropdownPymtAccount }
+                                defaultItem={ selectedDropdownPymtAccount }
                             />
                         </div>
                         <div className="column">
@@ -255,8 +278,11 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
                         <div className="column">
                             <UploadReceiptsModal
                                 receipts={ receipts }
-                                purchaseId={ props.purchaseId }
+                                relationId={ props.purchaseId }
                                 onChange={ setReceipts }
+                                cacheReceiptFile={ cacheReceiptFileHandler }
+                                downloadReceipts={ downloadReceiptsHandler }
+                                belongsTo={ ExpenseBelongsTo.Purchase }
                             />
                         </div>
                     </div>

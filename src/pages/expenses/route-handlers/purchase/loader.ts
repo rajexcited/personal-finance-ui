@@ -8,13 +8,16 @@ import {
   handleRouteActionError,
   PurchaseFields,
 } from "../../services";
+import { PymtAccountFields, PymtAccountService } from "../../../pymt-accounts/services";
 
 const purchaseService = PurchaseService();
+const pymtAccountService = PymtAccountService();
+
 const rhLogger = getLogger("route.handler.purchase.loader", null, null, "INFO");
 
 export interface PurchaseDetailLoaderResource {
-  purchaseDetail: PurchaseFields | null;
-  paymentAccounts: Map<string, string>;
+  purchaseDetail?: PurchaseFields;
+  paymentAccounts: PymtAccountFields[];
   purchaseTypes: ConfigResource[];
   purchaseTags: string[];
 }
@@ -30,7 +33,7 @@ export const purchaseDetailLoaderHandler = async ({ params }: LoaderFunctionArgs
 
     logger.debug("fetching other info");
     const purchaseTypes = await purchaseService.getPurchaseTypes();
-    const paymentAccounts = await purchaseService.getPaymentAccountMap();
+    const paymentAccounts = await pymtAccountService.getPymtAccountList();
     const purchaseTags = await purchaseService.getPurchaseTags();
     logger.debug("retrieved all info, now preparing response with all info to send to FC");
 
@@ -54,13 +57,12 @@ export const purchaseDetailSupportingLoaderHandler = async () => {
   const logger = getLogger("purchaseDetailSupportingLoaderHandler", rhLogger);
   try {
     const purchaseTypes = await purchaseService.getPurchaseTypes();
-    const paymentAccounts = await purchaseService.getPaymentAccountMap();
+    const paymentAccounts = await pymtAccountService.getPymtAccountList();
     const purchaseTags = await purchaseService.getPurchaseTags();
 
     const response: RouteHandlerResponse<PurchaseDetailLoaderResource, null> = {
       type: "success",
       data: {
-        purchaseDetail: null,
         paymentAccounts,
         purchaseTypes,
         purchaseTags,

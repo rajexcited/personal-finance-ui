@@ -4,6 +4,7 @@ import AuthContext, { dummyUserDetails } from "./auth-context";
 import { AuthenticationService, UserDetailsResource, UserSignupResource } from "../services";
 import { Animated } from "../../../components";
 import { ObjectDeepDifference, getLogger } from "../../../shared";
+import { JSONObject } from "../../../shared/utils/deep-obj-difference";
 
 
 const authService = AuthenticationService();
@@ -44,7 +45,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
 
         const setAuthenExpire = () => {
             const logger = getLogger("setAuthenExpire", _logger);
-            const diffUserDetails = ObjectDeepDifference(userDetails, dummyUserDetails);
+            const diffUserDetails = ObjectDeepDifference(userDetails as unknown as JSONObject, dummyUserDetails);
             if (Object.keys(diffUserDetails).length > 0) {
                 logger.debug("updating context to dummy user");
                 setUserDetails({ ...dummyUserDetails });

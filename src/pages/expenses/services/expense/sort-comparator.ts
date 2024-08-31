@@ -1,4 +1,4 @@
-import { ascCompare, descCompare } from "../../../shared";
+import { ascCompare, descCompare } from "../../../../shared";
 import { ExpenseFields } from "./field-types";
 import { ExpenseSortStateType, ExpenseSortDetails } from "./sort-headers";
 

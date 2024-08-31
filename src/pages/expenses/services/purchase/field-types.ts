@@ -1,5 +1,6 @@
+import { ReceiptProps } from "../../../../components/receipt";
 import { AuditFields } from "../../../../shared";
-import { ExpenseBelongsTo, ExpenseStatus } from "../field-types";
+import { ExpenseBelongsTo, ExpenseStatus } from "../expense/field-types";
 
 interface BasePurchaseFields {
   id: string;
@@ -12,26 +13,6 @@ interface BasePurchaseFields {
 }
 
 export interface PurchaseItemFields extends BasePurchaseFields {}
-
-export enum ReceiptType {
-  PNG = "image/png",
-  JPEG = "image/jpeg",
-  PDF = "application/pdf",
-}
-
-export interface ReceiptProps {
-  file?: File;
-  name: string;
-  id: string;
-  contentType: ReceiptType;
-  url?: string;
-  purchaseId: string;
-}
-
-export type ErrorReceiptProps = ReceiptProps & { error: Error };
-type DownloadReceiptResourceError = Pick<ReceiptProps, "id" | "purchaseId"> & { error: string; status: "fail" };
-type DownloadReceiptResourceSuccess = Required<Pick<ReceiptProps, "id" | "purchaseId" | "url"> & { status: "success" }>;
-export type DownloadReceiptResource = DownloadReceiptResourceSuccess | DownloadReceiptResourceError;
 
 export interface PurchaseFields extends BasePurchaseFields {
   paymentAccountId?: string;

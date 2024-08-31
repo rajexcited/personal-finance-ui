@@ -1,4 +1,4 @@
-import { SortDirection, SortType } from "../../../components";
+import { SortDirection, SortType } from "../../../../components";
 import { ExpenseFields } from "./field-types";
 
 export interface ExpenseSortDetails {
@@ -24,14 +24,14 @@ export type Header = SortableHeader | UnSortableHeader;
 
 export const rowHeaders: Header[] = [
   { id: "pymt-acc", label: "Payment Account", sortable: true, datafieldKey: "paymentAccountName" },
-  {
-    id: "prchs-dt",
-    label: "Purchased Date",
-    sortable: true,
-    datafieldKey: "purchasedDate",
-    sortLevel: 1,
-    sortDirection: "desc",
-  },
+  // {
+  //   id: "prchs-dt",
+  //   label: "Purchased/Refund Date",
+  //   sortable: true,
+  //   datafieldKey: "purchasedDate",
+  //   sortLevel: 1,
+  //   sortDirection: "desc",
+  // },
   {
     id: "bill-name",
     label: "Bill Name",
@@ -50,7 +50,7 @@ export const rowHeaders: Header[] = [
     sortLevel: 3,
     type: "amount",
   },
-  { id: "ctgr", label: "Category", sortable: true, datafieldKey: "purchaseTypeName" },
+  // { id: "ctgr", label: "Category", sortable: true, datafieldKey: "purchaseTypeName" },
   { id: "vrfd", label: "Verified", sortable: false },
   { id: "tags", label: "Tags", sortable: false },
   { id: "actions", label: "Actions", sortable: false },

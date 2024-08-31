@@ -1,26 +1,27 @@
 import { ActionFunctionArgs, json, redirect } from "react-router-dom";
 import { getFullPath } from "../../../root";
 import {
-  PurchaseService,
   HttpStatusCode,
   RouteHandlerResponse,
   getLogger,
   handleRouteActionError,
-  PurchaseFields,
-  ExpenseBelongsTo,
+  PurchaseRefundFields,
+  refundService,
+  ExpenseStatus,
 } from "../../services";
+import { ExpenseBelongsTo } from "../../services";
 import { ReceiptProps } from "../../../../components/receipt";
 import { uploadReceipts } from "../receipt/upload";
 
-const purchaseService = PurchaseService();
 const rhLogger = getLogger("route.handler.purchase.action", null, null, "DEBUG");
 
-export const purchaseActionHandler = async ({ request }: ActionFunctionArgs) => {
+export const refundActionHandler = async ({ request }: ActionFunctionArgs) => {
   if (request.method === "POST") {
-    return await purchaseAddUpdateActionHandler(request);
+    return await refundAddUpdateActionHandler(request);
   } else if (request.method === "DELETE") {
-    return await purchaseDeleteActionHandler(request);
+    return await refundDeleteActionHandler(request);
   }
+
   const error: RouteHandlerResponse<null, any> = {
     type: "error",
     errorMessage: "action not supported",
@@ -30,11 +31,12 @@ export const purchaseActionHandler = async ({ request }: ActionFunctionArgs) => 
       },
     },
   };
+
   return json(error, { status: HttpStatusCode.InternalServerError });
 };
 
-type PurchaseResourceKey = keyof PurchaseFields;
-const getFormData = (formData: FormData, formKey: PurchaseResourceKey) => {
+type RefundResourceKey = keyof PurchaseRefundFields;
+const getFormData = (formData: FormData, formKey: RefundResourceKey) => {
   const formValue = formData.get(formKey);
 
   if (formValue) {
@@ -52,11 +54,10 @@ const getFormData = (formData: FormData, formKey: PurchaseResourceKey) => {
   return null;
 };
 
-const purchaseAddUpdateActionHandler = async (request: Request) => {
-  const logger = getLogger("purchaseAddUpdateActionHandler", rhLogger);
+const refundAddUpdateActionHandler = async (request: Request) => {
+  const logger = getLogger("refundAddUpdateActionHandler", rhLogger);
   try {
     const formdata = await request.formData();
-
     const receipts: ReceiptProps[] = getFormData(formdata, "receipts");
     const uploadReceiptResult = await uploadReceipts(receipts, formdata, logger);
 
@@ -64,22 +65,22 @@ const purchaseAddUpdateActionHandler = async (request: Request) => {
       return uploadReceiptResult;
     }
 
-    await purchaseService.addUpdatePurchase({
+    await refundService.addUpdateDetails({
       id: getFormData(formdata, "id"),
       billName: getFormData(formdata, "billName"),
       paymentAccountId: getFormData(formdata, "paymentAccountId"),
       paymentAccountName: getFormData(formdata, "paymentAccountName"),
       amount: getFormData(formdata, "amount"),
       description: getFormData(formdata, "description"),
-      purchasedDate: getFormData(formdata, "purchasedDate"),
+      refundDate: getFormData(formdata, "refundDate"),
       tags: getFormData(formdata, "tags"),
-      verifiedTimestamp: getFormData(formdata, "verifiedTimestamp"),
-      items: getFormData(formdata, "items"),
-      purchaseTypeId: getFormData(formdata, "purchaseTypeId"),
-      purchaseTypeName: getFormData(formdata, "purchaseTypeName"),
       receipts: uploadReceiptResult,
       auditDetails: { createdOn: new Date(), updatedOn: new Date() },
-      belongsTo: ExpenseBelongsTo.Purchase,
+      belongsTo: ExpenseBelongsTo.PurchaseRefund,
+      status: ExpenseStatus.Enable,
+      purchaseId: getFormData(formdata, "purchaseId"),
+      reasonId: getFormData(formdata, "reasonId"),
+      reasonValue: getFormData(formdata, "reasonValue"),
     });
 
     return redirect(getFullPath("expenseJournalRoot"));
@@ -89,15 +90,15 @@ const purchaseAddUpdateActionHandler = async (request: Request) => {
   }
 };
 
-const purchaseDeleteActionHandler = async (request: Request) => {
-  const logger = getLogger("purchaseDeleteActionHandler", rhLogger);
+const refundDeleteActionHandler = async (request: Request) => {
+  const logger = getLogger("refundDeleteActionHandler", rhLogger);
   try {
     const formdata = await request.formData();
-    const purchaseId = getFormData(formdata, "id");
-    await purchaseService.removePurchase(purchaseId);
+    const refundId = getFormData(formdata, "id");
+    await refundService.removeDetails(refundId);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: "purchase is deleted",
+      data: "refund is deleted",
     };
     return response;
   } catch (e) {

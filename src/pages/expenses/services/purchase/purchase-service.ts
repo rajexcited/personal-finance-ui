@@ -14,20 +14,19 @@ import {
   TagsService,
   TagBelongsTo,
   InvalidError,
+  isUuid,
 } from "../../../../shared";
-import { DownloadReceiptResource, ErrorReceiptProps, PurchaseFields, PurchaseItemFields, ReceiptProps } from "./field-types";
 import { PurchaseTypeService } from "./purchase-type-service";
 import { PymtAccountService } from "../../../pymt-accounts";
-import { ReceiptUploadError } from "./receipt-error";
 import pMemoize from "p-memoize";
 import ExpiryMap from "expiry-map";
-import { validate as isValidUuid, version as getUuidVersion } from "uuid";
 import ms from "ms";
 import pDebounce from "p-debounce";
-import { ExpenseBelongsTo } from "../field-types";
+import { ExpenseBelongsTo, ExpenseFields } from "../expense/field-types";
+import { CacheAction, DownloadReceiptResource, ErrorReceiptProps, ReceiptProps, ReceiptUploadError } from "../../../../components/receipt";
+import { PurchaseFields, PurchaseItemFields } from "./field-types";
 
 type PurchaseTagQueryParams = Record<"purchasedYear", string[]>;
-type CacheAction = "AddUpdateGet" | "Remove";
 
 export const PurchaseService = () => {
   const onBeforeExpiredReceiptFileCallback = async (item: DownloadReceiptResource) => {
@@ -41,7 +40,7 @@ export const PurchaseService = () => {
 
   const pymtAccService = PymtAccountService();
   const purchaseTypeService = PurchaseTypeService();
-  const tagService = TagsService();
+  const tagService = TagsService(TagBelongsTo.Purchase);
 
   const rootPath = "/expenses/purchase";
   const _logger = getLogger("service.expense.purchase");
@@ -111,13 +110,6 @@ export const PurchaseService = () => {
     { cache: new ExpiryMap(ms("15 sec")) }
   );
 
-  const isUuid = (id: string | null | undefined) => {
-    if (id && isValidUuid(id) && getUuidVersion(id) === 4) {
-      return true;
-    }
-    return false;
-  };
-
   const updatePurchaseType = (categoryMap: Map<string, string>, item: PurchaseFields | PurchaseItemFields) => {
     if (item.purchaseTypeId && isUuid(item.purchaseTypeId) && categoryMap.get(item.purchaseTypeId)) {
       item.purchaseTypeName = categoryMap.get(item.purchaseTypeId);
@@ -169,16 +161,15 @@ export const PurchaseService = () => {
     const purchaseItemTags = purchase.items?.flatMap((ei) => ei.tags) || [];
     logger.debug("purchase item tags size: ", purchaseItemTags.length);
     const tags = [...purchaseTags, ...purchaseItemTags];
-    await tagService.updateTags(TagBelongsTo.Purchase, tags);
+    await tagService.updateTags(tags);
     logger.debug("add update tags completed");
   };
 
   const addUpdateDbPurchase = async (purchase: PurchaseFields, loggerBase: LoggerBase) => {
     // here we don't have url or file prop in receipts
     const logger = getLogger("addUpdateDbPurchase", loggerBase);
-    if (purchase.belongsTo !== ExpenseBelongsTo.Purchase) {
-      throw new InvalidError("this is not purchase");
-    }
+    validatePurchaseBelongsTo(purchase);
+
     const transformStart = new Date();
     const dbPurchase: PurchaseFields = {
       ...purchase,
@@ -198,7 +189,7 @@ export const PurchaseService = () => {
   };
 
   const initializePurchaseTags = async () => {
-    const tagCount = await tagService.getCount(TagBelongsTo.Purchase);
+    const tagCount = await tagService.getCount();
     if (tagCount > 0) {
       return;
     }
@@ -208,7 +199,7 @@ export const PurchaseService = () => {
       purchasedYear: [String(thisYear), String(thisYear - 1)],
     };
     const response = await axios.get(`${rootPath}/tags`, { params: queryParams });
-    await tagService.updateTags(TagBelongsTo.Purchase, response.data);
+    await tagService.updateTags(response.data);
   };
 
   const cacheReceiptFile = async (receipt: ReceiptProps, action: CacheAction, fileData?: ArrayBuffer, newReceipt?: ReceiptProps) => {
@@ -232,7 +223,7 @@ export const PurchaseService = () => {
           // action is update
           const updatingRes: DownloadReceiptResource = {
             ...resp,
-            purchaseId: newReceipt.purchaseId,
+            relationId: newReceipt.relationId,
             id: newReceipt.id,
           };
           await receiptFileDb.addUpdateItem(updatingRes);
@@ -256,12 +247,19 @@ export const PurchaseService = () => {
         const result: DownloadReceiptResource = {
           id: newReceipt?.id || receipt.id,
           status: "success",
-          purchaseId: newReceipt?.purchaseId || receipt.purchaseId,
+          relationId: newReceipt?.relationId || receipt.relationId,
           url: receipturl,
+          belongsTo: newReceipt?.belongsTo || receipt.belongsTo,
         };
         await receiptFileDb.addItem(result);
         return { ...result };
       }
+    }
+  };
+
+  const validatePurchaseBelongsTo = (purchase: ExpenseFields | null) => {
+    if (purchase && purchase.belongsTo !== ExpenseBelongsTo.Purchase) {
+      throw new InvalidError("incorrect expense belongs: " + purchase.belongsTo);
     }
   };
 
@@ -272,6 +270,7 @@ export const PurchaseService = () => {
       try {
         const dbPurchase = await purchaseDb.getItem(purchaseId);
 
+        validatePurchaseBelongsTo(dbPurchase);
         if (dbPurchase && dbPurchase.items) {
           return dbPurchase;
         }
@@ -289,6 +288,7 @@ export const PurchaseService = () => {
     addUpdatePurchase: async (purchase: PurchaseFields) => {
       const logger = getLogger("addUpdatePurchase", _logger);
 
+      validatePurchaseBelongsTo(purchase);
       try {
         await updatePurchaseTypeAndPymtAccName(purchase);
         const data: PurchaseFields = {
@@ -304,7 +304,7 @@ export const PurchaseService = () => {
         }, {});
 
         const updateReceiptIdPromises = (response.data as PurchaseFields).receipts.map(async (rct) => {
-          await cacheReceiptFile(purchaseReceipts[rct.name], "AddUpdateGet", undefined, rct);
+          await cacheReceiptFile(purchaseReceipts[rct.name], CacheAction.AddUpdateGet, undefined, rct);
         });
         await Promise.all(updateReceiptIdPromises);
 
@@ -313,7 +313,7 @@ export const PurchaseService = () => {
         if (existing) {
           const deleteReceiptPromises = existing.receipts.map(async (rct) => {
             if (!purchaseReceipts[rct.name]) {
-              await cacheReceiptFile(rct, "Remove");
+              await cacheReceiptFile(rct, CacheAction.Remove);
             }
           });
           await Promise.all(deleteReceiptPromises);
@@ -335,7 +335,7 @@ export const PurchaseService = () => {
         const response = await axios.delete(rootPath + "/id/" + purchaseId);
         await addUpdateDbPurchase(response.data, logger);
         const deletingReceiptPromises = (response.data as PurchaseFields).receipts.map(async (rct) => {
-          await cacheReceiptFile(rct, "Remove");
+          await cacheReceiptFile(rct, CacheAction.Remove);
         });
         await Promise.all(deletingReceiptPromises);
       } catch (e) {
@@ -360,7 +360,7 @@ export const PurchaseService = () => {
     },
 
     getPurchaseTags: async () => {
-      const tagList = await tagService.getTags(TagBelongsTo.Purchase);
+      const tagList = await tagService.getTags();
       return tagList;
     },
 
@@ -384,14 +384,15 @@ export const PurchaseService = () => {
           if (!rct.file) return { ...rct };
 
           logger.info("uploading receipt file, id =", rct.id, ", name =", rct.name, ", contenttype =", rct.contentType);
-          await axios.post(`${rootPath}/id/${rct.purchaseId}/receipts/id/${rct.name}`, rct.file, {
+          await axios.post(`${rootPath}/id/${rct.relationId}/receipts/id/${rct.name}`, rct.file, {
             headers: { "Content-Type": rct.contentType },
           });
           const result: ReceiptProps = {
             name: rct.name,
             contentType: rct.contentType,
             id: rct.id,
-            purchaseId: rct.purchaseId,
+            relationId: rct.relationId,
+            belongsTo: rct.belongsTo,
           };
           return result;
         } catch (e) {
@@ -419,12 +420,12 @@ export const PurchaseService = () => {
 
       const promises = receipts.map(async (rct) => {
         try {
-          const cachedReceiptResponse = await cacheReceiptFile(rct, "AddUpdateGet");
+          const cachedReceiptResponse = await cacheReceiptFile(rct, CacheAction.AddUpdateGet);
           if (cachedReceiptResponse) {
             return cachedReceiptResponse as DownloadReceiptResource;
           }
-          const fileResponse = await axios.get(`${rootPath}/id/${rct.purchaseId}/receipts/id/${rct.id}`, { responseType: "blob" });
-          const downloadReceiptResponse = await cacheReceiptFile(rct, "AddUpdateGet", fileResponse.data);
+          const fileResponse = await axios.get(`${rootPath}/id/${rct.relationId}/receipts/id/${rct.id}`, { responseType: "blob" });
+          const downloadReceiptResponse = await cacheReceiptFile(rct, CacheAction.AddUpdateGet, fileResponse.data);
           if (!downloadReceiptResponse) {
             throw new Error("caching failed");
           }
@@ -440,7 +441,8 @@ export const PurchaseService = () => {
             status: "fail",
             id: rct.id,
             error: err.name + " - " + err.message,
-            purchaseId: rct.purchaseId,
+            relationId: rct.relationId,
+            belongsTo: rct.belongsTo,
           };
           return errorResponse;
         }

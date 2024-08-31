@@ -3,10 +3,11 @@ import ReactMarkdown from "react-markdown";
 import bulmaCaraosel, { BulmaCarouselOptions } from "bulma-carousel";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlassMinus, faMagnifyingGlassPlus } from "@fortawesome/free-solid-svg-icons";
-import { getLogger, PurchaseService, ReceiptProps, ReceiptType, subtractDates } from "../../../services";
+import { getLogger, PurchaseService, subtractDates } from "../../../services";
 import { LoadSpinner } from "../../../../../components";
 import "bulma-carousel/dist/css/bulma-carousel.min.css";
 import "./view-receipts.css";
+import { ReceiptProps, ReceiptType } from "../../../../../components/receipt";
 
 
 interface ViewReceiptsProps {

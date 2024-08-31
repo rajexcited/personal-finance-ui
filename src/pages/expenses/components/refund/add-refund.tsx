@@ -4,26 +4,27 @@ import ReactMarkdown from "react-markdown";
 import { v4 as uuidv4 } from "uuid";
 import "bulma-extensions/bulma-tooltip/dist/css/bulma-tooltip.min.css";
 import { getFullPath } from "../../../root";
-import { PurchaseFields, RouteHandlerResponse } from "../../services";
 import { useAuth } from "../../../auth";
 import { Animated } from "../../../../components";
-import { PurchaseDetailLoaderResource } from "../../route-handlers";
-import { PurchaseForm } from "./modify-form/purchase-form";
+import { getLogger, PurchaseRefundFields, RouteHandlerResponse } from "../../services";
+import { PurchaseRefundForm } from "./refund-form";
+import { RefundDetailLoaderResource } from "../../route-handlers";
 
 
+const fcLogger = getLogger("FC.AddRefund", null, null, "INFO");
 
-export const AddPurchase: FunctionComponent = () => {
-    const [purchaseId, setPurchaseId] = useState("");
+export const AddRefund: FunctionComponent = () => {
+    const [refundId, setRefundId] = useState("");
     const navigation = useNavigation();
     const submit = useSubmit();
     const auth = useAuth();
     // for error
     const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
-    const loaderData = useLoaderData() as RouteHandlerResponse<PurchaseDetailLoaderResource, null>;
+    const loaderData = useLoaderData() as RouteHandlerResponse<RefundDetailLoaderResource, null>;
     const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
-        setPurchaseId(uuidv4());
+        setRefundId(uuidv4());
     }, []);
 
     useEffect(() => {
@@ -31,19 +32,25 @@ export const AddPurchase: FunctionComponent = () => {
             setErrorMessage(loaderData.errorMessage);
         } else if (actionData?.type === "error") {
             setErrorMessage(actionData.errorMessage);
-        } else if (auth.userDetails.isAuthenticated) {
+        } else {
             setErrorMessage("");
         }
-    }, [loaderData, actionData, auth]);
+    }, [loaderData, actionData]);
 
-    const onPurchaseAdded = (data: PurchaseFields, formData: FormData) => {
+    const onRefundAdded = (data: PurchaseRefundFields, formData: FormData) => {
+        const logger = getLogger("onRefundAdded", fcLogger);
         if (auth.userDetails.isAuthenticated) {
-            // logger.log("purchase added", data.purchaseId, data);
-            submit(formData, { action: getFullPath("addPurchase"), method: "post", encType: "multipart/form-data" });
+            // logger.debug("purchase added", data.purchaseId, data);
+            submit(formData, { action: getFullPath("addPurchaseRefund"), method: "post", encType: "multipart/form-data" });
         } else {
+            //todo verify
+            // this is probably never getting called.
+            logger.warn("user is not authenticated. details = ", { ...auth.userDetails });
             setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
         }
     };
+
+    fcLogger.debug("navigation state =", navigation.state, ", text =", navigation.text, ", location =", navigation.location, ", formAction =", navigation.formAction);
 
     return (
         <>
@@ -60,14 +67,15 @@ export const AddPurchase: FunctionComponent = () => {
             { loaderData.type === "success" &&
                 <div className="columns">
                     <div className="column">
-                        <PurchaseForm
-                            key="add-purchase-form"
-                            purchaseId={ purchaseId }
-                            submitLabel={ navigation.state === "submitting" ? "Adding Purchase details..." : "Add" }
-                            onSubmit={ onPurchaseAdded }
-                            purchaseTypes={ loaderData.data.purchaseTypes }
+                        <PurchaseRefundForm
+                            key="add-purchase-refund-form"
+                            submitLabel={ navigation.state === "submitting" ? "Adding Refund details..." : "Add" }
+                            onSubmit={ onRefundAdded }
+                            refundId={ refundId }
+                            purchaseDetails={ loaderData.data.purchaseDetail }
                             paymentAccounts={ loaderData.data.paymentAccounts }
-                            sourceTags={ loaderData.data.purchaseTags }
+                            sourceTags={ loaderData.data.refundTags }
+                            reasons={ loaderData.data.refundReasons }
                         />
                     </div>
                 </div>

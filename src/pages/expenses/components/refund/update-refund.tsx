@@ -2,21 +2,21 @@ import { FunctionComponent, useState, useEffect } from "react";
 import { useActionData, useLoaderData, useNavigation, useSubmit } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import "bulma-extensions/bulma-tooltip/dist/css/bulma-tooltip.min.css";
-import { PurchaseForm } from "./modify-form/purchase-form";
-import { getLogger, PurchaseFields, RouteHandlerResponse } from "../../services";
+import { getLogger, PurchaseRefundFields, RouteHandlerResponse } from "../../services";
 import { useAuth } from "../../../auth";
 import { getFullPath } from "../../../root";
 import { Animated } from "../../../../components";
-import { PurchaseDetailLoaderResource } from "../../route-handlers";
+import { PurchaseRefundForm } from "./refund-form";
+import { RefundDetailLoaderResource } from "../../route-handlers";
 
 
-const fcLogger = getLogger("FC.UpdatePurchase", null, null, "INFO");
+const fcLogger = getLogger("FC.UpdateRefund", null, null, "INFO");
 
-export const UpdatePurchase: FunctionComponent = () => {
+export const UpdateRefund: FunctionComponent = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const navigation = useNavigation();
     const submit = useSubmit();
-    const loaderData = useLoaderData() as RouteHandlerResponse<PurchaseDetailLoaderResource, null>;
+    const loaderData = useLoaderData() as RouteHandlerResponse<RefundDetailLoaderResource, null>;
     const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
     const auth = useAuth();
 
@@ -25,27 +25,38 @@ export const UpdatePurchase: FunctionComponent = () => {
         if (loaderData.type === "error") {
             logger.debug("found error in loader data = ", loaderData.errorMessage);
             setErrorMessage(loaderData.errorMessage);
-        }
-        else if (actionData?.type === "error") {
+
+        } else if (actionData?.type === "error") {
             logger.debug("found error in action data = ", actionData.errorMessage);
             setErrorMessage(actionData.errorMessage);
+
         } else if (!auth.userDetails.isAuthenticated) {
+            //todo verify
+            // this is probably never getting called.
             logger.debug("user is not authenticated");
             setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
+
         } else {
             logger.debug("success scenario, cleaning error");
             setErrorMessage("");
+
         }
     }, [actionData, loaderData, auth]);
 
-    const onPurchaseUpdated = (data: PurchaseFields, formData: FormData) => {
+    const onRefundUpdated = (data: PurchaseRefundFields, formData: FormData) => {
+        const logger = getLogger("onRefundUpdated", fcLogger);
         if (auth.userDetails.isAuthenticated) {
-            // logger.log("purchase updated", data.purchaseId, data, data.items, "same as loader purchase? ", loaderData.purchaseDetail?.purchaseId === data.purchaseId, "object difference = ", JSON.stringify(difference(data, loaderData.purchaseDetail)));
-            submit(formData, { action: getFullPath("updatePurchase", data.id), method: "post", encType: "multipart/form-data" });
+            // logger.debug("purchase updated", data.purchaseId, data, data.items, "same as loader purchase? ", loaderData.purchaseDetail?.purchaseId === data.purchaseId, "object difference = ", JSON.stringify(difference(data, loaderData.purchaseDetail)));
+            submit(formData, { action: getFullPath("updatePurchaseRefund", data.id), method: "post", encType: "multipart/form-data" });
         } else {
+            //todo verify
+            // this is probably never getting called.
+            logger.warn("user is not authenticated. details = ", { ...auth.userDetails });
             setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
         }
     };
+
+    fcLogger.debug("navigation state =", navigation.state, ", text =", navigation.text, ", location =", navigation.location, ", formAction =", navigation.formAction);
 
     return (
         <>
@@ -63,16 +74,17 @@ export const UpdatePurchase: FunctionComponent = () => {
             <div className="columns">
                 <div className="column">
                     {
-                        loaderData.type === "success" && loaderData.data.purchaseDetail &&
-                        <PurchaseForm
+                        loaderData.type === "success" && loaderData.data.refundDetail &&
+                        <PurchaseRefundForm
                             key="update-purchase-form"
-                            purchaseId={ loaderData.data.purchaseDetail.id }
                             submitLabel={ navigation.state === "submitting" ? "Saving Account details..." : "Update" }
-                            onSubmit={ onPurchaseUpdated }
-                            details={ loaderData.data.purchaseDetail }
-                            purchaseTypes={ loaderData.data.purchaseTypes }
+                            onSubmit={ onRefundUpdated }
+                            refundId={ loaderData.data.refundDetail.id }
+                            refundDetails={ loaderData.data.refundDetail }
+                            purchaseDetails={ loaderData.data.purchaseDetail }
                             paymentAccounts={ loaderData.data.paymentAccounts }
-                            sourceTags={ loaderData.data.purchaseTags }
+                            sourceTags={ loaderData.data.refundTags }
+                            reasons={ loaderData.data.refundReasons }
                         />
                     }
                 </div>

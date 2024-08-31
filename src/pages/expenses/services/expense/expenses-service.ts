@@ -1,26 +1,23 @@
+import pMemoize from "p-memoize";
+import ExpiryMap from "expiry-map";
+import datetime from "date-and-time";
+import ms from "ms";
 import {
   axios,
-  convertAuditFieldsToDateInstance,
   handleRestErrors,
   getLogger,
   MyLocalDatabase,
   LocalDBStore,
   LocalDBStoreIndex,
-  parseTimestamp,
   subtractDates,
-  LoggerBase,
   getDefaultIfError,
-} from "../../../shared";
-import { PymtAccountService } from "../../pymt-accounts";
-import pMemoize from "p-memoize";
-import ExpiryMap from "expiry-map";
-import datetime from "date-and-time";
-import ms from "ms";
-import pDebounce from "p-debounce";
+  getCacheOption,
+} from "../../../../shared";
+import { PymtAccountService } from "../../../pymt-accounts";
 import { ExpenseBelongsTo, ExpenseFields, ExpenseStatus } from "./field-types";
-import { PurchaseFields, PurchaseService } from "./purchase";
+import { PurchaseFields, PurchaseService } from "../purchase";
 
-type ExpenseQueryParams = Record<"pageNo" | "status" | "pageMonths", string[]>;
+type ExpenseQueryParams = Record<"pageNo" | "status" | "pageMonths" | "belongsTo", string[]>;
 
 export const ExpenseService = () => {
   const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
@@ -51,23 +48,26 @@ export const ExpenseService = () => {
     { cache: new ExpiryMap(ms("3 min")), cacheKey: JSON.stringify }
   );
 
-  const isPurchaseWithinRange = (purchase: PurchaseFields, rangeStartDate: Date, rangeEndDate: Date) => {
-    if (purchase.purchasedDate >= rangeStartDate && purchase.purchasedDate <= rangeEndDate) {
-      return true;
+  const isPurchaseWithinRange = (purchase: ExpenseFields, rangeStartDate: Date, rangeEndDate: Date) => {
+    if (purchase.belongsTo === ExpenseBelongsTo.Purchase) {
+      if (purchase.purchasedDate >= rangeStartDate && purchase.purchasedDate <= rangeEndDate) {
+        return true;
+      }
     }
     return false;
   };
 
-  const getExpenseList = async (pageNo: number, status?: ExpenseStatus) => {
+  const getExpenseList = async (pageNo: number, status?: ExpenseStatus, pageMonths?: number, belongsTo?: ExpenseBelongsTo) => {
     const logger = getLogger("getList", _logger);
 
     const startTime = new Date();
     try {
-      const queryPageMonths = 3;
+      const queryPageMonths = pageMonths === undefined ? 3 : pageMonths;
       const queryParams: ExpenseQueryParams = {
         pageNo: [String(pageNo)],
         status: [status || ExpenseStatus.Enable],
         pageMonths: [String(queryPageMonths)],
+        belongsTo: belongsTo ? [String(belongsTo)] : [],
       };
 
       let expenses: ExpenseFields[] = [];
@@ -82,7 +82,7 @@ export const ExpenseService = () => {
         const rangeStartDate = datetime.addMonths(new Date(), queryPageMonths * -1 * pageNo);
         const rangeEndDate = datetime.addMonths(new Date(), queryPageMonths * -1 * (pageNo - 1));
         const filteredExpenses = dbExpenses.filter((xpns) => {
-          if (xpns.belongsTo === ExpenseBelongsTo.Purchase && isPurchaseWithinRange(xpns, rangeStartDate, rangeEndDate)) {
+          if (isPurchaseWithinRange(xpns, rangeStartDate, rangeEndDate)) {
             return true;
           }
           if (xpns.auditDetails.updatedOn >= rangeStartDate && xpns.auditDetails.updatedOn <= rangeEndDate) {
@@ -160,7 +160,13 @@ export const ExpenseService = () => {
   };
 
   return {
-    getExpenseList: pDebounce(getExpenseList, ms("1 sec")),
+    getExpenseList: pMemoize(getExpenseList, getCacheOption("2 sec")),
+
+    getPurchaseList: pMemoize(async (pageNo: number, pageMonths: number) => {
+      const list = await getExpenseList(pageNo, ExpenseStatus.Enable, pageMonths, ExpenseBelongsTo.Purchase);
+      return list as PurchaseFields[];
+    }, getCacheOption("3 sec")),
+
     getPaymentAccountMap,
   };
 };
