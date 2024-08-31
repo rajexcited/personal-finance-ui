@@ -1,6 +1,13 @@
 export { MyLocalDatabase, LocalDBStore, LocalDBStoreIndex } from "./db";
 
-export type { AuditFields, ConfigResource, UpdateConfigStatusResource, UpdateConfigDetailsResource, DeleteConfigDetailsResource } from "./services";
+export type {
+  AuditFields,
+  ConfigResource,
+  UpdateConfigStatusResource,
+  UpdateConfigDetailsResource,
+  DeleteConfigDetailsResource,
+  TagQueryParams,
+} from "./services";
 export {
   TagBelongsTo,
   TagsService,
@@ -16,6 +23,7 @@ export {
   descCompare,
   handleRestErrors,
   isBlank,
+  isNotBlank,
   formatTimestamp,
   parseTimestamp,
   HttpStatusCode,
@@ -29,5 +37,8 @@ export {
   getLogger,
   ObjectDeepDifference,
   InvalidError,
+  getCacheOption,
+  handleAndRethrowServiceError,
+  isUuid,
 } from "./utils";
 export type { RouteHandlerResponse } from "./utils";

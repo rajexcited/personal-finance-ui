@@ -118,3 +118,12 @@ export const getDefaultIfError = async <T>(fn: () => Promise<T>, defaultValue: T
     return defaultValue;
   }
 };
+
+export const handleAndRethrowServiceError = (e: Error, logger: LoggerBase) => {
+  const err = e as Error;
+  handleRestErrors(err, logger);
+  logger.warn("not rest error", e);
+  let errorMessage = e.name ? e.name + ": " : "";
+  errorMessage += e.message ? e.message : "unknown error";
+  throw Error(errorMessage);
+};

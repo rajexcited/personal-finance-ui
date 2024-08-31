@@ -24,6 +24,7 @@ export enum ConfigTypeStatus {
 
 export enum ConfigTypeBelongsTo {
   PurchaseType = "purchase-type",
+  RefundReason = "refund-reason",
   PaymentAccountType = "pymt-account-type",
   CurrencyProfile = "currency-profile",
 }

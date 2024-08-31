@@ -9,3 +9,4 @@ export { ConfigTypeService } from "./config-type/config-type-service";
 export { default as axios } from "./axios-proxy";
 
 export { TagBelongsTo, TagsService } from "./tags-service";
+export type { TagQueryParams } from "./tags-service";

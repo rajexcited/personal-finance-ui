@@ -6,9 +6,16 @@ import _ from "lodash";
 //   }
 // }
 
+type JSONValue = string | number | boolean | Date | JSONObject | JSONArray | null | undefined;
+export interface JSONObject {
+  [key: string]: JSONValue;
+}
+export type JSONArray = Array<JSONValue>;
+
 const changes = (object: any, baseObj: any) => {
-  return _.transform(object, (result: any, value: any, key: string) => {
-    if (!_.isEqual(value, baseObj[key])) {
+  return _.transform(object, (result: JSONObject, value: JSONValue, key: string | number) => {
+    const bv = baseObj[key];
+    if (!_.isEqual(value, bv)) {
       result[key] = _.isObject(value) && _.isObject(baseObj[key]) ? changes(value, baseObj[key]) : { new: value, old: baseObj[key] };
     }
   });
@@ -24,9 +31,9 @@ declare global {
     myProperty: any;
   }
 }
-* 
- */
-export const ObjectDeepDifference = (object: any, baseObject: any) => {
+ *
+**/
+export const ObjectDeepDifference = (object: JSONObject | JSONArray, baseObject: JSONObject | JSONArray) => {
   const result1 = flattenObject(changes(object, baseObject));
   const result2 = flattenObject(changes(baseObject, object));
 
@@ -34,18 +41,25 @@ export const ObjectDeepDifference = (object: any, baseObject: any) => {
     result1[k] = result2[k];
   });
 
-  return result1;
+  return result1 as Record<string, any>;
 };
 
-const flattenObject = (obj: any, prefix: string = ""): any => {
+const flattenObject = (obj: JSONObject, prefix: string = "") => {
   return Object.entries(obj).reduce((acc, [key, value]) => {
     const newKey = prefix ? prefix + "." + key : key;
 
-    return !hasDiff(value) ? { ...acc, ...flattenObject(value, newKey) } : { ...acc, [newKey]: value };
-  }, {});
+    if (!hasDiff(value)) {
+      const fltnobj: JSONObject = flattenObject(value as JSONObject, newKey);
+      return { ...acc, ...fltnobj };
+    }
+
+    const res: JSONObject = { ...acc };
+    res[newKey] = value;
+    return res;
+  }, {} as JSONObject);
 };
 
-const hasDiff = (obj: any) => {
+const hasDiff = (obj: JSONValue) => {
   return _.isObject(obj) && "new" in obj && "old" in obj;
 };
 

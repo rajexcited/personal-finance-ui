@@ -10,7 +10,7 @@ interface LoadSpinnerProps {
     color?: string;
 }
 
-const LoadSpinner: FunctionComponent<LoadSpinnerProps> = (props) => {
+export const LoadSpinner: FunctionComponent<LoadSpinnerProps> = (props) => {
 
     if (!props.insideModal) {
 
@@ -40,5 +40,3 @@ const LoadSpinner: FunctionComponent<LoadSpinnerProps> = (props) => {
         </div>
     );
 };
-
-export default LoadSpinner;
