@@ -3,7 +3,7 @@ import 'bulma-calendar/dist/css/bulma-calendar.min.css';
 import './calendar.css';
 import bulmaCalendar from "bulma-calendar";
 import dateutils from "date-and-time";
-import { getLogger } from '../shared';
+import { formatTimestamp, getLogger } from '../shared';
 
 export interface CalendarProps extends bulmaCalendar.Options {
     id: string;
@@ -59,14 +59,19 @@ const Calendar: FunctionComponent<CalendarProps> = (props) => {
         });
     }, [calendarInstance]);
 
+    useEffect(() => {
+        // to set the today date as default selection
+        if (props.startDate && calendarInstance) {
+            calendarInstance.value(formatTimestamp(props.startDate, "YYYY-MM-DD"));
+            // calendarInstance.refresh();
+        }
+    }, [calendarInstance, props.startDate]);
+
     if (calendarRef.current && calendarInstance && calState === "ready") {
         const todayFooterClassList = calendarRef.current.querySelector(".datetimepicker-footer-today.button")?.classList;
         todayFooterClassList?.remove("has-text-warning");
         todayFooterClassList?.add("is-ghost");
-        // to set the today date as default selection
-        if (props.startDate && calendarInstance) {
-            calendarInstance.refresh();
-        }
+
         setCalState("rendered");
     }
 

@@ -3,23 +3,40 @@ import RootLayout from "./root";
 import ErrorPage from "./error";
 import { getShortPath, pathBaseName } from "../navigation";
 import {
-    PymtAccountList,
     PymtAccountsRoot,
-    AddPymtAccount,
-    UpdatePymtAccount,
-    pymtAccountActionHandler,
-    pymtAccountDetailLoaderHandler,
+    PymtAccountList,
     pymtAccountListLoaderHandler,
-    pymtAccountDetailSupportingLoaderHandler
+    AddPymtAccount, UpdatePymtAccount,
+    pymtAccountActionHandler, pymtAccountDetailLoaderHandler, pymtAccountDetailSupportingLoaderHandler
 } from '../../../pymt-accounts';
-import { AddPurchase, ExpenseJournalPage, ExpenseList, UpdatePurchase, addRefundDetailLoaderHandler, expenseListLoaderHandler, modifyRefundDetailLoaderHandler, purchaseActionHandler, purchaseDetailLoaderHandler, purchaseDetailSupportingLoaderHandler, refundActionHandler } from '../../../expenses';
-import { PurchaseTypePage, ProfileSettingsPage, PymtAccountTypePage, SettingsRootPage, purchaseTypeListActionHandler, purchaseTypeListLoaderHandler, paymentAccountTypeListLoaderHandler, profileDetailsActionHandler, profileDetailsLoaderHandler, pymtAccTypeListActionHandler, securityDetailsActionHandler, securityDetailsLoaderHandler, SecurityPage } from "../../../settings";
+import {
+    ExpenseJournalPage, ExpenseList, expenseListLoaderHandler,
+    AddPurchase, UpdatePurchase,
+    purchaseActionHandler, purchaseDetailLoaderHandler, purchaseDetailSupportingLoaderHandler,
+    addRefundDetailLoaderHandler, modifyRefundDetailLoaderHandler,
+    refundActionHandler
+} from '../../../expenses';
+import {
+    SettingsRootPage,
+    PurchaseTypePage,
+    purchaseTypeListActionHandler, purchaseTypeListLoaderHandler,
+    ProfileSettingsPage,
+    profileDetailsActionHandler, profileDetailsLoaderHandler,
+    PymtAccountTypePage,
+    paymentAccountTypeListLoaderHandler, pymtAccTypeListActionHandler,
+    SecurityPage,
+    securityDetailsActionHandler, securityDetailsLoaderHandler,
+    RefundReasonPage,
+    refundReasonListActionHandler, refundReasonListLoaderHandler,
+    IncomeTypePage,
+    incomeTypeListActionHandler, incomeTypeListLoaderHandler
+} from "../../../settings";
 import { LoginPage, RequireAuth, SignupPage, LogoutPage } from "../../../auth";
 import { HomePage } from "./home";
 import { getLogger } from "../../services";
-import { AddRefund, UpdateRefund } from "../../../expenses/components";
-import { RefundReasonPage } from "../../../settings/components/refund-reasons";
-import { refundReasonListActionHandler, refundReasonListLoaderHandler } from "../../../settings/route-handlers/refund-reason-loader-action";
+import { AddIncome, AddRefund, UpdateIncome, UpdateRefund } from "../../../expenses/components";
+import { addIncomeDetailLoaderHandler, incomeActionHandler, modifyIncomeDetailLoaderHandler } from "../../../expenses/route-handlers";
+
 
 const logger = getLogger("CBR.router", null, null, "INFO");
 logger.debug("pathBaseName =", pathBaseName, ", rootPath =", getShortPath("rootPath"));
@@ -43,7 +60,9 @@ export const router = createBrowserRouter([
                     { path: getShortPath("addPurchase"), element: <AddPurchase />, loader: purchaseDetailSupportingLoaderHandler, action: purchaseActionHandler },
                     { path: getShortPath("updatePurchase"), element: <UpdatePurchase />, loader: purchaseDetailLoaderHandler, action: purchaseActionHandler },
                     { path: getShortPath("addPurchaseRefund"), element: <AddRefund />, loader: addRefundDetailLoaderHandler, action: refundActionHandler },
-                    { path: getShortPath("updatePurchaseRefund"), element: <UpdateRefund />, loader: modifyRefundDetailLoaderHandler, action: refundActionHandler }
+                    { path: getShortPath("updatePurchaseRefund"), element: <UpdateRefund />, loader: modifyRefundDetailLoaderHandler, action: refundActionHandler },
+                    { path: getShortPath("addIncome"), element: <AddIncome />, loader: addIncomeDetailLoaderHandler, action: incomeActionHandler },
+                    { path: getShortPath("updateIncome"), element: <UpdateIncome />, loader: modifyIncomeDetailLoaderHandler, action: incomeActionHandler }
                 ]
             },
             {
@@ -64,6 +83,7 @@ export const router = createBrowserRouter([
                     { path: getShortPath("purchaseTypeSettings"), element: <PurchaseTypePage />, loader: purchaseTypeListLoaderHandler, action: purchaseTypeListActionHandler },
                     { path: getShortPath("pymtAccountTypeSettings"), element: <PymtAccountTypePage />, loader: paymentAccountTypeListLoaderHandler, action: pymtAccTypeListActionHandler },
                     { path: getShortPath("refundReasonSettings"), element: <RefundReasonPage />, loader: refundReasonListLoaderHandler, action: refundReasonListActionHandler },
+                    { path: getShortPath("incomeTypeSettings"), element: <IncomeTypePage />, loader: incomeTypeListLoaderHandler, action: incomeTypeListActionHandler },
                     { path: getShortPath("profileSettings"), element: <ProfileSettingsPage />, loader: profileDetailsLoaderHandler, action: profileDetailsActionHandler },
                     { path: getShortPath("securitySettings"), element: <SecurityPage />, loader: securityDetailsLoaderHandler, action: securityDetailsActionHandler },
                 ]

@@ -55,24 +55,10 @@ export const getExpenses = async (filters: ExpenseFilter) => {
     rangeEndDate
   );
 
-  const isPurchaseWithinRange = (xpns: ExpenseFields, rangeStartDate: Date, rangeEndDate: Date, logger: LoggerBase) => {
-    logger.debug("expense id=", xpns.id, ", updatedOn=", xpns.auditDetails.updatedOn);
-    if (xpns.belongsTo === ExpenseBelongsTo.Purchase) {
-      const purchasedDate = getDateInstance(xpns.purchasedDate);
-      if (purchasedDate >= rangeStartDate && purchasedDate <= rangeEndDate) {
-        return true;
-      }
-    }
-    return false;
-  };
-
   const filteredExpenses = expenses.filter((xpns) => {
     logger.debug("expense id=", xpns.id, ", updatedOn=", xpns.auditDetails.updatedOn);
     const updatedOn = getDateInstance(xpns.auditDetails.updatedOn);
     if (updatedOn >= rangeStartDate && updatedOn <= rangeEndDate) {
-      return true;
-    }
-    if (isPurchaseWithinRange(xpns, rangeStartDate, rangeEndDate, logger)) {
       return true;
     }
     return false;

@@ -83,7 +83,7 @@ const initializePurchaseTypes = async () => {
 const initializeRefundReasons = async () => {
   const refundReasons = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ConfigTypeBelongsTo.RefundReason);
   if (refundReasons.length === 0) {
-    const defaultRefundReasons = ["price match", "costly", "no deal", "found better deal", "wanted to try", "dont like"];
+    const defaultRefundReasons = ["price match", "costly", "no deal", "found better deal", "wanted to try", "dont like", "broken"];
 
     const refundReasons = defaultRefundReasons.map((rfdrsn) => {
       return {
@@ -107,8 +107,44 @@ const initializeRefundReasons = async () => {
   }
 };
 
+const initializeIncomeTypes = async () => {
+  const incomeTypes = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ConfigTypeBelongsTo.IncomeType);
+  if (incomeTypes.length === 0) {
+    const defaultIncomeTypes = [
+      "salary",
+      "passive income",
+      "interest from savings",
+      "gift",
+      "credit card points",
+      "divident",
+      "stock profit/loss",
+      "cd interest",
+    ];
+
+    const incomeTypeCfgList = defaultIncomeTypes.map((inctyp) => {
+      return {
+        belongsTo: ConfigTypeBelongsTo.IncomeType,
+        id: uuidv4(),
+        name: inctyp,
+        value: inctyp,
+        status: randomStatus(),
+        tags: [],
+        description: "Income Type is " + inctyp + ". Used to tag income transactions.",
+        auditDetails: auditData(),
+      } as ConfigResource;
+    });
+    incomeTypeCfgList[incomeTypeCfgList.length - 1].status = ConfigTypeStatus.Deleted;
+
+    const incomeTypeCfgPromises = incomeTypeCfgList.map(async (incomeTypeCfg) => {
+      await configTypeDb.addItem(incomeTypeCfg);
+    });
+
+    await Promise.all(incomeTypeCfgPromises);
+  }
+};
+
 const init = async () => {
-  await Promise.all([initializePurchaseTypes(), initializePymtAccTypes(), initializeRefundReasons()]);
+  await Promise.all([initializePurchaseTypes(), initializePymtAccTypes(), initializeRefundReasons(), initializeIncomeTypes()]);
 };
 
 await init();
@@ -136,6 +172,10 @@ export const getPurchaseTypes = async () => {
 
 export const getRefundReasons = async () => {
   return await getConfigTypes(ConfigTypeBelongsTo.RefundReason);
+};
+
+export const getIncomeTypes = async () => {
+  return await getConfigTypes(ConfigTypeBelongsTo.IncomeType);
 };
 
 export const addUpdateConfigType = async (data: ConfigResource) => {

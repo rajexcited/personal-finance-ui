@@ -19,6 +19,8 @@ type RouteId =
   | "updatePurchase"
   | "addPurchaseRefund"
   | "updatePurchaseRefund"
+  | "addIncome"
+  | "updateIncome"
   | "pymtAccountsRoot"
   | "addPymAccount"
   | "updatePymAccount"
@@ -26,6 +28,7 @@ type RouteId =
   | "purchaseTypeSettings"
   | "pymtAccountTypeSettings"
   | "refundReasonSettings"
+  | "incomeTypeSettings"
   | "profileSettings"
   | "securitySettings";
 
@@ -66,6 +69,14 @@ const PAGE_URL: Record<RouteId, PageRouteResource> = {
     shortUrl: "purchase/refund/:refundId/update",
     baseRouteId: "expenseJournalRoot",
   },
+  addIncome: {
+    shortUrl: "income/add",
+    baseRouteId: "expenseJournalRoot",
+  },
+  updateIncome: {
+    shortUrl: "income/:incomeId/update",
+    baseRouteId: "expenseJournalRoot",
+  },
   pymtAccountsRoot: {
     shortUrl: "payment-accounts",
     baseRouteId: "rootPath",
@@ -92,6 +103,10 @@ const PAGE_URL: Record<RouteId, PageRouteResource> = {
   },
   refundReasonSettings: {
     shortUrl: "refund-reason",
+    baseRouteId: "settingsRoot",
+  },
+  incomeTypeSettings: {
+    shortUrl: "income-type",
     baseRouteId: "settingsRoot",
   },
   profileSettings: {

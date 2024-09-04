@@ -1,5 +1,5 @@
 import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, UpdateConfigStatusResource } from "./field-type";
-import { getLogger, handleRestErrors, NotFoundError } from "../../utils";
+import { getLogger, handleAndRethrowServiceError, NotFoundError } from "../../utils";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "../../db";
 import axios from "../axios-proxy";
 import { convertAuditFieldsToDateInstance } from "../audit-fields";
@@ -52,10 +52,8 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
         const configTypes = configTypesNested.flatMap((configType) => configType);
         return configTypes;
       } catch (e) {
-        const err = e as Error;
-        handleRestErrors(err, logger);
-        logger.warn("not rest error", e);
-        throw Error("unknown error");
+        handleAndRethrowServiceError(e as Error, logger);
+        throw new Error("this never gets thrown");
       }
     },
 
@@ -84,10 +82,8 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
 
         return configTypeResponse;
       } catch (e) {
-        const err = e as Error;
-        handleRestErrors(err, logger);
-        logger.warn("not rest error", e);
-        throw Error("unknown error");
+        handleAndRethrowServiceError(e as Error, logger);
+        throw new Error("this never gets thrown");
       }
     },
 
@@ -108,10 +104,8 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
 
         await configDb.addUpdateItem(configResponse);
       } catch (e) {
-        const err = e as Error;
-        handleRestErrors(err, logger);
-        logger.warn("not rest error", e);
-        throw Error("unknown error");
+        handleAndRethrowServiceError(e as Error, logger);
+        throw new Error("this never gets thrown");
       }
     },
 
@@ -128,10 +122,8 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
         const configResponse = response.data as ConfigResource;
         await configDb.addUpdateItem(configResponse);
       } catch (e) {
-        const err = e as Error;
-        handleRestErrors(err, logger);
-        logger.warn("not rest error", e);
-        throw Error("unknown error");
+        handleAndRethrowServiceError(e as Error, logger);
+        throw new Error("this never gets thrown");
       }
     },
 
@@ -151,10 +143,8 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
 
         await configDb.addUpdateItem(configResponse);
       } catch (e) {
-        const err = e as Error;
-        handleRestErrors(err, logger);
-        logger.warn("not rest error", e);
-        throw Error("unknown error");
+        handleAndRethrowServiceError(e as Error, logger);
+        throw new Error("this never gets thrown");
       }
     },
 

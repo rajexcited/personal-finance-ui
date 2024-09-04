@@ -1,8 +1,5 @@
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "../db";
 import { getLogger } from "../utils";
-import pMemoize from "p-memoize";
-import ExpiryMap from "expiry-map";
-import ms from "ms";
 
 export type TagQueryParams = Record<"year", string[]>;
 
@@ -13,6 +10,8 @@ export enum TagBelongsTo {
   PurchaseTypeConfig = "purchase-type-config",
   PaymentAccountTypeConfig = "pymt-acc-type-config",
   RefundReasonConfig = "refund-reason-config",
+  Income = "income",
+  IncomeTypeConfig = "income-type-config",
 }
 
 interface TagResource {
