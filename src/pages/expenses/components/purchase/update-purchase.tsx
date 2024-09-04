@@ -43,7 +43,7 @@ export const UpdatePurchase: FunctionComponent = () => {
             // logger.log("purchase updated", data.purchaseId, data, data.items, "same as loader purchase? ", loaderData.purchaseDetail?.purchaseId === data.purchaseId, "object difference = ", JSON.stringify(difference(data, loaderData.purchaseDetail)));
             submit(formData, { action: getFullPath("updatePurchase", data.id), method: "post", encType: "multipart/form-data" });
         } else {
-            setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
+            setErrorMessage("you have been logged out. please (login)[/login] to add purchase");
         }
     };
 
@@ -67,7 +67,7 @@ export const UpdatePurchase: FunctionComponent = () => {
                         <PurchaseForm
                             key="update-purchase-form"
                             purchaseId={ loaderData.data.purchaseDetail.id }
-                            submitLabel={ navigation.state === "submitting" ? "Saving Account details..." : "Update" }
+                            submitLabel={ navigation.state === "submitting" ? "Saving Purchase details..." : "Update" }
                             onSubmit={ onPurchaseUpdated }
                             details={ loaderData.data.purchaseDetail }
                             purchaseTypes={ loaderData.data.purchaseTypes }

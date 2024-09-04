@@ -163,23 +163,32 @@ export const PurchaseTypePage: FunctionComponent = () => {
             </div>
             <div className="columns">
                 <div className="column is-two-fifths">
+                    {
+                        purchaseTypeItems.length > 0 &&
+                        <>
 
-                    <Switch
-                        initialStatus={ enableFilter }
-                        id="purchaseTypeEnableFilter"
-                        labelWhenOn="Filtered by enabled"
-                        labelWhenOff="All Purchase Types"
-                        tooltip="Toggle to filter by status enable or show all"
-                        onChange={ setEnableFilter }
-                    />
+                            <Switch
+                                initialStatus={ enableFilter }
+                                id="purchaseTypeEnableFilter"
+                                labelWhenOn="Filtered by enabled"
+                                labelWhenOff="All Purchase Types"
+                                tooltip="Toggle to filter by status enable or show all"
+                                onChange={ setEnableFilter }
+                            />
 
-                    <List
-                        items={ purchaseTypeItems }
-                        onControlRequest={ onRequestListControlPurchaseTypeHandler }
-                        controlsInEllipsis={ controlsInEllipsis }
-                        controlsBeforeEllipsis={ controlsBeforeEllipsis }
-                    />
+                            <List
+                                items={ purchaseTypeItems }
+                                onControlRequest={ onRequestListControlPurchaseTypeHandler }
+                                controlsInEllipsis={ controlsInEllipsis }
+                                controlsBeforeEllipsis={ controlsBeforeEllipsis }
+                            />
+                        </>
+                    }
 
+                    {
+                        purchaseTypeItems.length === 0 &&
+                        <span>There are no Purchase Types configured.</span>
+                    }
                 </div>
                 <div className="column">
                     <section>

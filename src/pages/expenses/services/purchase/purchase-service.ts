@@ -53,8 +53,8 @@ export const PurchaseService = () => {
       const types = await getDefaultIfError(purchaseTypeService.getTypes, []);
       const typeMap = new Map<string, string>();
       types.forEach((ctg) => {
-        typeMap.set(ctg.id, ctg.name);
-        typeMap.set(ctg.name, ctg.id);
+        typeMap.set(ctg.id, ctg.value);
+        typeMap.set(ctg.value, ctg.id);
       });
       logger.info("transformed to type Map, ", typeMap, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
       return typeMap;
@@ -70,8 +70,8 @@ export const PurchaseService = () => {
       const types = await getDefaultIfError(async () => await purchaseTypeService.getTypes(ConfigTypeStatus.Deleted), []);
       const typeMap = new Map<string, string>();
       types.forEach((ctg) => {
-        typeMap.set(ctg.id, ctg.name);
-        typeMap.set(ctg.name, ctg.id);
+        typeMap.set(ctg.id, ctg.value);
+        typeMap.set(ctg.value, ctg.id);
       });
       logger.info("transformed to type Map, ", typeMap, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
       return typeMap;
@@ -268,6 +268,10 @@ export const PurchaseService = () => {
       const logger = getLogger("getPurchase", _logger);
 
       try {
+        if (!purchaseId) {
+          throw new InvalidError("purchase id is not defined");
+        }
+
         const dbPurchase = await purchaseDb.getItem(purchaseId);
 
         validatePurchaseBelongsTo(dbPurchase);

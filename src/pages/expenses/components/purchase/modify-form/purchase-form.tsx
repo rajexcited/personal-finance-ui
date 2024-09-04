@@ -12,12 +12,10 @@ import {
     DropDownItemType
 } from "../../../../../components";
 import { PurchaseBreakDown } from "./purchase-breakdown";
-import { ConfigResource, PurchaseFields, PurchaseItemFields, formatTimestamp, getLogger, ExpenseBelongsTo, PurchaseService, receiptService } from "../../../services";
+import { ConfigResource, PurchaseFields, PurchaseItemFields, formatTimestamp, getLogger, ExpenseBelongsTo, receiptService } from "../../../services";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../../components/receipt";
 import { PymtAccountFields } from "../../../../pymt-accounts/services";
 
-
-const purchaseService = PurchaseService();
 
 export interface PurchaseFormProps {
     submitLabel: string;
@@ -109,7 +107,7 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
         const myDropdownPurchaseTypeItems = props.purchaseTypes.map(ctg => {
             const itm: DropDownItemType = {
                 id: ctg.id || "configIdNeverUsed",
-                content: ctg.name,
+                content: ctg.value,
                 tooltip: ctg.description
             };
             return itm;

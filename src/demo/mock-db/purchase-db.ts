@@ -4,7 +4,7 @@ import { PurchaseFields, PurchaseItemFields, ExpenseStatus } from "../../pages/e
 import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDate, getLogger } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { auditData } from "../services/userDetails";
-import { deleteReceiptFileData, updatePurchaseIdForReceipt } from "./purchase-receipts-db";
+import { deleteReceiptFileData, updatePurchaseIdForReceipt } from "./receipts-db";
 import { getPurchaseTypes } from "./config-type-db";
 import { getPymtAccountList } from "./pymt-acc-db";
 import { ExpenseBelongsTo } from "../../pages/expenses/services";
@@ -19,11 +19,11 @@ const _rootLogger = getLogger("mock.db.expense.purchase", null, null, "DEBUG");
 const init = async () => {
   const logger = getLogger("init", _rootLogger);
 
-  const expenseCategories = (await getPurchaseTypes()).list;
-  logger.debug("retrieved", expenseCategories.length, "expense categories");
+  const purchaseTypes = (await getPurchaseTypes()).list;
+  logger.debug("retrieved", purchaseTypes.length, "purchase types");
 
-  const categoryId = (categoryName: string) => {
-    return expenseCategories.find((cat) => cat.name === categoryName)?.id;
+  const typeId = (typeName: string) => {
+    return purchaseTypes.find((prchtyp) => prchtyp.value === typeName)?.id;
   };
 
   const paymentAccounts = (await getPymtAccountList()).list;
@@ -32,14 +32,14 @@ const init = async () => {
     return paymentAccounts.find((acc) => acc.shortName.toLowerCase().includes(accname.toLowerCase()))?.id;
   };
 
-  const expenses = await purchaseDb.getAll();
-  logger.debug("retrieved", expenses.length, "expenses");
+  const purchases = await purchaseDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ExpenseBelongsTo.Purchase);
+  logger.debug("retrieved", purchases.length, "purchases");
 
-  if (expenses.length > 0) {
+  if (purchases.length > 0) {
     return;
   }
 
-  logger.debug("creating sample expenses");
+  logger.debug("creating sample purchases");
   await purchaseDb.addItem({
     id: uuidv4(),
     billName: "burger restaurant",
@@ -48,7 +48,7 @@ const init = async () => {
     tags: "outdoor,dining,trip".split(","),
     paymentAccountId: pymtAccId("checking"),
     purchasedDate: formatTimestamp(datetime.addDays(new Date(), -10)),
-    purchaseTypeId: categoryId("hangout"),
+    purchaseTypeId: typeId("hangout"),
     receipts: [],
     items: [],
     auditDetails: auditData(),
@@ -63,8 +63,8 @@ const init = async () => {
     description: "this is dummy expense for demo purpose",
     tags: "get2gethor,potluck".split(","),
     paymentAccountId: pymtAccId("cash"),
-    purchasedDate: formatTimestamp(datetime.addDays(new Date(), -1)),
-    purchaseTypeId: categoryId("food shopping"),
+    purchasedDate: formatTimestamp(datetime.addDays(new Date(), -3)),
+    purchaseTypeId: typeId("food shopping"),
     verifiedTimestamp: formatTimestamp(datetime.addHours(new Date(), -1)),
     receipts: [],
     auditDetails: auditData(),
@@ -77,7 +77,7 @@ const init = async () => {
         amount: "14.34",
         tags: "kids,breaktime,hangout".split(","),
         description: "for breakfast, break time during play or evening hangout",
-        purchaseTypeId: categoryId("hangout"),
+        purchaseTypeId: typeId("hangout"),
       },
       {
         id: uuidv4(),
@@ -91,7 +91,7 @@ const init = async () => {
         billName: "non stick pan",
         amount: "39.7",
         tags: "utensil,kitchen".split(","),
-        purchaseTypeId: categoryId("home stuffs"),
+        purchaseTypeId: typeId("home stuffs"),
         description: "",
       },
     ],
@@ -231,7 +231,7 @@ export const addUpdatePurchase = async (data: PurchaseFields) => {
     ...data,
     id: newPurchaseId,
     status: ExpenseStatus.Enable,
-    receipts: data.receipts.map((r) => ({ ...r, id: uuidv4(), purchaseId: "", url: "" })),
+    receipts: data.receipts.map((r) => ({ ...r, id: uuidv4(), relationId: "", url: "" })),
     items: data.items?.map((ei) => ({ ...ei, expenseCategoryName: undefined, id: uuidv4() })) || [],
     auditDetails: auditData(),
   };

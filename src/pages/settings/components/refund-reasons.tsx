@@ -163,23 +163,31 @@ export const RefundReasonPage: FunctionComponent = () => {
             </div>
             <div className="columns">
                 <div className="column is-two-fifths">
+                    {
+                        refundReasonItems.length > 0 &&
+                        <>
+                            <Switch
+                                initialStatus={ enableFilter }
+                                id="refundReasonEnableFilter"
+                                labelWhenOn="Filtered by enabled"
+                                labelWhenOff="All Refund Reasons"
+                                tooltip="Toggle to filter by status enable or show all"
+                                onChange={ setEnableFilter }
+                            />
 
-                    <Switch
-                        initialStatus={ enableFilter }
-                        id="refundReasonEnableFilter"
-                        labelWhenOn="Filtered by enabled"
-                        labelWhenOff="All Refund Reasons"
-                        tooltip="Toggle to filter by status enable or show all"
-                        onChange={ setEnableFilter }
-                    />
+                            <List
+                                items={ refundReasonItems }
+                                onControlRequest={ onRequestListControlRefundReasonHandler }
+                                controlsInEllipsis={ controlsInEllipsis }
+                                controlsBeforeEllipsis={ controlsBeforeEllipsis }
+                            />
+                        </>
+                    }
 
-                    <List
-                        items={ refundReasonItems }
-                        onControlRequest={ onRequestListControlRefundReasonHandler }
-                        controlsInEllipsis={ controlsInEllipsis }
-                        controlsBeforeEllipsis={ controlsBeforeEllipsis }
-                    />
-
+                    {
+                        refundReasonItems.length === 0 &&
+                        <span>There are no Reasons configured for Refund.</span>
+                    }
                 </div>
                 <div className="column">
                     <section>

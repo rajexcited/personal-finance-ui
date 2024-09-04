@@ -41,7 +41,7 @@ export const AddPurchase: FunctionComponent = () => {
             // logger.log("purchase added", data.purchaseId, data);
             submit(formData, { action: getFullPath("addPurchase"), method: "post", encType: "multipart/form-data" });
         } else {
-            setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
+            setErrorMessage("you have been logged out. please (login)[/login] to add purchase");
         }
     };
 

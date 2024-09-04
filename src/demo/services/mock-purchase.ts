@@ -2,7 +2,7 @@ import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
 import { missingValidation, validateAuthorization, validateDataType } from "./common-validators";
 import { PurchaseFields } from "../../pages/expenses/services";
-import { getReceiptFileData, saveReceiptFileData } from "../mock-db/purchase-receipts-db";
+import { getReceiptFileData, saveReceiptFileData } from "../mock-db/receipts-db";
 import { getLogger } from "../../shared";
 import { ExpenseBelongsTo } from "../../pages/expenses/services";
 import { addUpdatePurchase, deletePurchase, getPurchaseDetails, getPurchaseTags } from "../mock-db/purchase-db";
@@ -121,7 +121,7 @@ export const MockPurchase = (demoMock: MockAdapter) => {
     }
     const receiptName = urlParts.slice(-1)[0];
 
-    await saveReceiptFileData(filedata, purchaseId, receiptName);
+    await saveReceiptFileData(filedata, purchaseId, receiptName, ExpenseBelongsTo.Purchase);
 
     return responseCreator.toSuccessResponse("saved");
   });
@@ -142,7 +142,7 @@ export const MockPurchase = (demoMock: MockAdapter) => {
       return responseCreator.toValidationError(validationErrors);
     }
 
-    const result = await getReceiptFileData(purchaseId, receiptId);
+    const result = await getReceiptFileData(purchaseId, receiptId, ExpenseBelongsTo.Purchase);
     if (result.error) {
       responseCreator.toUnknownError(result.error);
     }
