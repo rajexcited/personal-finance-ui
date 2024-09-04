@@ -1,7 +1,7 @@
 export { PurchaseTypeService, PurchaseService } from "./purchase";
 export type { PurchaseFields, PurchaseItemFields } from "./purchase";
 
-export { ExpenseService } from "./expense/expenses-service";
+export * as expenseService from "./expense/expenses-service";
 
 export { ExpenseStatus, ExpenseBelongsTo } from "./expense/field-types";
 export type { ExpenseFields } from "./expense/field-types";
@@ -17,4 +17,7 @@ export { getLogger, formatTimestamp, NotFoundError, handleRouteActionError, Http
 export type { PurchaseRefundFields } from "./refund";
 export { refundService, refundReasonService } from "./refund";
 
-export * as receiptService from "./receipt/receipt-service";
+export { receiptService } from "./receipt";
+
+export type { IncomeFields } from "./income";
+export { incomeService, incomeTypeService } from "./income";

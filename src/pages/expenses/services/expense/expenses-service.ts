@@ -1,172 +1,125 @@
 import pMemoize from "p-memoize";
-import ExpiryMap from "expiry-map";
 import datetime from "date-and-time";
-import ms from "ms";
 import {
   axios,
-  handleRestErrors,
   getLogger,
   MyLocalDatabase,
   LocalDBStore,
   LocalDBStoreIndex,
   subtractDates,
-  getDefaultIfError,
   getCacheOption,
+  handleAndRethrowServiceError,
 } from "../../../../shared";
-import { PymtAccountService } from "../../../pymt-accounts";
 import { ExpenseBelongsTo, ExpenseFields, ExpenseStatus } from "./field-types";
 import { PurchaseFields, PurchaseService } from "../purchase";
+import { refundService } from "../refund";
+import { incomeService } from "../income";
 
 type ExpenseQueryParams = Record<"pageNo" | "status" | "pageMonths" | "belongsTo", string[]>;
 
-export const ExpenseService = () => {
-  const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
-  const pymtAccService = PymtAccountService();
-  const purchaseService = PurchaseService();
+const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
+const purchaseService = PurchaseService();
 
-  const rootPath = "/expenses";
-  const _logger = getLogger("service.expense");
+const rootPath = "/expenses";
+const _logger = getLogger("service.expense");
 
-  const getPaymentAccountMap = async () => {
-    const logger = getLogger("getPaymentAccountMap", _logger);
-    const startTime = new Date();
+const getExpenseCount = pMemoize(async (queryParams: ExpenseQueryParams) => {
+  const countResponse = await axios.get(`${rootPath}/count`, { params: queryParams });
+  return Number(countResponse.data);
+}, getCacheOption("3 min"));
 
-    const pymtAccs = await getDefaultIfError(pymtAccService.getPymtAccountList, []);
-    const pymtAccMap = new Map<string, string>();
-    pymtAccs.forEach((acc) => {
-      pymtAccMap.set(acc.id, acc.shortName);
-    });
-    logger.info("transformed to pymt acc Map, ", pymtAccMap, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
-    return pymtAccMap;
-  };
+export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseStatus, pageMonths?: number, belongsTo?: ExpenseBelongsTo) => {
+  const logger = getLogger("getExpenseList", _logger);
 
-  const getExpenseCount = pMemoize(
-    async (queryParams: ExpenseQueryParams) => {
-      const countResponse = await axios.get(`${rootPath}/count`, { params: queryParams });
-      return Number(countResponse.data);
-    },
-    { cache: new ExpiryMap(ms("3 min")), cacheKey: JSON.stringify }
-  );
+  const startTime = new Date();
+  try {
+    const queryPageMonths = pageMonths === undefined ? 3 : pageMonths;
+    const queryParams: ExpenseQueryParams = {
+      pageNo: [String(pageNo)],
+      status: [status || ExpenseStatus.Enable],
+      pageMonths: [String(queryPageMonths)],
+      belongsTo: belongsTo ? [String(belongsTo)] : [],
+    };
 
-  const isPurchaseWithinRange = (purchase: ExpenseFields, rangeStartDate: Date, rangeEndDate: Date) => {
-    if (purchase.belongsTo === ExpenseBelongsTo.Purchase) {
-      if (purchase.purchasedDate >= rangeStartDate && purchase.purchasedDate <= rangeEndDate) {
-        return true;
-      }
-    }
-    return false;
-  };
+    let expenses: ExpenseFields[] = [];
+    let expenseCount: number | null = null;
+    if (status !== ExpenseStatus.Deleted) {
+      const dbExpensePromise = expenseDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, queryParams.status[0]);
+      const expenseCountPromise = getExpenseCount(queryParams);
+      await Promise.all([dbExpensePromise, expenseCountPromise]);
+      const dbExpenses = await dbExpensePromise;
+      logger.info("expenseDb.getAllFromIndex and expenseCount.api execution time =", subtractDates(null, startTime).toSeconds(), " sec.");
 
-  const getExpenseList = async (pageNo: number, status?: ExpenseStatus, pageMonths?: number, belongsTo?: ExpenseBelongsTo) => {
-    const logger = getLogger("getList", _logger);
-
-    const startTime = new Date();
-    try {
-      const queryPageMonths = pageMonths === undefined ? 3 : pageMonths;
-      const queryParams: ExpenseQueryParams = {
-        pageNo: [String(pageNo)],
-        status: [status || ExpenseStatus.Enable],
-        pageMonths: [String(queryPageMonths)],
-        belongsTo: belongsTo ? [String(belongsTo)] : [],
-      };
-
-      let expenses: ExpenseFields[] = [];
-      let expenseCount: number | null = null;
-      if (status !== ExpenseStatus.Deleted) {
-        const dbExpensePromise = expenseDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, status || ExpenseStatus.Enable);
-        const expenseCountPromise = getExpenseCount(queryParams);
-        await Promise.all([dbExpensePromise, expenseCountPromise]);
-        const dbExpenses = await dbExpensePromise;
-        logger.info("expenseDb.getAllFromIndex and expenseCount.api execution time =", subtractDates(null, startTime).toSeconds(), " sec.");
-
-        const rangeStartDate = datetime.addMonths(new Date(), queryPageMonths * -1 * pageNo);
-        const rangeEndDate = datetime.addMonths(new Date(), queryPageMonths * -1 * (pageNo - 1));
-        const filteredExpenses = dbExpenses.filter((xpns) => {
-          if (isPurchaseWithinRange(xpns, rangeStartDate, rangeEndDate)) {
-            return true;
-          }
-          if (xpns.auditDetails.updatedOn >= rangeStartDate && xpns.auditDetails.updatedOn <= rangeEndDate) {
-            return true;
-          }
-          return false;
-        });
-        logger.info("db expenses =", [...filteredExpenses]);
-        expenseCount = await expenseCountPromise;
-        if (filteredExpenses.length === expenseCount) {
-          logger.info(
-            "filteredExpenses from DB, queryParams =",
-            queryParams,
-            ", filteredExpenses.length=",
-            filteredExpenses.length,
-            ", execution time =",
-            subtractDates(null, startTime).toSeconds(),
-            " sec"
-          );
-          expenses = filteredExpenses;
+      const rangeStartDate = datetime.addMonths(new Date(), queryPageMonths * -1 * pageNo);
+      const rangeEndDate = datetime.addMonths(new Date(), queryPageMonths * -1 * (pageNo - 1));
+      const filteredExpenses = dbExpenses.filter((xpns) => {
+        if (xpns.auditDetails.updatedOn >= rangeStartDate && xpns.auditDetails.updatedOn <= rangeEndDate) {
+          return true;
         }
-      }
-
-      if (expenseCount !== null && expenses.length !== expenseCount) {
-        // call api to refresh the list
-        let apiStartTime = new Date();
-
-        const responsePromise = axios.get(rootPath, { params: queryParams });
-        await responsePromise;
+        return false;
+      });
+      logger.info("db expenses =", [...filteredExpenses]);
+      expenseCount = await expenseCountPromise;
+      if (filteredExpenses.length === expenseCount) {
         logger.info(
-          "getExpenses api, queryParams =",
+          "filteredExpenses from DB, queryParams =",
           queryParams,
-          ", api execution time =",
-          subtractDates(null, apiStartTime).toSeconds(),
-          " sec and time diff from request start =",
-          subtractDates(null, startTime),
+          ", filteredExpenses.length=",
+          filteredExpenses.length,
+          ", execution time =",
+          subtractDates(null, startTime).toSeconds(),
           " sec"
         );
-        logger.info("api execution time =", subtractDates(null, apiStartTime).toSeconds(), " sec");
-
-        apiStartTime = new Date();
-        expenses = (await responsePromise).data;
+        expenses = filteredExpenses;
       }
-
-      const promises = expenses.map(async (expense) => {
-        if (expense.belongsTo === ExpenseBelongsTo.Purchase) {
-          return await purchaseService.addUpdateDbPurchase(expense, logger);
-        }
-      });
-      logger.info("transformed expense resources, execution time =", subtractDates(null, startTime).toSeconds(), " sec");
-
-      const transformedExpenses = await Promise.all(promises);
-      const returnResp = transformedExpenses
-        .map((xpns) => {
-          let expnse = null;
-          if (xpns) {
-            if (xpns.belongsTo === ExpenseBelongsTo.Purchase) {
-              expnse = { ...xpns, items: undefined };
-            }
-            expnse = { ...xpns };
-          }
-          return expnse;
-        })
-        .filter((xpns) => xpns !== null);
-
-      return returnResp as ExpenseFields[];
-    } catch (e) {
-      const err = e as Error;
-      handleRestErrors(err, logger);
-      logger.warn("not rest error", e);
-      throw Error("unknown error");
-    } finally {
-      logger.info("execution time =", subtractDates(null, startTime).toSeconds(), " sec");
     }
-  };
 
-  return {
-    getExpenseList: pMemoize(getExpenseList, getCacheOption("2 sec")),
+    if (expenseCount !== null && expenses.length !== expenseCount) {
+      // call api to refresh the list
+      let apiStartTime = new Date();
 
-    getPurchaseList: pMemoize(async (pageNo: number, pageMonths: number) => {
-      const list = await getExpenseList(pageNo, ExpenseStatus.Enable, pageMonths, ExpenseBelongsTo.Purchase);
-      return list as PurchaseFields[];
-    }, getCacheOption("3 sec")),
+      const response = await axios.get(rootPath, { params: queryParams });
+      logger.info(
+        "getExpenses api, queryParams =",
+        queryParams,
+        ", api execution time =",
+        subtractDates(null, apiStartTime).toSeconds(),
+        " sec and time diff from request start =",
+        subtractDates(null, startTime),
+        " sec"
+      );
+      logger.info("api execution time =", subtractDates(null, apiStartTime).toSeconds(), " sec");
 
-    getPaymentAccountMap,
-  };
-};
+      apiStartTime = new Date();
+      expenses = response.data;
+    }
+
+    const promises = expenses.map(async (expense) => {
+      if (expense.belongsTo === ExpenseBelongsTo.Purchase) {
+        return await purchaseService.addUpdateDbPurchase(expense, logger);
+      }
+      if (expense.belongsTo === ExpenseBelongsTo.PurchaseRefund) {
+        return await refundService.addUpdateDbRefund(expense, logger);
+      }
+      if (expense.belongsTo === ExpenseBelongsTo.Income) {
+        return await incomeService.addUpdateDbIncome(expense, logger);
+      }
+    });
+    logger.info("transformed expense resources, execution time =", subtractDates(null, startTime).toSeconds(), " sec");
+
+    const transformedExpenses = await Promise.all(promises);
+    const returnResp = transformedExpenses.filter((xpns) => xpns !== undefined);
+
+    return returnResp as ExpenseFields[];
+  } catch (e) {
+    handleAndRethrowServiceError(e as Error, logger);
+    throw new Error("this never gets thrown");
+  } finally {
+    logger.info("execution time =", subtractDates(null, startTime).toSeconds(), " sec");
+  }
+}, getCacheOption("1 min"));
+
+export const getPurchaseList = pMemoize(async (pageNo: number, pageMonths: number) => {
+  const list = await getExpenseList(pageNo, ExpenseStatus.Enable, pageMonths, ExpenseBelongsTo.Purchase);
+  return list as PurchaseFields[];
+}, getCacheOption("1 min"));

@@ -9,3 +9,8 @@ export type { RefundDetailLoaderResource } from "./refund/loader";
 export { addRefundDetailLoaderHandler, modifyRefundDetailLoaderHandler } from "./refund/loader";
 
 export { refundActionHandler } from "./refund/action";
+
+export { addIncomeDetailLoaderHandler, modifyIncomeDetailLoaderHandler } from "./income/loader";
+export type { IncomeDetailLoaderResource } from "./income/loader";
+
+export { incomeActionHandler } from "./income/action";

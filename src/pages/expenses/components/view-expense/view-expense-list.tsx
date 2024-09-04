@@ -1,8 +1,8 @@
 import { FunctionComponent, useState, useEffect, useRef } from "react";
-import { useActionData, useLoaderData, useNavigate, useSubmit } from "react-router-dom";
+import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { Animated, ConfirmDialog, LoadSpinner } from "../../../../components";
-import { rowHeaders, PurchaseFields, expenseComparator, ExpenseSortStateType, getLogger, RouteHandlerResponse } from "../../services";
+import { rowHeaders, expenseComparator, ExpenseSortStateType, getLogger, RouteHandlerResponse, ExpenseFields, ExpenseBelongsTo } from "../../services";
 import { getFullPath } from "../../../root";
 import { useDebounceState } from "../../../../hooks";
 import { ExpenseItemTableRow } from "./view-expense-item-tablerow";
@@ -21,15 +21,17 @@ const getPrevSortDetails = (sortDetails: ExpenseSortStateType) => {
     return prevSortDetails as JSONObject;
 };
 
+type SelectedExpense = Pick<ExpenseFields, "id" | "belongsTo">;
+
 export const ExpenseList: FunctionComponent = () => {
-    const loaderData = useLoaderData() as RouteHandlerResponse<PurchaseFields[], null>;
+    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseFields[], null>;
     const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
-    const [expenseList, setExpenseList] = useState<PurchaseFields[]>([]);
-    const [selectedExpenseId, setSelectedExpenseId] = useState("");
-    const [deletingExpenseId, setDeletingExpenseId] = useState("");
+    const [expenseList, setExpenseList] = useState<ExpenseFields[]>([]);
+    const [selectedExpense, setSelectedExpense] = useState<SelectedExpense>();
+    const [deletingExpense, setDeletingExpense] = useState<SelectedExpense>();
     const [isViewReceiptsEnable, setViewReceiptsEnable] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-    const navigate = useNavigate();
+
     const submit = useSubmit();
     const [loading, setLoading] = useDebounceState(false, 500, true);
     const headerRef = useRef<ExpenseTableHeadRefType>(null);
@@ -61,7 +63,7 @@ export const ExpenseList: FunctionComponent = () => {
         }
     }, [loaderData, actionData]);
 
-    const getSortedExpenses = (expenses: PurchaseFields[], sortDetails: ExpenseSortStateType): PurchaseFields[] => {
+    const getSortedExpenses = (expenses: ExpenseFields[], sortDetails: ExpenseSortStateType) => {
         const logger = getLogger("getSortedExpenses", fcLogger);
         const sortedExpenses = [...expenses];
         sortedExpenses.sort(expenseComparator.bind(null, sortDetails));
@@ -80,25 +82,38 @@ export const ExpenseList: FunctionComponent = () => {
         });
     };
 
-    const onRemoveRequestHandler = (expenseId: string) => {
-        setSelectedExpenseId(expenseId);
-        setDeletingExpenseId(expenseId);
+    const onRemoveRequestHandler = (expenseId: string, belongsTo: ExpenseBelongsTo) => {
+        const expenseSelected: SelectedExpense = { id: expenseId, belongsTo: belongsTo };
+        setSelectedExpense(expenseSelected);
+        setDeletingExpense(expenseSelected);
     };
 
-    const onViewReceiptsRequestHandler = (expenseId: string) => {
-        setSelectedExpenseId(expenseId);
+    const onViewReceiptsRequestHandler = (expenseId: string, belongsTo: ExpenseBelongsTo) => {
+        const expenseSelected: SelectedExpense = { id: expenseId, belongsTo: belongsTo };
+        setSelectedExpense(expenseSelected);
         setViewReceiptsEnable(true);
     };
 
     const onDeleteConfirmHandler = () => {
-        const deletingExpense = expenseList.find(xpns => xpns.id === deletingExpenseId);
-        const data: any = { ...deletingExpense };
-        submit(data, { action: getFullPath("expenseJournalRoot"), method: "delete" });
-        setDeletingExpenseId("");
+        const expenseToBeDeleted = expenseList.find(xpns => xpns.id === deletingExpense?.id && xpns.belongsTo === deletingExpense.belongsTo);
+        if (expenseToBeDeleted) {
+            const data: any = { ...expenseToBeDeleted };
+            submit(data, { action: getFullPath("expenseJournalRoot"), method: "delete" });
+            setDeletingExpense(undefined);
+        }
     };
 
     fcLogger.debug(new Date(), "view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billName));
-    const selectedExpenseReceipts = (isViewReceiptsEnable && expenseList.find(xpns => xpns.id === selectedExpenseId)?.receipts) || [];
+    const selectedExpenseReceipts = (isViewReceiptsEnable && expenseList.find(xpns => xpns.id === selectedExpense?.id && selectedExpense.belongsTo === xpns.belongsTo)?.receipts) || [];
+
+    function onSelectRequestHandler (expenseId: string, belongsTo: ExpenseBelongsTo): void {
+        if (expenseId && belongsTo) {
+            const expenseSelected: SelectedExpense = { id: expenseId, belongsTo: belongsTo };
+            setSelectedExpense(expenseSelected);
+        } else {
+            setSelectedExpense(undefined);
+        }
+    }
 
     return (
         <section>
@@ -128,8 +143,8 @@ export const ExpenseList: FunctionComponent = () => {
                                 key={ xpns.id + "-trow" }
                                 id={ xpns.id + "-trow" }
                                 details={ xpns }
-                                onSelect={ setSelectedExpenseId }
-                                isSelected={ selectedExpenseId === xpns.id }
+                                onSelect={ onSelectRequestHandler }
+                                isSelected={ selectedExpense?.id === xpns.id }
                                 onRemove={ onRemoveRequestHandler }
                                 onViewReceipt={ onViewReceiptsRequestHandler }
                             />
@@ -149,13 +164,13 @@ export const ExpenseList: FunctionComponent = () => {
                 id="delete-expense-confirm-dialog"
                 content="Are you sure that you want to delete expense?"
                 title="Remove Expense"
-                open={ !!deletingExpenseId }
+                open={ !!deletingExpense?.id }
                 onConfirm={ onDeleteConfirmHandler }
-                onCancel={ () => setDeletingExpenseId("") }
+                onCancel={ () => setDeletingExpense(undefined) }
                 yesButtonClassname="is-danger"
             />
             <ViewReceipts
-                key={ "view-receipts-" + (isViewReceiptsEnable ? selectedExpenseId : "dummy") }
+                key={ "view-receipts-" + (isViewReceiptsEnable && selectedExpense?.id || "dummy") }
                 isShow={ isViewReceiptsEnable }
                 receipts={ selectedExpenseReceipts }
                 onHide={ () => setViewReceiptsEnable(false) }
