@@ -11,12 +11,18 @@ const AccountsHome: FunctionComponent = () => {
         navigate(getFullPath("addPymAccount"));
     };
 
+    const onClickNavigateAddNriTransferHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+        event.preventDefault();
+        // navigate(getFullPath("addPurchase"));
+    };
+
     return (
         <>
             <div className="columns">
                 <div className="column">
                     <div className="buttons">
                         <button className="button is-link" onClick={ onClickNavigateAddPymtAccountHandler }>Add Account</button>
+                        <button className="button is-link" onClick={ onClickNavigateAddNriTransferHandler }>Add Transfer</button>
                     </div>
                 </div>
             </div>

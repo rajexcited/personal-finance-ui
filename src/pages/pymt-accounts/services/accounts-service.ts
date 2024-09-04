@@ -26,9 +26,9 @@ export const PymtAccountService = () => {
     const acctypes = await pymtAccountTypeService.getAccountTypes();
     const typeMap = new Map<string, string>();
     acctypes.forEach((at) => {
-      if (at.id && at.name) {
-        typeMap.set(at.id, at.name);
-        typeMap.set(at.name, at.id);
+      if (at.id && at.value) {
+        typeMap.set(at.id, at.value);
+        typeMap.set(at.value, at.id);
       }
     });
     return typeMap;
@@ -76,7 +76,7 @@ export const PymtAccountService = () => {
       logger.warn("not rest error", e);
       throw Error("unknown error");
     }
-  }, getCacheOption("30 sec"));
+  }, getCacheOption("60 sec"));
 
   const getPymtAccount = pMemoize(async (accountId: string) => {
     const logger = getLogger("getPymtAccount", _logger);
@@ -113,7 +113,7 @@ export const PymtAccountService = () => {
       logger.warn("not rest error", e);
       throw Error("unknown error");
     }
-  }, getCacheOption("10 sec"));
+  }, getCacheOption("20 sec"));
 
   const addUpdatePymtAccount = pMemoize(async (pymtAccount: PymtAccountFields) => {
     const logger = getLogger("addUpdatePymtAccount", _logger);

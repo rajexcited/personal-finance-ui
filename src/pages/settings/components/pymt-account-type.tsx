@@ -163,23 +163,31 @@ export const PymtAccountTypePage: FunctionComponent = () => {
             </div>
             <div className="columns">
                 <div className="column is-two-fifths">
+                    {
+                        pymtAccountTypeItems.length > 0 &&
+                        <>
+                            <Switch
+                                initialStatus={ enableFilter }
+                                id="pymtAccTypEnableFilter"
+                                labelWhenOn="Filtered by enabled"
+                                labelWhenOff="All Types"
+                                tooltip="Toggle to filter by status enable or show all"
+                                onChange={ setEnableFilter }
+                            />
 
-                    <Switch
-                        initialStatus={ enableFilter }
-                        id="pymtAccTypEnableFilter"
-                        labelWhenOn="Filtered by enabled"
-                        labelWhenOff="All Types"
-                        tooltip="Toggle to filter by status enable or show all"
-                        onChange={ setEnableFilter }
-                    />
+                            <List
+                                items={ pymtAccountTypeItems }
+                                onControlRequest={ onRequestListControlPymtAccTypeHandler }
+                                controlsInEllipsis={ controlsInEllipsis }
+                                controlsBeforeEllipsis={ controlsBeforeEllipsis }
+                            />
+                        </>
+                    }
 
-                    <List
-                        items={ pymtAccountTypeItems }
-                        onControlRequest={ onRequestListControlPymtAccTypeHandler }
-                        controlsInEllipsis={ controlsInEllipsis }
-                        controlsBeforeEllipsis={ controlsBeforeEllipsis }
-                    />
-
+                    {
+                        pymtAccountTypeItems.length === 0 &&
+                        <span>There are no Payment Account Types configured.</span>
+                    }
                 </div>
                 <div className="column">
                     <section>
