@@ -46,7 +46,7 @@ export const AddRefund: FunctionComponent = () => {
             //todo verify
             // this is probably never getting called.
             logger.warn("user is not authenticated. details = ", { ...auth.userDetails });
-            setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
+            setErrorMessage("you have been logged out. please (login)[/login] to add refund");
         }
     };
 

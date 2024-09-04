@@ -52,7 +52,7 @@ export const UpdateRefund: FunctionComponent = () => {
             //todo verify
             // this is probably never getting called.
             logger.warn("user is not authenticated. details = ", { ...auth.userDetails });
-            setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
+            setErrorMessage("you have been logged out. please (login)[/login] to update refund");
         }
     };
 
@@ -77,7 +77,7 @@ export const UpdateRefund: FunctionComponent = () => {
                         loaderData.type === "success" && loaderData.data.refundDetail &&
                         <PurchaseRefundForm
                             key="update-purchase-form"
-                            submitLabel={ navigation.state === "submitting" ? "Saving Account details..." : "Update" }
+                            submitLabel={ navigation.state === "submitting" ? "Saving Refund details..." : "Update" }
                             onSubmit={ onRefundUpdated }
                             refundId={ loaderData.data.refundDetail.id }
                             refundDetails={ loaderData.data.refundDetail }

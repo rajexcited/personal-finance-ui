@@ -21,10 +21,10 @@ import {
 import { PymtAccountService } from "../../../pymt-accounts";
 import { ExpenseBelongsTo, ExpenseFields } from "../expense/field-types";
 import { PurchaseRefundFields } from "./field-types";
-import * as receiptService from "../receipt/receipt-service";
+import { receiptService } from "../receipt";
 import { CacheAction, ReceiptProps } from "../../../../components/receipt";
 
-const serviceLogger = getLogger("service.expense.refund");
+const serviceLogger = getLogger("service.expense.refund", null, null, "DEBUG");
 
 const refundDb = new MyLocalDatabase<PurchaseRefundFields>(LocalDBStore.Expense);
 
@@ -33,7 +33,7 @@ const tagService = TagsService(TagBelongsTo.PurchaseRefund);
 
 const rootPath = "/expenses/refund";
 
-const getDefaultPaymentAccounts = pMemoize(async () => {
+const getDefaultPaymentAccounts = async () => {
   const logger = getLogger("getDefaultPaymentAccounts", serviceLogger);
   const startTime = new Date();
 
@@ -41,9 +41,9 @@ const getDefaultPaymentAccounts = pMemoize(async () => {
 
   logger.info("transformed to pymt acc, ", pymtAccs, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
   return pymtAccs;
-}, getCacheOption("60 sec"));
+};
 
-const getPaymentAccount = pMemoize(async (paymentAccId: string) => {
+const getPaymentAccount = async (paymentAccId: string) => {
   const logger = getLogger("getPaymentAccount", serviceLogger);
   const startTime = new Date();
 
@@ -51,7 +51,7 @@ const getPaymentAccount = pMemoize(async (paymentAccId: string) => {
 
   logger.info("transformed to pymt acc, ", pymtAcc, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
   return pymtAcc;
-}, getCacheOption("15 sec"));
+};
 
 const updatePaymentAccount = async (refunditem: PurchaseRefundFields) => {
   let startTime = new Date();
@@ -82,7 +82,7 @@ const updateTags = async (refund: PurchaseRefundFields) => {
   logger.debug("add update tags completed");
 };
 
-const addUpdateDbRefund = async (refunddetails: PurchaseRefundFields, loggerBase: LoggerBase) => {
+export const addUpdateDbRefund = async (refunddetails: PurchaseRefundFields, loggerBase: LoggerBase) => {
   // here we don't have url or file prop in receipts
   const logger = getLogger("addUpdateDbRefund", loggerBase);
   if (refunddetails.belongsTo !== ExpenseBelongsTo.PurchaseRefund) {
@@ -130,6 +130,10 @@ export const getDetails = pMemoize(async (refundId: string) => {
   const logger = getLogger("getDetails", serviceLogger);
 
   try {
+    if (!refundId) {
+      throw new InvalidError("refund id is not defined");
+    }
+
     const dbRefund = await refundDb.getItem(refundId);
 
     if (dbRefund) {
@@ -141,6 +145,7 @@ export const getDetails = pMemoize(async (refundId: string) => {
     return addUpdateDbRefund(response.data, logger);
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
+    throw new Error("this never gets thrown");
   }
 }, getCacheOption("10 sec"));
 
@@ -181,6 +186,7 @@ export const addUpdateDetails = pMemoize(async (refunddetails: PurchaseRefundFie
     await addUpdateDbRefund(response.data, logger);
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
+    throw new Error("this never gets thrown");
   }
 }, getCacheOption("5 sec"));
 
@@ -196,6 +202,7 @@ export const removeDetails = async (refundId: string) => {
     await Promise.all(deletingReceiptPromises);
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
+    throw new Error("this never gets thrown");
   }
 };
 

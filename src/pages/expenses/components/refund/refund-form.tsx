@@ -10,7 +10,7 @@ import {
     TextArea,
     DropDownItemType
 } from "../../../../components";
-import { ExpenseBelongsTo, ExpenseService, ExpenseStatus, formatTimestamp, getLogger, PurchaseFields, PurchaseRefundFields, receiptService } from "../../services";
+import { ExpenseBelongsTo, expenseService, ExpenseStatus, formatTimestamp, getLogger, PurchaseFields, PurchaseRefundFields, receiptService } from "../../services";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../components/receipt";
 import { PymtAccountFields } from "../../../pymt-accounts/services";
 import { ConfigResource, isNotBlank, parseTimestamp } from "../../../../shared";
@@ -29,7 +29,6 @@ export interface PurchaseRefundFormProps {
 }
 
 const fcLogger = getLogger("FC.PurchaseRefundForm", null, null, "DEBUG");
-const expenseService = ExpenseService();
 const purchasePageMonths = 2;
 
 const getPurchaseDropdownTooltip = (purchaseDetails: PurchaseFields) => {
@@ -144,7 +143,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                 tooltip: dropdownTooltip
             };
         });
-        setDropdownRefundReasons(ddPymtAccList);
+        setDropdownRefundReasons(ddreasonList);
 
         if (props.refundDetails?.reasonId && props.refundDetails.reasonValue) {
             let mySelectedReason = ddreasonList.find(reason => (reason.id === props.refundDetails?.reasonId && reason.content === props.refundDetails.reasonValue));

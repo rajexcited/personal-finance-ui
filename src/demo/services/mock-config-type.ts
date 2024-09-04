@@ -86,6 +86,7 @@ export const MockConfigType = (demoMock: MockAdapter) => {
     if (
       belongsTo !== ConfigTypeBelongsTo.PurchaseType &&
       belongsTo !== ConfigTypeBelongsTo.PaymentAccountType &&
+      belongsTo !== ConfigTypeBelongsTo.IncomeType &&
       belongsTo !== ConfigTypeBelongsTo.RefundReason
     ) {
       return responseCreator.toNotFoundError("invalid belongsTo update url");
@@ -133,6 +134,10 @@ export const MockConfigType = (demoMock: MockAdapter) => {
 
   demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.RefundReason).reply((config) => {
     return addUpdate(ConfigTypeBelongsTo.RefundReason, config);
+  });
+
+  demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.IncomeType).reply((config) => {
+    return addUpdate(ConfigTypeBelongsTo.IncomeType, config);
   });
 
   demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType).reply((config) => {
@@ -213,6 +218,20 @@ export const MockConfigType = (demoMock: MockAdapter) => {
     return responseCreator.toSuccessResponse(responselist);
   });
 
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.IncomeType + "/tags").reply(async (config) => {
+    const logger = getLogger("mock.config-types." + ConfigTypeBelongsTo.PaymentAccountType + ".getTags");
+    const responseCreator = AxiosResponseCreator(config);
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+
+    const result = await getConfigTypes(ConfigTypeBelongsTo.PaymentAccountType);
+    const responselist = result.list.flatMap((ec) => ec.tags);
+    logger.debug("categories size=", result.list.length, ", tags size =", responselist.length);
+    return responseCreator.toSuccessResponse(responselist);
+  });
+
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PurchaseType).reply(async (config) => {
     return await getConfigTypeList(ConfigTypeBelongsTo.PurchaseType, config);
   });
@@ -223,6 +242,10 @@ export const MockConfigType = (demoMock: MockAdapter) => {
 
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType).reply(async (config) => {
     return await getConfigTypeList(ConfigTypeBelongsTo.PaymentAccountType, config);
+  });
+
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.IncomeType).reply(async (config) => {
+    return await getConfigTypeList(ConfigTypeBelongsTo.IncomeType, config);
   });
 
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.CurrencyProfile).reply((config) => {
