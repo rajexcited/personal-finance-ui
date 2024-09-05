@@ -14,7 +14,7 @@ import {
 import { PymtAccountFields, PymtAccountService } from "../../../pymt-accounts/services";
 import { ConfigTypeStatus, InvalidError, isUuid } from "../../../../shared";
 
-const rhLogger = getLogger("route.handler.purchase.loader", null, null, "INFO");
+const rhLogger = getLogger("route.handler.purchase.loader", null, null, "DISABLED");
 const pymtAccountService = PymtAccountService();
 const purchaseService = PurchaseService();
 

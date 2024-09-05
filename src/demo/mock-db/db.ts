@@ -114,7 +114,7 @@ const DataBaseConfig: DBType = {
     },
   ],
 };
-const rootLogger = getLogger("mock.demo.db", null, null, "DEBUG");
+const rootLogger = getLogger("mock.demo.db", null, null, "DISABLED");
 const getItemKeyPath = (storeKeyPath: string | string[]) => {
   const prefixWithItem = (path: string) => "item." + path;
   if (Array.isArray(storeKeyPath)) {
@@ -179,7 +179,7 @@ export class MyLocalDatabase<T> {
       this._storeConfig.expireHoure = DataBaseConfig.expireHour;
     }
 
-    this._logger = getLogger("MyLocalDatabase." + objectStoreName, rootLogger, null, "ERROR");
+    this._logger = getLogger("MyLocalDatabase." + objectStoreName, rootLogger, null, "DISABLED");
   }
 
   private validateKeyPath(logger: LoggerBase, key?: string | string[] | IDBKeyRange, index?: LocalDBStoreIndex) {

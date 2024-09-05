@@ -10,7 +10,7 @@ import { Animated } from "../../../../components";
 import { PurchaseDetailLoaderResource } from "../../route-handlers";
 
 
-const fcLogger = getLogger("FC.UpdatePurchase", null, null, "INFO");
+const fcLogger = getLogger("FC.UpdatePurchase", null, null, "DISABLED");
 
 export const UpdatePurchase: FunctionComponent = () => {
     const [errorMessage, setErrorMessage] = useState('');

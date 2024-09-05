@@ -2,7 +2,7 @@ import { ascCompare, descCompare, getLogger, LoggerBase } from "../../../../shar
 import { ExpenseFields } from "./field-types";
 import { ExpenseSortStateType, ExpenseSortDetails } from "./sort-headers";
 
-const rootLogger = getLogger("service.expense.sort-comparator", null, null, "INFO");
+const rootLogger = getLogger("service.expense.sort-comparator", null, null, "DISABLED");
 
 export const getSortedExpenses = (expenses: ExpenseFields[], sortDetails: ExpenseSortStateType, _logger: LoggerBase) => {
   const logger = getLogger("getSortedExpenses", _logger);

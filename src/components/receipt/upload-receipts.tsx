@@ -28,7 +28,7 @@ const findNextScaleValue = (scale: number, findBigger: boolean) => {
     return scale;
 };
 
-const fcLogger = getLogger("FC.UploadReceiptsModal", null, null, "DEBUG");
+const fcLogger = getLogger("FC.UploadReceiptsModal", null, null, "DISABLED");
 
 export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props) => {
     const [receipts, setReceipts] = useState<ReceiptProps[]>(props.receipts);

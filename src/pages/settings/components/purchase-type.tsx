@@ -12,7 +12,7 @@ import { getFullPath } from "../../root";
 import { PurchaseTypeLoaderResource } from "../route-handlers/purchase-type-loader-action";
 
 
-const fcLogger = getLogger("FC.settings.PurchaseTypePage", null, null, "INFO");
+const fcLogger = getLogger("FC.settings.PurchaseTypePage", null, null, "DISABLED");
 
 export const PurchaseTypePage: FunctionComponent = () => {
     const loaderData = useLoaderData() as RouteHandlerResponse<PurchaseTypeLoaderResource, null>;

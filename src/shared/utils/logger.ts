@@ -14,6 +14,7 @@ enum LogLevel {
   DEBUG = 1,
   INFO = 2,
   ERROR = 3,
+  DISABLED = 4,
 }
 
 type LogLevelType = keyof typeof LogLevel;
@@ -59,6 +60,9 @@ export class LoggerBase {
         break;
       case LogLevel.ERROR:
         level = "ERROR";
+        break;
+      case LogLevel.DISABLED:
+        level = "DISABLED";
         break;
       case LogLevel.INFO:
       default:

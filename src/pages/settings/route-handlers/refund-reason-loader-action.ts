@@ -11,7 +11,7 @@ import {
 } from "../services";
 import { refundReasonService } from "../../expenses/services";
 
-const rhLogger = getLogger("route.handler.settings.refundReason.loader", null, null, "INFO");
+const rhLogger = getLogger("route.handler.settings.refundReason.loader", null, null, "DISABLED");
 
 export interface RefundReasonLoaderResource {
   refundReasons: ConfigResource[];

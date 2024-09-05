@@ -14,7 +14,7 @@ const settingsRoot = getFullPath("settingsRoot");
 const loginPage = getFullPath("loginPage");
 const signupPage = getFullPath("signupPage");
 
-const fcLogger = getLogger("FC.RootLayout", null, null, "DEBUG");
+const fcLogger = getLogger("FC.RootLayout", null, null, "DISABLED");
 const RootLayout: FunctionComponent = () => {
     const navigation = useNavigation();
     const isLoading = navigation.state !== "idle";

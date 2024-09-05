@@ -12,7 +12,7 @@ import {
 } from "../services";
 
 const purchaseTypeService = PurchaseTypeService();
-const rhLogger = getLogger("route.handler.settings.purchaseType.loader", null, null, "INFO");
+const rhLogger = getLogger("route.handler.settings.purchaseType.loader", null, null, "DISABLED");
 
 export interface PurchaseTypeLoaderResource {
   purchaseTypes: ConfigResource[];

@@ -13,7 +13,7 @@ import { ReceiptProps } from "../../../../components/receipt";
 import { uploadReceipts } from "../receipt/upload";
 
 const purchaseService = PurchaseService();
-const rhLogger = getLogger("route.handler.purchase.action", null, null, "DEBUG");
+const rhLogger = getLogger("route.handler.purchase.action", null, null, "DISABLED");
 
 export const purchaseActionHandler = async ({ request }: ActionFunctionArgs) => {
   if (request.method === "POST") {

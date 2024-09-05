@@ -15,7 +15,7 @@ export interface VerifyIndicatorProps {
 }
 
 
-const fcLogger = getLogger("FC.VerifyIndicator", null, null, "INFO");
+const fcLogger = getLogger("FC.VerifyIndicator", null, null, "DISABLED");
 const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
     const [openModal, setOpenModal] = useState(false);
 

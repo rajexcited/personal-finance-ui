@@ -15,7 +15,7 @@ import { ExpenseFilter } from "./expense-db";
 
 const refundDb = new MyLocalDatabase<PurchaseRefundFields>(LocalDBStore.Expense);
 
-const _rootLogger = getLogger("mock.db.expense.purchase.refund", null, null, "DEBUG");
+const _rootLogger = getLogger("mock.db.expense.purchase.refund", null, null, "DISABLED");
 
 // initialize on page load
 const init = async () => {

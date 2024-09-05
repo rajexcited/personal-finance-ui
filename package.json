@@ -5,7 +5,7 @@
   "private": true,
   "homepage": "https://rajexcited.github.io/personal-finance-ui/",
   "scripts": {
-    "prestart": "copy envlocal .env.local && copy src\\demo\\demo.ts src\\demo\\index.ts",
+    "prestart": "npm run clean >null 2>&1 && copy envlocal .env.local && copy src\\demo\\demo.ts src\\demo\\index.ts",
     "start": "react-scripts start",
     "clean": "del .env.local .env.production.local",
     "env-learn-link": "https://create-react-app.dev/docs/adding-custom-environment-variables/#what-other-env-files-can-be-used",
@@ -19,7 +19,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "prebuilddemo": "copy demoenv .env.production.local && copy src\\demo\\demo.ts src\\demo\\index.ts",
+    "prebuilddemo": "npm run clean >dist/null 2>&1 && copy envdemo .env.production.local && copy src\\demo\\demo.ts src\\demo\\index.ts",
     "builddemo": "react-scripts build",
     "predeploydemo": "npm run builddemo",
     "deploydemo": "gh-pages -d build",

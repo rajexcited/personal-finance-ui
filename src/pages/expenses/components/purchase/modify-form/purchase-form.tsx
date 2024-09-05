@@ -27,7 +27,7 @@ export interface PurchaseFormProps {
     sourceTags: string[];
 }
 
-const fcLogger = getLogger("FC.PurchaseForm", null, null, "DEBUG");
+const fcLogger = getLogger("FC.PurchaseForm", null, null, "DISABLED");
 
 export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
     const [billName, setBillName] = useState(props.details?.billName || '');

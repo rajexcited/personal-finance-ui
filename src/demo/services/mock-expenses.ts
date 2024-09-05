@@ -6,7 +6,7 @@ import { LoggerBase, getLogger } from "../../shared";
 import { ExpenseStatus } from "../../pages/expenses/services/expense/field-types";
 
 type ExpenseParam = Partial<Pick<Record<string, string[]>, "status" | "pageNo" | "pageMonths" | "purchasedYear">>;
-const _rootLogger = getLogger("mock.api.expenses", null, null, "DEBUG");
+const _rootLogger = getLogger("mock.api.expenses", null, null, "DISABLED");
 const rootPath = "/expenses";
 
 export const MockExpenses = (demoMock: MockAdapter) => {

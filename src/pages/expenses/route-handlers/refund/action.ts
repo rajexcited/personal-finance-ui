@@ -13,7 +13,7 @@ import { ExpenseBelongsTo } from "../../services";
 import { ReceiptProps } from "../../../../components/receipt";
 import { uploadReceipts } from "../receipt/upload";
 
-const rhLogger = getLogger("route.handler.purchase.action", null, null, "DEBUG");
+const rhLogger = getLogger("route.handler.purchase.action", null, null, "DISABLED");
 
 export const refundActionHandler = async ({ request }: ActionFunctionArgs) => {
   if (request.method === "POST") {

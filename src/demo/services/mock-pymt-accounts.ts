@@ -52,7 +52,7 @@ export const MockPaymentAccounts = (demoMock: MockAdapter) => {
   });
 
   demoMock.onGet("/payment/accounts/tags").reply(async (config) => {
-    const logger = getLogger("mock.pymtAcc.getTags", null, null, "DEBUG");
+    const logger = getLogger("mock.pymtAcc.getTags", null, null, "DISABLED");
     const responseCreator = AxiosResponseCreator(config);
 
     const isAuthorized = validateAuthorization(config.headers);
@@ -67,7 +67,7 @@ export const MockPaymentAccounts = (demoMock: MockAdapter) => {
   });
 
   demoMock.onGet("/payment/accounts").reply(async (config) => {
-    const logger = getLogger("mock.pymtAcc.getAccountList", null, null, "DEBUG");
+    const logger = getLogger("mock.pymtAcc.getAccountList", null, null, "DISABLED");
     const responseCreator = AxiosResponseCreator(config);
     logger.debug("baseUrl =", config.baseURL, ", url=", config.url);
 

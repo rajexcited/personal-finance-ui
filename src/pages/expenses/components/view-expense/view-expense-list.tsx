@@ -11,7 +11,7 @@ import "./view-expense-list.css";
 import { ViewReceipts } from "./receipt/view-receipts";
 
 
-const fcLogger = getLogger("FC.expense.view.ExpenseList", null, null, "INFO");
+const fcLogger = getLogger("FC.expense.view.ExpenseList", null, null, "DISABLED");
 
 type SelectedExpense = Pick<ExpenseFields, "id" | "belongsTo">;
 

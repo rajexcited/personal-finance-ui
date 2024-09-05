@@ -7,7 +7,7 @@ import { ExpenseBelongsTo, PurchaseRefundFields } from "../../pages/expenses/ser
 import { addUpdateRefund, deleteRefund, getRefundDetails, getRefundTags } from "../mock-db/refund-db";
 
 type RefundParam = Partial<Record<"status" | "pageNo" | "pageMonths" | "year", string[]>>;
-const _rootLogger = getLogger("mock.api.expenses.refund", null, null, "DEBUG");
+const _rootLogger = getLogger("mock.api.expenses.refund", null, null, "DISABLED");
 const rootPath = "/expenses/refund";
 
 export const MockRefund = (demoMock: MockAdapter) => {

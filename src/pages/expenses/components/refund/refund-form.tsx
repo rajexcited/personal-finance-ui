@@ -28,7 +28,7 @@ export interface PurchaseRefundFormProps {
     reasons: ConfigResource[];
 }
 
-const fcLogger = getLogger("FC.PurchaseRefundForm", null, null, "DEBUG");
+const fcLogger = getLogger("FC.PurchaseRefundForm", null, null, "DISABLED");
 const purchasePageMonths = 2;
 
 const getPurchaseDropdownTooltip = (purchaseDetails: PurchaseFields) => {

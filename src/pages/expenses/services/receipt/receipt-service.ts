@@ -10,7 +10,7 @@ const onBeforeExpiredReceiptFileCallback = async (item: DownloadReceiptResource)
 const receiptFileDb = new MyLocalDatabase<DownloadReceiptResource>(LocalDBStore.ReceiptFile, onBeforeExpiredReceiptFileCallback);
 
 const rootPath = "/expenses";
-const _logger = getLogger("service.expense.receipt", null, null, "DEBUG");
+const _logger = getLogger("service.expense.receipt", null, null, "DISABLED");
 
 export const cacheReceiptFile = async (
   receipt: ReceiptProps,

@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 import ReactMarkdown from "react-markdown";
 import { PymtAccTypeLoaderResource } from "../route-handlers/pymt-acc-type-loader-action";
 
-const fcLogger = getLogger("FC.settings.PymtAccountTypePage", null, null, "DEBUG");
+const fcLogger = getLogger("FC.settings.PymtAccountTypePage", null, null, "DISABLED");
 
 export const PymtAccountTypePage: FunctionComponent = () => {
     const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccTypeLoaderResource, null>;

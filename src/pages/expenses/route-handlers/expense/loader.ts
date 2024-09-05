@@ -1,6 +1,6 @@
 import { ExpenseFields, expenseService, ExpenseStatus, getLogger, handleRouteActionError, RouteHandlerResponse } from "../../services";
 
-const rhLogger = getLogger("route.handler.expense.loader", null, null, "INFO");
+const rhLogger = getLogger("route.handler.expense.loader", null, null, "DISABLED");
 
 export const expenseListLoaderHandler = async () => {
   const logger = getLogger("expenseListLoaderHandler", rhLogger);

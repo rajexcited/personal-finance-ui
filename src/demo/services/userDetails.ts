@@ -1,6 +1,6 @@
 import { formatTimestamp, getLogger } from "../../shared";
 
-const rootLogger = getLogger("mock.service.userDetails", null, null, "DEBUG");
+const rootLogger = getLogger("mock.service.userDetails", null, null, "DISABLED");
 
 type UserDataType = { firstName: string; lastName: string; emailId: string; password: string; countryCode: string };
 const UserSessionDetails: UserDataType = {

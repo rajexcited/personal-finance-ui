@@ -14,7 +14,7 @@ interface ConfirmDialogProps {
     onCancel (): void;
 }
 
-const fcLogger = getLogger("FC.ConfirmDialog", null, null, "INFO");
+const fcLogger = getLogger("FC.ConfirmDialog", null, null, "DISABLED");
 const ConfirmDialog: FunctionComponent<ConfirmDialogProps> = (props) => {
     const [isOpen, setOpen] = useState(props.open);
 

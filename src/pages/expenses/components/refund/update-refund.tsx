@@ -10,7 +10,7 @@ import { PurchaseRefundForm } from "./refund-form";
 import { RefundDetailLoaderResource } from "../../route-handlers";
 
 
-const fcLogger = getLogger("FC.UpdateRefund", null, null, "INFO");
+const fcLogger = getLogger("FC.UpdateRefund", null, null, "DISABLED");
 
 export const UpdateRefund: FunctionComponent = () => {
     const [errorMessage, setErrorMessage] = useState('');

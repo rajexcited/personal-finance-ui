@@ -10,7 +10,7 @@ import { IncomeDetailLoaderResource } from "../../route-handlers";
 import { IncomeForm } from "./income-form";
 
 
-const fcLogger = getLogger("FC.UpdateIncome", null, null, "INFO");
+const fcLogger = getLogger("FC.UpdateIncome", null, null, "DISABLED");
 
 export const UpdateIncome: FunctionComponent = () => {
     const [errorMessage, setErrorMessage] = useState('');

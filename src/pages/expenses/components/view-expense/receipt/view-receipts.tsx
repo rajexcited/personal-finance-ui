@@ -34,7 +34,7 @@ const findNextScaleValue = (scale: number, findBigger: boolean) => {
 };
 
 const purchaseService = PurchaseService();
-const fcLogger = getLogger("FC.ViewReceipts", null, null, "INFO");
+const fcLogger = getLogger("FC.ViewReceipts", null, null, "DISABLED");
 
 export const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
     const carouselRef = useRef<HTMLDivElement>(null);

@@ -13,7 +13,7 @@ import { PymtAccountFields, PymtAccountService } from "../../../pymt-accounts/se
 import { ConfigTypeStatus } from "../../../../shared";
 
 const pymtAccountService = PymtAccountService();
-const rhLogger = getLogger("route.handler.income.loader", null, null, "INFO");
+const rhLogger = getLogger("route.handler.income.loader", null, null, "DISABLED");
 
 export interface IncomeDetailLoaderResource {
   incomeDetail?: IncomeFields;

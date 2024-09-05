@@ -24,7 +24,7 @@ import { PurchaseRefundFields } from "./field-types";
 import { receiptService } from "../receipt";
 import { CacheAction, ReceiptProps } from "../../../../components/receipt";
 
-const serviceLogger = getLogger("service.expense.refund", null, null, "DEBUG");
+const serviceLogger = getLogger("service.expense.refund", null, null, "DISABLED");
 
 const refundDb = new MyLocalDatabase<PurchaseRefundFields>(LocalDBStore.Expense);
 

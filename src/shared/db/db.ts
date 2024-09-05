@@ -143,7 +143,7 @@ const getItemKeyPath = (storeKeyPath: string | string[]) => {
 };
 
 const configureLocalDatabase = async () => {
-  const _logger = getLogger("configureLocalDatabase", null, null, "INFO");
+  const _logger = getLogger("configureLocalDatabase", null, null, "DISABLED");
   _logger.debug("opening DB");
 
   // https://hackernoon.com/use-indexeddb-with-idb-a-1kb-library-that-makes-it-easy-8p1f3yqq
@@ -203,7 +203,7 @@ export class MyLocalDatabase<T> {
       this._storeConfig.expireHoure = DataBaseConfig.expireHour;
     }
 
-    this._logger = getLogger("MyLocalDatabase." + objectStoreName, null, null, "DEBUG");
+    this._logger = getLogger("MyLocalDatabase." + objectStoreName, null, null, "DISABLED");
     this.callbacks = {};
     if (onBeforeExpiredCallback) {
       this.callbacks[MyLocalDatabaseCallbackName.OnBeforeExpired] = onBeforeExpiredCallback;

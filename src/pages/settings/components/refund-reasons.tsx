@@ -12,7 +12,7 @@ import { getFullPath } from "../../root";
 import { RefundReasonLoaderResource } from "../route-handlers/refund-reason-loader-action";
 
 
-const fcLogger = getLogger("FC.settings.RefundReasonPage", null, null, "INFO");
+const fcLogger = getLogger("FC.settings.RefundReasonPage", null, null, "DISABLED");
 
 export const RefundReasonPage: FunctionComponent = () => {
     const loaderData = useLoaderData() as RouteHandlerResponse<RefundReasonLoaderResource, null>;

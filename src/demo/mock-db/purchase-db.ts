@@ -13,7 +13,7 @@ import { ReceiptProps } from "../../components/receipt";
 import { JSONObject } from "../../shared/utils/deep-obj-difference";
 
 const purchaseDb = new MyLocalDatabase<PurchaseFields>(LocalDBStore.Expense);
-const _rootLogger = getLogger("mock.db.expense.purchase", null, null, "DEBUG");
+const _rootLogger = getLogger("mock.db.expense.purchase", null, null, "DISABLED");
 
 // initialize on page load
 const init = async () => {

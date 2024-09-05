@@ -13,7 +13,7 @@ import {
 import { ReceiptProps } from "../../../../components/receipt";
 import { uploadReceipts } from "../receipt/upload";
 
-const rhLogger = getLogger("route.handler.income.action", null, null, "DEBUG");
+const rhLogger = getLogger("route.handler.income.action", null, null, "DISABLED");
 
 export const incomeActionHandler = async ({ request }: ActionFunctionArgs) => {
   if (request.method === "POST") {

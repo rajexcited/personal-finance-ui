@@ -22,7 +22,7 @@ enum ExpireStatus {
 
 const ONE_SECOND_IN_MILLI = 1000;
 
-const fcLogger = getLogger("FC.AuthContextProvider", null, null, "INFO");
+const fcLogger = getLogger("FC.AuthContextProvider", null, null, "DISABLED");
 
 const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ children }) => {
 

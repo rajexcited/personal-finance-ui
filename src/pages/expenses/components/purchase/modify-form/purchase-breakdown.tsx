@@ -20,7 +20,7 @@ export interface PurchaseBreakDownProps {
 }
 
 const idPrefix = "purchase-item-";
-const fcLogger = getLogger("FC.PurchaseBreakDown", null, null, "INFO");
+const fcLogger = getLogger("FC.PurchaseBreakDown", null, null, "DISABLED");
 
 export const PurchaseBreakDown: FunctionComponent<PurchaseBreakDownProps> = (props) => {
     const [isBodyOpen, setBodyOpen] = useState(false);

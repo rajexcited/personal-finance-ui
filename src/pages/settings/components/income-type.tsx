@@ -12,7 +12,7 @@ import { getFullPath } from "../../root";
 import { IncomeTypeLoaderResource } from "../route-handlers/income-type-loader-action";
 
 
-const fcLogger = getLogger("FC.settings.IncomeTypePage", null, null, "INFO");
+const fcLogger = getLogger("FC.settings.IncomeTypePage", null, null, "DISABLED");
 
 export const IncomeTypePage: FunctionComponent = () => {
     const loaderData = useLoaderData() as RouteHandlerResponse<IncomeTypeLoaderResource, null>;

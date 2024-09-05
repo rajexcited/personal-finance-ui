@@ -11,7 +11,7 @@ export interface ExpenseTableHeadRefType {
     sortDetails (): ExpenseSortStateType;
 }
 
-const fcLogger = getLogger("FC.expense.view.ExpenseTableHead", null, null, "INFO");
+const fcLogger = getLogger("FC.expense.view.ExpenseTableHead", null, null, "DISABLED");
 
 export const ExpenseTableHead = forwardRef<ExpenseTableHeadRefType, ExpenseTableHeadProps>((props, ref) => {
     const [sortDetails, setSortDetails] = useState<ExpenseSortStateType>({});

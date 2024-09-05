@@ -27,7 +27,7 @@ export interface IncomeFormProps {
     incomeTypes: ConfigResource[];
 }
 
-const fcLogger = getLogger("FC.IncomeForm", null, null, "DEBUG");
+const fcLogger = getLogger("FC.IncomeForm", null, null, "DISABLED");
 
 
 export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {

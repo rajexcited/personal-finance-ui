@@ -7,7 +7,7 @@ import { getFullPath, pathBaseName } from "../../root/components/navigation/page
 import { HeroTabs } from "../../../components";
 import { getLogger } from "../services";
 
-const fcLogger = getLogger("FC.SettingsRootPage", null, null, "INFO");
+const fcLogger = getLogger("FC.SettingsRootPage", null, null, "DISABLED");
 
 const TAB_HEADS = [
     { id: "root-stngs", title: "General Settings", url: getFullPath("settingsRoot"), icon: faGear },

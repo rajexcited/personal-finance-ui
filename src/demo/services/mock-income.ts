@@ -7,7 +7,7 @@ import { ExpenseBelongsTo, IncomeFields } from "../../pages/expenses/services";
 import { addUpdateIncome, deleteIncome, getIncomeDetails, getIncomeTags } from "../mock-db/income-db";
 
 type IncomeParam = Partial<Record<"status" | "pageNo" | "pageMonths" | "year", string[]>>;
-const _rootLogger = getLogger("mock.api.expenses.income", null, null, "DEBUG");
+const _rootLogger = getLogger("mock.api.expenses.income", null, null, "DISABLED");
 const rootPath = "/expenses/income";
 
 export const MockIncome = (demoMock: MockAdapter) => {

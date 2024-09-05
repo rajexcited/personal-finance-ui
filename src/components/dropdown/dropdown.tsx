@@ -37,7 +37,7 @@ const findUniqueElementId = (prefix: string) => {
     while (true);
     return id;
 };
-const fcLogger = getLogger("FC.DropDown", null, null, "DEBUG");
+const fcLogger = getLogger("FC.DropDown", null, null, "DISABLED");
 
 const DropDown: FunctionComponent<DropDownProps> = (props) => {
     const [isOpen, setOpen] = useState(false);

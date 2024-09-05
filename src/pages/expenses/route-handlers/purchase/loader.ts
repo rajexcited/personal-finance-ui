@@ -13,7 +13,7 @@ import { PymtAccountFields, PymtAccountService } from "../../../pymt-accounts/se
 const purchaseService = PurchaseService();
 const pymtAccountService = PymtAccountService();
 
-const rhLogger = getLogger("route.handler.purchase.loader", null, null, "INFO");
+const rhLogger = getLogger("route.handler.purchase.loader", null, null, "DISABLED");
 
 export interface PurchaseDetailLoaderResource {
   purchaseDetail?: PurchaseFields;

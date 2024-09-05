@@ -33,7 +33,7 @@ const HeroTab: FunctionComponent<HeroTabProps> = (props) => {
     return (<span>{ props.children }</span>);
 };
 
-const fcHeroTabsLogger = getLogger("FC.HeroTabs", null, null, "INFO");
+const fcHeroTabsLogger = getLogger("FC.HeroTabs", null, null, "DISABLED");
 interface HeroTabsProps {
     children: JSX.Element;
 }

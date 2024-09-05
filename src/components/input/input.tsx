@@ -52,7 +52,7 @@ export type InputProps =
     | ColorInputProps;
 
 
-const fcLogger = getLogger("FC.Input", null, null, "DEBUG");
+const fcLogger = getLogger("FC.Input", null, null, "DISABLED");
 
 const Input: FunctionComponent<InputProps> = (props) => {
     const [inputValue, setInputValue] = useState(props.initialValue);

@@ -17,7 +17,7 @@ const AuthenticationServiceImpl = () => {
   const rootPath = "/user";
   /** 10 min */
   const MIN_SESSION_TIME_IN_SEC = 10 * 60;
-  const _logger = getLogger("service.auth", null, null, "INFO");
+  const _logger = getLogger("service.auth", null, null, "DISABLED");
 
   const login = async (details: UserLoginResource) => {
     const logger = getLogger("login", _logger);
@@ -56,7 +56,7 @@ const AuthenticationServiceImpl = () => {
   };
 
   const isTokenSessionValid = (loggerBase: LoggerBase) => {
-    const logger = getLogger("isTokenSessionValid", loggerBase, null, "INFO");
+    const logger = getLogger("isTokenSessionValid", loggerBase, null, "DISABLED");
     const tokenSessionDetails = sessionStorage.getItem(authTokenSessionKey);
     logger.debug("token session data =", tokenSessionDetails);
     // scenario 1 - tokenSessionDetails is null - when session gets invalidated
@@ -92,7 +92,7 @@ const AuthenticationServiceImpl = () => {
    * @returns user session details if valid
    */
   const getValidAuthSessionDetails = (loggerBase: LoggerBase) => {
-    const logger = getLogger("getValidAuthSessionDetails", loggerBase, null, "INFO");
+    const logger = getLogger("getValidAuthSessionDetails", loggerBase, null, "DISABLED");
     if (!isTokenSessionValid(logger)) {
       return null;
     }
@@ -301,7 +301,7 @@ const AuthenticationServiceImpl = () => {
   };
 
   const getTokenExpiryTime = () => {
-    const logger = getLogger("getTokenExpiryTime", _logger, null, "INFO");
+    const logger = getLogger("getTokenExpiryTime", _logger, null, "DISABLED");
     if (isTokenSessionValid(logger)) {
       const tokenSessionResource = JSON.parse(sessionStorage.getItem(authTokenSessionKey) as string) as AccessTokenResource;
       const subtractResult = subtractDates(tokenSessionResource.expiryTime);

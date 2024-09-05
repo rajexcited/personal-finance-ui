@@ -8,7 +8,7 @@ export type SortDirection = "asc" | "desc" | "";
 const directions: SortDirection[] = ["", "asc", "desc"];
 
 export type SortType = "amount" | "alpha" | "number";
-const fcLogger = getLogger("FC.Th", null, null, "DEBUG");
+const fcLogger = getLogger("FC.Th", null, null, "DISABLED");
 
 const rotate = (val: SortDirection, arr: SortDirection[]): SortDirection => {
     let ind = arr.indexOf(val);

@@ -11,7 +11,7 @@ import { IncomeDetailLoaderResource } from "../../route-handlers";
 import { IncomeForm } from "./income-form";
 
 
-const fcLogger = getLogger("FC.AddIncome", null, null, "INFO");
+const fcLogger = getLogger("FC.AddIncome", null, null, "DISABLED");
 
 export const AddIncome: FunctionComponent = () => {
     const [incomeId, setIncomeId] = useState("");

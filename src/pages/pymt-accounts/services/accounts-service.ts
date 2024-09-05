@@ -162,7 +162,7 @@ export const PymtAccountService = () => {
   };
 
   const initializePymtAccountTags = async () => {
-    const logger = getLogger("initializePymtAccountTags", _logger, null, "DEBUG");
+    const logger = getLogger("initializePymtAccountTags", _logger, null, "DISABLED");
     const tagCount = await tagService.getCount();
     logger.debug("tagCount =", tagCount);
     if (tagCount > 0) {

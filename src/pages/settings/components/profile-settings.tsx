@@ -7,7 +7,7 @@ import { ProfileDetailsLoaderResource } from "../route-handlers/profile-loader-a
 import ReactMarkdown from "react-markdown";
 import { UpdateUserDetailsResource } from "../../auth";
 
-const fcLogger = getLogger("FC.settings.ProfileSettings", null, null, "INFO");
+const fcLogger = getLogger("FC.settings.ProfileSettings", null, null, "DISABLED");
 
 export const ProfileSettingsPage: FunctionComponent = () => {
     const loaderData = useLoaderData() as RouteHandlerResponse<ProfileDetailsLoaderResource, null>;

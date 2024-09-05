@@ -8,7 +8,7 @@ import { ExpenseBelongsTo } from "../../pages/expenses/services";
 import { addUpdatePurchase, deletePurchase, getPurchaseDetails, getPurchaseTags } from "../mock-db/purchase-db";
 
 type PurchaseParam = Partial<Record<"status" | "pageNo" | "pageMonths" | "purchasedYear", string[]>>;
-const _rootLogger = getLogger("mock.api.expenses.purchase", null, null, "DEBUG");
+const _rootLogger = getLogger("mock.api.expenses.purchase", null, null, "DISABLED");
 const rootPath = "/expenses/purchase";
 
 export const MockPurchase = (demoMock: MockAdapter) => {

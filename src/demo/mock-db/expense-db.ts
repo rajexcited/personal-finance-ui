@@ -5,7 +5,7 @@ import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { ExpenseBelongsTo, PurchaseFields } from "../../pages/expenses/services";
 
 const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
-const _rootLogger = getLogger("mock.db.expense", null, null, "DEBUG");
+const _rootLogger = getLogger("mock.db.expense", null, null, "DISABLED");
 
 // initialize on page load
 const init = async () => {

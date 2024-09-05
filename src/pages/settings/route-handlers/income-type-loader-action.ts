@@ -11,7 +11,7 @@ import {
 } from "../services";
 import { incomeTypeService } from "../../expenses/services";
 
-const rhLogger = getLogger("route.handler.settings.incomeType.loader", null, null, "INFO");
+const rhLogger = getLogger("route.handler.settings.incomeType.loader", null, null, "DISABLED");
 
 export interface IncomeTypeLoaderResource {
   incomeTypes: ConfigResource[];

@@ -42,7 +42,7 @@ const defaultOptions: BulmaTagsInputOptions = {
  * https://wikiki.github.io/
  * 
  **/
-const fcLogger = getLogger("FC.TagsInput", null, null, "DEBUG");
+const fcLogger = getLogger("FC.TagsInput", null, null, "DISABLED");
 
 const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
   const tagsRef = useRef<HTMLInputElement>(null);

@@ -38,7 +38,7 @@ import { AddIncome, AddRefund, UpdateIncome, UpdateRefund } from "../../../expen
 import { addIncomeDetailLoaderHandler, incomeActionHandler, modifyIncomeDetailLoaderHandler } from "../../../expenses/route-handlers";
 
 
-const logger = getLogger("CBR.router", null, null, "INFO");
+const logger = getLogger("CBR.router", null, null, "DISABLED");
 logger.debug("pathBaseName =", pathBaseName, ", rootPath =", getShortPath("rootPath"));
 
 export const router = createBrowserRouter([

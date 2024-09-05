@@ -11,7 +11,7 @@ import { JSONObject } from "../../shared/utils/deep-obj-difference";
 import { getIncomeTypes } from "./config-type-db";
 
 const incomeDb = new MyLocalDatabase<IncomeFields>(LocalDBStore.Expense);
-const _rootLogger = getLogger("mock.db.expense.income", null, null, "DEBUG");
+const _rootLogger = getLogger("mock.db.expense.income", null, null, "DISABLED");
 
 // initialize on page load
 const init = async () => {
