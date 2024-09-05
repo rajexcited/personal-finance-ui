@@ -1,6 +1,7 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import { ExpenseSortStateType, Header, rowHeaders } from "../../services";
+import { ExpenseSortFieldKey, ExpenseSortStateType, getLogger, Header, rowHeaders } from "../../services";
 import { SortDirection, Th } from "../../../../components";
+import { ExpenseSortDetails } from "../../services/expense/sort-headers";
 
 interface ExpenseTableHeadProps {
     onChangeExpenseSort (sortDetails: ExpenseSortStateType): void;
@@ -10,16 +11,20 @@ export interface ExpenseTableHeadRefType {
     sortDetails (): ExpenseSortStateType;
 }
 
+const fcLogger = getLogger("FC.expense.view.ExpenseTableHead", null, null, "INFO");
+
 export const ExpenseTableHead = forwardRef<ExpenseTableHeadRefType, ExpenseTableHeadProps>((props, ref) => {
     const [sortDetails, setSortDetails] = useState<ExpenseSortStateType>({});
 
     useEffect(() => {
+        const logger = getLogger("useEffect.dep[]", fcLogger);
         const newHdrState: ExpenseSortStateType = {};
         rowHeaders.forEach(rh => {
             if (rh.sortable) {
                 newHdrState[rh.datafieldKey] = { ...rh };
             }
         });
+        logger.debug("newHdrState =", JSON.parse(JSON.stringify(newHdrState)), " being configured to setSortDetails");
         setSortDetails(newHdrState);
     }, []);
 
@@ -33,12 +38,22 @@ export const ExpenseTableHead = forwardRef<ExpenseTableHeadRefType, ExpenseTable
             const sortdetail = sortDetails[rh.datafieldKey];
             if (sortdetail) {
                 setSortDetails(prev => {
-                    const updatedState = { ...prev };
-                    updatedState[rh.datafieldKey] = { ...sortdetail, sortDirection: direction };
+                    const updatedState: ExpenseSortStateType = { ...prev };
+                    updatedState[rh.datafieldKey] = { ...sortdetail, sortDirection: direction, sortLevel: 0 };
+                    const resolvingState = updatedState;
+                    Object.keys(updatedState).forEach((key) => {
+                        const newSortDetails = resolvingState[key as ExpenseSortFieldKey] = { ...updatedState[key as ExpenseSortFieldKey] } as ExpenseSortDetails;
+                        if (!newSortDetails.sortDirection) {
+                            newSortDetails.sortLevel = undefined;
+                        }
+                        if (newSortDetails.sortLevel !== undefined) {
+                            newSortDetails.sortLevel = newSortDetails.sortLevel + 1;
+                        }
+                    });
                     Promise
-                        .resolve({ ...updatedState })
+                        .resolve({ ...resolvingState })
                         .then(props.onChangeExpenseSort);
-                    return updatedState;
+                    return resolvingState;
                 });
             }
         }

@@ -1,10 +1,13 @@
 import { SortDirection, SortType } from "../../../../components";
 import { ExpenseFields } from "./field-types";
 
+type AllKeys<T> = T extends any ? keyof T : never;
+export type ExpenseSortFieldKey = AllKeys<ExpenseFields>;
 export interface ExpenseSortDetails {
   sortable: true;
   sortLevel?: number;
-  datafieldKey: keyof ExpenseFields;
+  datafieldKey: ExpenseSortFieldKey;
+  relatedDatafieldKeys: ExpenseSortFieldKey[];
   sortDirection?: SortDirection;
   type?: SortType;
 }
@@ -23,16 +26,15 @@ interface UnSortableHeader {
 export type Header = SortableHeader | UnSortableHeader;
 
 export const rowHeaders: Header[] = [
-  { id: "belongsTo", label: "Type", sortable: true, datafieldKey: "belongsTo" },
-  { id: "pymt-acc", label: "Payment Account", sortable: true, datafieldKey: "paymentAccountName" },
-  // {
-  //   id: "prchs-dt",
-  //   label: "Purchased/Refund Date",
-  //   sortable: true,
-  //   datafieldKey: "purchasedDate",
-  //   sortLevel: 1,
-  //   sortDirection: "desc",
-  // },
+  { id: "belongsTo", label: "Type", sortable: true, datafieldKey: "belongsTo", relatedDatafieldKeys: [] },
+  {
+    id: "xpns-dt",
+    label: "Expense Date",
+    sortable: true,
+    datafieldKey: "purchasedDate",
+    relatedDatafieldKeys: ["incomeDate", "refundDate", "purchasedDate"],
+  },
+  { id: "pymt-acc", label: "Payment Account", sortable: true, datafieldKey: "paymentAccountName", relatedDatafieldKeys: [] },
   {
     id: "bill-name",
     label: "Bill Name",
@@ -40,6 +42,7 @@ export const rowHeaders: Header[] = [
     sortLevel: 2,
     sortDirection: "asc",
     datafieldKey: "billName",
+    relatedDatafieldKeys: [],
     type: "alpha",
   },
   {
@@ -47,6 +50,7 @@ export const rowHeaders: Header[] = [
     label: "Amount",
     sortable: true,
     datafieldKey: "amount",
+    relatedDatafieldKeys: [],
     sortDirection: "desc",
     sortLevel: 3,
     type: "amount",
@@ -57,6 +61,6 @@ export const rowHeaders: Header[] = [
   { id: "actions", label: "Actions", sortable: false },
 ];
 
-export type HeaderStateType = { [K in keyof ExpenseFields]?: SortableHeader };
+export type HeaderStateType = { [K in ExpenseSortFieldKey]?: SortableHeader };
 
-export type ExpenseSortStateType = { [K in keyof ExpenseFields]?: ExpenseSortDetails };
+export type ExpenseSortStateType = { [K in ExpenseSortFieldKey]?: ExpenseSortDetails };

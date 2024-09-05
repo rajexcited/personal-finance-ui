@@ -14,10 +14,11 @@ export const ExpenseJournalPage: FunctionComponent = () => {
         event.preventDefault();
         navigate(getFullPath("addIncome"));
     };
-    const onClickNavigateAddInvestmentHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
-        event.preventDefault();
-        // navigate(getFullPath("addPurchase"));
-    };
+
+    // const onClickNavigateAddInvestmentHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    //     event.preventDefault();
+    //     navigate(getFullPath("addPurchase"));
+    // };
 
     const onClickNavigateAddPurchaseRefundHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
@@ -31,7 +32,7 @@ export const ExpenseJournalPage: FunctionComponent = () => {
                     <div className="buttons">
                         <button className="button is-link" onClick={ onClickNavigateAddPurchaseHandler }>Add Purchase</button>
                         <button className="button is-link" onClick={ onClickNavigateAddIncomeHandler }>Add Income</button>
-                        <button className="button is-link" onClick={ onClickNavigateAddInvestmentHandler }>Add Investment</button>
+                        {/* <button className="button is-link" onClick={ onClickNavigateAddInvestmentHandler }>Add Investment</button> */ }
                         <button className="button is-link" onClick={ onClickNavigateAddPurchaseRefundHandler }>Add Refund</button>
                     </div>
                 </div>

@@ -6,10 +6,10 @@ export * as expenseService from "./expense/expenses-service";
 export { ExpenseStatus, ExpenseBelongsTo } from "./expense/field-types";
 export type { ExpenseFields } from "./expense/field-types";
 
-export type { ExpenseSortStateType, Header } from "./expense/sort-headers";
+export type { ExpenseSortStateType, Header, ExpenseSortFieldKey } from "./expense/sort-headers";
 export { rowHeaders } from "./expense/sort-headers";
 
-export { expenseComparator } from "./expense/sort-comparator";
+export { getSortedExpenses } from "./expense/sort-comparator";
 
 export type { ConfigResource, RouteHandlerResponse } from "../../../shared";
 export { getLogger, formatTimestamp, NotFoundError, handleRouteActionError, HttpStatusCode, subtractDates } from "../../../shared";

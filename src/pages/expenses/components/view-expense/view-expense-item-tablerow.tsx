@@ -1,10 +1,11 @@
-import { FunctionComponent, useRef } from "react";
+import { FunctionComponent, useEffect, useRef, useState } from "react";
 import { faEdit, faTrash, faReceipt, faCircleDollarToSlot } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { ExpenseBelongsTo, ExpenseFields, getLogger } from "../../services";
+import { ExpenseBelongsTo, ExpenseFields, formatTimestamp, getLogger } from "../../services";
 import { formatAmount } from "../../../../formatters";
 import { useNavigate } from "react-router-dom";
 import { getFullPath } from "../../../root";
+import { parseTimestamp } from "../../../../shared";
 
 
 interface ExpenseItemTableRowProps {
@@ -19,8 +20,30 @@ interface ExpenseItemTableRowProps {
 const fcLogger = getLogger("FC.expenseItemTableRow");
 
 export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props) => {
+    const [expenseDate, setExpenseDate] = useState<string>();
     const rowRef = useRef<HTMLTableRowElement>(null);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        let xpnsDateStr = undefined;
+        if (props.details.belongsTo === ExpenseBelongsTo.Income) {
+            xpnsDateStr = props.details.incomeDate;
+        } else if (props.details.belongsTo === ExpenseBelongsTo.Purchase) {
+            xpnsDateStr = props.details.purchasedDate;
+        } else if (props.details.belongsTo === ExpenseBelongsTo.PurchaseRefund) {
+            xpnsDateStr = props.details.refundDate;
+        }
+
+        let xpnsDate = undefined;
+        if (xpnsDateStr instanceof Date) {
+            xpnsDate = xpnsDateStr;
+        } else if (typeof xpnsDateStr === "string") {
+            xpnsDate = parseTimestamp(xpnsDateStr);
+        }
+        if (xpnsDate) {
+            setExpenseDate(formatTimestamp(xpnsDate, "MMM DD, YYYY"));
+        }
+    }, []);
 
     const onClickToggleRowSelectionHandler: React.MouseEventHandler<HTMLTableRowElement> = event => {
         event.preventDefault();
@@ -81,6 +104,7 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
 
     let belongsTo = "NA";
     let expenseCategory = undefined;
+
     if (props.details.belongsTo === ExpenseBelongsTo.Income) {
         belongsTo = "Income";
         expenseCategory = props.details.incomeTypeName;
@@ -90,8 +114,8 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
     } else if (props.details.belongsTo === ExpenseBelongsTo.PurchaseRefund) {
         belongsTo = "Refund";
         expenseCategory = props.details.reasonValue;
-        // } else     if(props.details.belongsTo === ExpenseBelongsTo.Investment) {
     }
+
 
     // const viewExpenseAction = (<a className="is-link" onClick={ onClickViewExpenseHandler } key={ "updt-purchase-action" + props.id }>
     //     <span className="icon tooltip" data-tooltip="Update Expense">
@@ -135,11 +159,14 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
         actions.push(viewReceiptsAction);
     }
 
+
+
+
     return (
         <>
             <tr ref={ rowRef } onClick={ onClickToggleRowSelectionHandler } className={ props.isSelected ? "is-selected" : "" }>
-                {/* <td>{ dateutil.format(props.details.auditDetails.createdOn as Date, "MMM DD, YYYY") }</td> */ }
                 <td>{ belongsTo }</td>
+                { <td>{ expenseDate || "-" }</td> }
                 <td>{ props.details.paymentAccountName || "-" }</td>
                 <td>{ props.details.billName }</td>
                 <td>{ formatAmount(props.details.amount) }</td>

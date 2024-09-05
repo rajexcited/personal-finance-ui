@@ -1,14 +1,16 @@
-import { faArrowDown, faArrowUp, faArrowsUpDown, faSortAlphaDown, faSortAlphaUp, faSortAmountDown, faSortAmountUp, faSortDown, faSortNumericDown, faSortNumericUp, faSortUp, faUpDown, faUpRightAndDownLeftFromCenter } from "@fortawesome/free-solid-svg-icons";
+import { faArrowDown, faArrowUp, faArrowsUpDown, faSortAlphaDown, faSortAlphaUp, faSortAmountDown, faSortAmountUp, faSortNumericDown, faSortNumericUp, faUpDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { FunctionComponent, useEffect, useState } from "react";
 import { useDebounceState } from "../hooks";
+import { getLogger } from "../shared";
 
 export type SortDirection = "asc" | "desc" | "";
 const directions: SortDirection[] = ["", "asc", "desc"];
 
 export type SortType = "amount" | "alpha" | "number";
+const fcLogger = getLogger("FC.Th", null, null, "DEBUG");
 
-const rotate = (val: string, arr: string[]): SortDirection => {
+const rotate = (val: SortDirection, arr: SortDirection[]): SortDirection => {
     let ind = arr.indexOf(val);
     ind = ind + 1;
     ind = ind % arr.length;
@@ -38,16 +40,28 @@ const Th: FunctionComponent<ThProps> = (props) => {
     }, [props.sortdirection]);
 
     useEffect(() => {
+        const logger = getLogger("useEffect.dep[sortdirectionChange]", fcLogger);
+        logger.debug(" props.sortdirection =", props.sortdirection, " props.onChange =", props.onChange, " sortdirectionChange =", sortdirectionChange, " sortdirection =", sortdirection);
         if (props.sortdirection !== undefined && props.onChange) {
             props.onChange(sortdirection);
         }
     }, [sortdirectionChange]);
 
     const onClickCellHandler: React.MouseEventHandler<HTMLTableCellElement> = event => {
+        const logger = getLogger("onClickCellHandler", fcLogger);
         event.preventDefault();
+        logger.debug("props.sortdirection =", props.sortdirection, " props.onChange =", props.onChange);
         if (props.sortdirection !== undefined && props.onChange) {
-            setSortdirection(sd => rotate(sd, directions));
-            setSortdirectionChange(prev => !prev);
+            setSortdirection(sd => {
+                const newsd = rotate(sd, directions);
+                logger.debug(" sd =", sd, "newsd =", newsd, "directions =", directions);
+                return newsd;
+            });
+            setSortdirectionChange(prev => {
+                const curr = !prev;
+                logger.debug("prev =", prev, "curr =", curr);
+                return curr;
+            });
         }
     };
 

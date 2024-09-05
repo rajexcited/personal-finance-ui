@@ -2,24 +2,16 @@ import { FunctionComponent, useState, useEffect, useRef } from "react";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { Animated, ConfirmDialog, LoadSpinner } from "../../../../components";
-import { rowHeaders, expenseComparator, ExpenseSortStateType, getLogger, RouteHandlerResponse, ExpenseFields, ExpenseBelongsTo } from "../../services";
+import { rowHeaders, ExpenseSortStateType, getLogger, RouteHandlerResponse, ExpenseFields, ExpenseBelongsTo, getSortedExpenses } from "../../services";
 import { getFullPath } from "../../../root";
 import { useDebounceState } from "../../../../hooks";
 import { ExpenseItemTableRow } from "./view-expense-item-tablerow";
 import { ExpenseTableHead, ExpenseTableHeadRefType } from "./expense-table-head";
 import "./view-expense-list.css";
 import { ViewReceipts } from "./receipt/view-receipts";
-import { ObjectDeepDifference } from "../../../../shared";
-import { JSONObject } from "../../../../shared/utils/deep-obj-difference";
+
 
 const fcLogger = getLogger("FC.expense.view.ExpenseList", null, null, "INFO");
-let prevSortDetails: ExpenseSortStateType | null = null;
-const getPrevSortDetails = (sortDetails: ExpenseSortStateType) => {
-    if (!prevSortDetails) {
-        prevSortDetails = sortDetails;
-    }
-    return prevSortDetails as JSONObject;
-};
 
 type SelectedExpense = Pick<ExpenseFields, "id" | "belongsTo">;
 
@@ -38,12 +30,13 @@ export const ExpenseList: FunctionComponent = () => {
 
     // do I need this useeffect? can i not set loader data directly to expenseList state?
     useEffect(() => {
+        const logger = getLogger("useEffect.dep[loaderData, actionData]", fcLogger);
         if (loaderData.type === "success") {
             setLoading(true);
             setErrorMessage("");
 
             if (headerRef && headerRef.current && Object.keys(headerRef.current.sortDetails()).length) {
-                setExpenseList(getSortedExpenses(loaderData.data, headerRef.current.sortDetails()));
+                setExpenseList(getSortedExpenses(loaderData.data, headerRef.current.sortDetails(), logger));
             } else {
                 const initialSortDetails: ExpenseSortStateType = {};
                 rowHeaders.forEach(rh => {
@@ -51,7 +44,7 @@ export const ExpenseList: FunctionComponent = () => {
                         initialSortDetails[rh.datafieldKey] = { ...rh };
                     }
                 });
-                setExpenseList(getSortedExpenses(loaderData.data, initialSortDetails));
+                setExpenseList(getSortedExpenses(loaderData.data, initialSortDetails, logger));
             }
         } else if (actionData?.type === "success") {
             setErrorMessage("");
@@ -63,21 +56,15 @@ export const ExpenseList: FunctionComponent = () => {
         }
     }, [loaderData, actionData]);
 
-    const getSortedExpenses = (expenses: ExpenseFields[], sortDetails: ExpenseSortStateType) => {
-        const logger = getLogger("getSortedExpenses", fcLogger);
-        const sortedExpenses = [...expenses];
-        sortedExpenses.sort(expenseComparator.bind(null, sortDetails));
-        logger.debug("sortDetails", JSON.stringify(sortDetails), "diff: ", ObjectDeepDifference(sortDetails as JSONObject, getPrevSortDetails(sortDetails)));
-        return sortedExpenses;
-    };
-
     const onChangeExpenseSortHandler = (sortDetails: ExpenseSortStateType) => {
+        const logger = getLogger("onChangeExpenseSortHandler", fcLogger);
         setLoading(true);
+        logger.debug("sorting expenses and reloading with sortDetails =", sortDetails);
         setExpenseList(prev => {
-            const newExp = getSortedExpenses(prev, sortDetails);
+            const newExp = getSortedExpenses(prev, sortDetails, logger);
             setTimeout(() => {
                 setLoading(false);
-            }, 10);
+            }, 200);
             return newExp;
         });
     };
