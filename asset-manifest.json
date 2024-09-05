@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/personal-finance-ui/static/css/main.fc7360d0.css",
-    "main.js": "/personal-finance-ui/static/js/main.e3fa23d2.js",
-    "static/media/axios.cjs": "/personal-finance-ui/static/media/axios.e7d77f0967a69d31d7fc.cjs",
-    "static/media/demo-logo.png": "/personal-finance-ui/static/media/demo-logo.579bb2984be118d51e89.png",
-    "index.html": "/personal-finance-ui/index.html"
+    "main.css": "https://rajexcited.github.io/personal-finance-ui/static/css/main.0080661b.css",
+    "main.js": "https://rajexcited.github.io/personal-finance-ui/static/js/main.f7ec0c4a.js",
+    "static/media/axios.cjs": "https://rajexcited.github.io/personal-finance-ui/static/media/axios.cd0a976556d6411f77a7.cjs",
+    "static/media/demo-logo.png": "https://rajexcited.github.io/personal-finance-ui/static/media/demo-logo.579bb2984be118d51e89.png",
+    "index.html": "https://rajexcited.github.io/personal-finance-ui/index.html"
   },
   "entrypoints": [
-    "static/css/main.fc7360d0.css",
-    "static/js/main.e3fa23d2.js"
+    "static/css/main.0080661b.css",
+    "static/js/main.f7ec0c4a.js"
   ]
 }
