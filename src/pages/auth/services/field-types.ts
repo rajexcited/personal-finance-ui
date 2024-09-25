@@ -11,12 +11,19 @@ export interface UserSignupResource {
   countryCode: string;
 }
 
+export enum UserStatus {
+  ACTIVE_USER = "active-user",
+  DELETED_USER = "deleted-user",
+  DEACTIVATED_USER = "deactive-user",
+}
+
 export interface UserDetailsResource {
   emailId: string;
   isAuthenticated: boolean;
   fullName: string;
   firstName: string;
   lastName: string;
+  status: UserStatus;
 }
 
 export type UpdateUserDetailsResource = Pick<UserDetailsResource, "firstName" | "lastName">;

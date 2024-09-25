@@ -49,7 +49,7 @@ const UpdateAccount: FunctionComponent = () => {
             }
             <div className="columns">
                 <div className="column">
-                    { loaderData.type === "success" && loaderData.data.pymtAccountDetail &&
+                    { loaderData.type === "success" && !auth.readOnly && loaderData.data.pymtAccountDetail &&
                         <AccountForm
                             key="update-account-form"
                             accountId={ loaderData.data.pymtAccountDetail.id }
@@ -62,6 +62,13 @@ const UpdateAccount: FunctionComponent = () => {
                     }
                 </div>
             </div>
+
+            { auth.readOnly &&
+                <div className="columns">
+                    <div className="column">
+                        <span>Not Allowed to update Payment Account</span>
+                    </div></div>
+            }
         </>
     );
 

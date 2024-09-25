@@ -27,3 +27,5 @@ export type {
   DeleteConfigDetailsResource,
   RouteHandlerResponse,
 } from "../../../shared";
+
+export { ActionRelation } from "./security-action";

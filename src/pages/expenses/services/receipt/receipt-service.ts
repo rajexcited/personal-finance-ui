@@ -97,7 +97,7 @@ export const uploadReceipts = async (receipts: ReceiptProps[]) => {
       if (!rct.file) return { ...rct };
 
       logger.info("uploading receipt file, id =", rct.id, ", name =", rct.name, ", contenttype =", rct.contentType);
-      await axios.post(`${rootPath}/${rct.belongsTo}/id/${rct.relationId}/receipts/id/${rct.name}`, rct.file, {
+      await axios.post(`${rootPath}/${rct.belongsTo}/id/${rct.relationId}/receipts/id/${rct.id}`, rct.file, {
         headers: { "Content-Type": rct.contentType },
       });
 

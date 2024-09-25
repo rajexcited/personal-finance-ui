@@ -1,5 +1,5 @@
 import "./interceptors";
-import { LoggerBase, axios, getLogger, handleRestErrors, isBlank, subtractDates } from "../../../shared";
+import { LoggerBase, axios, getCacheOption, getLogger, handleRestErrors, isBlank, subtractDates } from "../../../shared";
 import {
   AccessTokenResource,
   UpdateUserDetailsResource,
@@ -7,8 +7,10 @@ import {
   UserDetailsResource,
   UserLoginResource,
   UserSignupResource,
+  UserStatus,
 } from "./field-types";
 import _ from "lodash";
+import pMemoize from "p-memoize";
 
 export const authTokenSessionKey = "fin-auth-tkn";
 const authUserSessionKey = "fin-auth-usr";
@@ -162,7 +164,7 @@ const AuthenticationServiceImpl = () => {
    *
    *  @returns user details
    */
-  const getUserDetails = async () => {
+  const getUserDetails = pMemoize(async () => {
     const logger = getLogger("getUserDetails", _logger);
     try {
       if (!isTokenSessionValid(logger)) {
@@ -199,6 +201,7 @@ const AuthenticationServiceImpl = () => {
         lastName: userDetailsResponse.lastName,
         isAuthenticated: true,
         fullName: getFullName(userDetailsResponse.firstName, userDetailsResponse.lastName),
+        status: userDetailsResponse.status,
       };
 
       sessionStorage.setItem(authUserSessionKey, JSON.stringify(userSessionDetail));
@@ -216,9 +219,10 @@ const AuthenticationServiceImpl = () => {
       lastName: "",
       isAuthenticated: false,
       fullName: "",
+      status: UserStatus.DEACTIVATED_USER,
     };
     return dummyUserDetail;
-  };
+  }, getCacheOption("1.5 sec"));
 
   const signup = async (details: UserSignupResource) => {
     const logger = getLogger("signup", _logger);
@@ -249,6 +253,7 @@ const AuthenticationServiceImpl = () => {
         lastName: details.lastName,
         isAuthenticated: true,
         fullName: getFullName(details.firstName, details.lastName),
+        status: UserStatus.ACTIVE_USER,
       };
       logger.debug("stored user session data");
       sessionStorage.setItem(authUserSessionKey, JSON.stringify(userSessionDetails));
@@ -273,6 +278,7 @@ const AuthenticationServiceImpl = () => {
         lastName: details.lastName,
         isAuthenticated: sessionDetails.isAuthenticated,
         fullName: getFullName(details.firstName, details.lastName),
+        status: sessionDetails.status,
       };
       sessionStorage.setItem(authUserSessionKey, JSON.stringify(newSessionDetails));
     } catch (e) {
@@ -350,6 +356,29 @@ const AuthenticationServiceImpl = () => {
     refreshToken,
     updateName,
     updatePassword,
+
+    deleteUserAccount: async (details: UserLoginResource) => {
+      const logger = getLogger("deleteUserAccount", _logger);
+      try {
+        // encode before sending over api call
+        const data: UserLoginResource = {
+          emailId: details.emailId,
+          password: btoa(details.password),
+        };
+        const response = await axios.delete(`${rootPath}/details`, { headers: { ...data } });
+        logger.debug("response =", response);
+      } catch (e) {
+        const err = e as Error;
+        handleRestErrors(err, logger);
+        logger.warn("not rest error", e);
+        throw Error("unknown error");
+      }
+    },
+
+    isUserAccountReadOnly: async () => {
+      const userDetails = await getUserDetails();
+      return userDetails.status !== UserStatus.ACTIVE_USER;
+    },
   };
 };
 

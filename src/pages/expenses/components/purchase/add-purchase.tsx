@@ -57,7 +57,7 @@ export const AddPurchase: FunctionComponent = () => {
                     </article>
                 </Animated>
             }
-            { loaderData.type === "success" &&
+            { loaderData.type === "success" && !auth.readOnly &&
                 <div className="columns">
                     <div className="column">
                         <PurchaseForm
@@ -71,6 +71,12 @@ export const AddPurchase: FunctionComponent = () => {
                         />
                     </div>
                 </div>
+            }
+            { auth.readOnly &&
+                <div className="columns">
+                    <div className="column">
+                        <span>Not Allowed to add Purchase</span>
+                    </div></div>
             }
         </>
     );

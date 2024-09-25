@@ -12,9 +12,11 @@ interface ConfirmDialogProps {
     yesButtonClassname?: string;
     onConfirm (): void;
     onCancel (): void;
+    validateBeforeConfirm?(): boolean;
 }
 
 const fcLogger = getLogger("FC.ConfirmDialog", null, null, "DISABLED");
+
 const ConfirmDialog: FunctionComponent<ConfirmDialogProps> = (props) => {
     const [isOpen, setOpen] = useState(props.open);
 
@@ -38,9 +40,12 @@ const ConfirmDialog: FunctionComponent<ConfirmDialogProps> = (props) => {
     const onClickConfirmHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         const logger = getLogger("onClickConfirmHandler", fcLogger);
         event.preventDefault();
-        logger.debug("isOpen?", isOpen, "setting it to false");
-        setOpen(false);
-        props.onConfirm();
+        const isValid = props.validateBeforeConfirm ? props.validateBeforeConfirm() : true;
+        logger.debug("isOpen?", isOpen, "setting it to false if valid=true", "isValid? ", isValid);
+        if (isValid) {
+            setOpen(false);
+            props.onConfirm();
+        }
     };
 
     let content = props.content;

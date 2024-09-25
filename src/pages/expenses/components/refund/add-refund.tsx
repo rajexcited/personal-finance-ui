@@ -64,7 +64,7 @@ export const AddRefund: FunctionComponent = () => {
                     </article>
                 </Animated>
             }
-            { loaderData.type === "success" &&
+            { loaderData.type === "success" && !auth.readOnly &&
                 <div className="columns">
                     <div className="column">
                         <PurchaseRefundForm
@@ -79,6 +79,12 @@ export const AddRefund: FunctionComponent = () => {
                         />
                     </div>
                 </div>
+            }
+            { auth.readOnly &&
+                <div className="columns">
+                    <div className="column">
+                        <span>Not Allowed to add Refund</span>
+                    </div></div>
             }
         </>
     );

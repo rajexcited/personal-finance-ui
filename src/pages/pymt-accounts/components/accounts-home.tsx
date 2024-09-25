@@ -1,14 +1,18 @@
 import { FunctionComponent } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { getFullPath } from "../../root";
+import { useAuth } from "../../auth";
 
 
 const AccountsHome: FunctionComponent = () => {
     const navigate = useNavigate();
+    const auth = useAuth();
 
     const onClickNavigateAddPymtAccountHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        navigate(getFullPath("addPymAccount"));
+        if (!auth.readOnly) {
+            navigate(getFullPath("addPymAccount"));
+        }
     };
 
     const onClickNavigateAddNriTransferHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
@@ -21,8 +25,8 @@ const AccountsHome: FunctionComponent = () => {
             <div className="columns">
                 <div className="column">
                     <div className="buttons">
-                        <button className="button is-link" onClick={ onClickNavigateAddPymtAccountHandler }>Add Account</button>
-                        <button className="button is-link" onClick={ onClickNavigateAddNriTransferHandler }>Add Transfer</button>
+                        <button className="button is-link" onClick={ onClickNavigateAddPymtAccountHandler } disabled={ auth.readOnly } >Add Account</button>
+                        <button className="button is-link" onClick={ onClickNavigateAddNriTransferHandler } disabled={ auth.readOnly } >Add Transfer</button>
                     </div>
                 </div>
             </div>

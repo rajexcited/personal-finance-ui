@@ -15,6 +15,7 @@ import {
   TagBelongsTo,
   InvalidError,
   isUuid,
+  TagQueryParams,
 } from "../../../../shared";
 import { PurchaseTypeService } from "./purchase-type-service";
 import { PymtAccountService } from "../../../pymt-accounts";
@@ -25,8 +26,6 @@ import pDebounce from "p-debounce";
 import { ExpenseBelongsTo, ExpenseFields } from "../expense/field-types";
 import { CacheAction, DownloadReceiptResource, ErrorReceiptProps, ReceiptProps, ReceiptUploadError } from "../../../../components/receipt";
 import { PurchaseFields, PurchaseItemFields } from "./field-types";
-
-type PurchaseTagQueryParams = Record<"purchasedYear", string[]>;
 
 export const PurchaseService = () => {
   const onBeforeExpiredReceiptFileCallback = async (item: DownloadReceiptResource) => {
@@ -195,8 +194,8 @@ export const PurchaseService = () => {
     }
 
     const thisYear = new Date().getFullYear();
-    const queryParams: PurchaseTagQueryParams = {
-      purchasedYear: [String(thisYear), String(thisYear - 1)],
+    const queryParams: TagQueryParams = {
+      year: [String(thisYear), String(thisYear - 1)],
     };
     const response = await axios.get(`${rootPath}/tags`, { params: queryParams });
     await tagService.updateTags(response.data);
@@ -366,92 +365,6 @@ export const PurchaseService = () => {
     getPurchaseTags: async () => {
       const tagList = await tagService.getTags();
       return tagList;
-    },
-
-    updatePurchaseReceipts: async (receipts: ReceiptProps[]) => {
-      const logger = getLogger("updatePurchaseReceipts", _logger);
-      const receiptNames = new Set(receipts.map((rct) => rct.name));
-      if (receiptNames.size !== receipts.length) {
-        const receiptNameCounter: Record<string, number> = {};
-        receipts.forEach((rct) => {
-          const name = rct.name;
-          if (receiptNames.has(name)) {
-            const counter = receiptNameCounter[name] || 1;
-            rct.name = name + "-" + counter;
-            receiptNameCounter[name] = counter + 1;
-          }
-        });
-      }
-
-      const uploadedReceiptsPromises = receipts.map(async (rct) => {
-        try {
-          if (!rct.file) return { ...rct };
-
-          logger.info("uploading receipt file, id =", rct.id, ", name =", rct.name, ", contenttype =", rct.contentType);
-          await axios.post(`${rootPath}/id/${rct.relationId}/receipts/id/${rct.name}`, rct.file, {
-            headers: { "Content-Type": rct.contentType },
-          });
-          const result: ReceiptProps = {
-            name: rct.name,
-            contentType: rct.contentType,
-            id: rct.id,
-            relationId: rct.relationId,
-            belongsTo: rct.belongsTo,
-          };
-          return result;
-        } catch (e) {
-          let err = e as Error;
-          try {
-            handleRestErrors(e as Error, logger);
-            logger.warn("not rest error", e);
-          } catch (ee) {
-            err = ee as Error;
-          }
-          const erRct: ErrorReceiptProps = { ...rct, error: err };
-          return erRct;
-        }
-      });
-      const uploadedReceipts = await Promise.all(uploadedReceiptsPromises);
-      logger.info("uploadedReceipts =", uploadedReceipts);
-      const errorReceipts = uploadedReceipts.filter((rct) => "error" in rct);
-      if (errorReceipts.length > 0) throw new ReceiptUploadError(errorReceipts as ErrorReceiptProps[]);
-      return uploadedReceipts;
-    },
-
-    downloadReceipts: async (receipts: ReceiptProps[]) => {
-      const logger = getLogger("downloadReceipts", _logger);
-      logger.debug("starting to download and prepare resource list");
-
-      const promises = receipts.map(async (rct) => {
-        try {
-          const cachedReceiptResponse = await cacheReceiptFile(rct, CacheAction.AddUpdateGet);
-          if (cachedReceiptResponse) {
-            return cachedReceiptResponse as DownloadReceiptResource;
-          }
-          const fileResponse = await axios.get(`${rootPath}/id/${rct.relationId}/receipts/id/${rct.id}`, { responseType: "blob" });
-          const downloadReceiptResponse = await cacheReceiptFile(rct, CacheAction.AddUpdateGet, fileResponse.data);
-          if (!downloadReceiptResponse) {
-            throw new Error("caching failed");
-          }
-          return downloadReceiptResponse as DownloadReceiptResource;
-        } catch (e) {
-          let err = e as Error;
-          try {
-            handleRestErrors(e as Error, logger);
-          } catch (ee) {
-            err = ee as Error;
-          }
-          const errorResponse: DownloadReceiptResource = {
-            status: "fail",
-            id: rct.id,
-            error: err.name + " - " + err.message,
-            relationId: rct.relationId,
-            belongsTo: rct.belongsTo,
-          };
-          return errorResponse;
-        }
-      });
-      return await Promise.all(promises);
     },
 
     getPurchaseTypes: () => {

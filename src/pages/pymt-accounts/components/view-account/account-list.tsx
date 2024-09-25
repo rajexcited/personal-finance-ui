@@ -5,6 +5,7 @@ import { PymtAccountFields, RouteHandlerResponse } from "../../services";
 import { Animated, ConfirmDialog } from "../../../../components";
 import { getFullPath } from "../../../root";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "../../../auth";
 
 
 const AccountList: FunctionComponent = () => {
@@ -12,9 +13,10 @@ const AccountList: FunctionComponent = () => {
     const actionData = useActionData() as RouteHandlerResponse<any, null> | null;
     const [deletingAccountId, setDeletingAccountId] = useState("");
     const submit = useSubmit();
+    const auth = useAuth();
 
     const onDeleteConfirmHandler = () => {
-        if (loaderData.type === "success") {
+        if (loaderData.type === "success" && !auth.readOnly) {
             const deletingPymtAcc = loaderData.data.find(acc => acc.id === deletingAccountId);
             const data: any = { ...deletingPymtAcc };
             submit(data, { action: getFullPath("pymtAccountsRoot"), method: "delete", encType: "application/json" });

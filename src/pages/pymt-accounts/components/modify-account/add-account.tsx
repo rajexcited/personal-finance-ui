@@ -60,7 +60,7 @@ const AddAccount: FunctionComponent = () => {
             }
 
             {
-                loaderData.type === "success" &&
+                loaderData.type === "success" && !auth.readOnly &&
 
                 <div className="columns">
                     <div className="column">
@@ -74,6 +74,13 @@ const AddAccount: FunctionComponent = () => {
                         />
                     </div>
                 </div>
+            }
+
+            { auth.readOnly &&
+                <div className="columns">
+                    <div className="column">
+                        <span>Not Allowed to add Payment Account</span>
+                    </div></div>
             }
 
         </>

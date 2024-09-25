@@ -70,7 +70,7 @@ export const UpdateIncome: FunctionComponent = () => {
             <div className="columns">
                 <div className="column">
                     {
-                        loaderData.type === "success" && loaderData.data.incomeDetail &&
+                        loaderData.type === "success" && !auth.readOnly && loaderData.data.incomeDetail &&
                         <IncomeForm
                             key="update-income-form"
                             submitLabel={ navigation.state === "submitting" ? "Saving Income details..." : "Update" }
@@ -84,6 +84,13 @@ export const UpdateIncome: FunctionComponent = () => {
                     }
                 </div>
             </div>
+
+            { auth.readOnly &&
+                <div className="columns">
+                    <div className="column">
+                        <span>Not Allowed to update Income</span>
+                    </div></div>
+            }
         </>
     );
 };

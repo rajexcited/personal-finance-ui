@@ -94,7 +94,7 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
         const logger = getLogger("useEffect.dep[props.selectedItem]", fcLogger);
         logger.info("props.items =", props.items, ", props.defaultItem =", props.defaultItem);
         let ddItems: DropDownItemType[] = [];
-        if (props.items && props.items.length > 0) {
+        if (props.items) {
             if (typeof props.items[0] === "string") {
                 ddItems = props.items.map(item => ({
                     id: item,

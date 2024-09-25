@@ -5,6 +5,7 @@ import { PymtAccountFields } from "../../services";
 import { useNavigate } from "react-router-dom";
 import { getFullPath } from "../../../root";
 import { Animated } from "../../../../components";
+import { useAuth } from "../../../auth";
 
 export interface AccountItemProps {
     id: string;
@@ -15,6 +16,7 @@ export interface AccountItemProps {
 const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
     const [isBodyOpen, setBodyOpen] = useState(false);
     const navigate = useNavigate();
+    const auth = useAuth();
 
     const onClickBodyToggleHandler: React.MouseEventHandler<HTMLButtonElement | HTMLSpanElement> = event => {
         event.preventDefault();
@@ -42,8 +44,13 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                             </span>
                         </span>
                     </p>
-                    <button className="card-header-icon" onClick={ onClickUpdateHandler }>Update</button>
-                    <button className="card-header-icon" onClick={ onClickDeleteHandler }>Delete</button>
+                    {
+                        !auth.readOnly &&
+                        <>
+                            <button className="card-header-icon" onClick={ onClickUpdateHandler }>Update</button>
+                            <button className="card-header-icon" onClick={ onClickDeleteHandler }>Delete</button>
+                        </>
+                    }
                     <button className="card-header-icon" aria-label="expand breakdown" onClick={ onClickBodyToggleHandler }>
                         <span className="icon">
                             <FontAwesomeIcon icon={ isBodyOpen ? faAngleUp : faAngleDown } />

@@ -4,8 +4,15 @@ import { missingValidation, validateAuthorization } from "./common-validators";
 import { tokenSessionData, userSessionDetails } from "./userDetails";
 import { v4 as uuidv4 } from "uuid";
 import datetime from "date-and-time";
+import { UserDetailsResource, UserLoginResource } from "../../pages/auth";
+import { UserStatus } from "../../pages/auth/services";
+import { getLogger } from "../../shared";
 
-export const MockLogin = (demoMock: MockAdapter) => {
+type UserDetailsRsc = Omit<UserDetailsResource, "isAuthenticated" | "fullName">;
+
+const _rootLogger = getLogger("mock.api.user", null, null, "DEBUG");
+
+export const MockUser = (demoMock: MockAdapter) => {
   const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#$%^&*])[\w!@#$%^&\(\)\=*]{8,25}$/;
   const expiresInSec = 30 * 60;
 
@@ -118,7 +125,13 @@ export const MockLogin = (demoMock: MockAdapter) => {
     }
 
     const details = userSessionDetails();
-    return responseCreator.toSuccessResponse({ ...details, password: null });
+    const response: UserDetailsRsc = {
+      emailId: details.emailId,
+      firstName: details.firstName,
+      lastName: details.lastName,
+      status: details.status as UserStatus,
+    };
+    return responseCreator.toSuccessResponse(response);
   });
 
   demoMock.onPost("/user/details").reply((config) => {
@@ -139,13 +152,13 @@ export const MockLogin = (demoMock: MockAdapter) => {
         return responseCreator.toValidationError([{ path: "password", message: "incorrect value" }]);
       }
 
-      if (data.password !== userSessionDetails().password) {
+      if (atob(data.password) !== userSessionDetails().password) {
         return responseCreator.toValidationError([{ path: "password", message: "incorrect value" }]);
       }
       if (data.password === data.newPassword) {
         return responseCreator.toValidationError([{ path: "newPassword", message: "incorrect value" }]);
       }
-      userSessionDetails({ password: data.newPassword });
+      userSessionDetails({ password: atob(data.newPassword) });
       return responseCreator.toSuccessResponse("password changed");
     }
 
@@ -154,7 +167,54 @@ export const MockLogin = (demoMock: MockAdapter) => {
       return responseCreator.toValidationError(missingErrors);
     }
 
-    userSessionDetails(data);
+    userSessionDetails({ firstName: data.firstName, lastName: data.lastName });
     return responseCreator.toSuccessResponse("Name is changed");
+  });
+
+  demoMock.onDelete("/user/details").reply((config) => {
+    const logger = getLogger("deleteUser", _rootLogger);
+    const responseCreator = AxiosResponseCreator(config);
+
+    logger.debug("mock api called, config =", { ...config });
+    const data: UserLoginResource = {
+      emailId: config.headers?.emailId,
+      password: config.headers?.password,
+    };
+    const missingErrors = missingValidation(data, ["emailId", "password"]);
+    if (missingErrors.length > 0) {
+      logger.debug("missingErrors =", missingErrors);
+      return responseCreator.toValidationError(missingErrors);
+    }
+
+    if (!passwordRegex.test(atob(data.password))) {
+      logger.debug("password incorrect format");
+      return responseCreator.toValidationError([{ path: "password", message: "pattern is not acceptable" }]);
+    }
+
+    if (isInvalidDemoEmailId(data.emailId)) {
+      logger.debug("invalid demo email");
+      return responseCreator.toValidationError([{ path: "emailId", message: "invalid demo email id. email id must ends with '@demo.com'" }]);
+    }
+
+    const userDetails = userSessionDetails();
+
+    if (userDetails.emailId !== data.emailId || userDetails.password !== atob(data.password)) {
+      logger.debug("incorrect login credential");
+      return responseCreator.toValidationError([{ path: "request", message: "invalid login credential" }]);
+    }
+
+    const respDetails = userSessionDetails({
+      status: UserStatus.DELETED_USER,
+    });
+
+    const response: UserDetailsRsc = {
+      emailId: respDetails.emailId,
+      firstName: respDetails.firstName,
+      lastName: respDetails.lastName,
+      status: respDetails.status as UserStatus,
+    };
+
+    logger.debug("responding success, response=", response);
+    return responseCreator.toSuccessResponse(response);
   });
 };

@@ -49,7 +49,7 @@ export const handleRestErrors = (e: Error, loggerBase: LoggerBase) => {
         err = new BadRequestError([{ message: e.response.data.message }], e.response.data.message);
       } else if (e.response.data.Message) {
         err = new BadRequestError([{ message: e.response.data.Message }], e.response.data.Message);
-      } else if (Array.isArray(e.response.data)) {
+      } else if (Array.isArray(e.response.data) && e.response.data.length > 0) {
         const msg = (e.response.data as ValidationErrorData[]).map((err) => `${err.path} - ${err.message}`).join("\n\n");
         err = new BadRequestError(e.response.data, msg);
       } else {

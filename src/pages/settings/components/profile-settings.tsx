@@ -5,7 +5,7 @@ import { getFullPath } from "../../root";
 import { RouteHandlerResponse, getLogger } from "../services";
 import { ProfileDetailsLoaderResource } from "../route-handlers/profile-loader-action";
 import ReactMarkdown from "react-markdown";
-import { UpdateUserDetailsResource } from "../../auth";
+import { UpdateUserDetailsResource, useAuth } from "../../auth";
 
 const fcLogger = getLogger("FC.settings.ProfileSettings", null, null, "DISABLED");
 
@@ -16,6 +16,7 @@ export const ProfileSettingsPage: FunctionComponent = () => {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const submit = useSubmit();
+    const auth = useAuth();
 
     useEffect(() => {
         if (loaderData.type === "success") {
@@ -26,7 +27,9 @@ export const ProfileSettingsPage: FunctionComponent = () => {
 
     const onClickChangeNameHandler: MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        setUpdateNameRequest(true);
+        if (!auth.readOnly) {
+            setUpdateNameRequest(true);
+        }
     };
 
     const onClickChangeNameCancelHandler: MouseEventHandler<HTMLButtonElement> = event => {
@@ -41,7 +44,7 @@ export const ProfileSettingsPage: FunctionComponent = () => {
 
     const onSubmitNameChangeHandler: FormEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
-        if (loaderData.type === "success") {
+        if (!auth.readOnly && loaderData.type === "success") {
             if (firstName !== loaderData.data.nameDetails.firstName || lastName !== loaderData.data.nameDetails.lastName) {
                 const nameDetails: UpdateUserDetailsResource = {
                     firstName: firstName,
@@ -116,7 +119,7 @@ export const ProfileSettingsPage: FunctionComponent = () => {
                                         </>
                                     }
                                     {
-                                        !updateNameRequest &&
+                                        !auth.readOnly && !updateNameRequest &&
                                         <button className="button is-dark" type="button" onClick={ onClickChangeNameHandler }>Change Name</button>
                                     }
                                 </div>

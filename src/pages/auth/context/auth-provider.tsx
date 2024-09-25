@@ -1,10 +1,9 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import AuthContext, { dummyUserDetails } from "./auth-context";
-import { AuthenticationService, UserDetailsResource, UserSignupResource } from "../services";
+import { AuthenticationService, UserDetailsResource, UserSignupResource, UserStatus } from "../services";
 import { Animated } from "../../../components";
 import { ObjectDeepDifference, getLogger } from "../../../shared";
-import { JSONObject } from "../../../shared/utils/deep-obj-difference";
 
 
 const authService = AuthenticationService();
@@ -28,6 +27,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
 
     const [userDetails, setUserDetails] = useState<UserDetailsResource>({ ...dummyUserDetails });
     const [expiringStatus, setExpiringStatus] = useState(ExpireStatus.Unknown);
+    const [isUserAccountReadOnly, setUserAccountReadOnly] = useState(false);
 
     // first time - when component initilizes
     useEffect(() => {
@@ -36,6 +36,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
         userDetailsPromise.then(userDetails => {
             logger.debug("received userDetail =", userDetails, "setting to context if not null");
             if (userDetails.isAuthenticated) setUserDetails({ ...userDetails });
+            authService.isUserAccountReadOnly().then(setUserAccountReadOnly);
         });
     }, []);
 
@@ -45,7 +46,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
 
         const setAuthenExpire = () => {
             const logger = getLogger("setAuthenExpire", _logger);
-            const diffUserDetails = ObjectDeepDifference(userDetails as unknown as JSONObject, dummyUserDetails);
+            const diffUserDetails = ObjectDeepDifference({ ...userDetails }, { ...dummyUserDetails });
             if (Object.keys(diffUserDetails).length > 0) {
                 logger.debug("updating context to dummy user");
                 setUserDetails({ ...dummyUserDetails });
@@ -100,6 +101,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
                     logger.debug("authen true from session/api. so update the context if required");
                     await setAuthenNotExpired();
                     setAboutToExpire();
+                    authService.isUserAccountReadOnly().then(setUserAccountReadOnly);
                 } else {
                     logger.debug("authen false from session/api. so update the context if required");
                     setAuthenExpire();
@@ -113,7 +115,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
             clearInterval(intervalId);
         };
 
-    }, [userDetails, expiringStatus]);
+    }, [userDetails, expiringStatus, setUserDetails, setExpiringStatus]);
 
     const login = async (emailId: string, password: string) => {
         const logger = getLogger("login", fcLogger);
@@ -155,6 +157,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
         <AuthContext.Provider value={
             {
                 userDetails,
+                readOnly: isUserAccountReadOnly,
                 login,
                 logout,
                 signup

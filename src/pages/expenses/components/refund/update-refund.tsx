@@ -74,7 +74,7 @@ export const UpdateRefund: FunctionComponent = () => {
             <div className="columns">
                 <div className="column">
                     {
-                        loaderData.type === "success" && loaderData.data.refundDetail &&
+                        loaderData.type === "success" && !auth.readOnly && loaderData.data.refundDetail &&
                         <PurchaseRefundForm
                             key="update-purchase-form"
                             submitLabel={ navigation.state === "submitting" ? "Saving Refund details..." : "Update" }
@@ -89,6 +89,13 @@ export const UpdateRefund: FunctionComponent = () => {
                     }
                 </div>
             </div>
+
+            { auth.readOnly &&
+                <div className="columns">
+                    <div className="column">
+                        <span>Not Allowed to update Refund</span>
+                    </div></div>
+            }
         </>
     );
 };

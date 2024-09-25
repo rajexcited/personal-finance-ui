@@ -2,13 +2,14 @@ import { formatTimestamp, getLogger } from "../../shared";
 
 const rootLogger = getLogger("mock.service.userDetails", null, null, "DISABLED");
 
-type UserDataType = { firstName: string; lastName: string; emailId: string; password: string; countryCode: string };
+type UserDataType = Record<"firstName" | "lastName" | "emailId" | "password" | "countryCode" | "status", string>;
 const UserSessionDetails: UserDataType = {
   firstName: "",
   lastName: "",
   emailId: "",
   password: "",
   countryCode: "",
+  status: "active",
 };
 
 export const userSessionDetails = (setter?: Partial<UserDataType>) => {
@@ -17,6 +18,7 @@ export const userSessionDetails = (setter?: Partial<UserDataType>) => {
   UserSessionDetails.lastName = setter?.lastName || UserSessionDetails.lastName;
   UserSessionDetails.password = setter?.password || UserSessionDetails.password;
   UserSessionDetails.countryCode = setter?.countryCode || UserSessionDetails.countryCode;
+  UserSessionDetails.status = setter?.status || UserSessionDetails.status;
 
   return { ...UserSessionDetails };
 };

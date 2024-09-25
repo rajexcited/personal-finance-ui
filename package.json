@@ -11,9 +11,10 @@
     "env-learn-link": "https://create-react-app.dev/docs/adding-custom-environment-variables/#what-other-env-files-can-be-used",
     "prebuildlocalaws": "npm run build && copy envaws .env.local",
     "buildlocalaws": "npm run buildwithoutmock",
-    "postbuildlocalaws": "del .env.local",
+    "postbuildlocalaws": "npm run clean >dist/null 2>&1",
     "prebuildwithoutmock": "copy src\\demo\\dummy.ts src\\demo\\index.ts",
     "buildwithoutmock": "react-scripts build",
+    "postbuildwithoutmock": "copy src\\demo\\demp.ts src\\demo\\index.ts",
     "precopytoinfra": "rmdir /S /Q ..\\personal-finance-backend-aws\\dist\\ui",
     "copytoinfra": "xcopy /E build ..\\personal-finance-backend-aws\\dist\\ui\\",
     "build": "react-scripts build",
@@ -23,7 +24,7 @@
     "builddemo": "react-scripts build",
     "predeploydemo": "npm run builddemo",
     "deploydemo": "gh-pages -d build",
-    "postdeploydemo": "del .env.production.local"
+    "postdeploydemo": "npm run clean >dist/null 2>&1"
   },
   "eslintConfig": {
     "extends": [

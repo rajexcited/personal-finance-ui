@@ -9,7 +9,7 @@ export { paymentAccountTypeListLoaderHandler, pymtAccTypeListActionHandler } fro
 export { ProfileSettingsPage } from "./components/profile-settings";
 export { profileDetailsLoaderHandler, profileDetailsActionHandler } from "./route-handlers/profile-loader-action";
 
-export { SecurityPage } from "./components/security";
+export { SecurityPage } from "./components/security/security";
 export { securityDetailsLoaderHandler, securityDetailsActionHandler } from "./route-handlers/security-loader-action";
 
 export { IncomeTypePage } from "./components/income-type";

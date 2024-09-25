@@ -10,6 +10,7 @@ import ViewConfig from "./view-config";
 import UpdateConfig, { ConfigInputProps } from "./update-config";
 import { getFullPath } from "../../root";
 import { RefundReasonLoaderResource } from "../route-handlers/refund-reason-loader-action";
+import { useAuth } from "../../auth";
 
 
 const fcLogger = getLogger("FC.settings.RefundReasonPage", null, null, "DISABLED");
@@ -22,6 +23,7 @@ export const RefundReasonPage: FunctionComponent = () => {
     const [toggleUpdate, setToggleUpdate] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const submit = useSubmit();
+    const auth = useAuth();
 
     useEffect(() => {
         const logger = getLogger("useEffect.dep[loaderData, actionData]", fcLogger);
@@ -114,7 +116,7 @@ export const RefundReasonPage: FunctionComponent = () => {
     };
 
     const onDeleteConfirmHandler = () => {
-        if (action?.item) {
+        if (action?.item && !auth.readOnly) {
             const data: DeleteConfigDetailsResource = {
                 ...action.item,
                 action: "deleteDetails"
@@ -126,17 +128,19 @@ export const RefundReasonPage: FunctionComponent = () => {
 
     const onAddUpdateRefundReasonHandler = (details: UpdateConfigDetailsResource | UpdateConfigStatusResource) => {
         updateAction(undefined);
-
-        submit(details as any, { method: "post", action: getFullPath("refundReasonSettings"), encType: "application/json" });
+        if (!auth.readOnly) {
+            submit(details as any, { method: "post", action: getFullPath("refundReasonSettings"), encType: "application/json" });
+        }
     };
 
     const controlsBeforeEllipsis: Control[] = [{ id: ActionId.View, content: "View", icon: faEye }];
-    const controlsInEllipsis: Control[] = [
-        { id: ActionId.Update, content: "Edit", icon: faEdit },
-        { id: ActionId.Delete, content: "Delete", icon: faRemove },
-        { id: ActionId.ToggleEnable, content: "Change to Enable", icon: faToggleOn, isActive: (item: ListItem) => !item.status },
-        { id: ActionId.ToggleDisable, content: "Change to Disable", icon: faToggleOff, isActive: (item: ListItem) => item.status },
-    ];
+    const controlsInEllipsis: Control[] = [];
+    if (!auth.readOnly) {
+        controlsInEllipsis.push({ id: ActionId.Update, content: "Edit", icon: faEdit });
+        controlsInEllipsis.push({ id: ActionId.Delete, content: "Delete", icon: faRemove });
+        controlsInEllipsis.push({ id: ActionId.ToggleEnable, content: "Change to Enable", icon: faToggleOn, isActive: (item: ListItem) => !item.status });
+        controlsInEllipsis.push({ id: ActionId.ToggleDisable, content: "Change to Disable", icon: faToggleOff, isActive: (item: ListItem) => item.status });
+    }
 
     const configInputProps: ConfigInputProps = {
         name: {
@@ -191,16 +195,18 @@ export const RefundReasonPage: FunctionComponent = () => {
                 </div>
                 <div className="column">
                     <section>
-                        <div className="buttons is-right px-5 mx-5">
-                            {
-                                action && action.type === "view" &&
-                                <>
-                                    <button className="button is-link is-rounded" onClick={ onClickRequestDeleteRefundReasonHandler }> &nbsp; &nbsp; Delete &nbsp; &nbsp; </button>
-                                    <button className="button is-link is-rounded" onClick={ onClickRequestUpdateRefundReasonHandler }> &nbsp; &nbsp; Edit &nbsp; &nbsp; </button>
-                                </>
-                            }
-                            <button className="button is-link is-rounded" onClick={ onClickRequestAddRefundReasonHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
-                        </div>
+                        { !auth.readOnly &&
+                            <div className="buttons is-right px-5 mx-5">
+                                {
+                                    action && action.type === "view" &&
+                                    <>
+                                        <button className="button is-link is-rounded" onClick={ onClickRequestDeleteRefundReasonHandler }> &nbsp; &nbsp; Delete &nbsp; &nbsp; </button>
+                                        <button className="button is-link is-rounded" onClick={ onClickRequestUpdateRefundReasonHandler }> &nbsp; &nbsp; Edit &nbsp; &nbsp; </button>
+                                    </>
+                                }
+                                <button className="button is-link is-rounded" onClick={ onClickRequestAddRefundReasonHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
+                            </div>
+                        }
                     </section>
                     <section className="mt-4 pt-4 px-4">
                         {
@@ -219,7 +225,7 @@ export const RefundReasonPage: FunctionComponent = () => {
                         }
                         {
                             // condition to create new instance 
-                            action?.type === ActionId.Update && toggleUpdate &&
+                            !auth.readOnly && action?.type === ActionId.Update && toggleUpdate &&
                             <UpdateConfig
                                 details={ action.item }
                                 inputProps={ configInputProps }
@@ -230,7 +236,7 @@ export const RefundReasonPage: FunctionComponent = () => {
                         }
                         {
                             // condition to create new instance 
-                            action?.type === ActionId.Update && !toggleUpdate &&
+                            !auth.readOnly && action?.type === ActionId.Update && !toggleUpdate &&
                             <UpdateConfig
                                 details={ action.item }
                                 inputProps={ configInputProps }
@@ -241,7 +247,7 @@ export const RefundReasonPage: FunctionComponent = () => {
                         }
                         {
                             // condition to create new instance 
-                            action?.type === ActionId.Add &&
+                            !auth.readOnly && action?.type === ActionId.Add &&
                             <UpdateConfig
                                 details={ action.item }
                                 inputProps={ configInputProps }

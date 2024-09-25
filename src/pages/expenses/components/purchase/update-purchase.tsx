@@ -63,7 +63,7 @@ export const UpdatePurchase: FunctionComponent = () => {
             <div className="columns">
                 <div className="column">
                     {
-                        loaderData.type === "success" && loaderData.data.purchaseDetail &&
+                        loaderData.type === "success" && !auth.readOnly && loaderData.data.purchaseDetail &&
                         <PurchaseForm
                             key="update-purchase-form"
                             purchaseId={ loaderData.data.purchaseDetail.id }
@@ -77,6 +77,12 @@ export const UpdatePurchase: FunctionComponent = () => {
                     }
                 </div>
             </div>
+            { auth.readOnly &&
+                <div className="columns">
+                    <div className="column">
+                        <span>Not Allowed to update Refund</span>
+                    </div></div>
+            }
         </>
     );
 };

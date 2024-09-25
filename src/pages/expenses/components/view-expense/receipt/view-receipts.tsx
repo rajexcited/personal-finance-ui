@@ -3,11 +3,11 @@ import ReactMarkdown from "react-markdown";
 import bulmaCaraosel, { BulmaCarouselOptions } from "bulma-carousel";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlassMinus, faMagnifyingGlassPlus } from "@fortawesome/free-solid-svg-icons";
-import { getLogger, PurchaseService, subtractDates } from "../../../services";
+import { getLogger, receiptService, subtractDates } from "../../../services";
 import { LoadSpinner } from "../../../../../components";
+import { ReceiptProps, ReceiptType } from "../../../../../components/receipt";
 import "bulma-carousel/dist/css/bulma-carousel.min.css";
 import "./view-receipts.css";
-import { ReceiptProps, ReceiptType } from "../../../../../components/receipt";
 
 
 interface ViewReceiptsProps {
@@ -33,7 +33,6 @@ const findNextScaleValue = (scale: number, findBigger: boolean) => {
     return scale;
 };
 
-const purchaseService = PurchaseService();
 const fcLogger = getLogger("FC.ViewReceipts", null, null, "DISABLED");
 
 export const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
@@ -66,7 +65,7 @@ export const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
             setReceiptLoading(true);
             logger.debug("downloading receipts");
             const startTime = new Date();
-            purchaseService.downloadReceipts(props.receipts)
+            receiptService.downloadReceipts(props.receipts)
                 .then(downloadReceipts => {
                     logger.info("receipts are downloaded. downloadReceipts =", downloadReceipts, ". time taken:", subtractDates(new Date(), startTime).toSeconds(), "sec");
                     const error = downloadReceipts.map(dr => dr.status === "fail" && dr.error).filter(dr => dr).join("\n\n");

@@ -64,7 +64,7 @@ export const AddIncome: FunctionComponent = () => {
                     </article>
                 </Animated>
             }
-            { loaderData.type === "success" &&
+            { loaderData.type === "success" && !auth.readOnly &&
                 <div className="columns">
                     <div className="column">
                         <IncomeForm
@@ -79,6 +79,12 @@ export const AddIncome: FunctionComponent = () => {
                         />
                     </div>
                 </div>
+            }
+            { auth.readOnly &&
+                <div className="columns">
+                    <div className="column">
+                        <span>Not Allowed to add Income</span>
+                    </div></div>
             }
         </>
     );

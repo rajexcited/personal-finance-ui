@@ -6,6 +6,7 @@ import { formatAmount } from "../../../../formatters";
 import { useNavigate } from "react-router-dom";
 import { getFullPath } from "../../../root";
 import { parseTimestamp } from "../../../../shared";
+import { useAuth } from "../../../auth";
 
 
 interface ExpenseItemTableRowProps {
@@ -23,6 +24,7 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
     const [expenseDate, setExpenseDate] = useState<string>();
     const rowRef = useRef<HTMLTableRowElement>(null);
     const navigate = useNavigate();
+    const auth = useAuth();
 
     useEffect(() => {
         let xpnsDateStr = undefined;
@@ -151,8 +153,11 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
         </a>
     );
 
-    const actions = [updateExpenseAction, removeExpenseAction];
-    if (props.details.belongsTo === ExpenseBelongsTo.Purchase) {
+    const actions = [];
+    if (!auth.readOnly) {
+        actions.push(updateExpenseAction, removeExpenseAction);
+    }
+    if (props.details.belongsTo === ExpenseBelongsTo.Purchase && !auth.readOnly) {
         actions.push(addRefundAction);
     }
     if (props.details.receipts.length > 0) {
