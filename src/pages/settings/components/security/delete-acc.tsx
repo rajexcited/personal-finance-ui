@@ -11,6 +11,7 @@ interface DeleteAccountSectionProps {
     onSubmit: (data: UserLoginResource) => void;
     onCancel: () => void;
     readOnly: boolean;
+    error: string;
 }
 
 const fcLogger = getLogger("FC.settings.security.DeleteAccountSection", null, null, "DEBUG");
@@ -30,6 +31,15 @@ export const DeleteAccountSection: FunctionComponent<DeleteAccountSectionProps> 
             setInvalidFormElements(["emailId", "password"]);
         }
     }, [actionState]);
+
+    useEffect(() => {
+        setActionState(prev => {
+            if (prev !== ActionState.NoAction && props.error) {
+                return ActionState.NoAction;
+            }
+            return prev;
+        });
+    }, [props.error, setActionState]);
 
     const onClickRequestHandler: MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();

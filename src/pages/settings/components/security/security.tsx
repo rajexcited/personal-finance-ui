@@ -108,6 +108,7 @@ export const SecurityPage: FunctionComponent = () => {
                 onCancel={ onCancelHandler }
                 onSubmit={ onSubmitPasswordChangeHandler }
                 readOnly={ auth.readOnly }
+                error={ errorMessage }
             />
             <p>&nbsp;</p>
             <DeleteAccountSection
@@ -115,6 +116,7 @@ export const SecurityPage: FunctionComponent = () => {
                 onCancel={ onCancelHandler }
                 onSubmit={ onSubmitDeleteAccountHandler }
                 readOnly={ auth.readOnly }
+                error={ errorMessage }
             />
         </section>
     );

@@ -13,6 +13,7 @@ interface ChangePasswordSectionProps {
     onSubmit: (data: UpdateUserPasswordResource) => void;
     onCancel: () => void;
     readOnly: boolean;
+    error: string;
 }
 
 const fcLogger = getLogger("FC.settings.security.ChangePasswordSection", null, null, "DEBUG");
@@ -33,6 +34,15 @@ export const ChangePasswordSection: FunctionComponent<ChangePasswordSectionProps
             logger.debug("password has been reset and invalidFormElement list has been re-initialized");
         }
     }, [actionState, setCurrentPassword, setNewPassword, setInvalidFormElements]);
+
+    useEffect(() => {
+        setActionState(prev => {
+            if (prev !== ActionState.NoAction && props.error) {
+                return ActionState.NoAction;
+            }
+            return prev;
+        });
+    }, [props.error, setActionState]);
 
     const onClickRequestHandler: MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
