@@ -22,13 +22,15 @@ const defaultOptions: bulmaCalendar.Options = {
     displayMode: "inline"
 };
 
+const fcLogger = getLogger("FC.calendar", null, null, "DISABLED");
+
 const Calendar: FunctionComponent<CalendarProps> = (props) => {
     const calendarRef = useRef<HTMLInputElement>(null);
     const [calendarInstance, setCalendarInstance] = useState<bulmaCalendar>();
     const [calState, setCalState] = useState('notready');
 
     useEffect(() => {
-        const logger = getLogger("FC.calendar.useEffect.dep[calendarRef.current]");
+        const logger = getLogger("useEffect.dep[calendarRef.current]", fcLogger);
         if (!calendarRef.current || calendarInstance)
             return;
 

@@ -17,26 +17,26 @@ const tagService = TagsService(TagBelongsTo.PaymentAccountTypeConfig);
  * retrives undeleted account types
  * @returns list of account type
  */
-export const getAccountTypes = pMemoize(async (status?: ConfigTypeStatus) => {
+export const getAccountTypes = async (status?: ConfigTypeStatus) => {
   const paramStatuses = status ? [status] : [ConfigTypeStatus.Enable, ConfigTypeStatus.Disable];
   const accountTypeListPromise = configTypeService.getConfigTypeList(paramStatuses);
   await Promise.all([accountTypeListPromise, initializePymtAccTypeTags()]);
   return await accountTypeListPromise;
-}, getCacheOption("30 sec"));
+};
 
-export const addUpdateAccountType = pMemoize(async (accountType: ConfigResource) => {
+export const addUpdateAccountType = async (accountType: ConfigResource) => {
   await configTypeService.addUpdateConfigType(accountType);
-}, getCacheOption("2 sec"));
+};
 
-export const deleteAccountType = pMemoize(async (pymtAccountTypeId: string) => {
+export const deleteAccountType = async (pymtAccountTypeId: string) => {
   await configTypeService.deleteConfigType(pymtAccountTypeId);
-}, getCacheOption("2 sec"));
+};
 
-export const updateAccountTypeStatus = pMemoize(async (categoryStatusData: UpdateConfigStatusResource) => {
+export const updateAccountTypeStatus = async (categoryStatusData: UpdateConfigStatusResource) => {
   await configTypeService.updateConfigTypeStatus(categoryStatusData);
-}, getCacheOption("2 sec"));
+};
 
-const initializePymtAccTypeTags = async () => {
+const initializePymtAccTypeTags = pMemoize(async () => {
   const tagCount = await tagService.getCount();
   if (tagCount > 0) {
     return;
@@ -44,7 +44,7 @@ const initializePymtAccTypeTags = async () => {
 
   const response = await configTypeService.getConfigTags();
   await tagService.updateTags(response);
-};
+}, getCacheOption("2 sec"));
 
 export const getPymtAccTypeTags = async () => {
   const tagList = await tagService.getTags();

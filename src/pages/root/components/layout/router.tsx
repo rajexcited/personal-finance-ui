@@ -29,7 +29,10 @@ import {
     RefundReasonPage,
     refundReasonListActionHandler, refundReasonListLoaderHandler,
     IncomeTypePage,
-    incomeTypeListActionHandler, incomeTypeListLoaderHandler
+    incomeTypeListActionHandler, incomeTypeListLoaderHandler,
+    SharePersonPage,
+    sharePersonListLoaderHandler,
+    sharePersonListActionHandler
 } from "../../../settings";
 import { LoginPage, RequireAuth, SignupPage, LogoutPage } from "../../../auth";
 import { HomePage } from "./home";
@@ -84,6 +87,7 @@ export const router = createBrowserRouter([
                     { path: getShortPath("pymtAccountTypeSettings"), element: <PymtAccountTypePage />, loader: paymentAccountTypeListLoaderHandler, action: pymtAccTypeListActionHandler },
                     { path: getShortPath("refundReasonSettings"), element: <RefundReasonPage />, loader: refundReasonListLoaderHandler, action: refundReasonListActionHandler },
                     { path: getShortPath("incomeTypeSettings"), element: <IncomeTypePage />, loader: incomeTypeListLoaderHandler, action: incomeTypeListActionHandler },
+                    { path: getShortPath("sharePersonSettings"), element: <SharePersonPage />, loader: sharePersonListLoaderHandler, action: sharePersonListActionHandler },
                     { path: getShortPath("profileSettings"), element: <ProfileSettingsPage />, loader: profileDetailsLoaderHandler, action: profileDetailsActionHandler },
                     { path: getShortPath("securitySettings"), element: <SecurityPage />, loader: securityDetailsLoaderHandler, action: securityDetailsActionHandler },
                 ]

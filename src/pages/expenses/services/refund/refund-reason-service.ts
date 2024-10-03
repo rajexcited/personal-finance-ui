@@ -1,4 +1,4 @@
-import pDebounce from "p-debounce";
+import pMemoize from "p-memoize";
 import {
   ConfigTypeService,
   ConfigTypeStatus,
@@ -8,8 +8,8 @@ import {
   DeleteConfigDetailsResource,
   TagsService,
   TagBelongsTo,
+  getCacheOption,
 } from "../../../../shared";
-import ms from "ms";
 
 const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.RefundReason);
 const tagService = TagsService(TagBelongsTo.RefundReasonConfig);
@@ -18,14 +18,14 @@ const tagService = TagsService(TagBelongsTo.RefundReasonConfig);
  *
  * @returns
  */
-const initializeTags = pDebounce(async () => {
+const initializeTags = pMemoize(async () => {
   const tagCount = await tagService.getCount();
   if (tagCount > 0) {
     return;
   }
   const response = await configTypeService.getConfigTags();
   await tagService.updateTags(response);
-}, ms("2 sec"));
+}, getCacheOption("2 sec"));
 
 /**
  * retrives undeleted categories

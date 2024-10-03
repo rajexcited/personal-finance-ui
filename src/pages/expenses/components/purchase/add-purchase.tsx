@@ -68,6 +68,7 @@ export const AddPurchase: FunctionComponent = () => {
                             purchaseTypes={ loaderData.data.purchaseTypes }
                             paymentAccounts={ loaderData.data.paymentAccounts }
                             sourceTags={ loaderData.data.purchaseTags }
+                            sharePersons={ loaderData.data.sharePersons }
                         />
                     </div>
                 </div>

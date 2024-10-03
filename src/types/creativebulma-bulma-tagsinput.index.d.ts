@@ -45,7 +45,7 @@ declare module "@creativebulma/bulma-tagsinput" {
     /**
      * Get items
      */
-    items(): () => any;
+    items: any[];
     source: any;
     container: Element;
     /**

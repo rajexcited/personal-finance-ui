@@ -7,7 +7,7 @@ import { getLogger } from "../../shared";
 import { ExpenseBelongsTo } from "../../pages/expenses/services";
 import { addUpdatePurchase, deletePurchase, getPurchaseDetails, getPurchaseTags } from "../mock-db/purchase-db";
 
-type PurchaseParam = Partial<Record<"status" | "pageNo" | "pageMonths" | "purchasedYear", string[]>>;
+type PurchaseParam = Partial<Record<"status" | "pageNo" | "pageMonths" | "year", string[]>>;
 const _rootLogger = getLogger("mock.api.expenses.purchase", null, null, "DISABLED");
 const rootPath = "/expenses/purchase";
 
@@ -73,27 +73,27 @@ export const MockPurchase = (demoMock: MockAdapter) => {
     }
 
     const params = config.params as PurchaseParam;
-    const missingErrors = missingValidation(params, ["purchasedYear"]);
+    const missingErrors = missingValidation(params, ["year"]);
 
     logger.info("found missingErrors for purchasedYear param =", [...missingErrors]);
     if (missingErrors.length > 0) {
       return responseCreator.toValidationError(missingErrors);
     }
 
-    const dataTypeErrors = validateDataType(params, ["purchasedYear"], "arraynumber");
+    const dataTypeErrors = validateDataType(params, ["year"], "arraynumber");
     logger.info("found dataType arraynumber Errors for purchasedYear param =", [...dataTypeErrors]);
     if (dataTypeErrors.length > 0) {
       return responseCreator.toValidationError(dataTypeErrors);
     }
 
-    const invalidYearValues = params.purchasedYear?.filter((yr) => yr.length !== 4);
+    const invalidYearValues = params.year?.filter((yr) => yr.length !== 4);
     if (invalidYearValues && invalidYearValues.length > 0) {
       logger.info("found invalid purchasedYears =", [...invalidYearValues]);
 
       return responseCreator.toValidationError([{ path: "purchasedYear", message: "incorrect value" }]);
     }
 
-    const purchasedYearParams = [params.purchasedYear].flat().map((yr) => Number(yr));
+    const purchasedYearParams = [params.year].flat().map((yr) => Number(yr));
 
     const responselist = await getPurchaseTags(purchasedYearParams);
 

@@ -12,35 +12,25 @@ export interface CurrencyProfileResource extends ConfigResource {
   };
 }
 
-const CurrencyProfileServiceImpl = () => {
-  const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.CurrencyProfile);
+const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.CurrencyProfile);
 
-  /**
-   * retrives enabled currency profiles
-   * @returns list of currency profile
-   */
-  const getCurrencyProfiles = async () => {
-    const currencyProfiles = await configTypeService.getConfigTypeList([ConfigTypeStatus.Enable]);
-    return currencyProfiles as CurrencyProfileResource[];
-  };
-
-  /**
-   * deletes or archives a category
-   * @param category
-   */
-  const deleteCurrencyProfile = async (currencyProfileId: string) => {
-    await configTypeService.deleteConfigType(currencyProfileId);
-  };
-
-  const updateCurrencyProfileStatus = async (currencyProfileStatusData: UpdateConfigStatusResource) => {
-    await configTypeService.updateConfigTypeStatus(currencyProfileStatusData);
-  };
-
-  return {
-    getCurrencyProfiles,
-    deleteCurrencyProfile,
-    updateCurrencyProfileStatus,
-  };
+/**
+ * retrives enabled currency profiles
+ * @returns list of currency profile
+ */
+export const getCurrencyProfiles = async () => {
+  const currencyProfiles = await configTypeService.getConfigTypeList([ConfigTypeStatus.Enable]);
+  return currencyProfiles as CurrencyProfileResource[];
 };
 
-export default CurrencyProfileServiceImpl;
+/**
+ * deletes or archives a category
+ * @param category
+ */
+export const deleteCurrencyProfile = async (currencyProfileId: string) => {
+  await configTypeService.deleteConfigType(currencyProfileId);
+};
+
+export const updateCurrencyProfileStatus = async (currencyProfileStatusData: UpdateConfigStatusResource) => {
+  await configTypeService.updateConfigTypeStatus(currencyProfileStatusData);
+};

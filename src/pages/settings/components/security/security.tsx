@@ -12,7 +12,7 @@ import { DeleteAccountSection } from "./delete-acc";
 
 
 const defaultUserAction: UserAction = { state: ActionState.NoAction };
-const fcLogger = getLogger("FC.settings.SecurityPage", null, null, "DEBUG");
+const fcLogger = getLogger("FC.settings.SecurityPage", null, null, "DISABLED");
 
 export const SecurityPage: FunctionComponent = () => {
     const loaderData = useLoaderData() as RouteHandlerResponse<UserDetailsResource, null>;

@@ -16,7 +16,7 @@ interface ChangePasswordSectionProps {
     error: string;
 }
 
-const fcLogger = getLogger("FC.settings.security.ChangePasswordSection", null, null, "DEBUG");
+const fcLogger = getLogger("FC.settings.security.ChangePasswordSection", null, null, "DISABLED");
 
 export const ChangePasswordSection: FunctionComponent<ChangePasswordSectionProps> = (props) => {
     const [currentPassword, setCurrentPassword] = useState("");

@@ -1,7 +1,7 @@
 import { ActionFunctionArgs, json, redirect } from "react-router-dom";
 import { getFullPath } from "../../../root";
 import {
-  PurchaseService,
+  purchaseService,
   HttpStatusCode,
   RouteHandlerResponse,
   getLogger,
@@ -12,7 +12,6 @@ import {
 import { ReceiptProps } from "../../../../components/receipt";
 import { uploadReceipts } from "../receipt/upload";
 
-const purchaseService = PurchaseService();
 const rhLogger = getLogger("route.handler.purchase.action", null, null, "DISABLED");
 
 export const purchaseActionHandler = async ({ request }: ActionFunctionArgs) => {
@@ -77,6 +76,7 @@ const purchaseAddUpdateActionHandler = async (request: Request) => {
       items: getFormData(formdata, "items"),
       purchaseTypeId: getFormData(formdata, "purchaseTypeId"),
       purchaseTypeName: getFormData(formdata, "purchaseTypeName"),
+      personIds: getFormData(formdata, "personIds"),
       receipts: uploadReceiptResult,
       auditDetails: { createdOn: new Date(), updatedOn: new Date() },
       belongsTo: ExpenseBelongsTo.Purchase,

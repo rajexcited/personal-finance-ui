@@ -9,12 +9,15 @@ import {
     Input,
     TextArea,
     VerifyIndicator,
-    DropDownItemType
+    DropDownItemType,
+    TagsInputSharePerson,
+    TagObject
 } from "../../../../../components";
 import { PurchaseBreakDown } from "./purchase-breakdown";
 import { ConfigResource, PurchaseFields, PurchaseItemFields, formatTimestamp, getLogger, ExpenseBelongsTo, receiptService } from "../../../services";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../../components/receipt";
 import { PymtAccountFields } from "../../../../pymt-accounts/services";
+import { SharePersonResource } from "../../../../settings/services";
 
 
 export interface PurchaseFormProps {
@@ -25,6 +28,7 @@ export interface PurchaseFormProps {
     purchaseTypes: ConfigResource[];
     paymentAccounts: PymtAccountFields[];
     sourceTags: string[];
+    sharePersons: SharePersonResource[];
 }
 
 const fcLogger = getLogger("FC.PurchaseForm", null, null, "DISABLED");
@@ -42,6 +46,8 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
     const [verifiedDateTime, setVerifiedDateTime] = useState(props.details?.verifiedTimestamp as Date | undefined);
     const [items, setItems] = useState<PurchaseItemFields[]>(props.details?.items || []);
     const [receipts, setReceipts] = useState<ReceiptProps[]>(props.details?.receipts || []);
+    const [selectedSharePersonTagItems, setSelectedSharePersonTagItems] = useState<TagObject[]>([]);
+    const [sourceSharePersonTagItems, setSourceSharePersonTagItems] = useState<TagObject[]>([]);
     const navigate = useNavigate();
 
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = async event => {
@@ -80,7 +86,8 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
             purchaseTypeName: selectedDropdownPurchaseType?.content,
             receipts: datareceipts,
             auditDetails: { createdOn: "", updatedOn: "" },
-            belongsTo: ExpenseBelongsTo.Purchase
+            belongsTo: ExpenseBelongsTo.Purchase,
+            personIds: selectedSharePersonTagItems.map(sspt => sspt.id)
         };
 
         Object.entries(data).forEach((entry) => {
@@ -115,10 +122,13 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
         setDropdownPurchaseTypeItems(myDropdownPurchaseTypeItems);
         logger.info("props.purchaseTypes =", props.purchaseTypes, ", myDropdownPurchaseTypeItems =", myDropdownPurchaseTypeItems, ", props.details?.purchaseTypeId =", props.details?.purchaseTypeId, ", props.details?.purchaseTypeName =", props.details?.purchaseTypeName);
         if (props.details?.purchaseTypeId) {
-            const selectedDropdownPurchaseType: DropDownItemType = {
-                id: props.details.purchaseTypeId,
-                content: props.details.purchaseTypeName || ""
-            };
+            let selectedDropdownPurchaseType = myDropdownPurchaseTypeItems.find(ddprchTyp => ddprchTyp.id === props.details?.purchaseTypeId);
+            if (!selectedDropdownPurchaseType) {
+                selectedDropdownPurchaseType = {
+                    id: props.details.purchaseTypeId,
+                    content: props.details.purchaseTypeName || ""
+                };
+            }
             setSelectedDropdownPurchaseType(selectedDropdownPurchaseType);
             logger.info("selectedDropdownPurchaseType =", selectedDropdownPurchaseType);
         }
@@ -145,6 +155,22 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
             }
             logger.debug("mySelectedPaymentAcc =", mySelectedPaymentAcc);
             setSelectedDropdownPymtAccount(mySelectedPaymentAcc);
+        }
+
+        const mySourceSharePersonTagItems = props.sharePersons.map(sp => {
+            const itm: TagObject = {
+                id: sp.id || "sharepersonIdNeverUsed",
+                displayText: sp.nickName || `${sp.firstName} ${sp.lastName}`,
+                searchText: [sp.nickName || "", sp.firstName, sp.lastName, sp.emailId].join(";")
+            };
+            return itm;
+        });
+        setSourceSharePersonTagItems(mySourceSharePersonTagItems);
+        logger.info("props.sharePersons =", props.sharePersons, ", mySourceSharePersonTagItems =", mySourceSharePersonTagItems, ", props.details?.personIds =", props.details?.personIds);
+        if (props.details && props.details.personIds.length > 0) {
+            const mySelectedSharePersons = mySourceSharePersonTagItems.filter(sspt => props.details?.personIds.includes(sspt.id));
+            setSelectedSharePersonTagItems(mySelectedSharePersons);
+            logger.info("mySelectedSharePersons =", mySelectedSharePersons);
         }
 
         logger.info("props.sourceTags =", props.sourceTags);
@@ -224,12 +250,20 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
                                 selectedItem={ selectedDropdownPurchaseType }
                                 defaultItem={ selectedDropdownPurchaseType }
                             />
-
                         </div>
                     </div>
                     <div className="columns">
                         <div className="column">
-
+                            <TagsInputSharePerson
+                                id="person-tags"
+                                label="Tag Persons: "
+                                defaultValue={ selectedSharePersonTagItems }
+                                placeholder="Tag Person by Name"
+                                onChange={ setSelectedSharePersonTagItems }
+                                key={ "person-tags" }
+                                sourceValues={ sourceSharePersonTagItems }
+                                maxTags={ 10 }
+                            />
                         </div>
                     </div>
                     <div className="columns">

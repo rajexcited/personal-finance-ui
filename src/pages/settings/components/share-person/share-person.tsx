@@ -3,28 +3,34 @@ import ReactMarkdown from "react-markdown";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
 import { faEdit, faEye, faRemove, faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
 import { v4 as uuidv4 } from "uuid";
-import { Animated, ConfirmDialog, List, Switch } from "../../../components";
-import { ActionId, ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, DeleteConfigDetailsResource, RouteHandlerResponse, TypeCategoryAction, UpdateConfigDetailsResource, UpdateConfigStatusResource, getLogger } from "../services";
-import { Control, ListItem } from "../../../components/list";
-import ViewConfig from "./view-config";
-import UpdateConfig, { ConfigInputProps } from "./update-config";
-import { getFullPath } from "../../root";
-import { PurchaseTypeLoaderResource } from "../route-handlers/purchase-type-loader-action";
-import { useAuth } from "../../auth";
-import { ConfigAction } from "../../../shared";
+import { Animated, ConfirmDialog, List, Switch } from "../../../../components";
+import { Control, ListItem } from "../../../../components/list";
+import { getFullPath } from "../../../root";
+import { useAuth } from "../../../auth";
+import { ActionId, ConfigTypeStatus, DeleteSharePersonResource, getLogger, RouteHandlerResponse, SharePersonResource, UpdateSharePersonResource, UpdateSharePersonStatusResource } from "../../services";
+import { SharePersonLoaderResource } from "../../route-handlers/share-person-loader-action";
+import { ConfigAction } from "../../../../shared";
+import { ViewSharePerson } from "./view-share-person";
+import { UpdateSharePerson } from "./update-share-person";
 
 
-const fcLogger = getLogger("FC.settings.PurchaseTypePage", null, null, "DISABLED");
+const fcLogger = getLogger("FC.settings.SharePersonPage", null, null, "DISABLED");
 
-export const PurchaseTypePage: FunctionComponent = () => {
-    const loaderData = useLoaderData() as RouteHandlerResponse<PurchaseTypeLoaderResource, null>;
+interface TypeSharePersonAction {
+    item: SharePersonResource,
+    type: ActionId;
+}
+
+export const SharePersonPage: FunctionComponent = () => {
+    const loaderData = useLoaderData() as RouteHandlerResponse<SharePersonLoaderResource, null>;
     const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
     const [enableFilter, setEnableFilter] = useState(true);
-    const [action, setAction] = useState<TypeCategoryAction>();
+    const [action, setAction] = useState<TypeSharePersonAction>();
     const [toggleUpdate, setToggleUpdate] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const submit = useSubmit();
     const auth = useAuth();
+
 
     useEffect(() => {
         const logger = getLogger("useEffect.dep[loaderData, actionData]", fcLogger);
@@ -39,14 +45,17 @@ export const PurchaseTypePage: FunctionComponent = () => {
         }
     }, [loaderData, actionData]);
 
-    const purchaseTypeItems: ListItem[] = useMemo(() => {
+    const sharePersonItems: ListItem[] = useMemo(() => {
         if (loaderData.type === "success") {
-            const list = loaderData.data.purchaseTypes.map(cfg => ({
-                id: cfg.id,
-                title: cfg.name + " - " + cfg.status,
-                description: cfg.description,
-                status: cfg.status === ConfigTypeStatus.Enable
-            }));
+            const list = loaderData.data.sharePersons.map(sp => {
+                const name = sp.nickName || `${sp.firstName} ${sp.lastName}`;
+                return {
+                    id: sp.id,
+                    title: `${name} - ${sp.status}`,
+                    description: sp.description,
+                    status: sp.status === ConfigTypeStatus.Enable
+                };
+            });
             if (enableFilter) {
                 return list.filter(item => item.status);
             }
@@ -55,7 +64,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
         return [];
     }, [loaderData, enableFilter]);
 
-    const updateAction = (newAction?: TypeCategoryAction) => {
+    const updateAction = (newAction?: TypeSharePersonAction) => {
         setAction(prev => {
             if (newAction && prev?.type !== newAction.type) {
                 setErrorMessage("");
@@ -64,34 +73,37 @@ export const PurchaseTypePage: FunctionComponent = () => {
         });
     };
 
-    const onClickRequestAddPurchaseTypeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    const onClickRequestAddSharePersonHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
-        const defaultAddConfig: ConfigResource = {
-            belongsTo: ConfigTypeBelongsTo.PurchaseType,
+        const defaultAddConfig: SharePersonResource = {
             id: uuidv4(),
             description: "",
-            name: "",
-            value: "",
             status: ConfigTypeStatus.Enable,
             auditDetails: { createdOn: "", updatedOn: "" },
-            tags: []
+            emailId: "",
+            firstName: "",
+            lastName: "",
+            nickName: "",
+            phone: ""
         };
         updateAction({ item: defaultAddConfig, type: ActionId.Add });
     };
-    const onClickRequestUpdatePurchaseTypeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+
+    const onClickRequestUpdateSharePersonHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
         if (action?.item) {
             updateAction({ item: action.item, type: ActionId.Update });
             setToggleUpdate(prev => !prev);
         }
     };
-    const onClickRequestDeletePurchaseTypeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+
+    const onClickRequestDeleteSharePersonHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
         if (action?.item) updateAction({ item: action.item, type: ActionId.Delete });
     };
 
-    const onRequestListControlPurchaseTypeHandler = (item: ListItem, control: Control) => {
-        const cfgitem = loaderData.type === "success" && loaderData.data.purchaseTypes.find(cfg => cfg.id === item.id);
+    const onRequestListControlSharePersonHandler = (item: ListItem, control: Control) => {
+        const cfgitem = loaderData.type === "success" && loaderData.data.sharePersons.find(cfg => cfg.id === item.id);
         if (!cfgitem) return;
 
         if (control.id === ActionId.View) {
@@ -102,13 +114,13 @@ export const PurchaseTypePage: FunctionComponent = () => {
         } else if (control.id === ActionId.Delete) {
             updateAction({ item: cfgitem, type: ActionId.Delete });
         } else if (control.id === ActionId.ToggleEnable) {
-            onAddUpdatePurchaseTypeHandler({
+            onAddUpdateSharePersonHandler({
                 ...cfgitem,
                 status: ConfigTypeStatus.Enable,
                 action: ConfigAction.UpdateStatus
             });
         } else if (control.id === ActionId.ToggleDisable) {
-            onAddUpdatePurchaseTypeHandler({
+            onAddUpdateSharePersonHandler({
                 ...cfgitem,
                 status: ConfigTypeStatus.Disable,
                 action: ConfigAction.UpdateStatus
@@ -118,19 +130,19 @@ export const PurchaseTypePage: FunctionComponent = () => {
 
     const onDeleteConfirmHandler = () => {
         if (action?.item && !auth.readOnly) {
-            const data: DeleteConfigDetailsResource = {
+            const data: DeleteSharePersonResource = {
                 ...action.item,
                 action: ConfigAction.DeleteDetails
             };
             updateAction(undefined);
-            submit(data as any, { method: "delete", action: getFullPath("purchaseTypeSettings"), encType: "application/json" });
+            submit(data as any, { method: "delete", action: getFullPath("sharePersonSettings"), encType: "application/json" });
         }
     };
 
-    const onAddUpdatePurchaseTypeHandler = (details: UpdateConfigDetailsResource | UpdateConfigStatusResource) => {
+    const onAddUpdateSharePersonHandler = (details: UpdateSharePersonResource | UpdateSharePersonStatusResource) => {
         updateAction(undefined);
         if (!auth.readOnly) {
-            submit(details as any, { method: "post", action: getFullPath("purchaseTypeSettings"), encType: "application/json" });
+            submit(details as any, { method: "post", action: getFullPath("sharePersonSettings"), encType: "application/json" });
         }
     };
 
@@ -144,47 +156,33 @@ export const PurchaseTypePage: FunctionComponent = () => {
         controlsInEllipsis.push({ id: ActionId.ToggleDisable, content: "Change to Disable", icon: faToggleOff, isActive: (item: ListItem) => item.status });
     }
 
-    const configInputProps: ConfigInputProps = {
-        name: {
-            idPrefix: "purchase",
-            placeholder: "Enter Purchase Type Name",
-            tooltip: "Purchase Type name by which you can attach the purchase while adding or updating purchase/receipt/bill",
-        },
-
-        description: {
-            idPrefix: "purchase",
-            placeholder: "Enter Desription for Purchase Type",
-        }
-    };
-
-    const purchaseTags = loaderData.type === "success" ? loaderData.data.purchaseTags : [];
 
     return (
         <>
             <div className="columns">
                 <div className="column has-text-centered">
-                    <h1 className="title">List of Purchase Type</h1>
+                    <h1 className="title">List of Persons Sharing</h1>
                 </div>
                 <div className="column"></div>
             </div>
             <div className="columns">
                 <div className="column is-two-fifths">
                     {
-                        purchaseTypeItems.length > 0 &&
+                        sharePersonItems.length > 0 &&
                         <>
 
                             <Switch
                                 initialStatus={ enableFilter }
-                                id="purchaseTypeEnableFilter"
+                                id="sharePersonEnableFilter"
                                 labelWhenOn="Filtered by enabled"
-                                labelWhenOff="All Purchase Types"
+                                labelWhenOff="All Share Persons"
                                 tooltip="Toggle to filter by status enable or show all"
                                 onChange={ setEnableFilter }
                             />
 
                             <List
-                                items={ purchaseTypeItems }
-                                onControlRequest={ onRequestListControlPurchaseTypeHandler }
+                                items={ sharePersonItems }
+                                onControlRequest={ onRequestListControlSharePersonHandler }
                                 controlsInEllipsis={ controlsInEllipsis }
                                 controlsBeforeEllipsis={ controlsBeforeEllipsis }
                             />
@@ -192,8 +190,8 @@ export const PurchaseTypePage: FunctionComponent = () => {
                     }
 
                     {
-                        purchaseTypeItems.length === 0 &&
-                        <span>There are no Purchase Types configured.</span>
+                        sharePersonItems.length === 0 &&
+                        <span>There are no Share Persons configured.</span>
                     }
                 </div>
                 <div className="column">
@@ -204,11 +202,11 @@ export const PurchaseTypePage: FunctionComponent = () => {
                                 {
                                     action && action.type === "view" &&
                                     <>
-                                        <button className="button is-link is-rounded" onClick={ onClickRequestDeletePurchaseTypeHandler }> &nbsp; &nbsp; Delete &nbsp; &nbsp; </button>
-                                        <button className="button is-link is-rounded" onClick={ onClickRequestUpdatePurchaseTypeHandler }> &nbsp; &nbsp; Edit &nbsp; &nbsp; </button>
+                                        <button className="button is-link is-rounded" onClick={ onClickRequestDeleteSharePersonHandler }> &nbsp; &nbsp; Delete &nbsp; &nbsp; </button>
+                                        <button className="button is-link is-rounded" onClick={ onClickRequestUpdateSharePersonHandler }> &nbsp; &nbsp; Edit &nbsp; &nbsp; </button>
                                     </>
                                 }
-                                <button className="button is-link is-rounded" onClick={ onClickRequestAddPurchaseTypeHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
+                                <button className="button is-link is-rounded" onClick={ onClickRequestAddSharePersonHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
                             </div>
                         }
                     </section>
@@ -225,48 +223,42 @@ export const PurchaseTypePage: FunctionComponent = () => {
                         }
                         {
                             action?.type === ActionId.View &&
-                            <ViewConfig details={ action.item } />
+                            <ViewSharePerson details={ action.item } />
                         }
                         {
                             // condition to create new instance 
                             !auth.readOnly && action?.type === ActionId.Update && toggleUpdate &&
-                            <UpdateConfig
+                            <UpdateSharePerson
                                 details={ action.item }
-                                inputProps={ configInputProps }
-                                sourceTags={ purchaseTags }
                                 onCancel={ () => updateAction(undefined) }
-                                onUpdate={ onAddUpdatePurchaseTypeHandler }
+                                onUpdate={ onAddUpdateSharePersonHandler }
                             />
                         }
                         {
                             // condition to create new instance 
                             !auth.readOnly && action?.type === ActionId.Update && !toggleUpdate &&
-                            <UpdateConfig
+                            <UpdateSharePerson
                                 details={ action.item }
-                                inputProps={ configInputProps }
-                                sourceTags={ purchaseTags }
                                 onCancel={ () => updateAction(undefined) }
-                                onUpdate={ onAddUpdatePurchaseTypeHandler }
+                                onUpdate={ onAddUpdateSharePersonHandler }
                             />
                         }
                         {
                             // condition to create new instance 
                             !auth.readOnly && action?.type === ActionId.Add &&
-                            <UpdateConfig
+                            <UpdateSharePerson
                                 details={ action.item }
-                                inputProps={ configInputProps }
-                                sourceTags={ purchaseTags }
                                 onCancel={ () => updateAction(undefined) }
-                                onUpdate={ onAddUpdatePurchaseTypeHandler }
+                                onUpdate={ onAddUpdateSharePersonHandler }
                             />
                         }
                     </section>
                 </div>
             </div>
             <ConfirmDialog
-                id="delete-purchase-type-confirm-dialog"
-                content="Are you sure that you want to delete purchase type?"
-                title="Remove Purchase Type"
+                id="delete-share-person-confirm-dialog"
+                content="Are you sure that you want to delete Share Person?"
+                title="Remove Share Person"
                 open={ action?.type === "delete" }
                 onConfirm={ onDeleteConfirmHandler }
                 onCancel={ () => updateAction(undefined) }

@@ -56,6 +56,7 @@ const init = async () => {
     status: ExpenseStatus.Enable,
     belongsTo: ExpenseBelongsTo.Income,
     incomeTypeName: "salary",
+    personIds: [],
   });
 };
 

@@ -16,7 +16,7 @@ export type TypeCategoryAction = {
 
 export type { CurrencyProfileResource } from "./currency-profile-service";
 
-export { default as CurrencyProfileService } from "./currency-profile-service";
+export * as currencyProfileService from "./currency-profile-service";
 
 export { ConfigTypeBelongsTo, ConfigTypeStatus, getLogger, handleRouteActionError, HttpStatusCode } from "../../../shared";
 
@@ -29,3 +29,12 @@ export type {
 } from "../../../shared";
 
 export { ActionRelation } from "./security-action";
+
+export * as sharePersonService from "./share-person/share-person-service";
+
+export type {
+  SharePersonResource,
+  DeleteSharePersonResource,
+  UpdateSharePersonResource,
+  UpdateSharePersonStatusResource,
+} from "./share-person/field-type";

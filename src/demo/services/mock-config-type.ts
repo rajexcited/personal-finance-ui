@@ -87,7 +87,8 @@ export const MockConfigType = (demoMock: MockAdapter) => {
       belongsTo !== ConfigTypeBelongsTo.PurchaseType &&
       belongsTo !== ConfigTypeBelongsTo.PaymentAccountType &&
       belongsTo !== ConfigTypeBelongsTo.IncomeType &&
-      belongsTo !== ConfigTypeBelongsTo.RefundReason
+      belongsTo !== ConfigTypeBelongsTo.RefundReason &&
+      belongsTo !== ConfigTypeBelongsTo.SharePerson
     ) {
       return responseCreator.toNotFoundError("invalid belongsTo update url");
     }
@@ -142,6 +143,10 @@ export const MockConfigType = (demoMock: MockAdapter) => {
 
   demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType).reply((config) => {
     return addUpdate(ConfigTypeBelongsTo.PaymentAccountType, config);
+  });
+
+  demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.SharePerson).reply((config) => {
+    return addUpdate(ConfigTypeBelongsTo.SharePerson, config);
   });
 
   const getConfigTypeList = async (belongsTo: string, config: AxiosRequestConfig) => {
@@ -246,6 +251,10 @@ export const MockConfigType = (demoMock: MockAdapter) => {
 
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.IncomeType).reply(async (config) => {
     return await getConfigTypeList(ConfigTypeBelongsTo.IncomeType, config);
+  });
+
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.SharePerson).reply(async (config) => {
+    return await getConfigTypeList(ConfigTypeBelongsTo.SharePerson, config);
   });
 
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.CurrencyProfile).reply((config) => {

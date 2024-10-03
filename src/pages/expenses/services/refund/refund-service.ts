@@ -1,4 +1,4 @@
-import pMemoize from "p-memoize";
+import pMemoize, { pMemoizeClear } from "p-memoize";
 import {
   axios,
   convertAuditFieldsToDateInstance,
@@ -18,26 +18,29 @@ import {
   handleAndRethrowServiceError,
   isUuid,
 } from "../../../../shared";
-import { PymtAccountService } from "../../../pymt-accounts";
+import { pymtAccountService } from "../../../pymt-accounts";
 import { ExpenseBelongsTo, ExpenseFields } from "../expense/field-types";
 import { PurchaseRefundFields } from "./field-types";
 import { receiptService } from "../receipt";
 import { CacheAction, ReceiptProps } from "../../../../components/receipt";
 
 const serviceLogger = getLogger("service.expense.refund", null, null, "DISABLED");
-
 const refundDb = new MyLocalDatabase<PurchaseRefundFields>(LocalDBStore.Expense);
-
-const pymtAccService = PymtAccountService();
 const tagService = TagsService(TagBelongsTo.PurchaseRefund);
 
 const rootPath = "/expenses/refund";
+
+let clearExpenseListCache: Function = () => {};
+
+export const setClearExpenseListCacheHandler = (clearCacheFn: Function) => {
+  clearExpenseListCache = clearCacheFn;
+};
 
 const getDefaultPaymentAccounts = async () => {
   const logger = getLogger("getDefaultPaymentAccounts", serviceLogger);
   const startTime = new Date();
 
-  const pymtAccs = await getDefaultIfError(pymtAccService.getPymtAccountList, []);
+  const pymtAccs = await getDefaultIfError(pymtAccountService.getPymtAccountList, []);
 
   logger.info("transformed to pymt acc, ", pymtAccs, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
   return pymtAccs;
@@ -47,7 +50,7 @@ const getPaymentAccount = async (paymentAccId: string) => {
   const logger = getLogger("getPaymentAccount", serviceLogger);
   const startTime = new Date();
 
-  const pymtAcc = await getDefaultIfError(async () => await pymtAccService.getPymtAccount(paymentAccId), null);
+  const pymtAcc = await getDefaultIfError(async () => await pymtAccountService.getPymtAccount(paymentAccId), null);
 
   logger.info("transformed to pymt acc, ", pymtAcc, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
   return pymtAcc;
@@ -184,13 +187,15 @@ export const addUpdateDetails = pMemoize(async (refunddetails: PurchaseRefundFie
     }
 
     await addUpdateDbRefund(response.data, logger);
+    clearExpenseListCache();
+    pMemoizeClear(getDetails);
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
   }
 }, getCacheOption("5 sec"));
 
-export const removeDetails = async (refundId: string) => {
+export const removeDetails = pMemoize(async (refundId: string) => {
   const logger = getLogger("removeDetails", serviceLogger);
 
   try {
@@ -200,11 +205,13 @@ export const removeDetails = async (refundId: string) => {
       await receiptService.cacheReceiptFile(rct, CacheAction.Remove);
     });
     await Promise.all(deletingReceiptPromises);
+    clearExpenseListCache();
+    pMemoizeClear(getDetails);
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
   }
-};
+}, getCacheOption("3 sec"));
 
 export const getTags = () => {
   return tagService.getTags();

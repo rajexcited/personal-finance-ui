@@ -81,6 +81,7 @@ const refundAddUpdateActionHandler = async (request: Request) => {
       purchaseId: getFormData(formdata, "purchaseId"),
       reasonId: getFormData(formdata, "reasonId"),
       reasonValue: getFormData(formdata, "reasonValue"),
+      personIds: getFormData(formdata, "personIds"),
     });
 
     return redirect(getFullPath("expenseJournalRoot"));

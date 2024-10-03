@@ -1,6 +1,7 @@
 import { FunctionComponent, useState } from "react";
 import { ConfigResource, ConfigTypeStatus, UpdateConfigDetailsResource } from "../services";
 import { Input, InputValidators, Switch, TagsInput, TextArea } from "../../../components";
+import { ConfigAction } from "../../../shared";
 
 export type ConfigInputProps = {
     [key in keyof ConfigResource]?: { placeholder?: string; tooltip?: string; idPrefix: string; };
@@ -33,7 +34,7 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
             description,
             status: status ? ConfigTypeStatus.Enable : ConfigTypeStatus.Disable,
             tags,
-            action: "addUpdateDetails"
+            action: ConfigAction.AddUpdateDetails
         };
         props.onUpdate(configData);
     };

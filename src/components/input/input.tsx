@@ -27,7 +27,7 @@ interface BaseInputProps {
 }
 
 interface TextInputProps extends BaseInputProps {
-    type: "text" | "email" | "password";
+    type: "text" | "email" | "password" | "tel";
     size?: number;
     maxlength?: number;
     minlength?: number;
@@ -212,7 +212,7 @@ const Input: FunctionComponent<InputProps> = (props) => {
             </label>
             <div className={ `control ${props.onSubmit ? "is-flex" : ""} ${props.leftIcon ? "has-icons-left" : ""} ${rightIcon ? "has-icons-right" : ""}` }>
                 {
-                    (props.type === "text" || props.type === "email" || props.type === "password") &&
+                    (props.type === "text" || props.type === "email" || props.type === "password" || props.type === "tel") &&
                     <input
                         ref={ inputRef }
                         type={ inputType }

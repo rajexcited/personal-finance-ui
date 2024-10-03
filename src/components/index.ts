@@ -17,3 +17,6 @@ export { default as Switch } from "./switch";
 
 export { DropDown } from "./dropdown";
 export type { DropDownItemType } from "./dropdown";
+
+export { TagsInputSharePerson } from "./tags-input-share-person";
+export type { TagObject } from "./tags-input-share-person";

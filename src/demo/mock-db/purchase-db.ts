@@ -54,6 +54,7 @@ const init = async () => {
     auditDetails: auditData(),
     status: ExpenseStatus.Enable,
     belongsTo: ExpenseBelongsTo.Purchase,
+    personIds: [],
   });
 
   await purchaseDb.addItem({
@@ -70,6 +71,7 @@ const init = async () => {
     auditDetails: auditData(),
     status: ExpenseStatus.Enable,
     belongsTo: ExpenseBelongsTo.Purchase,
+    personIds: [],
     items: [
       {
         id: uuidv4(),

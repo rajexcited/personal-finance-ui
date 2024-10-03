@@ -85,6 +85,7 @@ export const UpdateRefund: FunctionComponent = () => {
                             paymentAccounts={ loaderData.data.paymentAccounts }
                             sourceTags={ loaderData.data.refundTags }
                             reasons={ loaderData.data.refundReasons }
+                            sharePersons={ loaderData.data.sharePersons }
                         />
                     }
                 </div>

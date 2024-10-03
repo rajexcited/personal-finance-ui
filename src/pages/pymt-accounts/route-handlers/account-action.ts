@@ -1,8 +1,6 @@
 import { ActionFunctionArgs, json, redirect } from "react-router-dom";
 import { getFullPath } from "../../root";
-import { getLogger, handleRouteActionError, HttpStatusCode, PymtAccountFields, PymtAccountService, RouteHandlerResponse } from "../services";
-
-const pymtAccountService = PymtAccountService();
+import { getLogger, handleRouteActionError, HttpStatusCode, PymtAccountFields, pymtAccountService, RouteHandlerResponse } from "../services";
 
 export const pymtAccountActionHandler = async ({ request }: ActionFunctionArgs) => {
   if (request.method === "POST") {

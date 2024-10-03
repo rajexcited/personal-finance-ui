@@ -1,4 +1,4 @@
-export { PurchaseTypeService, PurchaseService } from "./purchase";
+export { PurchaseTypeService, purchaseService } from "./purchase";
 export type { PurchaseFields, PurchaseItemFields } from "./purchase";
 
 export * as expenseService from "./expense/expenses-service";

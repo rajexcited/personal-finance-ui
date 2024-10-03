@@ -75,6 +75,7 @@ const incomeAddUpdateActionHandler = async (request: Request) => {
       tags: getFormData(formdata, "tags"),
       incomeTypeId: getFormData(formdata, "incomeTypeId"),
       incomeTypeName: getFormData(formdata, "incomeTypeName"),
+      personIds: getFormData(formdata, "personIds"),
       receipts: uploadReceiptResult,
       auditDetails: { createdOn: new Date(), updatedOn: new Date() },
       belongsTo: ExpenseBelongsTo.Income,

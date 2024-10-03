@@ -14,7 +14,7 @@ interface DeleteAccountSectionProps {
     error: string;
 }
 
-const fcLogger = getLogger("FC.settings.security.DeleteAccountSection", null, null, "DEBUG");
+const fcLogger = getLogger("FC.settings.security.DeleteAccountSection", null, null, "DISABLED");
 
 export const DeleteAccountSection: FunctionComponent<DeleteAccountSectionProps> = (props) => {
     const [password, setPassword] = useState("");

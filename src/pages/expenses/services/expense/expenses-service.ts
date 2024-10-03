@@ -1,4 +1,4 @@
-import pMemoize from "p-memoize";
+import pMemoize, { pMemoizeClear } from "p-memoize";
 import datetime from "date-and-time";
 import {
   axios,
@@ -11,17 +11,16 @@ import {
   handleAndRethrowServiceError,
 } from "../../../../shared";
 import { ExpenseBelongsTo, ExpenseFields, ExpenseStatus } from "./field-types";
-import { PurchaseFields, PurchaseService } from "../purchase";
+import { PurchaseFields, purchaseService } from "../purchase";
 import { refundService } from "../refund";
 import { incomeService } from "../income";
 
 type ExpenseQueryParams = Record<"pageNo" | "status" | "pageMonths" | "belongsTo", string[]>;
 
 const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
-const purchaseService = PurchaseService();
 
 const rootPath = "/expenses";
-const _logger = getLogger("service.expense");
+const _logger = getLogger("service.expense", null, null, "DISABLED");
 
 const getExpenseCount = pMemoize(async (queryParams: ExpenseQueryParams) => {
   const countResponse = await axios.get(`${rootPath}/count`, { params: queryParams });
@@ -117,9 +116,18 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
   } finally {
     logger.info("execution time =", subtractDates(null, startTime).toSeconds(), " sec");
   }
-}, getCacheOption("1 min"));
+}, getCacheOption("3 min"));
 
-export const getPurchaseList = pMemoize(async (pageNo: number, pageMonths: number) => {
+export const getPurchaseList = async (pageNo: number, pageMonths: number) => {
   const list = await getExpenseList(pageNo, ExpenseStatus.Enable, pageMonths, ExpenseBelongsTo.Purchase);
   return list as PurchaseFields[];
-}, getCacheOption("1 min"));
+};
+
+const clearExpenseListCache = () => {
+  pMemoizeClear(getExpenseList);
+  pMemoizeClear(getExpenseCount);
+};
+
+purchaseService.setClearExpenseListCacheHandler(clearExpenseListCache);
+incomeService.setClearExpenseListCacheHandler(clearExpenseListCache);
+refundService.setClearExpenseListCacheHandler(clearExpenseListCache);

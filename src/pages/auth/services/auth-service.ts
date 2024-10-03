@@ -367,6 +367,12 @@ const AuthenticationServiceImpl = () => {
         };
         const response = await axios.delete(`${rootPath}/details`, { headers: { ...data } });
         logger.debug("response =", response);
+        const userSessionDetails = sessionStorage.getItem(authUserSessionKey);
+        if (userSessionDetails) {
+          const resc = JSON.parse(userSessionDetails) as UserDetailsResource;
+          resc.status = UserStatus.DELETED_USER;
+          sessionStorage.setItem(authUserSessionKey, JSON.stringify(resc));
+        }
       } catch (e) {
         const err = e as Error;
         handleRestErrors(err, logger);

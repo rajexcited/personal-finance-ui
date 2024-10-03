@@ -1,4 +1,4 @@
-import pMemoize from "p-memoize";
+import pMemoize, { pMemoizeClear } from "p-memoize";
 import {
   axios,
   convertAuditFieldsToDateInstance,
@@ -19,33 +19,37 @@ import {
   isUuid,
   ConfigTypeStatus,
 } from "../../../../shared";
-import { PymtAccountService } from "../../../pymt-accounts";
+import { pymtAccountService } from "../../../pymt-accounts";
 import { ExpenseBelongsTo, ExpenseFields } from "../expense/field-types";
 import { IncomeFields } from "./field-types";
 import { receiptService } from "../receipt";
 import { CacheAction, ReceiptProps } from "../../../../components/receipt";
 import * as incomeTypeService from "./income-type-service";
 
-const serviceLogger = getLogger("service.expense.income");
+const serviceLogger = getLogger("service.expense.income", null, null, "DISABLED");
 
 const incomeDb = new MyLocalDatabase<IncomeFields>(LocalDBStore.Expense);
-
-const pymtAccService = PymtAccountService();
 const tagService = TagsService(TagBelongsTo.Income);
 
 const rootPath = "/expenses/income";
+
+let clearExpenseListCache: Function = () => {};
+
+export const setClearExpenseListCacheHandler = (clearCacheFn: Function) => {
+  clearExpenseListCache = clearCacheFn;
+};
 
 const updatePaymentAccount = async (incomeDetails: IncomeFields) => {
   let startTime = new Date();
   const logger = getLogger("updatePaymentAccount", serviceLogger);
 
   if (incomeDetails.paymentAccountId && isUuid(incomeDetails.paymentAccountId)) {
-    const paymentAccList = await getDefaultIfError(pymtAccService.getPymtAccountList, []);
+    const paymentAccList = await getDefaultIfError(pymtAccountService.getPymtAccountList, []);
     let matchedPymtAcc = paymentAccList.find((pacc) => pacc.id === incomeDetails.paymentAccountId) || null;
 
     if (!matchedPymtAcc) {
       const paymentAccountId = incomeDetails.paymentAccountId;
-      matchedPymtAcc = await getDefaultIfError(() => pymtAccService.getPymtAccount(paymentAccountId), null);
+      matchedPymtAcc = await getDefaultIfError(() => pymtAccountService.getPymtAccount(paymentAccountId), null);
     }
 
     if (matchedPymtAcc) {
@@ -186,13 +190,15 @@ export const addUpdateDetails = pMemoize(async (incomeDetails: IncomeFields) => 
     }
 
     await addUpdateDbIncome(response.data, logger);
+    clearExpenseListCache();
+    pMemoizeClear(getDetails);
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
   }
 }, getCacheOption("5 sec"));
 
-export const removeDetails = async (incomeId: string) => {
+export const removeDetails = pMemoize(async (incomeId: string) => {
   const logger = getLogger("removeDetails", serviceLogger);
 
   try {
@@ -202,11 +208,13 @@ export const removeDetails = async (incomeId: string) => {
       await receiptService.cacheReceiptFile(rct, CacheAction.Remove);
     });
     await Promise.all(deletingReceiptPromises);
+    clearExpenseListCache();
+    pMemoizeClear(getDetails);
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
   }
-};
+}, getCacheOption("5 sec"));
 
 export const getTags = () => {
   return tagService.getTags();

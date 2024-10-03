@@ -6,11 +6,10 @@ import {
   getLogger,
   handleRouteActionError,
   CurrencyProfileResource,
-  CurrencyProfileService,
+  currencyProfileService,
 } from "../services";
 
 const authenticationService = AuthenticationService();
-const currencyProfileService = CurrencyProfileService();
 
 export interface ProfileDetailsLoaderResource {
   nameDetails: UpdateUserDetailsResource;

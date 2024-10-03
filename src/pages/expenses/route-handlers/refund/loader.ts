@@ -8,15 +8,14 @@ import {
   refundService,
   PurchaseRefundFields,
   refundReasonService,
-  PurchaseService,
+  purchaseService,
   PurchaseFields,
 } from "../../services";
-import { PymtAccountFields, PymtAccountService } from "../../../pymt-accounts/services";
+import { PymtAccountFields, pymtAccountService } from "../../../pymt-accounts/services";
 import { ConfigTypeStatus, InvalidError, isUuid } from "../../../../shared";
+import { SharePersonResource, sharePersonService } from "../../../settings/services";
 
 const rhLogger = getLogger("route.handler.purchase.loader", null, null, "DISABLED");
-const pymtAccountService = PymtAccountService();
-const purchaseService = PurchaseService();
 
 export interface RefundDetailLoaderResource {
   refundDetail?: PurchaseRefundFields;
@@ -24,6 +23,7 @@ export interface RefundDetailLoaderResource {
   paymentAccounts: PymtAccountFields[];
   refundReasons: ConfigResource[];
   refundTags: string[];
+  sharePersons: SharePersonResource[];
 }
 
 export const modifyRefundDetailLoaderHandler = async ({ params }: LoaderFunctionArgs) => {
@@ -39,24 +39,28 @@ export const modifyRefundDetailLoaderHandler = async ({ params }: LoaderFunction
     // this error should never have to handle because it should be thrown by rest api call
     if (!details) throw new NotFoundError("refund details not found");
 
-    let purchaseDetails: PurchaseFields | undefined = undefined;
+    let purchaseDetailsPromise: Promise<PurchaseFields | undefined> = Promise.resolve(undefined);
     if (details.purchaseId) {
-      purchaseDetails = await purchaseService.getPurchase(details.purchaseId);
+      purchaseDetailsPromise = purchaseService.getPurchase(details.purchaseId);
     }
     logger.debug("fetching other info");
-    const reasonList = await refundReasonService.getReasonList(ConfigTypeStatus.Enable);
-    const paymentAccounts = await pymtAccountService.getPymtAccountList();
-    const refundTags = await refundService.getTags();
+    const reasonListPromise = refundReasonService.getReasonList(ConfigTypeStatus.Enable);
+    const paymentAccountsPromise = pymtAccountService.getPymtAccountList();
+    const refundTagsPromise = refundService.getTags();
+    const sharePersonsPromise = sharePersonService.getSharePersonList(ConfigTypeStatus.Enable);
+
+    await Promise.all([purchaseDetailsPromise, reasonListPromise, paymentAccountsPromise, refundTagsPromise, sharePersonsPromise]);
     logger.debug("retrieved all info, now preparing response with all info to send to FC");
 
     const response: RouteHandlerResponse<RefundDetailLoaderResource, null> = {
       type: "success",
       data: {
-        refundDetail: { ...details, purchaseDetails: purchaseDetails },
-        purchaseDetail: purchaseDetails,
-        paymentAccounts,
-        refundReasons: reasonList,
-        refundTags,
+        refundDetail: { ...details, purchaseDetails: await purchaseDetailsPromise },
+        purchaseDetail: await purchaseDetailsPromise,
+        paymentAccounts: await paymentAccountsPromise,
+        refundReasons: await reasonListPromise,
+        refundTags: await refundTagsPromise,
+        sharePersons: await sharePersonsPromise,
       },
     };
     return response;
@@ -71,25 +75,29 @@ export const addRefundDetailLoaderHandler = async ({ params }: LoaderFunctionArg
   try {
     logger.debug("fetching refund details, params =", params);
     const purchaseId = params.purchaseId;
-    let purchaseDetails: PurchaseFields | undefined = undefined;
+    let purchaseDetailsPromise: Promise<PurchaseFields | undefined> = Promise.resolve(undefined);
     if (purchaseId && isUuid(params.purchaseId)) {
-      purchaseDetails = await purchaseService.getPurchase(purchaseId);
+      purchaseDetailsPromise = purchaseService.getPurchase(purchaseId);
     } else if (purchaseId !== "unknown") {
       throw new InvalidError("unable to recognize purchaseId");
     }
 
-    const reasonList = await refundReasonService.getReasonList(ConfigTypeStatus.Enable);
-    const paymentAccounts = await pymtAccountService.getPymtAccountList();
-    const refundTags = await refundService.getTags();
+    const reasonListPromise = refundReasonService.getReasonList(ConfigTypeStatus.Enable);
+    const paymentAccountsPromise = pymtAccountService.getPymtAccountList();
+    const refundTagsPromise = refundService.getTags();
+    const sharePersonsPromise = sharePersonService.getSharePersonList(ConfigTypeStatus.Enable);
+
+    await Promise.all([purchaseDetailsPromise, reasonListPromise, paymentAccountsPromise, refundTagsPromise, sharePersonsPromise]);
 
     const response: RouteHandlerResponse<RefundDetailLoaderResource, null> = {
       type: "success",
       data: {
         refundDetail: undefined,
-        purchaseDetail: purchaseDetails,
-        paymentAccounts,
-        refundReasons: reasonList,
-        refundTags,
+        purchaseDetail: await purchaseDetailsPromise,
+        paymentAccounts: await paymentAccountsPromise,
+        refundReasons: await reasonListPromise,
+        refundTags: await refundTagsPromise,
+        sharePersons: await sharePersonsPromise,
       },
     };
     return response;

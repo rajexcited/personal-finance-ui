@@ -11,6 +11,7 @@ import UpdateConfig, { ConfigInputProps } from "./update-config";
 import { getFullPath } from "../../root";
 import { RefundReasonLoaderResource } from "../route-handlers/refund-reason-loader-action";
 import { useAuth } from "../../auth";
+import { ConfigAction } from "../../../shared";
 
 
 const fcLogger = getLogger("FC.settings.RefundReasonPage", null, null, "DISABLED");
@@ -104,13 +105,13 @@ export const RefundReasonPage: FunctionComponent = () => {
             onAddUpdateRefundReasonHandler({
                 ...cfgitem,
                 status: ConfigTypeStatus.Enable,
-                action: "updateStatus"
+                action: ConfigAction.UpdateStatus
             });
         } else if (control.id === ActionId.ToggleDisable) {
             onAddUpdateRefundReasonHandler({
                 ...cfgitem,
                 status: ConfigTypeStatus.Disable,
-                action: "updateStatus"
+                action: ConfigAction.UpdateStatus
             });
         }
     };
@@ -119,7 +120,7 @@ export const RefundReasonPage: FunctionComponent = () => {
         if (action?.item && !auth.readOnly) {
             const data: DeleteConfigDetailsResource = {
                 ...action.item,
-                action: "deleteDetails"
+                action: ConfigAction.DeleteDetails
             };
             updateAction(undefined);
             submit(data as any, { method: "delete", action: getFullPath("refundReasonSettings"), encType: "application/json" });

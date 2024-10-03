@@ -15,6 +15,7 @@ export {
   ConfigTypeService,
   ConfigTypeStatus,
   ConfigTypeBelongsTo,
+  ConfigAction,
   axios,
 } from "./services";
 

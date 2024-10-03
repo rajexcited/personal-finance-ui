@@ -11,6 +11,7 @@ import UpdateConfig, { ConfigInputProps } from "./update-config";
 import { getFullPath } from "../../root";
 import { IncomeTypeLoaderResource } from "../route-handlers/income-type-loader-action";
 import { useAuth } from "../../auth";
+import { ConfigAction } from "../../../shared";
 
 
 const fcLogger = getLogger("FC.settings.IncomeTypePage", null, null, "DISABLED");
@@ -104,13 +105,13 @@ export const IncomeTypePage: FunctionComponent = () => {
             onAddUpdateIncomeTypeHandler({
                 ...cfgitem,
                 status: ConfigTypeStatus.Enable,
-                action: "updateStatus"
+                action: ConfigAction.UpdateStatus
             });
         } else if (control.id === ActionId.ToggleDisable) {
             onAddUpdateIncomeTypeHandler({
                 ...cfgitem,
                 status: ConfigTypeStatus.Disable,
-                action: "updateStatus"
+                action: ConfigAction.UpdateStatus
             });
         }
     };
@@ -119,7 +120,7 @@ export const IncomeTypePage: FunctionComponent = () => {
         if (action?.item && !auth.readOnly) {
             const data: DeleteConfigDetailsResource = {
                 ...action.item,
-                action: "deleteDetails"
+                action: ConfigAction.DeleteDetails
             };
             updateAction(undefined);
             submit(data as any, { method: "delete", action: getFullPath("incomeTypeSettings"), encType: "application/json" });

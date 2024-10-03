@@ -17,4 +17,5 @@ export interface IncomeFields {
   belongsTo: ExpenseBelongsTo.Income;
   incomeTypeId: string;
   incomeTypeName: string;
+  personIds: string[];
 }

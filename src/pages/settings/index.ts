@@ -17,3 +17,6 @@ export { incomeTypeListActionHandler, incomeTypeListLoaderHandler } from "./rout
 
 export { RefundReasonPage } from "./components/refund-reasons";
 export { refundReasonListActionHandler, refundReasonListLoaderHandler } from "./route-handlers/refund-reason-loader-action";
+
+export { SharePersonPage } from "./components/share-person/share-person";
+export { sharePersonListActionHandler, sharePersonListLoaderHandler } from "./route-handlers/share-person-loader-action";

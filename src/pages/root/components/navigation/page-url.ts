@@ -29,6 +29,7 @@ type RouteId =
   | "pymtAccountTypeSettings"
   | "refundReasonSettings"
   | "incomeTypeSettings"
+  | "sharePersonSettings"
   | "profileSettings"
   | "securitySettings";
 
@@ -107,6 +108,10 @@ const PAGE_URL: Record<RouteId, PageRouteResource> = {
   },
   incomeTypeSettings: {
     shortUrl: "income-type",
+    baseRouteId: "settingsRoot",
+  },
+  sharePersonSettings: {
+    shortUrl: "share-person",
     baseRouteId: "settingsRoot",
   },
   profileSettings: {

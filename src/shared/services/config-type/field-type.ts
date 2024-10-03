@@ -12,9 +12,15 @@ export interface ConfigResource {
   auditDetails: AuditFields;
 }
 
-export type UpdateConfigStatusResource = Pick<ConfigResource, "status" | "id"> & { action: "updateStatus" };
-export type UpdateConfigDetailsResource = ConfigResource & { action: "addUpdateDetails" };
-export type DeleteConfigDetailsResource = ConfigResource & { action: "deleteDetails" };
+export enum ConfigAction {
+  UpdateStatus = "updateStatus",
+  AddUpdateDetails = "addUpdateDetails",
+  DeleteDetails = "deleteDetails",
+}
+
+export type UpdateConfigStatusResource = Pick<ConfigResource, "status" | "id"> & { action: ConfigAction.UpdateStatus };
+export type UpdateConfigDetailsResource = ConfigResource & { action: ConfigAction.AddUpdateDetails };
+export type DeleteConfigDetailsResource = ConfigResource & { action: ConfigAction.DeleteDetails };
 
 export enum ConfigTypeStatus {
   Enable = "enable",
@@ -28,4 +34,5 @@ export enum ConfigTypeBelongsTo {
   PaymentAccountType = "pymt-account-type",
   CurrencyProfile = "currency-profile",
   IncomeType = "income-type",
+  SharePerson = "share-person",
 }

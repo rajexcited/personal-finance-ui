@@ -1,3 +1,4 @@
+import { UserStatus } from "../../pages/auth/services";
 import { formatTimestamp, getLogger } from "../../shared";
 
 const rootLogger = getLogger("mock.service.userDetails", null, null, "DISABLED");
@@ -9,7 +10,7 @@ const UserSessionDetails: UserDataType = {
   emailId: "",
   password: "",
   countryCode: "",
-  status: "active",
+  status: UserStatus.ACTIVE_USER,
 };
 
 export const userSessionDetails = (setter?: Partial<UserDataType>) => {

@@ -20,4 +20,5 @@ export interface PurchaseRefundFields {
   purchaseDetails?: PurchaseFields;
   reasonId: string;
   reasonValue: string;
+  personIds: string[];
 }

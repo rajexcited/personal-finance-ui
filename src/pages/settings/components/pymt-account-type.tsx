@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 import ReactMarkdown from "react-markdown";
 import { PymtAccTypeLoaderResource } from "../route-handlers/pymt-acc-type-loader-action";
 import { useAuth } from "../../auth";
+import { ConfigAction } from "../../../shared";
 
 const fcLogger = getLogger("FC.settings.PymtAccountTypePage", null, null, "DISABLED");
 
@@ -105,13 +106,13 @@ export const PymtAccountTypePage: FunctionComponent = () => {
             onAddUpdatePymtAccTypeHandler({
                 ...cfgitem,
                 status: ConfigTypeStatus.Enable,
-                action: "updateStatus"
+                action: ConfigAction.UpdateStatus
             });
         } else if (control.id === ActionId.ToggleDisable) {
             onAddUpdatePymtAccTypeHandler({
                 ...cfgitem,
                 status: ConfigTypeStatus.Disable,
-                action: "updateStatus"
+                action: ConfigAction.UpdateStatus
             });
         }
     };
@@ -120,7 +121,7 @@ export const PymtAccountTypePage: FunctionComponent = () => {
         if (action?.item && !auth.readOnly) {
             const data: DeleteConfigDetailsResource = {
                 ...action.item,
-                action: "deleteDetails"
+                action: ConfigAction.DeleteDetails
             };
             updateAction(undefined);
             submit(data as any, { method: "delete", action: getFullPath("pymtAccountTypeSettings"), encType: "application/json" });

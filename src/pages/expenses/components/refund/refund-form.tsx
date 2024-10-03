@@ -8,12 +8,15 @@ import {
     DropDown,
     Input,
     TextArea,
-    DropDownItemType
+    DropDownItemType,
+    TagObject,
+    TagsInputSharePerson
 } from "../../../../components";
 import { ExpenseBelongsTo, expenseService, ExpenseStatus, formatTimestamp, getLogger, PurchaseFields, PurchaseRefundFields, receiptService } from "../../services";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../components/receipt";
 import { PymtAccountFields } from "../../../pymt-accounts/services";
 import { ConfigResource, isNotBlank, parseTimestamp } from "../../../../shared";
+import { SharePersonResource } from "../../../settings/services";
 
 
 
@@ -26,6 +29,7 @@ export interface PurchaseRefundFormProps {
     paymentAccounts: PymtAccountFields[];
     sourceTags: string[];
     reasons: ConfigResource[];
+    sharePersons: SharePersonResource[];
 }
 
 const fcLogger = getLogger("FC.PurchaseRefundForm", null, null, "DISABLED");
@@ -74,6 +78,8 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
     const [purchaseListPageNo, setPurchaseListPageNo] = useState<number>(1);
     const [dropdownRefundReasons, setDropdownRefundReasons] = useState<DropDownItemType[]>([]);
     const [selectedDropdownReason, setSelectedDropdownReason] = useState<DropDownItemType>();
+    const [selectedSharePersonTagItems, setSelectedSharePersonTagItems] = useState<TagObject[]>([]);
+    const [sourceSharePersonTagItems, setSourceSharePersonTagItems] = useState<TagObject[]>([]);
     const navigate = useNavigate();
 
 
@@ -156,6 +162,22 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             logger.debug("mySelectedReason =", mySelectedReason);
             setSelectedDropdownReason(mySelectedReason);
         }
+
+        const mySourceSharePersonTagItems = props.sharePersons.map(sp => {
+            const itm: TagObject = {
+                id: sp.id || "sharepersonIdNeverUsed",
+                displayText: sp.nickName || `${sp.firstName} ${sp.lastName}`,
+                searchText: [sp.nickName || "", sp.firstName, sp.lastName, sp.emailId].join(";")
+            };
+            return itm;
+        });
+        setSourceSharePersonTagItems(mySourceSharePersonTagItems);
+        logger.info("props.sharePersons =", props.sharePersons, ", mySourceSharePersonTagItems =", mySourceSharePersonTagItems, ", props.details?.personIds =", props.refundDetails?.personIds);
+        if (props.refundDetails && props.refundDetails.personIds.length > 0) {
+            const mySelectedSharePersons = mySourceSharePersonTagItems.filter(sspt => props.refundDetails?.personIds.includes(sspt.id));
+            setSelectedSharePersonTagItems(mySelectedSharePersons);
+            logger.info("mySelectedSharePersons =", mySelectedSharePersons);
+        }
         logger.debug("props.sourceTags =", props.sourceTags);
 
     }, []);
@@ -205,7 +227,8 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             purchaseId: purchaseDetail?.id,
             purchaseDetails: purchaseDetail,
             reasonId: selectedDropdownReason.id,
-            reasonValue: selectedDropdownReason.content
+            reasonValue: selectedDropdownReason.content,
+            personIds: selectedSharePersonTagItems.map(sspt => sspt.id)
         };
 
         Object.entries(data).forEach((entry) => {
@@ -345,6 +368,20 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                 defaultItem={ selectedDropdownPurchaseDetail }
                                 loadMore={ loadMorePurchaseList }
                                 allowSearch={ true }
+                            />
+                        </div>
+                    </div>
+                    <div className="columns">
+                        <div className="column">
+                            <TagsInputSharePerson
+                                id="person-tags"
+                                label="Tag Persons: "
+                                defaultValue={ selectedSharePersonTagItems }
+                                placeholder="Tag Person by Name"
+                                onChange={ setSelectedSharePersonTagItems }
+                                key={ "person-tags" }
+                                sourceValues={ sourceSharePersonTagItems }
+                                maxTags={ 10 }
                             />
                         </div>
                     </div>

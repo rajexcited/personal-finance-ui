@@ -27,4 +27,16 @@ export const InputValidators = {
       };
     };
   },
+
+  phoneNoValidator: (errorMessage?: string) => {
+    const phoneNoRegex = /^(\+\d{1,2}[\s-])?\d{3}[\s.-]?\d{3}[\s.-]?\d{4}$/;
+    const defaultErrorMessage = "phone number must follow the pattern 222-3333-4444 or +1-222-333-4444";
+
+    return (value: string): InputValidateResponse => {
+      return {
+        isValid: phoneNoRegex.test(value),
+        errorMessage: errorMessage || defaultErrorMessage,
+      };
+    };
+  },
 };

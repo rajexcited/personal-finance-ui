@@ -8,12 +8,15 @@ import {
     DropDown,
     Input,
     TextArea,
-    DropDownItemType
+    DropDownItemType,
+    TagObject,
+    TagsInputSharePerson
 } from "../../../../components";
 import { ExpenseBelongsTo, ExpenseStatus, formatTimestamp, getLogger, IncomeFields, receiptService } from "../../services";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../components/receipt";
 import { PymtAccountFields } from "../../../pymt-accounts/services";
 import { ConfigResource } from "../../../../shared";
+import { SharePersonResource } from "../../../settings/services";
 
 
 
@@ -25,6 +28,7 @@ export interface IncomeFormProps {
     paymentAccounts: PymtAccountFields[];
     sourceTags: string[];
     incomeTypes: ConfigResource[];
+    sharePersons: SharePersonResource[];
 }
 
 const fcLogger = getLogger("FC.IncomeForm", null, null, "DISABLED");
@@ -41,6 +45,8 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
     const [selectedDropdownPymtAccount, setSelectedDropdownPymtAccount] = useState<DropDownItemType>();
     const [dropdownIncomeTypeList, setDropdownIncomeTypeList] = useState<DropDownItemType[]>([]);
     const [selectedDropdownIncomeType, setSelectedDropdownIncomeType] = useState<DropDownItemType>();
+    const [selectedSharePersonTagItems, setSelectedSharePersonTagItems] = useState<TagObject[]>([]);
+    const [sourceSharePersonTagItems, setSourceSharePersonTagItems] = useState<TagObject[]>([]);
     const navigate = useNavigate();
 
 
@@ -91,6 +97,23 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
             logger.debug("mySelectedType =", mySelectedType);
             setSelectedDropdownIncomeType(mySelectedType);
         }
+
+        const mySourceSharePersonTagItems = props.sharePersons.map(sp => {
+            const itm: TagObject = {
+                id: sp.id || "sharepersonIdNeverUsed",
+                displayText: sp.nickName || `${sp.firstName} ${sp.lastName}`,
+                searchText: [sp.nickName || "", sp.firstName, sp.lastName, sp.emailId].join(";")
+            };
+            return itm;
+        });
+        setSourceSharePersonTagItems(mySourceSharePersonTagItems);
+        logger.info("props.sharePersons =", props.sharePersons, ", mySourceSharePersonTagItems =", mySourceSharePersonTagItems, ", props.details?.personIds =", props.incomeDetails?.personIds);
+        if (props.incomeDetails && props.incomeDetails.personIds.length > 0) {
+            const mySelectedSharePersons = mySourceSharePersonTagItems.filter(sspt => props.incomeDetails?.personIds.includes(sspt.id));
+            setSelectedSharePersonTagItems(mySelectedSharePersons);
+            logger.info("mySelectedSharePersons =", mySelectedSharePersons);
+        }
+
         logger.debug("props.sourceTags =", props.sourceTags);
 
     }, []);
@@ -136,7 +159,8 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
             belongsTo: ExpenseBelongsTo.Income,
             status: ExpenseStatus.Enable,
             incomeTypeId: selectedDropdownIncomeType.id,
-            incomeTypeName: selectedDropdownIncomeType.content
+            incomeTypeName: selectedDropdownIncomeType.content,
+            personIds: selectedSharePersonTagItems.map(sspt => sspt.id)
         };
 
         Object.entries(data).forEach((entry) => {
@@ -231,6 +255,20 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
                                 selectedItem={ selectedDropdownIncomeType }
                                 defaultItem={ selectedDropdownIncomeType }
                                 required={ true }
+                            />
+                        </div>
+                    </div>
+                    <div className="columns">
+                        <div className="column">
+                            <TagsInputSharePerson
+                                id="person-tags"
+                                label="Tag Persons: "
+                                defaultValue={ selectedSharePersonTagItems }
+                                placeholder="Tag Person by Name"
+                                onChange={ setSelectedSharePersonTagItems }
+                                key={ "person-tags" }
+                                sourceValues={ sourceSharePersonTagItems }
+                                maxTags={ 10 }
                             />
                         </div>
                     </div>

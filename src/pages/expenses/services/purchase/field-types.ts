@@ -24,4 +24,5 @@ export interface PurchaseFields extends BasePurchaseFields {
   status?: ExpenseStatus;
   auditDetails: AuditFields;
   belongsTo: ExpenseBelongsTo.Purchase;
+  personIds: string[];
 }

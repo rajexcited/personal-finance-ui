@@ -68,6 +68,7 @@ const init = async () => {
     status: ExpenseStatus.Enable,
     belongsTo: ExpenseBelongsTo.PurchaseRefund,
     purchaseId: matchedPurchase.id,
+    personIds: [],
   });
   await refundDb.addItem({
     id: uuidv4(),
@@ -83,6 +84,7 @@ const init = async () => {
     auditDetails: auditData(),
     status: ExpenseStatus.Enable,
     belongsTo: ExpenseBelongsTo.PurchaseRefund,
+    personIds: [],
   });
 };
 

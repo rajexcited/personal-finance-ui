@@ -21,7 +21,7 @@ interface TagResource {
 
 export const TagsService = (belongsTo: TagBelongsTo) => {
   const tagsDb = new MyLocalDatabase<TagResource>(LocalDBStore.Tags);
-  const _logger = getLogger("service.tags");
+  const _logger = getLogger("service.tags", null, null, "DISABLED");
 
   return {
     updateTags: async (tags: string | string[]) => {
