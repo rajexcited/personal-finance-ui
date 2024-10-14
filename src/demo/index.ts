@@ -6,6 +6,7 @@ import { MockExpenses } from "./services/mock-expenses";
 import { MockPurchase } from "./services/mock-purchase";
 import { MockIncome } from "./services/mock-income";
 import { MockRefund } from "./services/mock-refund";
+import { MockStats } from "./services/mock-stats";
 
 MockUser(demoMock);
 MockConfigType(demoMock);
@@ -14,5 +15,6 @@ MockPurchase(demoMock);
 MockIncome(demoMock);
 MockRefund(demoMock);
 MockExpenses(demoMock);
+MockStats(demoMock);
 
 export default demoMock;

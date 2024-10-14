@@ -25,6 +25,7 @@ import { ExpenseBelongsTo, ExpenseFields } from "../expense/field-types";
 import { CacheAction, ReceiptProps } from "../../../../components/receipt";
 import { PurchaseFields, PurchaseItemFields } from "./field-types";
 import { cacheReceiptFile } from "../receipt/receipt-service";
+import { StatBelongsTo, statService } from "../../../home/services";
 
 const purchaseDb = new MyLocalDatabase<PurchaseFields>(LocalDBStore.Expense);
 const purchaseTypeService = PurchaseTypeService();
@@ -193,6 +194,12 @@ export const setClearExpenseListCacheHandler = (clearCache: Function) => {
   clearExpenseListCache();
 };
 
+const clearCache = () => {
+  clearExpenseListCache();
+  pMemoizeClear(getPurchase);
+  statService.clearStatsCache(StatBelongsTo.Purchase);
+};
+
 export const getPurchase = pMemoize(async (purchaseId: string) => {
   const logger = getLogger("getPurchase", _logger);
 
@@ -253,8 +260,7 @@ export const addUpdatePurchase = pMemoize(async (purchase: PurchaseFields) => {
     }
 
     await addUpdateDbPurchase(response.data, logger);
-    clearExpenseListCache();
-    pMemoizeClear(getPurchase);
+    clearCache();
   } catch (e) {
     const err = e as Error;
     handleRestErrors(err, logger);
@@ -273,8 +279,7 @@ export const removePurchase = pMemoize(async (purchaseId: string) => {
       await cacheReceiptFile(rct, CacheAction.Remove);
     });
     await Promise.all(deletingReceiptPromises);
-    clearExpenseListCache();
-    pMemoizeClear(getPurchase);
+    clearCache();
   } catch (e) {
     const err = e as Error;
     handleRestErrors(err, logger);

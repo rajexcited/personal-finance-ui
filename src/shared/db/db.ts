@@ -8,6 +8,7 @@ export enum LocalDBStore {
   PaymentAccount = "pymt-account-store",
   ReceiptFile = "receipt-file-store",
   Tags = "tags-store",
+  Statistics = "statistics-store",
 }
 
 export enum LocalDBStoreIndex {
@@ -112,6 +113,17 @@ const DataBaseConfig: DBType = {
         {
           name: LocalDBStoreIndex.BelongsTo,
           keyPath: "belongsTo",
+        },
+      ],
+    },
+    {
+      name: LocalDBStore.Statistics,
+      expireHoure: 10,
+      keyPath: "id",
+      indexes: [
+        {
+          name: LocalDBStoreIndex.BelongsTo,
+          keyPath: ["belongsTo", "year"],
         },
       ],
     },

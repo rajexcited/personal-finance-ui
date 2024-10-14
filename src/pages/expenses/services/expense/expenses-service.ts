@@ -14,6 +14,7 @@ import { ExpenseBelongsTo, ExpenseFields, ExpenseStatus } from "./field-types";
 import { PurchaseFields, purchaseService } from "../purchase";
 import { refundService } from "../refund";
 import { incomeService } from "../income";
+import { StatBelongsTo, statService } from "../../../home/services";
 
 type ExpenseQueryParams = Record<"pageNo" | "status" | "pageMonths" | "belongsTo", string[]>;
 
@@ -91,6 +92,19 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
 
       apiStartTime = new Date();
       expenses = response.data;
+
+      if (!belongsTo) {
+        statService.clearStatsCache(StatBelongsTo.Purchase);
+        statService.clearStatsCache(StatBelongsTo.Refund);
+        statService.clearStatsCache(StatBelongsTo.Income);
+      } else if (belongsTo === ExpenseBelongsTo.Purchase) {
+        statService.clearStatsCache(StatBelongsTo.Purchase);
+      } else if (belongsTo === ExpenseBelongsTo.PurchaseRefund) {
+        statService.clearStatsCache(StatBelongsTo.Refund);
+      } else {
+        // if (belongsTo === ExpenseBelongsTo.Income)
+        statService.clearStatsCache(StatBelongsTo.Income);
+      }
     }
 
     const promises = expenses.map(async (expense) => {

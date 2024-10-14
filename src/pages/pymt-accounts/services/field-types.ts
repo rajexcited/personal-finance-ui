@@ -3,6 +3,7 @@ import { AuditFields } from "../../../shared";
 export enum PymtAccStatus {
   Enable = "enable",
   Deleted = "deleted",
+  Immutable = "immutable",
 }
 
 export interface PymtAccountFields {

@@ -12,7 +12,7 @@ export enum ExpenseBelongsTo {
   Purchase = "purchase",
   Income = "income",
   // Investment = "investment",
-  PurchaseRefund = "purchase-refund",
+  PurchaseRefund = "refund",
 }
 
 export type ExpenseFields = PurchaseFields | PurchaseRefundFields | IncomeFields;

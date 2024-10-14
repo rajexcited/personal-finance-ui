@@ -2,7 +2,6 @@ import { FunctionComponent } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { getFullPath } from "../../root";
 import { useAuth } from "../../auth";
-import { UserStatus } from "../../auth/services";
 
 
 export const ExpenseJournalPage: FunctionComponent = () => {

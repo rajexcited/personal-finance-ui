@@ -5,7 +5,7 @@ import { getPaymentAccountTypes } from "./config-type-db";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { v4 as uuidv4 } from "uuid";
 
-const rootLogger = getLogger("mock.db.pymtAcc");
+const rootLogger = getLogger("mock.db.pymtAcc", null, null, "DISABLED");
 const pymtAccDb = new MyLocalDatabase<PymtAccountFields>(LocalDBStore.PaymentAccount);
 
 const init = async () => {
@@ -26,7 +26,7 @@ const init = async () => {
     tags: ["cash"],
     description: "my cash, notes or coins",
     auditDetails: auditData(),
-    status: PymtAccStatus.Enable,
+    status: PymtAccStatus.Immutable,
     dropdownTooltip: "",
   });
 
@@ -69,7 +69,7 @@ export const addUpdatePymtAccount = async (data: PymtAccountFields) => {
   if (existingPymtAcc) {
     const updatingPymtAcc: PymtAccountFields = {
       ...data,
-      status: PymtAccStatus.Enable,
+      status: existingPymtAcc.status,
       auditDetails: auditData(existingPymtAcc.auditDetails.createdBy, existingPymtAcc.auditDetails.createdOn),
     };
     await pymtAccDb.addUpdateItem(updatingPymtAcc);
@@ -88,7 +88,7 @@ export const addUpdatePymtAccount = async (data: PymtAccountFields) => {
 export const deletePymtAccount = async (pymtAccountId: string) => {
   const existingPymtAcc = await pymtAccDb.getItem(pymtAccountId);
 
-  if (existingPymtAcc) {
+  if (existingPymtAcc && existingPymtAcc.status === PymtAccStatus.Enable) {
     const deletingPymtAcc: PymtAccountFields = {
       ...existingPymtAcc,
       status: PymtAccStatus.Deleted,
@@ -97,5 +97,5 @@ export const deletePymtAccount = async (pymtAccountId: string) => {
     await pymtAccDb.addUpdateItem(deletingPymtAcc);
     return { deleted: { ...deletingPymtAcc } };
   }
-  return { error: "payment account not found" };
+  return { error: "payment account cannot be deleted" };
 };

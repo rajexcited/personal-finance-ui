@@ -28,6 +28,20 @@ const getDateInstance = (date: string | Date) => {
   return parseTimestamp(date);
 };
 
+export const getExpenseDate = (xpns: ExpenseFields, logger: LoggerBase) => {
+  let xpnsDate: Date;
+  if (xpns.belongsTo === ExpenseBelongsTo.Purchase) {
+    xpnsDate = getDateInstance(xpns.purchasedDate);
+  } else if (xpns.belongsTo === ExpenseBelongsTo.PurchaseRefund) {
+    xpnsDate = getDateInstance(xpns.refundDate);
+  } else {
+    xpnsDate = getDateInstance(xpns.incomeDate);
+  }
+
+  logger.debug("expense id =", xpns.id, ", expenseDate =", xpnsDate);
+  return xpnsDate;
+};
+
 export const getExpenses = async (filters: ExpenseFilter) => {
   const logger = getLogger("getlist", _rootLogger);
 
@@ -56,12 +70,8 @@ export const getExpenses = async (filters: ExpenseFilter) => {
   );
 
   const filteredExpenses = expenses.filter((xpns) => {
-    logger.debug("expense id=", xpns.id, ", updatedOn=", xpns.auditDetails.updatedOn);
-    const updatedOn = getDateInstance(xpns.auditDetails.updatedOn);
-    if (updatedOn >= rangeStartDate && updatedOn <= rangeEndDate) {
-      return true;
-    }
-    return false;
+    const expenseDate = getExpenseDate(xpns, logger);
+    return expenseDate >= rangeStartDate && expenseDate <= rangeEndDate;
   });
 
   logger.debug(

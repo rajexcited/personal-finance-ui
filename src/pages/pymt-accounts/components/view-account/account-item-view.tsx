@@ -1,7 +1,7 @@
 import { faAngleUp, faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useState } from "react";
-import { PymtAccountFields } from "../../services";
+import { PymtAccountFields, PymtAccStatus } from "../../services";
 import { useNavigate } from "react-router-dom";
 import { getFullPath } from "../../../root";
 import { Animated } from "../../../../components";
@@ -13,7 +13,7 @@ export interface AccountItemProps {
     onDeleteRequest (pymtAccountId: string): void;
 }
 
-const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
+export const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
     const [isBodyOpen, setBodyOpen] = useState(false);
     const navigate = useNavigate();
     const auth = useAuth();
@@ -39,17 +39,16 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                 <header className="card-header">
                     <p className="card-header-title">
                         <span className="card-header-icon" onClick={ onClickBodyToggleHandler }>
-                            <span>
-                                { props.details.shortName }
-                            </span>
+                            <span> { props.details.shortName } </span>
                         </span>
                     </p>
                     {
-                        !auth.readOnly &&
-                        <>
-                            <button className="card-header-icon" onClick={ onClickUpdateHandler }>Update</button>
-                            <button className="card-header-icon" onClick={ onClickDeleteHandler }>Delete</button>
-                        </>
+                        !auth.readOnly && [PymtAccStatus.Enable, PymtAccStatus.Immutable].includes(props.details.status) &&
+                        <button className="card-header-icon" onClick={ onClickUpdateHandler }>Update</button>
+                    }
+                    {
+                        !auth.readOnly && props.details.status === PymtAccStatus.Enable &&
+                        <button className="card-header-icon" onClick={ onClickDeleteHandler }>Delete</button>
                     }
                     <button className="card-header-icon" aria-label="expand breakdown" onClick={ onClickBodyToggleHandler }>
                         <span className="icon">
@@ -80,15 +79,16 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                                     <div className="tags">
                                         {
                                             props.details.tags &&
-                                            props.details.tags.map(
-                                                tag => <span
+                                            props.details.tags.map(tag =>
+                                                <span
                                                     className="tag is-link"
                                                     key={ tag + "-tag-key" }
-                                                >{ tag }</span>
+                                                >
+                                                    { tag }
+                                                </span>
                                             )
                                         }
                                     </div>
-
                                 </div>
                                 <div className="column">&nbsp;</div>
                             </div>
@@ -103,9 +103,7 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                     <footer className="card-footer is-active"> </footer>
                 </Animated>
             </div>
-
         </section>
     );
 };
 
-export default AccountItemCard;

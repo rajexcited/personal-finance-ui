@@ -23,6 +23,7 @@ import { ExpenseBelongsTo, ExpenseFields } from "../expense/field-types";
 import { PurchaseRefundFields } from "./field-types";
 import { receiptService } from "../receipt";
 import { CacheAction, ReceiptProps } from "../../../../components/receipt";
+import { StatBelongsTo, statService } from "../../../home/services";
 
 const serviceLogger = getLogger("service.expense.refund", null, null, "DISABLED");
 const refundDb = new MyLocalDatabase<PurchaseRefundFields>(LocalDBStore.Expense);
@@ -34,6 +35,12 @@ let clearExpenseListCache: Function = () => {};
 
 export const setClearExpenseListCacheHandler = (clearCacheFn: Function) => {
   clearExpenseListCache = clearCacheFn;
+};
+
+const clearCache = () => {
+  clearExpenseListCache();
+  statService.clearStatsCache(StatBelongsTo.Refund);
+  pMemoizeClear(getDetails);
 };
 
 const getDefaultPaymentAccounts = async () => {
@@ -187,8 +194,7 @@ export const addUpdateDetails = pMemoize(async (refunddetails: PurchaseRefundFie
     }
 
     await addUpdateDbRefund(response.data, logger);
-    clearExpenseListCache();
-    pMemoizeClear(getDetails);
+    clearCache();
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
@@ -205,8 +211,7 @@ export const removeDetails = pMemoize(async (refundId: string) => {
       await receiptService.cacheReceiptFile(rct, CacheAction.Remove);
     });
     await Promise.all(deletingReceiptPromises);
-    clearExpenseListCache();
-    pMemoizeClear(getDetails);
+    clearCache();
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");

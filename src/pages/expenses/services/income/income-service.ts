@@ -25,6 +25,7 @@ import { IncomeFields } from "./field-types";
 import { receiptService } from "../receipt";
 import { CacheAction, ReceiptProps } from "../../../../components/receipt";
 import * as incomeTypeService from "./income-type-service";
+import { StatBelongsTo, statService } from "../../../home/services";
 
 const serviceLogger = getLogger("service.expense.income", null, null, "DISABLED");
 
@@ -37,6 +38,12 @@ let clearExpenseListCache: Function = () => {};
 
 export const setClearExpenseListCacheHandler = (clearCacheFn: Function) => {
   clearExpenseListCache = clearCacheFn;
+};
+
+const clearCache = () => {
+  clearExpenseListCache();
+  statService.clearStatsCache(StatBelongsTo.Income);
+  pMemoizeClear(getDetails);
 };
 
 const updatePaymentAccount = async (incomeDetails: IncomeFields) => {
@@ -190,8 +197,7 @@ export const addUpdateDetails = pMemoize(async (incomeDetails: IncomeFields) => 
     }
 
     await addUpdateDbIncome(response.data, logger);
-    clearExpenseListCache();
-    pMemoizeClear(getDetails);
+    clearCache();
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
@@ -208,8 +214,7 @@ export const removeDetails = pMemoize(async (incomeId: string) => {
       await receiptService.cacheReceiptFile(rct, CacheAction.Remove);
     });
     await Promise.all(deletingReceiptPromises);
-    clearExpenseListCache();
-    pMemoizeClear(getDetails);
+    clearCache();
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");

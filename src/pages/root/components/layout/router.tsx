@@ -35,7 +35,7 @@ import {
     sharePersonListActionHandler
 } from "../../../settings";
 import { LoginPage, RequireAuth, SignupPage, LogoutPage } from "../../../auth";
-import { HomePage } from "./home";
+import { HomePage, homepageDetailsLoaderHandler } from "../../../home";
 import { getLogger } from "../../services";
 import { AddIncome, AddRefund, UpdateIncome, UpdateRefund } from "../../../expenses/components";
 import { addIncomeDetailLoaderHandler, incomeActionHandler, modifyIncomeDetailLoaderHandler } from "../../../expenses/route-handlers";
@@ -50,7 +50,7 @@ export const router = createBrowserRouter([
         element: <RootLayout />,
         errorElement: <ErrorPage />,
         children: [
-            { index: true, element: <HomePage /> },
+            { index: true, element: <HomePage />, loader: homepageDetailsLoaderHandler },
             { path: getShortPath("loginPage"), element: <LoginPage /> },
             { path: getShortPath("signupPage"), element: <SignupPage /> },
             { path: getShortPath("logoutPage"), element: <LogoutPage /> },
