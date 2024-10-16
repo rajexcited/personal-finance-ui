@@ -1,10 +1,12 @@
 import { FunctionComponent, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLoaderData, useNavigate } from "react-router-dom";
 import { faEnvelope, faLock, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ReactMarkdown from "react-markdown";
 import { Animated, DropDown, DropDownItemType, Input, InputValidateResponse, InputValidators, LoadSpinner } from "../../../components";
 import useAuth from "../hooks/use-auth";
+import { RouteHandlerResponse } from "../../../shared";
+import { SignupDetailsLoaderResource } from "../route-handlers/signup-loader";
 
 
 const SignupPage: FunctionComponent = () => {
@@ -18,6 +20,7 @@ const SignupPage: FunctionComponent = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [signupComplete, setSignupComplete] = useState(false);
+    const loaderData = useLoaderData() as RouteHandlerResponse<SignupDetailsLoaderResource, null>;
 
     const navigate = useNavigate();
     const auth = useAuth();
@@ -26,8 +29,15 @@ const SignupPage: FunctionComponent = () => {
         if (auth.userDetails.isAuthenticated) {
             setErrorMessage("You are already logged in, so cannot sing up");
         }
-        setCountries([{ id: "USA", content: "United States" }]);
     }, []);
+
+    useEffect(() => {
+        if (loaderData.data) {
+            const ddCountryList: DropDownItemType[] = loaderData.data.countryList.map(cntry => ({ id: cntry.code, content: cntry.name }));
+            setCountries(ddCountryList);
+            setSelectedCountry(prev => prev || ddCountryList[0]);
+        }
+    }, [loaderData]);
 
     useEffect(() => {
         if (!signupComplete) return;

@@ -1,4 +1,4 @@
-import { AuthenticationService } from "../../auth";
+import { authService } from "../../auth";
 import { getLogger, handleRouteActionError, RouteHandlerResponse, statService } from "../services";
 import { StatsExpenseResource } from "../services/field-types";
 
@@ -8,7 +8,6 @@ export interface HomepageDetailLoaderResource {
   stats: StatsExpenseResource[];
 }
 
-const authService = AuthenticationService();
 export const homepageDetailsLoaderHandler = async () => {
   const logger = getLogger("homepageDetailsLoaderHandler", rhLogger);
   try {

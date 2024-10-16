@@ -18,4 +18,5 @@ export interface IncomeFields {
   incomeTypeId: string;
   incomeTypeName: string;
   personIds: string[];
+  currencyProfileId: string;
 }

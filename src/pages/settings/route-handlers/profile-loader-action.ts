@@ -1,5 +1,5 @@
 import { ActionFunctionArgs, json } from "react-router-dom";
-import { AuthenticationService, UpdateUserDetailsResource } from "../../auth";
+import { authService, UpdateUserDetailsResource } from "../../auth";
 import {
   HttpStatusCode,
   RouteHandlerResponse,
@@ -9,8 +9,6 @@ import {
   currencyProfileService,
 } from "../services";
 
-const authenticationService = AuthenticationService();
-
 export interface ProfileDetailsLoaderResource {
   nameDetails: UpdateUserDetailsResource;
   currencyProfiles: CurrencyProfileResource[];
@@ -19,7 +17,7 @@ export interface ProfileDetailsLoaderResource {
 export const profileDetailsLoaderHandler = async () => {
   const logger = getLogger("route.profileDetailsLoaderHandler");
   try {
-    const userDetails = await authenticationService.getUserDetails();
+    const userDetails = await authService.getUserDetails();
     const currencyProfiles = await currencyProfileService.getCurrencyProfiles();
     const response: RouteHandlerResponse<ProfileDetailsLoaderResource, null> = {
       type: "success",
@@ -58,7 +56,7 @@ export const profileDetailsActionHandler = async ({ request }: ActionFunctionArg
 const nameChangedActionHandler = async (request: Request, data: UpdateUserDetailsResource) => {
   const logger = getLogger("route.nameChangedActionHandler");
   try {
-    await authenticationService.updateName(data);
+    await authService.updateName(data);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
       data: "name of user is updated",

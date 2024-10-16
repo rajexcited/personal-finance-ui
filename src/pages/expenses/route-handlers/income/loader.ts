@@ -11,7 +11,7 @@ import {
 } from "../../services";
 import { PymtAccountFields, pymtAccountService } from "../../../pymt-accounts/services";
 import { ConfigTypeStatus } from "../../../../shared";
-import { SharePersonResource, sharePersonService } from "../../../settings/services";
+import { CurrencyProfileResource, currencyProfileService, SharePersonResource, sharePersonService } from "../../../settings/services";
 
 const rhLogger = getLogger("route.handler.income.loader", null, null, "DISABLED");
 
@@ -21,10 +21,12 @@ export interface IncomeDetailLoaderResource {
   incomeTypes: ConfigResource[];
   incomeTags: string[];
   sharePersons: SharePersonResource[];
+  currencyProfiles: CurrencyProfileResource[];
 }
 
 export const modifyIncomeDetailLoaderHandler = async ({ params }: LoaderFunctionArgs) => {
   const logger = getLogger("modifyIncomeDetailLoaderHandler", rhLogger);
+
   try {
     logger.debug("fetching income details, params =", params);
     const details = await incomeService.getDetails(params.incomeId as string);
@@ -37,8 +39,9 @@ export const modifyIncomeDetailLoaderHandler = async ({ params }: LoaderFunction
     const paymentAccountsPromise = pymtAccountService.getPymtAccountList();
     const incomeTagsPromise = incomeService.getTags();
     const sharePersonsPromise = sharePersonService.getSharePersonList(ConfigTypeStatus.Enable);
+    const currencyProfilePromise = currencyProfileService.getCurrencyProfiles();
 
-    await Promise.all([incomeTypesPromise, paymentAccountsPromise, incomeTagsPromise, sharePersonsPromise]);
+    await Promise.all([incomeTypesPromise, paymentAccountsPromise, incomeTagsPromise, sharePersonsPromise, currencyProfilePromise]);
     logger.debug("retrieved all info, now preparing response with all info to send to FC");
 
     const response: RouteHandlerResponse<IncomeDetailLoaderResource, null> = {
@@ -49,6 +52,7 @@ export const modifyIncomeDetailLoaderHandler = async ({ params }: LoaderFunction
         incomeTypes: await incomeTypesPromise,
         incomeTags: await incomeTagsPromise,
         sharePersons: await sharePersonsPromise,
+        currencyProfiles: await currencyProfilePromise,
       },
     };
     return response;
@@ -65,7 +69,8 @@ export const addIncomeDetailLoaderHandler = async () => {
     const paymentAccountsPromise = pymtAccountService.getPymtAccountList();
     const incomeTagsPromise = incomeService.getTags();
     const sharePersonsPromise = sharePersonService.getSharePersonList(ConfigTypeStatus.Enable);
-    await Promise.all([incomeTypesPromise, paymentAccountsPromise, incomeTagsPromise, sharePersonsPromise]);
+    const currencyProfilePromise = currencyProfileService.getCurrencyProfiles();
+    await Promise.all([incomeTypesPromise, paymentAccountsPromise, incomeTagsPromise, sharePersonsPromise, currencyProfilePromise]);
 
     const response: RouteHandlerResponse<IncomeDetailLoaderResource, null> = {
       type: "success",
@@ -74,6 +79,7 @@ export const addIncomeDetailLoaderHandler = async () => {
         incomeTypes: await incomeTypesPromise,
         incomeTags: await incomeTagsPromise,
         sharePersons: await sharePersonsPromise,
+        currencyProfiles: await currencyProfilePromise,
       },
     };
     return response;

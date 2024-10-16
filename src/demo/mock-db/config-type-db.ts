@@ -1,3 +1,4 @@
+import ms from "ms";
 import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, getLogger } from "../../shared";
 import { auditData } from "../services/userDetails";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
@@ -143,8 +144,32 @@ const initializeIncomeTypes = async () => {
   }
 };
 
+const initializeCurrencyProfile = async () => {
+  const currencyProfiles = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ConfigTypeBelongsTo.CurrencyProfile);
+  if (currencyProfiles.length === 0) {
+    const defaultCurrencyProfile: ConfigResource = {
+      belongsTo: ConfigTypeBelongsTo.CurrencyProfile,
+      id: uuidv4(),
+      name: "USA",
+      value: "USD",
+      status: ConfigTypeStatus.Enable,
+      tags: [],
+      description: "currency profile for country, United States of America and currency, Dollar",
+      auditDetails: auditData(),
+    };
+
+    await configTypeDb.addItem(defaultCurrencyProfile);
+  }
+};
+
 const init = async () => {
-  await Promise.all([initializePurchaseTypes(), initializePymtAccTypes(), initializeRefundReasons(), initializeIncomeTypes()]);
+  await Promise.all([
+    initializePurchaseTypes(),
+    initializePymtAccTypes(),
+    initializeRefundReasons(),
+    initializeIncomeTypes(),
+    initializeCurrencyProfile(),
+  ]);
 };
 
 await init();
@@ -162,20 +187,42 @@ export const getConfigTypeDetails = async (belongsTo: string, configId: string) 
   return { get: configItem };
 };
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const getConfigTypesWithRetry = async (belongsTo: string) => {
+  let retryCount = 3;
+  let result;
+  do {
+    result = await getConfigTypes(belongsTo);
+    if (result.list.length === 0) {
+      await sleep(ms("1 sec"));
+      retryCount--;
+    } else {
+      retryCount = 0;
+    }
+  } while (retryCount > 0);
+
+  return result;
+};
+
 export const getPaymentAccountTypes = async () => {
-  return await getConfigTypes(ConfigTypeBelongsTo.PaymentAccountType);
+  return await getConfigTypesWithRetry(ConfigTypeBelongsTo.PaymentAccountType);
 };
 
 export const getPurchaseTypes = async () => {
-  return await getConfigTypes(ConfigTypeBelongsTo.PurchaseType);
+  return await getConfigTypesWithRetry(ConfigTypeBelongsTo.PurchaseType);
 };
 
 export const getRefundReasons = async () => {
-  return await getConfigTypes(ConfigTypeBelongsTo.RefundReason);
+  return await getConfigTypesWithRetry(ConfigTypeBelongsTo.RefundReason);
 };
 
 export const getIncomeTypes = async () => {
-  return await getConfigTypes(ConfigTypeBelongsTo.IncomeType);
+  return await getConfigTypesWithRetry(ConfigTypeBelongsTo.IncomeType);
+};
+
+export const getDefaultCurrencyProfileId = async () => {
+  const configResults = await getConfigTypesWithRetry(ConfigTypeBelongsTo.CurrencyProfile);
+  return configResults.list[0].id;
 };
 
 export const addUpdateConfigType = async (data: ConfigResource) => {

@@ -39,7 +39,9 @@ export {
   ObjectDeepDifference,
   InvalidError,
   getCacheOption,
+  pMemoizeSync,
   handleAndRethrowServiceError,
   isUuid,
 } from "./utils";
+
 export type { RouteHandlerResponse } from "./utils";

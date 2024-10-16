@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import datetime from "date-and-time";
 import { ExpenseStatus } from "../../pages/expenses";
-import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDate, getLogger } from "../../shared";
+import { ConfigTypeBelongsTo, LoggerBase, ObjectDeepDifference, formatTimestamp, getDate, getLogger } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { auditData } from "../services/userDetails";
 import { deleteReceiptFileData, updateRefundIdForReceipt } from "./receipts-db";
@@ -9,7 +9,7 @@ import { getPymtAccountList } from "./pymt-acc-db";
 import { ExpenseBelongsTo, PurchaseFields, PurchaseItemFields, PurchaseRefundFields } from "../../pages/expenses/services";
 import { ReceiptProps } from "../../components/receipt";
 import { JSONObject } from "../../shared/utils/deep-obj-difference";
-import { getRefundReasons } from "./config-type-db";
+import { getConfigTypes, getDefaultCurrencyProfileId, getRefundReasons } from "./config-type-db";
 import ms from "ms";
 import { ExpenseFilter } from "./expense-db";
 
@@ -53,6 +53,8 @@ const init = async () => {
   } while (matchedPurchase === undefined);
   const matchedPurchedItem = matchedPurchase.items?.find((prchitm) => prchitm.tags.includes("utensil")) as PurchaseItemFields;
 
+  const currencyProfileId = await getDefaultCurrencyProfileId();
+
   await refundDb.addItem({
     id: uuidv4(),
     billName: "returning " + matchedPurchedItem.billName,
@@ -69,6 +71,7 @@ const init = async () => {
     belongsTo: ExpenseBelongsTo.PurchaseRefund,
     purchaseId: matchedPurchase.id,
     personIds: [],
+    currencyProfileId: currencyProfileId,
   });
   await refundDb.addItem({
     id: uuidv4(),
@@ -85,6 +88,7 @@ const init = async () => {
     status: ExpenseStatus.Enable,
     belongsTo: ExpenseBelongsTo.PurchaseRefund,
     personIds: [],
+    currencyProfileId: currencyProfileId,
   });
 };
 
@@ -186,6 +190,7 @@ export const addUpdateRefund = async (data: PurchaseRefundFields) => {
       status: ExpenseStatus.Enable,
       receipts: receiptResult.list || [],
       auditDetails: auditData(existingRefund.auditDetails.createdBy, existingRefund.auditDetails.createdOn),
+      currencyProfileId: await getDefaultCurrencyProfileId(),
     };
 
     delete updatedRefund.paymentAccountName;
@@ -204,6 +209,7 @@ export const addUpdateRefund = async (data: PurchaseRefundFields) => {
     status: ExpenseStatus.Enable,
     receipts: data.receipts.map((r) => ({ ...r, id: uuidv4(), relationId: "", url: "" })),
     auditDetails: auditData(),
+    currencyProfileId: await getDefaultCurrencyProfileId(),
   };
 
   await refundDb.addUpdateItem(addedRefund);

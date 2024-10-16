@@ -80,6 +80,7 @@ const incomeAddUpdateActionHandler = async (request: Request) => {
       auditDetails: { createdOn: new Date(), updatedOn: new Date() },
       belongsTo: ExpenseBelongsTo.Income,
       status: ExpenseStatus.Enable,
+      currencyProfileId: getFormData(formdata, "currencyProfileId"),
     });
 
     return redirect(getFullPath("expenseJournalRoot"));

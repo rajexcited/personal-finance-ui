@@ -16,7 +16,7 @@ import { ExpenseBelongsTo, ExpenseStatus, formatTimestamp, getLogger, IncomeFiel
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../components/receipt";
 import { PymtAccountFields } from "../../../pymt-accounts/services";
 import { ConfigResource } from "../../../../shared";
-import { SharePersonResource } from "../../../settings/services";
+import { CurrencyProfileResource, SharePersonResource } from "../../../settings/services";
 
 
 
@@ -29,6 +29,7 @@ export interface IncomeFormProps {
     sourceTags: string[];
     incomeTypes: ConfigResource[];
     sharePersons: SharePersonResource[];
+    currencyProfiles: CurrencyProfileResource[];
 }
 
 const fcLogger = getLogger("FC.IncomeForm", null, null, "DISABLED");
@@ -47,6 +48,7 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
     const [selectedDropdownIncomeType, setSelectedDropdownIncomeType] = useState<DropDownItemType>();
     const [selectedSharePersonTagItems, setSelectedSharePersonTagItems] = useState<TagObject[]>([]);
     const [sourceSharePersonTagItems, setSourceSharePersonTagItems] = useState<TagObject[]>([]);
+    const [defaultCurrencyProfile, setDefaultCurrencyProfile] = useState<CurrencyProfileResource>(props.currencyProfiles[0]);
     const navigate = useNavigate();
 
 
@@ -160,7 +162,8 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
             status: ExpenseStatus.Enable,
             incomeTypeId: selectedDropdownIncomeType.id,
             incomeTypeName: selectedDropdownIncomeType.content,
-            personIds: selectedSharePersonTagItems.map(sspt => sspt.id)
+            personIds: selectedSharePersonTagItems.map(sspt => sspt.id),
+            currencyProfileId: defaultCurrencyProfile.id
         };
 
         Object.entries(data).forEach((entry) => {
@@ -214,6 +217,15 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
                         </div>
                     </div>
                     <div className="columns">
+                        <div className="column is-narrow">
+                            <p className="field">&nbsp;</p>
+                            <p className="field">
+                                <span className="tag is-link-is-light">{ defaultCurrencyProfile.name }</span>
+                            </p>
+                            <p className="field">
+                                <span className="tag is-link-is-light">{ defaultCurrencyProfile.value }</span>
+                            </p>
+                        </div>
                         <div className="column">
                             <Input
                                 id="income-amount"

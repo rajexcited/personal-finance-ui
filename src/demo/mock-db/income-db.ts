@@ -8,7 +8,7 @@ import { getPymtAccountList } from "./pymt-acc-db";
 import { ExpenseBelongsTo, IncomeFields } from "../../pages/expenses/services";
 import { ReceiptProps } from "../../components/receipt";
 import { JSONObject } from "../../shared/utils/deep-obj-difference";
-import { getIncomeTypes } from "./config-type-db";
+import { getDefaultCurrencyProfileId, getIncomeTypes } from "./config-type-db";
 
 const incomeDb = new MyLocalDatabase<IncomeFields>(LocalDBStore.Expense);
 const _rootLogger = getLogger("mock.db.expense.income", null, null, "DISABLED");
@@ -41,6 +41,8 @@ const init = async () => {
     return;
   }
 
+  const currencyProfileId = await getDefaultCurrencyProfileId();
+
   logger.debug("creating sample expenses");
   await incomeDb.addItem({
     id: uuidv4(),
@@ -57,6 +59,7 @@ const init = async () => {
     belongsTo: ExpenseBelongsTo.Income,
     incomeTypeName: "salary",
     personIds: [],
+    currencyProfileId: currencyProfileId,
   });
 };
 
@@ -156,6 +159,7 @@ export const addUpdateIncome = async (data: IncomeFields) => {
       status: ExpenseStatus.Enable,
       receipts: receiptResult.list || [],
       auditDetails: auditData(existingIncome.auditDetails.createdBy, existingIncome.auditDetails.createdOn),
+      currencyProfileId: await getDefaultCurrencyProfileId(),
     };
 
     delete updatedIncome.paymentAccountName;
@@ -174,6 +178,7 @@ export const addUpdateIncome = async (data: IncomeFields) => {
     status: ExpenseStatus.Enable,
     receipts: data.receipts.map((r) => ({ ...r, id: uuidv4(), relationId: "", url: "" })),
     auditDetails: auditData(),
+    currencyProfileId: await getDefaultCurrencyProfileId(),
   };
 
   await incomeDb.addUpdateItem(addedIncome);

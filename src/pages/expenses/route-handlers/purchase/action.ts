@@ -80,6 +80,7 @@ const purchaseAddUpdateActionHandler = async (request: Request) => {
       receipts: uploadReceiptResult,
       auditDetails: { createdOn: new Date(), updatedOn: new Date() },
       belongsTo: ExpenseBelongsTo.Purchase,
+      currencyProfileId: getFormData(formdata, "currencyProfileId"),
     });
 
     return redirect(getFullPath("expenseJournalRoot"));

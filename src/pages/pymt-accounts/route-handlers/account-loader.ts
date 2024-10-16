@@ -8,11 +8,13 @@ import {
   getLogger,
   handleRouteActionError,
 } from "../services";
+import { CurrencyProfileResource, currencyProfileService } from "../../settings/services";
 
 export interface PymtAccountDetailLoaderResource {
   pymtAccountDetail: PymtAccountFields | null;
   categoryTypes: ConfigResource[];
   pymtAccountTags: string[];
+  currencyProfiles: CurrencyProfileResource[];
 }
 
 export const pymtAccountListLoaderHandler = async () => {
@@ -36,15 +38,19 @@ export const pymtAccountDetailLoaderHandler = async ({ params }: LoaderFunctionA
   try {
     const pymtAccountDetail = await pymtAccountService.getPymtAccount(params.accountId as string);
     if (!pymtAccountDetail) throw Error("account details not found");
-    const pymtAccountTags = await pymtAccountService.getPymtAccountTags();
-    const categoryTypes = await pymtAccountService.getPymtAccountTypes();
+    const pymtAccountTagsPromise = pymtAccountService.getPymtAccountTags();
+    const categoryTypesPromise = pymtAccountService.getPymtAccountTypes();
+    const currencyProfilePromise = currencyProfileService.getCurrencyProfiles();
+
+    await Promise.all([pymtAccountTagsPromise, categoryTypesPromise, currencyProfilePromise]);
 
     const response: RouteHandlerResponse<PymtAccountDetailLoaderResource, null> = {
       type: "success",
       data: {
         pymtAccountDetail,
-        pymtAccountTags,
-        categoryTypes,
+        pymtAccountTags: await pymtAccountTagsPromise,
+        categoryTypes: await categoryTypesPromise,
+        currencyProfiles: await currencyProfilePromise,
       },
     };
     return response;
@@ -57,15 +63,19 @@ export const pymtAccountDetailLoaderHandler = async ({ params }: LoaderFunctionA
 export const pymtAccountDetailSupportingLoaderHandler = async () => {
   const logger = getLogger("route.pymtAccountDetailSupportingLoaderHandler");
   try {
-    const pymtAccountTags = await pymtAccountService.getPymtAccountTags();
-    const categoryTypes = await pymtAccountService.getPymtAccountTypes();
+    const pymtAccountTagsPromise = pymtAccountService.getPymtAccountTags();
+    const categoryTypesPromise = pymtAccountService.getPymtAccountTypes();
+    const currencyProfilePromise = currencyProfileService.getCurrencyProfiles();
+
+    await Promise.all([pymtAccountTagsPromise, categoryTypesPromise, currencyProfilePromise]);
 
     const response: RouteHandlerResponse<PymtAccountDetailLoaderResource, null> = {
       type: "success",
       data: {
         pymtAccountDetail: null,
-        pymtAccountTags,
-        categoryTypes,
+        pymtAccountTags: await pymtAccountTagsPromise,
+        categoryTypes: await categoryTypesPromise,
+        currencyProfiles: await currencyProfilePromise,
       },
     };
     return response;

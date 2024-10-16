@@ -9,7 +9,13 @@ import {
   PurchaseFields,
 } from "../../services";
 import { PymtAccountFields, pymtAccountService } from "../../../pymt-accounts/services";
-import { ConfigTypeStatus, SharePersonResource, sharePersonService } from "../../../settings/services";
+import {
+  ConfigTypeStatus,
+  CurrencyProfileResource,
+  currencyProfileService,
+  SharePersonResource,
+  sharePersonService,
+} from "../../../settings/services";
 
 const rhLogger = getLogger("route.handler.purchase.loader", null, null, "DISABLED");
 
@@ -19,6 +25,7 @@ export interface PurchaseDetailLoaderResource {
   purchaseTypes: ConfigResource[];
   purchaseTags: string[];
   sharePersons: SharePersonResource[];
+  currencyProfiles: CurrencyProfileResource[];
 }
 
 export const purchaseDetailLoaderHandler = async ({ params }: LoaderFunctionArgs) => {
@@ -35,8 +42,9 @@ export const purchaseDetailLoaderHandler = async ({ params }: LoaderFunctionArgs
     const paymentAccountsPromise = pymtAccountService.getPymtAccountList();
     const purchaseTagsPromise = purchaseService.getPurchaseTags();
     const sharePersonsPromise = sharePersonService.getSharePersonList(ConfigTypeStatus.Enable);
+    const currencyProfilePromise = currencyProfileService.getCurrencyProfiles();
 
-    await Promise.all([purchaseTypesPromise, paymentAccountsPromise, purchaseTagsPromise, sharePersonsPromise]);
+    await Promise.all([purchaseTypesPromise, paymentAccountsPromise, purchaseTagsPromise, sharePersonsPromise, currencyProfilePromise]);
     logger.debug("retrieved all info, now preparing response with all info to send to FC");
 
     const response: RouteHandlerResponse<PurchaseDetailLoaderResource, null> = {
@@ -47,6 +55,7 @@ export const purchaseDetailLoaderHandler = async ({ params }: LoaderFunctionArgs
         purchaseTypes: await purchaseTypesPromise,
         purchaseTags: await purchaseTagsPromise,
         sharePersons: await sharePersonsPromise,
+        currencyProfiles: await currencyProfilePromise,
       },
     };
     return response;
@@ -63,8 +72,9 @@ export const purchaseDetailSupportingLoaderHandler = async () => {
     const paymentAccountsPromise = pymtAccountService.getPymtAccountList();
     const purchaseTagsPromise = purchaseService.getPurchaseTags();
     const sharePersonsPromise = sharePersonService.getSharePersonList(ConfigTypeStatus.Enable);
+    const currencyProfilePromise = currencyProfileService.getCurrencyProfiles();
 
-    await Promise.all([purchaseTypesPromise, paymentAccountsPromise, purchaseTagsPromise, sharePersonsPromise]);
+    await Promise.all([purchaseTypesPromise, paymentAccountsPromise, purchaseTagsPromise, sharePersonsPromise, currencyProfilePromise]);
     const response: RouteHandlerResponse<PurchaseDetailLoaderResource, null> = {
       type: "success",
       data: {
@@ -72,6 +82,7 @@ export const purchaseDetailSupportingLoaderHandler = async () => {
         purchaseTypes: await purchaseTypesPromise,
         purchaseTags: await purchaseTagsPromise,
         sharePersons: await sharePersonsPromise,
+        currencyProfiles: await currencyProfilePromise,
       },
     };
     return response;

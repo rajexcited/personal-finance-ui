@@ -20,4 +20,4 @@ export { ObjectDeepDifference } from "./deep-obj-difference";
 
 export { ascCompare, descCompare } from "./comparator";
 
-export { getCacheOption } from "./cache-utils";
+export { getCacheOption, pMemoizeSync } from "./cache-utils";

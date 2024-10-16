@@ -1,7 +1,7 @@
 import { PymtAccStatus, PymtAccountFields } from "../../pages/pymt-accounts/services";
 import { LoggerBase, getLogger } from "../../shared";
 import { auditData } from "../services/userDetails";
-import { getPaymentAccountTypes } from "./config-type-db";
+import { getDefaultCurrencyProfileId, getPaymentAccountTypes } from "./config-type-db";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { v4 as uuidv4 } from "uuid";
 
@@ -17,6 +17,8 @@ const init = async () => {
     return;
   }
 
+  const currencyProfileId = await getDefaultCurrencyProfileId();
+
   await pymtAccDb.addItem({
     id: uuidv4(),
     shortName: "cash",
@@ -28,6 +30,7 @@ const init = async () => {
     auditDetails: auditData(),
     status: PymtAccStatus.Immutable,
     dropdownTooltip: "",
+    currencyProfileId: currencyProfileId,
   });
 
   await pymtAccDb.addItem({
@@ -42,6 +45,7 @@ const init = async () => {
     auditDetails: auditData(),
     status: PymtAccStatus.Enable,
     dropdownTooltip: "",
+    currencyProfileId: currencyProfileId,
   });
 };
 

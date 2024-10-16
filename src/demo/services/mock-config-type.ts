@@ -257,7 +257,7 @@ export const MockConfigType = (demoMock: MockAdapter) => {
     return await getConfigTypeList(ConfigTypeBelongsTo.SharePerson, config);
   });
 
-  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.CurrencyProfile).reply((config) => {
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.CurrencyProfile).reply(async (config) => {
     const logger = getLogger("mock.config-types." + ConfigTypeBelongsTo.CurrencyProfile + ".getList");
     const responseCreator = AxiosResponseCreator(config);
     const isAuthorized = validateAuthorization(config.headers);
@@ -266,6 +266,7 @@ export const MockConfigType = (demoMock: MockAdapter) => {
     }
 
     logger.debug("config", config, ", params =", config.params);
+
     const paramConfigStatus = Array.isArray(config.params.status) ? config.params.status : [config.params.status || ConfigTypeStatus.Enable];
 
     const invalidStatuses = paramConfigStatus.filter(
@@ -276,28 +277,21 @@ export const MockConfigType = (demoMock: MockAdapter) => {
       return responseCreator.toValidationError([{ path: "status", message: "status in param provided is not valid" }]);
     }
 
-    const mocklist: CurrencyProfileResource[] = [
-      {
-        id: uuidv4(),
-        name: "USA",
-        value: "USD",
-        belongsTo: ConfigTypeBelongsTo.CurrencyProfile,
-        status: ConfigTypeStatus.Enable,
-        description: "currency profile for country, United States of America and currency, Dollar",
-        tags: [],
-        auditDetails: auditData(),
+    const result = await getConfigTypes(ConfigTypeBelongsTo.CurrencyProfile);
+    const responselist = result.list
+      .filter((cfg) => config.params.status.includes(cfg.status))
+      .map((conf) => ({
+        ...conf,
         country: {
           name: "United States of America",
-          code: "USA",
+          code: conf.name,
         },
         currency: {
           name: "Dollar",
-          code: "USD",
+          code: conf.value,
           symbol: "$",
         },
-      },
-    ];
-    const responselist = mocklist.filter((cfg) => config.params.status.includes(cfg.status));
+      }));
 
     return responseCreator.toSuccessResponse(responselist);
   });

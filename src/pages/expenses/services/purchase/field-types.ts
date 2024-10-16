@@ -25,4 +25,5 @@ export interface PurchaseFields extends BasePurchaseFields {
   auditDetails: AuditFields;
   belongsTo: ExpenseBelongsTo.Purchase;
   personIds: string[];
+  currencyProfileId: string;
 }

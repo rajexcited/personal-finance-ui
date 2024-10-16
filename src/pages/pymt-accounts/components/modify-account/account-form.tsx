@@ -4,6 +4,7 @@ import { getFullPath } from "../../../root";
 import { TagsInput, Input, TextArea, DropDown, InputValidators } from "../../../../components";
 import { ConfigResource, PymtAccountFields, PymtAccStatus } from "../../services";
 import { faBank } from "@fortawesome/free-solid-svg-icons";
+import { CurrencyProfileResource } from "../../../settings/services";
 
 
 
@@ -19,6 +20,7 @@ export interface AccountFormProps {
     categoryTypes: ConfigResource[];
     details?: PymtAccountFields;
     accountId: string;
+    currencyProfiles: CurrencyProfileResource[];
 }
 
 const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
@@ -28,6 +30,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
     const [description, setDescription] = useState(props.details?.description || "");
     const [tags, setTags] = useState(props.details?.tags || []);
     const [typeName, setTypeName] = useState(props.details?.typeName?.toString() || "");
+    const [defaultCurrencyProfile, setDefaultCurrencyProfile] = useState<CurrencyProfileResource>(props.currencyProfiles[0]);
 
     // how to set this value? if I collect values from displayed paymentAccounts, 
     // there are chances to missed the tags. 
@@ -51,7 +54,8 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
             typeId: "",
             auditDetails: { createdOn: "", updatedOn: "" },
             status: PymtAccStatus.Enable,
-            dropdownTooltip: ""
+            dropdownTooltip: "",
+            currencyProfileId: defaultCurrencyProfile.id
         };
         props.onSubmit(data);
     };
@@ -123,6 +127,17 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                         onChange={ setAccountIdNum }
                                         validate={ validateName }
                                     />
+                                </div>
+                            </div>
+                            <div className="column">
+                                <div className="column is-narrow">
+                                    <p className="field">&nbsp;</p>
+                                    <p className="field">
+                                        <span className="tag is-link-is-light">{ defaultCurrencyProfile.name }</span>
+                                    </p>
+                                    <p className="field">
+                                        <span className="tag is-link-is-light">{ defaultCurrencyProfile.value }</span>
+                                    </p>
                                 </div>
                             </div>
                         </div>

@@ -21,4 +21,5 @@ export interface PurchaseRefundFields {
   reasonId: string;
   reasonValue: string;
   personIds: string[];
+  currencyProfileId: string;
 }

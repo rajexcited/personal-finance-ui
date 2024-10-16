@@ -71,6 +71,7 @@ const AddAccount: FunctionComponent = () => {
                             onSubmit={ onAddedAccount }
                             sourceTags={ loaderData.data.pymtAccountTags }
                             categoryTypes={ loaderData.data.categoryTypes }
+                            currencyProfiles={ loaderData.data.currencyProfiles }
                         />
                     </div>
                 </div>

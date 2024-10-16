@@ -16,7 +16,7 @@ import { ExpenseBelongsTo, expenseService, ExpenseStatus, formatTimestamp, getLo
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../components/receipt";
 import { PymtAccountFields } from "../../../pymt-accounts/services";
 import { ConfigResource, isNotBlank, parseTimestamp } from "../../../../shared";
-import { SharePersonResource } from "../../../settings/services";
+import { CurrencyProfileResource, SharePersonResource } from "../../../settings/services";
 
 
 
@@ -30,6 +30,7 @@ export interface PurchaseRefundFormProps {
     sourceTags: string[];
     reasons: ConfigResource[];
     sharePersons: SharePersonResource[];
+    currencyProfiles: CurrencyProfileResource[];
 }
 
 const fcLogger = getLogger("FC.PurchaseRefundForm", null, null, "DISABLED");
@@ -80,6 +81,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
     const [selectedDropdownReason, setSelectedDropdownReason] = useState<DropDownItemType>();
     const [selectedSharePersonTagItems, setSelectedSharePersonTagItems] = useState<TagObject[]>([]);
     const [sourceSharePersonTagItems, setSourceSharePersonTagItems] = useState<TagObject[]>([]);
+    const [defaultCurrencyProfile, setDefaultCurrencyProfile] = useState<CurrencyProfileResource>(props.currencyProfiles[0]);
     const navigate = useNavigate();
 
 
@@ -228,7 +230,8 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             purchaseDetails: purchaseDetail,
             reasonId: selectedDropdownReason.id,
             reasonValue: selectedDropdownReason.content,
-            personIds: selectedSharePersonTagItems.map(sspt => sspt.id)
+            personIds: selectedSharePersonTagItems.map(sspt => sspt.id),
+            currencyProfileId: defaultCurrencyProfile.id
         };
 
         Object.entries(data).forEach((entry) => {
@@ -313,6 +316,15 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                         </div>
                     </div>
                     <div className="columns">
+                        <div className="column is-narrow">
+                            <p className="field">&nbsp;</p>
+                            <p className="field">
+                                <span className="tag is-link-is-light">{ defaultCurrencyProfile.name }</span>
+                            </p>
+                            <p className="field">
+                                <span className="tag is-link-is-light">{ defaultCurrencyProfile.value }</span>
+                            </p>
+                        </div>
                         <div className="column">
                             <Input
                                 id="refund-amount"

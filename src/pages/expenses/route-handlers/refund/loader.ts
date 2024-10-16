@@ -13,7 +13,7 @@ import {
 } from "../../services";
 import { PymtAccountFields, pymtAccountService } from "../../../pymt-accounts/services";
 import { ConfigTypeStatus, InvalidError, isUuid } from "../../../../shared";
-import { SharePersonResource, sharePersonService } from "../../../settings/services";
+import { CurrencyProfileResource, currencyProfileService, SharePersonResource, sharePersonService } from "../../../settings/services";
 
 const rhLogger = getLogger("route.handler.purchase.loader", null, null, "DISABLED");
 
@@ -24,6 +24,7 @@ export interface RefundDetailLoaderResource {
   refundReasons: ConfigResource[];
   refundTags: string[];
   sharePersons: SharePersonResource[];
+  currencyProfiles: CurrencyProfileResource[];
 }
 
 export const modifyRefundDetailLoaderHandler = async ({ params }: LoaderFunctionArgs) => {
@@ -48,8 +49,16 @@ export const modifyRefundDetailLoaderHandler = async ({ params }: LoaderFunction
     const paymentAccountsPromise = pymtAccountService.getPymtAccountList();
     const refundTagsPromise = refundService.getTags();
     const sharePersonsPromise = sharePersonService.getSharePersonList(ConfigTypeStatus.Enable);
+    const currencyProfilePromise = currencyProfileService.getCurrencyProfiles();
 
-    await Promise.all([purchaseDetailsPromise, reasonListPromise, paymentAccountsPromise, refundTagsPromise, sharePersonsPromise]);
+    await Promise.all([
+      purchaseDetailsPromise,
+      reasonListPromise,
+      paymentAccountsPromise,
+      refundTagsPromise,
+      sharePersonsPromise,
+      currencyProfilePromise,
+    ]);
     logger.debug("retrieved all info, now preparing response with all info to send to FC");
 
     const response: RouteHandlerResponse<RefundDetailLoaderResource, null> = {
@@ -61,6 +70,7 @@ export const modifyRefundDetailLoaderHandler = async ({ params }: LoaderFunction
         refundReasons: await reasonListPromise,
         refundTags: await refundTagsPromise,
         sharePersons: await sharePersonsPromise,
+        currencyProfiles: await currencyProfilePromise,
       },
     };
     return response;
@@ -86,8 +96,16 @@ export const addRefundDetailLoaderHandler = async ({ params }: LoaderFunctionArg
     const paymentAccountsPromise = pymtAccountService.getPymtAccountList();
     const refundTagsPromise = refundService.getTags();
     const sharePersonsPromise = sharePersonService.getSharePersonList(ConfigTypeStatus.Enable);
+    const currencyProfilePromise = currencyProfileService.getCurrencyProfiles();
 
-    await Promise.all([purchaseDetailsPromise, reasonListPromise, paymentAccountsPromise, refundTagsPromise, sharePersonsPromise]);
+    await Promise.all([
+      purchaseDetailsPromise,
+      reasonListPromise,
+      paymentAccountsPromise,
+      refundTagsPromise,
+      sharePersonsPromise,
+      currencyProfilePromise,
+    ]);
 
     const response: RouteHandlerResponse<RefundDetailLoaderResource, null> = {
       type: "success",
@@ -98,6 +116,7 @@ export const addRefundDetailLoaderHandler = async ({ params }: LoaderFunctionArg
         refundReasons: await reasonListPromise,
         refundTags: await refundTagsPromise,
         sharePersons: await sharePersonsPromise,
+        currencyProfiles: await currencyProfilePromise,
       },
     };
     return response;

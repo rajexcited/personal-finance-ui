@@ -18,4 +18,5 @@ export interface PymtAccountFields {
   status: PymtAccStatus;
   auditDetails: AuditFields;
   dropdownTooltip: string;
+  currencyProfileId: string;
 }

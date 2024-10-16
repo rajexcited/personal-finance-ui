@@ -6,6 +6,6 @@ export type {
   UpdateUserPasswordResource,
 } from "./field-types";
 
-export { default as AuthenticationService } from "./auth-service";
+export * as authService from "./auth-service";
 
 export { UserStatus } from "./field-types";

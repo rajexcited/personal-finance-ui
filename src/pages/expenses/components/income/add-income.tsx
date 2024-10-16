@@ -77,6 +77,7 @@ export const AddIncome: FunctionComponent = () => {
                             sourceTags={ loaderData.data.incomeTags }
                             incomeTypes={ loaderData.data.incomeTypes }
                             sharePersons={ loaderData.data.sharePersons }
+                            currencyProfiles={ loaderData.data.currencyProfiles }
                         />
                     </div>
                 </div>

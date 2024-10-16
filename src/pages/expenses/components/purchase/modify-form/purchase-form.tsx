@@ -17,7 +17,7 @@ import { PurchaseBreakDown } from "./purchase-breakdown";
 import { ConfigResource, PurchaseFields, PurchaseItemFields, formatTimestamp, getLogger, ExpenseBelongsTo, receiptService } from "../../../services";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../../components/receipt";
 import { PymtAccountFields } from "../../../../pymt-accounts/services";
-import { SharePersonResource } from "../../../../settings/services";
+import { CurrencyProfileResource, SharePersonResource } from "../../../../settings/services";
 
 
 export interface PurchaseFormProps {
@@ -29,6 +29,7 @@ export interface PurchaseFormProps {
     paymentAccounts: PymtAccountFields[];
     sourceTags: string[];
     sharePersons: SharePersonResource[];
+    currencyProfiles: CurrencyProfileResource[];
 }
 
 const fcLogger = getLogger("FC.PurchaseForm", null, null, "DISABLED");
@@ -48,6 +49,7 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
     const [receipts, setReceipts] = useState<ReceiptProps[]>(props.details?.receipts || []);
     const [selectedSharePersonTagItems, setSelectedSharePersonTagItems] = useState<TagObject[]>([]);
     const [sourceSharePersonTagItems, setSourceSharePersonTagItems] = useState<TagObject[]>([]);
+    const [defaultCurrencyProfile, setDefaultCurrencyProfile] = useState<CurrencyProfileResource>(props.currencyProfiles[0]);
     const navigate = useNavigate();
 
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = async event => {
@@ -87,7 +89,8 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
             receipts: datareceipts,
             auditDetails: { createdOn: "", updatedOn: "" },
             belongsTo: ExpenseBelongsTo.Purchase,
-            personIds: selectedSharePersonTagItems.map(sspt => sspt.id)
+            personIds: selectedSharePersonTagItems.map(sspt => sspt.id),
+            currencyProfileId: defaultCurrencyProfile.id
         };
 
         Object.entries(data).forEach((entry) => {
@@ -210,6 +213,15 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
                         </div>
                     </div>
                     <div className="columns">
+                        <div className="column is-narrow">
+                            <p className="field">&nbsp;</p>
+                            <p className="field">
+                                <span className="tag is-link-is-light">{ defaultCurrencyProfile.name }</span>
+                            </p>
+                            <p className="field">
+                                <span className="tag is-link-is-light">{ defaultCurrencyProfile.value }</span>
+                            </p>
+                        </div>
                         <div className="column">
                             <Input
                                 id="purchase-amount"

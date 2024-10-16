@@ -38,3 +38,8 @@ export interface AccessTokenResource {
   expiresIn: number;
   expiryTime: number;
 }
+
+export interface CountryResource {
+  name: string;
+  code: string;
+}

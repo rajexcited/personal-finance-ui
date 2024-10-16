@@ -1,11 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
 import datetime from "date-and-time";
 import { PurchaseFields, PurchaseItemFields, ExpenseStatus } from "../../pages/expenses";
-import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDate, getLogger } from "../../shared";
+import { ConfigTypeBelongsTo, LoggerBase, ObjectDeepDifference, formatTimestamp, getDate, getLogger } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { auditData } from "../services/userDetails";
 import { deleteReceiptFileData, updatePurchaseIdForReceipt } from "./receipts-db";
-import { getPurchaseTypes } from "./config-type-db";
+import { getConfigTypes, getDefaultCurrencyProfileId, getPurchaseTypes } from "./config-type-db";
 import { getPymtAccountList } from "./pymt-acc-db";
 import { ExpenseBelongsTo } from "../../pages/expenses/services";
 import { ExpenseFilter } from "./expense-db";
@@ -39,6 +39,8 @@ const init = async () => {
     return;
   }
 
+  const currencyProfileId = await getDefaultCurrencyProfileId();
+
   logger.debug("creating sample purchases");
   await purchaseDb.addItem({
     id: uuidv4(),
@@ -55,6 +57,7 @@ const init = async () => {
     status: ExpenseStatus.Enable,
     belongsTo: ExpenseBelongsTo.Purchase,
     personIds: [],
+    currencyProfileId: currencyProfileId,
   });
 
   await purchaseDb.addItem({
@@ -72,6 +75,7 @@ const init = async () => {
     status: ExpenseStatus.Enable,
     belongsTo: ExpenseBelongsTo.Purchase,
     personIds: [],
+    currencyProfileId: currencyProfileId,
     items: [
       {
         id: uuidv4(),
@@ -217,6 +221,7 @@ export const addUpdatePurchase = async (data: PurchaseFields) => {
       receipts: receiptResult.list || [],
       items: [...updatedExistingPurchaseIems, ...addedNewPurchaseIems],
       auditDetails: auditData(existingPurchase.auditDetails.createdBy, existingPurchase.auditDetails.createdOn),
+      currencyProfileId: await getDefaultCurrencyProfileId(),
     };
     delete updatedPurchase.purchaseTypeName;
     delete updatedPurchase.paymentAccountName;
@@ -236,6 +241,7 @@ export const addUpdatePurchase = async (data: PurchaseFields) => {
     receipts: data.receipts.map((r) => ({ ...r, id: uuidv4(), relationId: "", url: "" })),
     items: data.items?.map((ei) => ({ ...ei, expenseCategoryName: undefined, id: uuidv4() })) || [],
     auditDetails: auditData(),
+    currencyProfileId: await getDefaultCurrencyProfileId(),
   };
 
   await purchaseDb.addUpdateItem(addedPurchase);

@@ -1,12 +1,11 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import AuthContext, { dummyUserDetails } from "./auth-context";
-import { AuthenticationService, UserDetailsResource, UserSignupResource, UserStatus } from "../services";
+import { authService, UserDetailsResource, UserSignupResource } from "../services";
 import { Animated } from "../../../components";
 import { ObjectDeepDifference, getLogger } from "../../../shared";
 
 
-const authService = AuthenticationService();
 
 interface AuthContextProviderProps {
     children: JSX.Element;

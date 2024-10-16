@@ -58,6 +58,7 @@ const UpdateAccount: FunctionComponent = () => {
                             details={ loaderData.data.pymtAccountDetail }
                             sourceTags={ loaderData.data.pymtAccountTags }
                             categoryTypes={ loaderData.data.categoryTypes }
+                            currencyProfiles={ loaderData.data.currencyProfiles }
                         />
                     }
                 </div>
