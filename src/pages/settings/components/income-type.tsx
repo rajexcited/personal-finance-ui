@@ -138,9 +138,9 @@ export const IncomeTypePage: FunctionComponent = () => {
     const controlsInEllipsis: Control[] = [];
     if (!auth.readOnly) {
         controlsInEllipsis.push({ id: ActionId.Update, content: "Edit", icon: faEdit });
-        controlsBeforeEllipsis.push({ id: ActionId.Delete, content: "Delete", icon: faRemove });
+        controlsInEllipsis.push({ id: ActionId.Delete, content: "Delete", icon: faRemove });
         controlsInEllipsis.push({ id: ActionId.ToggleEnable, content: "Change to Enable", icon: faToggleOn, isActive: (item: ListItem) => !item.status });
-        controlsBeforeEllipsis.push({ id: ActionId.ToggleDisable, content: "Change to Disable", icon: faToggleOff, isActive: (item: ListItem) => item.status });
+        controlsInEllipsis.push({ id: ActionId.ToggleDisable, content: "Change to Disable", icon: faToggleOff, isActive: (item: ListItem) => item.status });
     }
 
     const configInputProps: ConfigInputProps = {
