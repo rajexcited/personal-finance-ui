@@ -15,18 +15,12 @@ const AccountsHome: FunctionComponent = () => {
         }
     };
 
-    const onClickNavigateAddNriTransferHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
-        event.preventDefault();
-        // navigate(getFullPath("addPurchase"));
-    };
-
     return (
         <>
             <div className="columns">
                 <div className="column">
                     <div className="buttons">
                         <button className="button is-link" onClick={ onClickNavigateAddPymtAccountHandler } disabled={ auth.readOnly } >Add Account</button>
-                        <button className="button is-link" onClick={ onClickNavigateAddNriTransferHandler } disabled={ auth.readOnly } >Add Transfer</button>
                     </div>
                 </div>
             </div>
