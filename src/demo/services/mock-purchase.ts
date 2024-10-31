@@ -43,9 +43,9 @@ export const MockPurchase = (demoMock: MockAdapter) => {
     }
     const data = JSON.parse(config.data) as PurchaseFields;
 
-    const missingErrors = missingValidation(data, ["id", "billName", "items", "purchasedDate", "receipts", "tags"]);
+    const missingErrors = missingValidation(data, ["id", "billName", "items", "purchaseDate", "receipts", "tags"]);
     const notUuidErrors = validateDataType(data, ["id", "purchaseTypeId", "paymentAccountId"], "uuid");
-    const notStringErrors = validateDataType(data, ["billName", "amount", "description", "purchasedDate", "verifiedTimestamp"], "string");
+    const notStringErrors = validateDataType(data, ["billName", "amount", "description", "purchaseDate", "verifiedTimestamp"], "string");
     const notArrayErrors = validateDataType(data, ["items", "receipts", "tags"], "array");
     const validationErrors = [...missingErrors, ...notUuidErrors, ...notStringErrors, ...notArrayErrors];
     logger.info("validationErrors =", validationErrors);

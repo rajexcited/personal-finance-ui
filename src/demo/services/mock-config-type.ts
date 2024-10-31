@@ -1,11 +1,8 @@
 import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
 import { missingValidation, validateAuthorization, validateDataType } from "./common-validators";
-import { v4 as uuidv4 } from "uuid";
-import { auditData } from "./userDetails";
 import { AxiosRequestConfig } from "axios";
 import { ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, getLogger } from "../../shared";
-import { CurrencyProfileResource } from "../../pages/settings/services";
 import { addUpdateConfigType, deleteConfigType, getConfigTypeDetails, getConfigTypes, updateConfigTypeStatus } from "../mock-db/config-type-db";
 
 export const MockConfigType = (demoMock: MockAdapter) => {

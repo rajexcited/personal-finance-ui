@@ -5,8 +5,6 @@ import {
   getLogger,
   MyLocalDatabase,
   LocalDBStore,
-  parseTimestamp,
-  formatTimestamp,
   subtractDates,
   LoggerBase,
   getDefaultIfError,
@@ -17,6 +15,8 @@ import {
   isUuid,
   TagQueryParams,
   getCacheOption,
+  getDateInstance,
+  getDateString,
 } from "../../../../shared";
 import { PurchaseTypeService } from "./purchase-type-service";
 import { pymtAccountService } from "../../../pymt-accounts";
@@ -153,14 +153,13 @@ export const addUpdateDbPurchase = async (purchase: PurchaseFields, loggerBase: 
   const transformStart = new Date();
   const dbPurchase: PurchaseFields = {
     ...purchase,
-    purchasedDate: typeof purchase.purchasedDate === "string" ? parseTimestamp(purchase.purchasedDate) : purchase.purchasedDate,
-    verifiedTimestamp: typeof purchase.verifiedTimestamp === "string" ? parseTimestamp(purchase.verifiedTimestamp) : purchase.verifiedTimestamp,
+    purchaseDate: getDateInstance(purchase.purchaseDate),
+    verifiedTimestamp: purchase.verifiedTimestamp ? getDateInstance(purchase.verifiedTimestamp) : undefined,
+    description: purchase.description || "",
   };
   await updatePurchaseTypeAndPymtAccName(dbPurchase);
   convertAuditFieldsToDateInstance(dbPurchase.auditDetails);
   dbPurchase.receipts = dbPurchase.receipts.map((rct) => ({ ...rct, purchaseId: purchase.id }));
-  await initializePurchaseTags();
-  await updatePurchaseTags(dbPurchase);
 
   logger.info("transforming execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
   await purchaseDb.addUpdateItem(dbPurchase);
@@ -191,13 +190,13 @@ const validatePurchaseBelongsTo = (purchase: ExpenseFields | null) => {
 let clearExpenseListCache: Function = () => {};
 
 export const setClearExpenseListCacheHandler = (clearCache: Function) => {
-  clearExpenseListCache();
+  clearExpenseListCache = clearCache;
 };
 
-const clearCache = () => {
+const clearCache = (purchaseData: PurchaseFields) => {
   clearExpenseListCache();
   pMemoizeClear(getPurchase);
-  statService.clearStatsCache(StatBelongsTo.Purchase);
+  statService.clearStatsCache(StatBelongsTo.Purchase, getDateInstance(purchaseData.purchaseDate).getFullYear());
 };
 
 export const getPurchase = pMemoize(async (purchaseId: string) => {
@@ -233,23 +232,26 @@ export const addUpdatePurchase = pMemoize(async (purchase: PurchaseFields) => {
     await updatePurchaseTypeAndPymtAccName(purchase);
     const data: PurchaseFields = {
       ...purchase,
-      purchasedDate: purchase.purchasedDate instanceof Date ? formatTimestamp(purchase.purchasedDate) : purchase.purchasedDate,
-      verifiedTimestamp: purchase.verifiedTimestamp instanceof Date ? formatTimestamp(purchase.verifiedTimestamp) : purchase.verifiedTimestamp,
+      purchaseDate: getDateString(purchase.purchaseDate),
+      verifiedTimestamp: purchase.verifiedTimestamp ? getDateString(purchase.verifiedTimestamp) : undefined,
+      description: purchase.description || "",
     };
     const response = await axios.post(rootPath, data);
+    const purchaseResponse = response.data as PurchaseFields;
 
+    await updatePurchaseTags(purchaseResponse);
     const purchaseReceipts = purchase.receipts.reduce((obj: Record<string, ReceiptProps>, rct) => {
       obj[rct.name] = rct;
       return obj;
     }, {});
 
-    const updateReceiptIdPromises = (response.data as PurchaseFields).receipts.map(async (rct) => {
+    const updateReceiptIdPromises = purchaseResponse.receipts.map(async (rct) => {
       await cacheReceiptFile(purchaseReceipts[rct.name], CacheAction.AddUpdateGet, undefined, rct);
     });
     await Promise.all(updateReceiptIdPromises);
 
     // cleaning memory if receipt object is removed
-    const existing = await purchaseDb.getItem(response.data.id);
+    const existing = await purchaseDb.getItem(purchaseResponse.id);
     if (existing) {
       const deleteReceiptPromises = existing.receipts.map(async (rct) => {
         if (!purchaseReceipts[rct.name]) {
@@ -259,8 +261,8 @@ export const addUpdatePurchase = pMemoize(async (purchase: PurchaseFields) => {
       await Promise.all(deleteReceiptPromises);
     }
 
-    await addUpdateDbPurchase(response.data, logger);
-    clearCache();
+    await addUpdateDbPurchase(purchaseResponse, logger);
+    clearCache(purchaseResponse);
   } catch (e) {
     const err = e as Error;
     handleRestErrors(err, logger);
@@ -274,12 +276,14 @@ export const removePurchase = pMemoize(async (purchaseId: string) => {
 
   try {
     const response = await axios.delete(rootPath + "/id/" + purchaseId);
-    await addUpdateDbPurchase(response.data, logger);
-    const deletingReceiptPromises = (response.data as PurchaseFields).receipts.map(async (rct) => {
+    const purchaseResponse = response.data as PurchaseFields;
+
+    await addUpdateDbPurchase(purchaseResponse, logger);
+    const deletingReceiptPromises = purchaseResponse.receipts.map(async (rct) => {
       await cacheReceiptFile(rct, CacheAction.Remove);
     });
     await Promise.all(deletingReceiptPromises);
-    clearCache();
+    clearCache(purchaseResponse);
   } catch (e) {
     const err = e as Error;
     handleRestErrors(err, logger);
@@ -288,10 +292,10 @@ export const removePurchase = pMemoize(async (purchaseId: string) => {
   }
 }, getCacheOption("3 sec"));
 
-export const getPurchaseTags = async () => {
-  const tagList = await tagService.getTags();
-  return tagList;
-};
+export const getPurchaseTags = pMemoize(async () => {
+  await initializePurchaseTags();
+  return tagService.getTags();
+}, getCacheOption("30 sec"));
 
 export const getPurchaseTypes = () => {
   return purchaseTypeService.getTypes(ConfigTypeStatus.Enable);

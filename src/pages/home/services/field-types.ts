@@ -1,5 +1,4 @@
 import { ConfigTypeStatus } from "../../../shared";
-import { ExpenseBelongsTo } from "../../expenses/services";
 import { PymtAccStatus } from "../../pymt-accounts/services";
 
 export interface MonthlyStatResource {

@@ -17,7 +17,7 @@ const ErrorPage: FunctionComponent = () => {
 
     logger.warn("error message =", errorMessage, ", route error =", err);
 
-    return <div className="section">
+    return <div className="section is-px-0-mobile">
         <h1 className="title is-1 has-text-centered has-text-danger">
             <span>Ooops!</span>
         </h1>

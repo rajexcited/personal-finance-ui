@@ -1,8 +1,8 @@
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent, useEffect, useMemo, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import { faTrashAlt } from "@fortawesome/free-regular-svg-icons";
-import { TagsInput, Input, DropDown, TextArea, DropDownItemType } from "../../../../../components";
+import { TagsInput, Input, DropDown, TextArea, DropDownItemType, InputValidators, InputValidateResponse } from "../../../../../components";
 import { PurchaseItemFields } from "../../../services";
 
 
@@ -60,6 +60,27 @@ export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (p
         props.onRemove(props.itemDetail.id || "");
     };
 
+    const billnameRequireValidator = useMemo(() => {
+        const isEmpty = !itemPurchaseType && itemDescription === "" && itemTags.length === 0 && itemAmount === "";
+
+        return (inputBillNameValue: string): InputValidateResponse => {
+            return {
+                isValid: (isEmpty && inputBillNameValue === "") || (Number(itemAmount).toString() === itemAmount.toString().trim() && !inputBillNameValue),
+                errorMessage: "item name and item amount both must be provided",
+            };
+        };
+    }, [itemAmount, itemPurchaseType, itemDescription, itemTags]);
+
+    const amountRequireValidator = useMemo(() => {
+        const isEmpty = !itemPurchaseType && itemDescription === "" && itemTags.length === 0 && itemBillName === "";
+        return (inputAmountValue: string): InputValidateResponse => {
+            return {
+                isValid: (isEmpty && inputAmountValue === "") || (Number(inputAmountValue).toString() === inputAmountValue.toString().trim() && !itemBillName),
+                errorMessage: "item amount and item name both must be provided",
+            };
+        };
+    }, [itemBillName, itemPurchaseType, itemDescription, itemTags]);
+
     return (
         <div className="columns">
             <div className="column is-one-twenty-fourth my-5 py-5">
@@ -81,6 +102,7 @@ export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (p
                     onChange={ setItemBillName }
                     className="is-large"
                     maxlength={ 50 }
+                    validate={ billnameRequireValidator }
                 />
             </div>
             <div className="column">
@@ -97,6 +119,7 @@ export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (p
                     key={ "purchase-item-amount" }
                     onChange={ setItemAmount }
                     step={ 0.01 }
+                    validate={ amountRequireValidator }
                 />
             </div>
             <div className="column">

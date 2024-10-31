@@ -10,7 +10,7 @@ import {
   UserSignupResource,
   UserStatus,
 } from "./field-types";
-import _, { memoize } from "lodash";
+import _ from "lodash";
 import pMemoize from "p-memoize";
 
 export const authTokenSessionKey = "fin-auth-tkn";
@@ -270,7 +270,7 @@ export const updateName = pMemoize(async (details: UpdateUserDetailsResource) =>
   try {
     const response = await axios.post(`${rootPath}/details`, details);
 
-    logger.debug("overwriting user session data");
+    logger.debug("received response =", response, " overwriting user session data");
     const sessionDetails = JSON.parse(sessionStorage.getItem(authUserSessionKey) as string) as UserDetailsResource;
     const newSessionDetails: UserDetailsResource = {
       emailId: sessionDetails.emailId,
@@ -298,6 +298,7 @@ export const updatePassword = pMemoize(async (details: UpdateUserPasswordResourc
       newPassword: btoa(details.newPassword),
     };
     const response = await axios.post(`${rootPath}/details`, data);
+    logger.debug("received response =", response);
   } catch (e) {
     const err = e as Error;
     handleRestErrors(err, logger);

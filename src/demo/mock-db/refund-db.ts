@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import datetime from "date-and-time";
 import { ExpenseStatus } from "../../pages/expenses";
-import { ConfigTypeBelongsTo, LoggerBase, ObjectDeepDifference, formatTimestamp, getDate, getLogger } from "../../shared";
+import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDateInstance, getLogger } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { auditData } from "../services/userDetails";
 import { deleteReceiptFileData, updateRefundIdForReceipt } from "./receipts-db";
@@ -9,7 +9,7 @@ import { getPymtAccountList } from "./pymt-acc-db";
 import { ExpenseBelongsTo, PurchaseFields, PurchaseItemFields, PurchaseRefundFields } from "../../pages/expenses/services";
 import { ReceiptProps } from "../../components/receipt";
 import { JSONObject } from "../../shared/utils/deep-obj-difference";
-import { getConfigTypes, getDefaultCurrencyProfileId, getRefundReasons } from "./config-type-db";
+import { getDefaultCurrencyProfileId, getRefundReasons } from "./config-type-db";
 import ms from "ms";
 import { ExpenseFilter } from "./expense-db";
 
@@ -31,7 +31,7 @@ const init = async () => {
   const paymentAccounts = (await getPymtAccountList()).list;
   logger.debug("retrieved", paymentAccounts.length, "payment accounts");
   const pymtAccId = (accname: string) => {
-    return paymentAccounts.find((acc) => acc.shortName.toLowerCase().includes(accname.toLowerCase()))?.id;
+    return paymentAccounts.find((acc) => acc.shortName.toLowerCase().includes(accname.toLowerCase()))?.id as string;
   };
 
   const refunds = await refundDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ExpenseBelongsTo.PurchaseRefund);
@@ -62,6 +62,7 @@ const init = async () => {
     description: "this is dummy refund for demo purpose",
     tags: "".split(","),
     paymentAccountId: pymtAccId("cash"),
+    paymentAccountName: "",
     refundDate: formatTimestamp(datetime.addDays(new Date(), -1)),
     reasonId: reasonId("broken"),
     reasonValue: "broken",
@@ -80,6 +81,7 @@ const init = async () => {
     description: "this is dummy refund for demo purpose",
     tags: "gift,entertainment".split(","),
     paymentAccountId: pymtAccId("cash"),
+    paymentAccountName: "",
     refundDate: formatTimestamp(new Date()),
     reasonId: reasonId("dont like"),
     reasonValue: "dont like",
@@ -105,7 +107,7 @@ export const getRefundTags = async (years: number[]) => {
   logger.debug("years =", years);
   const taglist = refundList
     .filter((ri) => {
-      const year = getDate(ri.refundDate).getFullYear();
+      const year = getDateInstance(ri.refundDate).getFullYear();
       return years.includes(year);
     })
     .flatMap((ri) => ri.tags);
@@ -193,7 +195,7 @@ export const addUpdateRefund = async (data: PurchaseRefundFields) => {
       currencyProfileId: await getDefaultCurrencyProfileId(),
     };
 
-    delete updatedRefund.paymentAccountName;
+    // delete updatedRefund.paymentAccountName;
     await refundDb.addUpdateItem(updatedRefund);
     return { updated: updatedRefund };
   }

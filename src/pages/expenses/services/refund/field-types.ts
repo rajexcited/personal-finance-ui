@@ -9,8 +9,8 @@ export interface PurchaseRefundFields {
   amount: string;
   description: string;
   tags: string[];
-  paymentAccountId?: string;
-  paymentAccountName?: string;
+  paymentAccountId: string;
+  paymentAccountName: string;
   refundDate: string | Date;
   receipts: ReceiptProps[];
   status: ExpenseStatus;

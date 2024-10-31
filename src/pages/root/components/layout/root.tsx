@@ -64,7 +64,7 @@ const RootLayout: FunctionComponent = () => {
             <NavBar />
             <LoadSpinner loading={ isLoading } />
 
-            <section className="root-route-child">
+            <section className="root-route-child section is-px-0-mobile">
                 <Outlet />
             </section>
         </div>

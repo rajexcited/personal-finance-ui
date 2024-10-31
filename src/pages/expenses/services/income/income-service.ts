@@ -5,8 +5,6 @@ import {
   getLogger,
   MyLocalDatabase,
   LocalDBStore,
-  parseTimestamp,
-  formatTimestamp,
   subtractDates,
   LoggerBase,
   getDefaultIfError,
@@ -18,6 +16,8 @@ import {
   handleAndRethrowServiceError,
   isUuid,
   ConfigTypeStatus,
+  getDateString,
+  getDateInstance,
 } from "../../../../shared";
 import { pymtAccountService } from "../../../pymt-accounts";
 import { ExpenseBelongsTo, ExpenseFields } from "../expense/field-types";
@@ -40,9 +40,9 @@ export const setClearExpenseListCacheHandler = (clearCacheFn: Function) => {
   clearExpenseListCache = clearCacheFn;
 };
 
-const clearCache = () => {
+const clearCache = (incomeData: IncomeFields) => {
   clearExpenseListCache();
-  statService.clearStatsCache(StatBelongsTo.Income);
+  statService.clearStatsCache(StatBelongsTo.Income, getDateInstance(incomeData.incomeDate).getFullYear());
   pMemoizeClear(getDetails);
 };
 
@@ -106,15 +106,13 @@ export const addUpdateDbIncome = async (incomeDetails: IncomeFields, loggerBase:
   const transformStart = new Date();
   const dbIncome: IncomeFields = {
     ...incomeDetails,
-    incomeDate: typeof incomeDetails.incomeDate === "string" ? parseTimestamp(incomeDetails.incomeDate) : incomeDetails.incomeDate,
+    incomeDate: getDateString(incomeDetails.incomeDate),
   };
   await updatePaymentAccount(dbIncome);
   await updateIncomeType(dbIncome);
 
   convertAuditFieldsToDateInstance(dbIncome.auditDetails);
   dbIncome.receipts = dbIncome.receipts.map((rct) => ({ ...rct, relationId: dbIncome.id }));
-  await initializeIncomeTags();
-  await updateTags(dbIncome);
 
   logger.info("transforming execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
   await incomeDb.addUpdateItem(dbIncome);
@@ -171,22 +169,25 @@ export const addUpdateDetails = pMemoize(async (incomeDetails: IncomeFields) => 
     validateIncomeBelongsTo(incomeDetails);
     const data: IncomeFields = {
       ...incomeDetails,
-      incomeDate: incomeDetails.incomeDate instanceof Date ? formatTimestamp(incomeDetails.incomeDate) : incomeDetails.incomeDate,
+      incomeDate: incomeDetails.incomeDate as string,
+      description: incomeDetails.description || "",
     };
     const response = await axios.post(rootPath, data);
+    const incomeResponse = response.data as IncomeFields;
 
+    await updateTags(incomeResponse);
     const incomeReceipts = incomeDetails.receipts.reduce((obj: Record<string, ReceiptProps>, rct) => {
       obj[rct.name] = rct;
       return obj;
     }, {});
 
-    const updateReceiptIdPromises = (response.data as IncomeFields).receipts.map(async (rct) => {
+    const updateReceiptIdPromises = incomeResponse.receipts.map(async (rct) => {
       await receiptService.cacheReceiptFile(incomeReceipts[rct.name], CacheAction.AddUpdateGet, undefined, rct);
     });
     await Promise.all(updateReceiptIdPromises);
 
     // cleaning memory if receipt object is removed
-    const existing = await incomeDb.getItem(response.data.id);
+    const existing = await incomeDb.getItem(incomeResponse.id);
     if (existing) {
       const deleteReceiptPromises = existing.receipts.map(async (rct) => {
         if (!incomeReceipts[rct.name]) {
@@ -196,8 +197,8 @@ export const addUpdateDetails = pMemoize(async (incomeDetails: IncomeFields) => 
       await Promise.all(deleteReceiptPromises);
     }
 
-    await addUpdateDbIncome(response.data, logger);
-    clearCache();
+    await addUpdateDbIncome(incomeResponse, logger);
+    clearCache(incomeResponse);
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
@@ -209,18 +210,21 @@ export const removeDetails = pMemoize(async (incomeId: string) => {
 
   try {
     const response = await axios.delete(`${rootPath}/id/${incomeId}`);
-    await addUpdateDbIncome(response.data, logger);
-    const deletingReceiptPromises = (response.data as IncomeFields).receipts.map(async (rct) => {
+    const incomeResponse = response.data as IncomeFields;
+
+    await addUpdateDbIncome(incomeResponse, logger);
+    const deletingReceiptPromises = incomeResponse.receipts.map(async (rct) => {
       await receiptService.cacheReceiptFile(rct, CacheAction.Remove);
     });
     await Promise.all(deletingReceiptPromises);
-    clearCache();
+    clearCache(incomeResponse);
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
   }
 }, getCacheOption("5 sec"));
 
-export const getTags = () => {
+export const getTags = pMemoize(async () => {
+  await initializeIncomeTags();
   return tagService.getTags();
-};
+}, getCacheOption("30 sec"));

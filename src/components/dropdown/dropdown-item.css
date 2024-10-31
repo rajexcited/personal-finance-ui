@@ -2,25 +2,31 @@ div.dropdown-item.is-active {
   background-color: #485fc7;
   color: #fff;
 }
+
 div.dropdown-item.is-active .button {
   background-color: #485fc7;
   color: #fff;
 }
+
 .dropdown-item.is-active .input {
   background-color: #4e62ba;
   color: #fff;
 }
+
 div.dropdown-item {
   cursor: pointer;
 }
+
 div.dropdown-item:hover {
   background-color: #f5f5f5;
   color: #0a0a0a;
 }
+
 div.dropdown-item.is-active:hover {
   background-color: #4359ba;
   color: #f5f5f5;
 }
+
 div.dropdown-item .input[disabled] {
   cursor: pointer;
   font-weight: bold;
@@ -28,4 +34,17 @@ div.dropdown-item .input[disabled] {
 
 div.dropdown.is-active .dropdown-menu {
   z-index: 35;
+}
+
+.dropdown-item .unselectable {
+  display: flex;
+}
+
+.dropdown-item .unselectable .icon.unselect {
+  display: none;
+}
+
+.dropdown-item.is-active .unselectable .icon.unselect {
+  display: inherit;
+  margin-left: auto;
 }

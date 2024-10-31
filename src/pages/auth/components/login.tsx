@@ -7,7 +7,7 @@ import { getFullPath } from "../../root";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock, faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import { getLogger } from "../../../shared";
-import "./login.css";
+
 
 enum LoginSubmitStatus {
     NotStarted = "not-started",
@@ -62,7 +62,7 @@ const LoginPage: FunctionComponent = () => {
     const validatePassword = InputValidators.passwordValidator();
 
     return (
-        <section className="login-section">
+        <section className="login-section section is-px-0-mobile">
             <LoadSpinner loading={ submitStatus === LoginSubmitStatus.InProgress } />
 
             { !!errorMessage &&
@@ -113,7 +113,7 @@ const LoginPage: FunctionComponent = () => {
                 <div className="p-5"> </div>
                 <div className="columns">
                     <div className="column">
-                        <div className="buttons is-centered">
+                        <div className="buttons is-centered is-hidden-mobile">
                             <button className="button is-link is-medium" type="button" onClick={ onClickSignupHandler }>
                                 <span className="icon">
                                     <FontAwesomeIcon icon={ faUserPlus } />

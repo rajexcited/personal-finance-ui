@@ -38,7 +38,7 @@ import { LoginPage, RequireAuth, SignupPage, LogoutPage, signupDetailsLoaderHand
 import { HomePage, homepageDetailsLoaderHandler } from "../../../home";
 import { getLogger } from "../../services";
 import { AddIncome, AddRefund, UpdateIncome, UpdateRefund } from "../../../expenses/components";
-import { addIncomeDetailLoaderHandler, incomeActionHandler, modifyIncomeDetailLoaderHandler } from "../../../expenses/route-handlers";
+import { addIncomeDetailLoaderHandler, expenseActionHandler, incomeActionHandler, modifyIncomeDetailLoaderHandler } from "../../../expenses/route-handlers";
 
 
 const logger = getLogger("CBR.router", null, null, "DISABLED");
@@ -57,9 +57,8 @@ export const router = createBrowserRouter([
             {
                 path: getShortPath("expenseJournalRoot"),
                 element: <RequireAuth><ExpenseJournalPage /></RequireAuth>,
-                action: purchaseActionHandler,
                 children: [
-                    { index: true, element: <ExpenseList />, loader: expenseListLoaderHandler },
+                    { index: true, element: <ExpenseList />, loader: expenseListLoaderHandler, action: expenseActionHandler },
                     { path: getShortPath("addPurchase"), element: <AddPurchase />, loader: purchaseDetailSupportingLoaderHandler, action: purchaseActionHandler },
                     { path: getShortPath("updatePurchase"), element: <UpdatePurchase />, loader: purchaseDetailLoaderHandler, action: purchaseActionHandler },
                     { path: getShortPath("addPurchaseRefund"), element: <AddRefund />, loader: addRefundDetailLoaderHandler, action: refundActionHandler },

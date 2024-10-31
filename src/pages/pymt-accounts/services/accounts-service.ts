@@ -45,7 +45,18 @@ export const getPymtAccountList = pMemoize(async (status?: PymtAccStatus) => {
   const logger = getLogger("getPymtAccountList", _logger);
 
   try {
-    const pymtAccounts = await paymentAccountDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, status || PymtAccStatus.Enable);
+    const pymtAccounts: PymtAccountFields[] = [];
+    if (!status || status === PymtAccStatus.Enable) {
+      const enablePymtAccPromise = paymentAccountDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, PymtAccStatus.Enable);
+      const immutablePymtAccPromise = paymentAccountDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, PymtAccStatus.Immutable);
+      const listOfAccounts = await Promise.all([enablePymtAccPromise, immutablePymtAccPromise]);
+      const list = listOfAccounts.flatMap((pymtacc) => pymtacc);
+      pymtAccounts.push(...list);
+    } else {
+      const statusPymtAccs = await paymentAccountDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, status);
+      pymtAccounts.push(...statusPymtAccs);
+    }
+
     if (pymtAccounts.length > 0) {
       await initializePymtAccountTags();
       return pymtAccounts;
@@ -185,18 +196,22 @@ export const getPymtAccountTags = async () => {
 const getDropdownTooltip = (pymtAccount: PymtAccountFields) => {
   const ddTooltipLines: string[] = [];
   let ddTooltip = "";
-  ddTooltip = pymtAccount.description ? "Description: " + pymtAccount.description : "";
+  ddTooltip = pymtAccount.description ? "Description:" + pymtAccount.description : "";
   if (isNotBlank(ddTooltip)) {
-    ddTooltipLines.push(" " + ddTooltip + "  ");
+    // ddTooltipLines.push(" " + ddTooltip + "  ");
+    ddTooltipLines.push(ddTooltip);
   }
-  ddTooltip = pymtAccount.tags.length > 0 ? "Tags: " + pymtAccount.tags.join(",") : "";
+  ddTooltip = pymtAccount.tags.length > 0 ? "Tags:" + pymtAccount.tags.join(",") : "";
   if (isNotBlank(ddTooltip)) {
-    ddTooltipLines.push(" " + ddTooltip + "  ");
+    // ddTooltipLines.push(" " + ddTooltip + "  ");
+    ddTooltipLines.push(ddTooltip);
   }
 
-  ddTooltip = pymtAccount.typeName ? "Type: " + pymtAccount.typeName : "";
+  ddTooltip = pymtAccount.typeName ? "Type:" + pymtAccount.typeName : "";
   if (isNotBlank(ddTooltip)) {
-    ddTooltipLines.push(" " + ddTooltip + "  ");
+    // ddTooltipLines.push(" " + ddTooltip + "  ");
+    ddTooltipLines.push(ddTooltip);
   }
-  return ddTooltipLines.join("&#10;&#13;");
+  // return ddTooltipLines.join("&#10;&#13;");
+  return ddTooltipLines.join("  ");
 };

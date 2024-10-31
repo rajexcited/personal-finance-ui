@@ -8,8 +8,8 @@ export interface IncomeFields {
   amount: string;
   description: string;
   tags: string[];
-  paymentAccountId?: string;
-  paymentAccountName?: string;
+  paymentAccountId: string;
+  paymentAccountName: string;
   incomeDate: string | Date;
   receipts: ReceiptProps[];
   status: ExpenseStatus;

@@ -24,7 +24,7 @@ const AccountsHome: FunctionComponent = () => {
                     </div>
                 </div>
             </div>
-            <section className="section is-narrow-y">
+            <section className="section is-narrow-y is-px-0-mobile">
                 <Outlet />
             </section>
         </>

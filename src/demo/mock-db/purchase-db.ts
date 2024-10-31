@@ -1,11 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
 import datetime from "date-and-time";
 import { PurchaseFields, PurchaseItemFields, ExpenseStatus } from "../../pages/expenses";
-import { ConfigTypeBelongsTo, LoggerBase, ObjectDeepDifference, formatTimestamp, getDate, getLogger } from "../../shared";
+import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDateInstance, getLogger } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { auditData } from "../services/userDetails";
 import { deleteReceiptFileData, updatePurchaseIdForReceipt } from "./receipts-db";
-import { getConfigTypes, getDefaultCurrencyProfileId, getPurchaseTypes } from "./config-type-db";
+import { getDefaultCurrencyProfileId, getPurchaseTypes } from "./config-type-db";
 import { getPymtAccountList } from "./pymt-acc-db";
 import { ExpenseBelongsTo } from "../../pages/expenses/services";
 import { ExpenseFilter } from "./expense-db";
@@ -49,7 +49,7 @@ const init = async () => {
     description: "this is dummy expense for demo purpose",
     tags: "outdoor,dining,trip".split(","),
     paymentAccountId: pymtAccId("checking"),
-    purchasedDate: formatTimestamp(datetime.addDays(new Date(), -10)),
+    purchaseDate: formatTimestamp(datetime.addDays(new Date(), -10)),
     purchaseTypeId: typeId("hangout"),
     receipts: [],
     items: [],
@@ -67,7 +67,7 @@ const init = async () => {
     description: "this is dummy expense for demo purpose",
     tags: "get2gethor,potluck".split(","),
     paymentAccountId: pymtAccId("cash"),
-    purchasedDate: formatTimestamp(datetime.addDays(new Date(), -3)),
+    purchaseDate: formatTimestamp(datetime.addDays(new Date(), -3)),
     purchaseTypeId: typeId("food shopping"),
     verifiedTimestamp: formatTimestamp(datetime.addHours(new Date(), -1)),
     receipts: [],
@@ -117,7 +117,7 @@ export const getPurchaseTags = async (purchasedYears: number[]) => {
   logger.debug("purchasedYears =", purchasedYears, ", purchasedYearRanges =", purchasedYears);
   const taglist = purchaseList
     .filter((pi) => {
-      const purchasedYear = getDate(pi.purchasedDate).getFullYear();
+      const purchasedYear = getDateInstance(pi.purchaseDate).getFullYear();
       return purchasedYears.includes(purchasedYear);
     })
     .flatMap((pi) => [...pi.tags, ...(pi.items?.flatMap((pii) => pii.tags) || [])]);

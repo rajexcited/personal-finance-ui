@@ -119,7 +119,7 @@ export const PurchaseBreakDown: FunctionComponent<PurchaseBreakDownProps> = (pro
                 </p>
                 <button className="card-header-icon" aria-label="expand breakdown" onClick={ onClickBodyToggleHandler }>
                     <span>
-                        { items.length } item { items.length === 1 ? "" : "s" }
+                        { items.length - 1 } item { items.length > 2 ? "s" : "" }
                     </span>
                     <span className="icon">
                         <FontAwesomeIcon icon={ isBodyOpen ? faAngleUp : faAngleDown } />

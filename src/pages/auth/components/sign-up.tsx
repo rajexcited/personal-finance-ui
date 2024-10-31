@@ -80,7 +80,7 @@ const SignupPage: FunctionComponent = () => {
 
 
     return (
-        <section className="section">
+        <section className="section is-px-0-mobile">
             <LoadSpinner loading={ submitting } />
 
             {

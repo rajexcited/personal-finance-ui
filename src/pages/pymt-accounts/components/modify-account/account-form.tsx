@@ -1,8 +1,8 @@
-import { FunctionComponent, useEffect, useState, useMemo } from "react";
+import { FunctionComponent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFullPath } from "../../../root";
-import { TagsInput, Input, TextArea, DropDown, InputValidators } from "../../../../components";
-import { ConfigResource, PymtAccountFields, PymtAccStatus } from "../../services";
+import { TagsInput, Input, TextArea, DropDown, InputValidators, DropDownItemType, CurrencySymbol } from "../../../../components";
+import { ConfigResource, PymtAccountFields, PymtAccStatus, getLogger } from "../../services";
 import { faBank } from "@fortawesome/free-solid-svg-icons";
 import { CurrencyProfileResource } from "../../../settings/services";
 
@@ -11,11 +11,6 @@ import { CurrencyProfileResource } from "../../../settings/services";
 export interface AccountFormProps {
     onSubmit (account: PymtAccountFields): void;
     submitLabel: string;
-    // how to set this value? if I collect values from displayed paymentAccounts, 
-    // there are chances to missed the tags. 
-    // if I set it as config type, I need to manage add/remove. tideous task.
-    // may be I can allow user to load old tags and store it as settings and 
-    // can setup a rest api to retrieve tags
     sourceTags: string[];
     categoryTypes: ConfigResource[];
     details?: PymtAccountFields;
@@ -23,26 +18,56 @@ export interface AccountFormProps {
     currencyProfiles: CurrencyProfileResource[];
 }
 
+const fcLogger = getLogger("FC.AccountForm", null, null, "DISABLED");
+
 const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
     const [shortName, setShortName] = useState(props.details?.shortName || "");
     const [accountIdNum, setAccountIdNum] = useState(props.details?.accountIdNum || "");
     const [institutionName, setInstitutionName] = useState(props.details?.institutionName || "");
     const [description, setDescription] = useState(props.details?.description || "");
     const [tags, setTags] = useState(props.details?.tags || []);
-    const [typeName, setTypeName] = useState(props.details?.typeName?.toString() || "");
+    const [dropdownAccTypes, setDropdownAccTypes] = useState<DropDownItemType[]>([]);
+    const [selectedDropdownAccType, setSelectedDropdownAccType] = useState<DropDownItemType>();
     const [defaultCurrencyProfile, setDefaultCurrencyProfile] = useState<CurrencyProfileResource>(props.currencyProfiles[0]);
-
-    // how to set this value? if I collect values from displayed paymentAccounts, 
-    // there are chances to missed the tags. 
-    // if I set it as config type, I need to manage add/remove. tideous task.
-    // may be I can allow user to load old tags and store it as settings and 
-    // can setup a rest api to retrieve tags
-    // const [sourceTagValues, setSourceTagValues] = useState<string[]>();
-
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const logger = getLogger("useEffect.dep[]", fcLogger);
+
+        const ddAccTypeList: DropDownItemType[] = props.categoryTypes.map((typCfg) => {
+            return {
+                id: typCfg.id,
+                content: typCfg.name,
+                tooltip: typCfg.description
+            };
+        });
+        setDropdownAccTypes(ddAccTypeList);
+
+        if (props.details?.typeId && props.details.typeName) {
+            let mySelectedType = ddAccTypeList.find(ddTyp => (ddTyp.id === props.details?.typeId && ddTyp.content === props.details.typeName));
+            if (!mySelectedType) {
+                mySelectedType = {
+                    id: props.details.typeId,
+                    content: props.details.typeName
+                };
+            }
+            logger.debug("mySelectedType =", mySelectedType);
+            setSelectedDropdownAccType(mySelectedType);
+        }
+
+    }, []);
+
+
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = event => {
+        const logger = getLogger("onSubmitHandler", fcLogger);
         event.preventDefault();
+
+        if (!selectedDropdownAccType) {
+            // this never gets called because it is required, but due to compilation added if condition
+            logger.debug("selectedDropdownAccType is null");
+            throw new Error("Pymt acc Type is not selected");
+        }
+
         const data: PymtAccountFields = {
             id: props.accountId,
             shortName,
@@ -50,8 +75,8 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
             institutionName,
             description,
             tags,
-            typeName,
-            typeId: "",
+            typeName: selectedDropdownAccType.content,
+            typeId: selectedDropdownAccType.id,
             auditDetails: { createdOn: "", updatedOn: "" },
             status: PymtAccStatus.Enable,
             dropdownTooltip: "",
@@ -65,8 +90,6 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
         event.stopPropagation();
         navigate(getFullPath("pymtAccountsRoot"));
     };
-
-    const accountTypes = useMemo(() => props.categoryTypes.map(ctg => ctg.name), [props.categoryTypes]);
 
     const validateName = InputValidators.nameValidator();
 
@@ -113,31 +136,30 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                             </div>
                         </div>
                         <div className="columns">
+                            <div className="column is-narrow">
+                                <CurrencySymbol
+                                    countryCode={ defaultCurrencyProfile.country.code }
+                                    countryName={ defaultCurrencyProfile.country.name }
+                                    currencyCode={ defaultCurrencyProfile.currency.code }
+                                    currencyName={ defaultCurrencyProfile.currency.name }
+                                />
+                            </div>
                             <div className="column">
                                 <div className="mr-4 pr-4">
                                     <Input
-                                        id="account-name-number"
-                                        label="Account Name / Number: "
+                                        id="account-number"
+                                        label="Account Number: "
                                         type="text"
-                                        placeholder="Enter Account name / number"
+                                        placeholder="Enter Account number"
                                         size={ 25 }
+                                        minlength={ 4 }
                                         maxlength={ 25 }
+                                        required={ true }
                                         initialValue={ accountIdNum }
-                                        tooltip="The account you want to add. give full name of account. this is for you to recognise account details."
+                                        tooltip="if you are uncofortable entering full account number, add last 4 digits so verification can be made easy."
                                         onChange={ setAccountIdNum }
                                         validate={ validateName }
                                     />
-                                </div>
-                            </div>
-                            <div className="column">
-                                <div className="column is-narrow">
-                                    <p className="field">&nbsp;</p>
-                                    <p className="field">
-                                        <span className="tag is-link-is-light">{ defaultCurrencyProfile.name }</span>
-                                    </p>
-                                    <p className="field">
-                                        <span className="tag is-link-is-light">{ defaultCurrencyProfile.value }</span>
-                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -146,11 +168,11 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                                 <DropDown
                                     id="account-type"
                                     label="Account Type: "
-                                    items={ accountTypes }
-                                    onSelect={ (selected: string) => setTypeName(selected) }
+                                    items={ dropdownAccTypes }
+                                    onSelect={ (selected: DropDownItemType) => setSelectedDropdownAccType(selected) }
                                     direction="down"
                                     required={ true }
-                                    selectedItem={ typeName }
+                                    selectedItem={ selectedDropdownAccType }
                                 />
                             </div>
                             <div className="column">
@@ -185,13 +207,30 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                 <footer>
                     <div className="columns">
                         <div className="column">
-                            <div className="buttons">
-                                <button className="button is-light" type="button" onClick={ onCancelHandler }> Cancel </button>
+                            <div className="buttons is-centered is-display-mobile">
+                                <button className="button is-dark is-large" type="submit">
+                                    <span className="px-2-label">
+                                        { props.submitLabel }
+                                    </span>
+                                </button>
                             </div>
                         </div>
                         <div className="column">
-                            <div className="buttons has-addons is-centered">
-                                <button className="button is-dark is-medium" type="submit"> { props.submitLabel } </button>
+                            <div className="buttons">
+                                <button className="button is-light" type="button" onClick={ onCancelHandler }>
+                                    <span className="px-2-label">
+                                        Cancel
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                        <div className="column">
+                            <div className="buttons is-centered is-hidden-mobile">
+                                <button className="button is-dark is-medium" type="submit">
+                                    <span className="px-2-label">
+                                        { props.submitLabel }
+                                    </span>
+                                </button>
                             </div>
                         </div>
                     </div>

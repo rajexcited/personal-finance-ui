@@ -70,7 +70,7 @@ const purchaseAddUpdateActionHandler = async (request: Request) => {
       paymentAccountName: getFormData(formdata, "paymentAccountName"),
       amount: getFormData(formdata, "amount"),
       description: getFormData(formdata, "description"),
-      purchasedDate: getFormData(formdata, "purchasedDate"),
+      purchaseDate: getFormData(formdata, "purchaseDate"),
       tags: getFormData(formdata, "tags"),
       verifiedTimestamp: getFormData(formdata, "verifiedTimestamp"),
       items: getFormData(formdata, "items"),

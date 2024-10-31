@@ -1,1 +1,3 @@
-export { MyLocalDatabase, LocalDBStore, LocalDBStoreIndex } from "./db";
+export { MyLocalDatabase } from "./db";
+
+export { LocalDBStore, LocalDBStoreIndex } from "./def-config";

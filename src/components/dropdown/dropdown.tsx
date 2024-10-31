@@ -19,7 +19,7 @@ export interface DropDownProps {
     items: string[] | DropDownItemType[];
     selectedItem?: string | DropDownItemType;
     defaultItem?: string | DropDownItemType;
-    onSelect (item: string | DropDownItemType): void;
+    onSelect (item: string | DropDownItemType | undefined): void;
     direction?: "up" | "down";
     size?: "normal" | "small" | "medium" | "large";
     required?: boolean;
@@ -126,13 +126,14 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
         }
     };
 
-    const onSelectHandler = (item: DropDownItemType, selectedId: string) => {
+    const onSelectHandler = (selectedId?: string) => {
         setOpen(false);
-        setSelectedItem(item);
+        const matched = selectedId ? filteredItems.find(dditm => (dditm.id === selectedId.replace("drpdwnitm", ""))) : undefined;
+        setSelectedItem(matched);
         if (typeof props.items[0] === "string") {
-            props.onSelect(item.id);
+            props.onSelect(matched?.id);
         } else {
-            props.onSelect(item);
+            props.onSelect(matched);
         }
     };
 
@@ -186,7 +187,7 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
                                         id={ itm.id + "drpdwnitm" }
                                         content={ itm.content }
                                         tooltip={ itm.tooltip }
-                                        onSelect={ onSelectHandler.bind(null, itm) }
+                                        onSelect={ onSelectHandler }
                                         type="text"
                                         selectedId={ selectedItem?.id + "drpdwnitm" } />
                                 )
@@ -212,9 +213,10 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
                         type="text"
                         name={ props.id + "dropdown" }
                         id={ props.id + "dropdown" }
-                        value={ selectedItem?.id }
+                        value={ selectedItem?.id || "" }
                         required={ props.required }
                         className="dropdown-input-required"
+                        onChange={ () => { } }
                     />
                 }
             </div>

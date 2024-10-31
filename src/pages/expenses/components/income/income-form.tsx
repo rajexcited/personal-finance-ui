@@ -10,12 +10,13 @@ import {
     TextArea,
     DropDownItemType,
     TagObject,
-    TagsInputSharePerson
+    TagsInputSharePerson,
+    CurrencySymbol
 } from "../../../../components";
 import { ExpenseBelongsTo, ExpenseStatus, formatTimestamp, getLogger, IncomeFields, receiptService } from "../../services";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../components/receipt";
 import { PymtAccountFields } from "../../../pymt-accounts/services";
-import { ConfigResource } from "../../../../shared";
+import { ConfigResource, getDateInstance } from "../../../../shared";
 import { CurrencyProfileResource, SharePersonResource } from "../../../settings/services";
 
 
@@ -39,7 +40,7 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
     const [billName, setBillName] = useState(props.incomeDetails?.billName || '');
     const [amount, setAmount] = useState(props.incomeDetails?.amount || '');
     const [description, setDescription] = useState(props.incomeDetails?.description || '');
-    const [incomeDate, setIncomeDate] = useState(props.incomeDetails?.incomeDate as Date);
+    const [incomeDate, setIncomeDate] = useState(new Date());
     const [tags, setTags] = useState<string[]>(props.incomeDetails?.tags || []);
     const [receipts, setReceipts] = useState<ReceiptProps[]>(props.incomeDetails?.receipts || []);
     const [dropdownPymtAccountItems, setDropdownPymtAccountItems] = useState<DropDownItemType[]>([]);
@@ -55,8 +56,8 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
     useEffect(() => {
         const logger = getLogger("useEffect.dep[]", fcLogger);
 
-        if (!props.incomeDetails?.incomeDate) {
-            setIncomeDate(new Date());
+        if (props.incomeDetails?.incomeDate) {
+            setIncomeDate(getDateInstance(props.incomeDetails.incomeDate));
         }
 
         const ddPymtAccList: DropDownItemType[] = props.paymentAccounts.map((pymtDetails) => ({
@@ -127,6 +128,10 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
             // this never gets called because it is required, but due to compilation added if condition
             throw new Error("Income Type is not selected");
         }
+        if (!selectedDropdownPymtAccount) {
+            // this never gets called because it is required, but due to compilation added if condition
+            throw new Error("Pymt acc is not selected");
+        }
 
         const formData = new FormData();
 
@@ -151,7 +156,8 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
         const data: IncomeFields = {
             id: props.incomeId,
             billName: billName,
-            paymentAccountId: selectedDropdownPymtAccount?.id,
+            paymentAccountId: selectedDropdownPymtAccount.id,
+            paymentAccountName: selectedDropdownPymtAccount.content,
             amount: amount,
             description: description,
             incomeDate: incomeDate,
@@ -172,7 +178,9 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
             if (value instanceof Date) value = formatTimestamp(value);
             else if (typeof value === "object") value = JSON.stringify(value);
             logger.debug("added to form, key=", key, ", value =", value);
-            formData.append(key, value);
+            if (value !== undefined) {
+                formData.append(key, value);
+            }
         });
 
         logger.info("data =", data);
@@ -218,13 +226,12 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
                     </div>
                     <div className="columns">
                         <div className="column is-narrow">
-                            <p className="field">&nbsp;</p>
-                            <p className="field">
-                                <span className="tag is-link-is-light">{ defaultCurrencyProfile.name }</span>
-                            </p>
-                            <p className="field">
-                                <span className="tag is-link-is-light">{ defaultCurrencyProfile.value }</span>
-                            </p>
+                            <CurrencySymbol
+                                countryCode={ defaultCurrencyProfile.country.code }
+                                countryName={ defaultCurrencyProfile.country.name }
+                                currencyCode={ defaultCurrencyProfile.currency.code }
+                                currencyName={ defaultCurrencyProfile.currency.name }
+                            />
                         </div>
                         <div className="column">
                             <Input
@@ -342,13 +349,30 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
             </div>
             <div className="columns">
                 <div className="column">
-                    <div className="buttons">
-                        <button className="button is-light" type="button" onClick={ onCancelHandler }> Cancel </button>
+                    <div className="buttons is-centered is-display-mobile">
+                        <button className="button is-dark is-medium" type="submit">
+                            <span className="px-2-label">
+                                { props.submitLabel }
+                            </span>
+                        </button>
                     </div>
                 </div>
                 <div className="column">
-                    <div className="buttons has-addons is-centered">
-                        <button className="button is-dark is-medium" type="submit"> { props.submitLabel } </button>
+                    <div className="buttons">
+                        <button className="button is-light" type="button" onClick={ onCancelHandler }>
+                            <span className="px-2-label">
+                                Cancel
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                <div className="column">
+                    <div className="buttons is-centered is-hidden-mobile">
+                        <button className="button is-dark is-medium" type="submit">
+                            <span className="px-2-label">
+                                { props.submitLabel }
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>

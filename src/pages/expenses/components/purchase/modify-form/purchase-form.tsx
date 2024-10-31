@@ -11,13 +11,15 @@ import {
     VerifyIndicator,
     DropDownItemType,
     TagsInputSharePerson,
-    TagObject
+    TagObject,
+    CurrencySymbol
 } from "../../../../../components";
 import { PurchaseBreakDown } from "./purchase-breakdown";
 import { ConfigResource, PurchaseFields, PurchaseItemFields, formatTimestamp, getLogger, ExpenseBelongsTo, receiptService } from "../../../services";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../../components/receipt";
 import { PymtAccountFields } from "../../../../pymt-accounts/services";
 import { CurrencyProfileResource, SharePersonResource } from "../../../../settings/services";
+import { getDateInstance, InvalidError } from "../../../../../shared";
 
 
 export interface PurchaseFormProps {
@@ -40,11 +42,11 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
     const [dropdownPymtAccounts, setDropdownPymtAccounts] = useState<DropDownItemType[]>([]);
     const [selectedDropdownPymtAccount, setSelectedDropdownPymtAccount] = useState<DropDownItemType>();
     const [description, setDescription] = useState(props.details?.description || '');
-    const [purchasedDate, setPurchaseDate] = useState(props.details?.purchasedDate as Date || new Date());
+    const [purchaseDate, setPurchaseDate] = useState(new Date());
     const [tags, setTags] = useState<string[]>(props.details?.tags || []);
     const [dropdownPurchaseTypeItems, setDropdownPurchaseTypeItems] = useState<DropDownItemType[]>([]);
     const [selectedDropdownPurchaseType, setSelectedDropdownPurchaseType] = useState<DropDownItemType>();
-    const [verifiedDateTime, setVerifiedDateTime] = useState(props.details?.verifiedTimestamp as Date | undefined);
+    const [verifiedDateTime, setVerifiedDateTime] = useState<Date>();
     const [items, setItems] = useState<PurchaseItemFields[]>(props.details?.items || []);
     const [receipts, setReceipts] = useState<ReceiptProps[]>(props.details?.receipts || []);
     const [selectedSharePersonTagItems, setSelectedSharePersonTagItems] = useState<TagObject[]>([]);
@@ -55,6 +57,10 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = async event => {
         event.preventDefault();
         const logger = getLogger("onSubmitHandler", fcLogger);
+
+        if (!selectedDropdownPurchaseType) {
+            throw new InvalidError("purchaseType is not selected");
+        }
 
         const formData = new FormData();
 
@@ -80,7 +86,7 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
             paymentAccountId: selectedDropdownPymtAccount?.id,
             amount,
             description,
-            purchasedDate,
+            purchaseDate,
             tags,
             verifiedTimestamp: verifiedDateTime,
             items,
@@ -99,7 +105,9 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
             if (value instanceof Date) value = formatTimestamp(value);
             else if (typeof value === "object") value = JSON.stringify(value);
             logger.info("added to form, key=", key, ", value =", value);
-            formData.append(key, value || "");
+            if (value !== undefined) {
+                formData.append(key, value);
+            }
         });
 
         logger.info("data =", data);
@@ -114,6 +122,14 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
 
     useEffect(() => {
         const logger = getLogger("useEffect.dep[]", fcLogger);
+
+        if (props.details?.purchaseDate) {
+            setPurchaseDate(getDateInstance(props.details.purchaseDate));
+        }
+        if (props.details?.verifiedTimestamp) {
+            setVerifiedDateTime(getDateInstance(props.details.verifiedTimestamp));
+        }
+
         const myDropdownPurchaseTypeItems = props.purchaseTypes.map(ctg => {
             const itm: DropDownItemType = {
                 id: ctg.id || "configIdNeverUsed",
@@ -214,13 +230,12 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
                     </div>
                     <div className="columns">
                         <div className="column is-narrow">
-                            <p className="field">&nbsp;</p>
-                            <p className="field">
-                                <span className="tag is-link-is-light">{ defaultCurrencyProfile.name }</span>
-                            </p>
-                            <p className="field">
-                                <span className="tag is-link-is-light">{ defaultCurrencyProfile.value }</span>
-                            </p>
+                            <CurrencySymbol
+                                countryCode={ defaultCurrencyProfile.country.code }
+                                countryName={ defaultCurrencyProfile.country.name }
+                                currencyCode={ defaultCurrencyProfile.currency.code }
+                                currencyName={ defaultCurrencyProfile.currency.name }
+                            />
                         </div>
                         <div className="column">
                             <Input
@@ -261,6 +276,7 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
                                 direction="down"
                                 selectedItem={ selectedDropdownPurchaseType }
                                 defaultItem={ selectedDropdownPurchaseType }
+                                required={ true }
                             />
                         </div>
                     </div>
@@ -337,7 +353,7 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
                                     key={ "purchase-purchase-date" }
                                     id="purchase-purchase-date"
                                     label="Purchased Date: "
-                                    startDate={ purchasedDate }
+                                    startDate={ purchaseDate }
                                     onSelect={ (range) => { setPurchaseDate((prev) => (range.start || prev)); } }
                                 />
                             </div>
@@ -361,13 +377,30 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
             </div>
             <div className="columns">
                 <div className="column">
-                    <div className="buttons">
-                        <button className="button is-light" type="button" onClick={ onCancelHandler }> Cancel </button>
+                    <div className="buttons is-centered is-display-mobile">
+                        <button className="button is-dark is-large" type="submit">
+                            <span className="px-2-label">
+                                { props.submitLabel }
+                            </span>
+                        </button>
                     </div>
                 </div>
                 <div className="column">
-                    <div className="buttons has-addons is-centered">
-                        <button className="button is-dark is-medium" type="submit"> { props.submitLabel } </button>
+                    <div className="buttons">
+                        <button className="button is-light" type="button" onClick={ onCancelHandler }>
+                            <span className="px-2-label">
+                                Cancel
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                <div className="column">
+                    <div className="buttons is-centered is-hidden-mobile">
+                        <button className="button is-dark is-medium" type="submit">
+                            <span className="px-2-label">
+                                { props.submitLabel }
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>

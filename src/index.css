@@ -40,3 +40,25 @@ tr.is-selected.is-light {
 .tooltip.is-tooltip-multiline::before {
     white-space: pre-line;
 }
+
+.px-2-label {
+    padding-left: 2rem;
+    padding-right: 2rem;
+}
+
+@media screen and (min-width: 769px),
+print {
+
+    .is-display-mobile,
+    .columns.is-display-mobile {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 768px),
+print {
+    .section.is-px-0-mobile {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}

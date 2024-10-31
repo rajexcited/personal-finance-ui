@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { ExpenseStatus } from "../../pages/expenses";
-import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDate, getLogger } from "../../shared";
+import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDateInstance, getLogger } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { auditData } from "../services/userDetails";
 import { deleteReceiptFileData, updateIncomeIdForReceipt } from "./receipts-db";
@@ -31,7 +31,7 @@ const init = async () => {
   const paymentAccounts = (await getPymtAccountList()).list;
   logger.debug("retrieved", paymentAccounts.length, "payment accounts");
   const pymtAccId = (accname: string) => {
-    return paymentAccounts.find((acc) => acc.shortName.toLowerCase().includes(accname.toLowerCase()))?.id;
+    return paymentAccounts.find((acc) => acc.shortName.toLowerCase().includes(accname.toLowerCase()))?.id as string;
   };
 
   const incomes = await incomeDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ExpenseBelongsTo.Income);
@@ -51,6 +51,7 @@ const init = async () => {
     description: "job salary",
     tags: "job".split(","),
     paymentAccountId: pymtAccId("checking"),
+    paymentAccountName: "",
     incomeDate: formatTimestamp(new Date()),
     incomeTypeId: typeId("salary"),
     receipts: [],
@@ -74,7 +75,7 @@ export const getIncomeTags = async (incomeYears: number[]) => {
   logger.debug("incomeYears =", incomeYears, ", incomeYearRanges =", incomeYears);
   const taglist = incomeList
     .filter((ii) => {
-      const incomeYear = getDate(ii.incomeDate).getFullYear();
+      const incomeYear = getDateInstance(ii.incomeDate).getFullYear();
       return incomeYears.includes(incomeYear);
     })
     .flatMap((ii) => ii.tags);
@@ -162,7 +163,7 @@ export const addUpdateIncome = async (data: IncomeFields) => {
       currencyProfileId: await getDefaultCurrencyProfileId(),
     };
 
-    delete updatedIncome.paymentAccountName;
+    // delete updatedIncome.paymentAccountName;
     await incomeDb.addUpdateItem(updatedIncome);
     return { updated: updatedIncome };
   }

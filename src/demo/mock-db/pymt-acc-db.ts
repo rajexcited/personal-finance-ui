@@ -55,6 +55,9 @@ export const getPymtAccountList = async (statuses?: PymtAccStatus[], baseLogger?
   const logger = getLogger("getlist", rootLogger, baseLogger);
 
   const filterStatuses = !statuses || statuses.length === 0 ? [PymtAccStatus.Enable] : statuses;
+  if (filterStatuses.includes(PymtAccStatus.Enable) && !filterStatuses.includes(PymtAccStatus.Immutable)) {
+    filterStatuses.push(PymtAccStatus.Immutable);
+  }
   const pymtAccPromises = filterStatuses.map(async (status) => {
     return await pymtAccDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, status);
   });

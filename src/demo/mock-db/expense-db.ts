@@ -31,7 +31,7 @@ const getDateInstance = (date: string | Date) => {
 export const getExpenseDate = (xpns: ExpenseFields, logger: LoggerBase) => {
   let xpnsDate: Date;
   if (xpns.belongsTo === ExpenseBelongsTo.Purchase) {
-    xpnsDate = getDateInstance(xpns.purchasedDate);
+    xpnsDate = getDateInstance(xpns.purchaseDate);
   } else if (xpns.belongsTo === ExpenseBelongsTo.PurchaseRefund) {
     xpnsDate = getDateInstance(xpns.refundDate);
   } else {

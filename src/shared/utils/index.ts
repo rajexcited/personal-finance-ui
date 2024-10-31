@@ -1,6 +1,6 @@
 export { isBlank, isNotBlank, isUuid } from "./string-utils";
 
-export { formatTimestamp, parseTimestamp, subtractDates, getDate } from "./date-utils";
+export { formatTimestamp, parseTimestamp, subtractDates, getDateInstance, getDateString } from "./date-utils";
 
 export {
   handleRestErrors,

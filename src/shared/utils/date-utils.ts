@@ -13,7 +13,7 @@ export const formatTimestamp = (timestamp: Date, formatPattern?: string | null) 
   return datetime.format(timestamp, format);
 };
 
-export const getDate = (date: DateParamType, format?: string) => {
+export const getDateInstance = (date: DateParamType, format?: string) => {
   let dd = new Date();
   if (date instanceof Date) {
     dd = date;
@@ -21,6 +21,25 @@ export const getDate = (date: DateParamType, format?: string) => {
     dd = parseTimestamp(date, format);
   } else if (typeof date === "number") {
     dd = new Date(date);
+  }
+
+  return dd;
+};
+
+export const getDateString = (date: DateParamType, format?: string, defaultValue?: string) => {
+  let dd = null;
+  if (!date && defaultValue) {
+    return defaultValue;
+  }
+
+  if (date && typeof date === "string") {
+    dd = date;
+  } else {
+    dd = getDateInstance(date);
+  }
+
+  if (dd instanceof Date) {
+    return formatTimestamp(dd, format);
   }
 
   return dd;
@@ -36,5 +55,5 @@ type DateParamType = string | null | undefined | number | Date;
  * @returns subtracted instance
  */
 export const subtractDates = (endDate: DateParamType, startDate?: DateParamType, format?: string) => {
-  return datetime.subtract(getDate(endDate, format), getDate(startDate, format));
+  return datetime.subtract(getDateInstance(endDate, format), getDateInstance(startDate, format));
 };

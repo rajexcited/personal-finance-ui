@@ -31,8 +31,8 @@ export const rowHeaders: Header[] = [
     id: "xpns-dt",
     label: "Expense Date",
     sortable: true,
-    datafieldKey: "purchasedDate",
-    relatedDatafieldKeys: ["incomeDate", "refundDate", "purchasedDate"],
+    datafieldKey: "purchaseDate",
+    relatedDatafieldKeys: ["incomeDate", "refundDate", "purchaseDate"],
   },
   { id: "pymt-acc", label: "Payment Account", sortable: true, datafieldKey: "paymentAccountName", relatedDatafieldKeys: [] },
   {

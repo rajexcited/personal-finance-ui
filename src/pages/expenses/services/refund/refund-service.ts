@@ -5,8 +5,6 @@ import {
   getLogger,
   MyLocalDatabase,
   LocalDBStore,
-  parseTimestamp,
-  formatTimestamp,
   subtractDates,
   LoggerBase,
   getDefaultIfError,
@@ -17,6 +15,9 @@ import {
   getCacheOption,
   handleAndRethrowServiceError,
   isUuid,
+  getDateInstance,
+  getDateString,
+  ConfigTypeStatus,
 } from "../../../../shared";
 import { pymtAccountService } from "../../../pymt-accounts";
 import { ExpenseBelongsTo, ExpenseFields } from "../expense/field-types";
@@ -24,6 +25,7 @@ import { PurchaseRefundFields } from "./field-types";
 import { receiptService } from "../receipt";
 import { CacheAction, ReceiptProps } from "../../../../components/receipt";
 import { StatBelongsTo, statService } from "../../../home/services";
+import { refundReasonService } from ".";
 
 const serviceLogger = getLogger("service.expense.refund", null, null, "DISABLED");
 const refundDb = new MyLocalDatabase<PurchaseRefundFields>(LocalDBStore.Expense);
@@ -37,9 +39,9 @@ export const setClearExpenseListCacheHandler = (clearCacheFn: Function) => {
   clearExpenseListCache = clearCacheFn;
 };
 
-const clearCache = () => {
+const clearCache = (refundData: PurchaseRefundFields) => {
   clearExpenseListCache();
-  statService.clearStatsCache(StatBelongsTo.Refund);
+  statService.clearStatsCache(StatBelongsTo.Refund, getDateInstance(refundData.refundDate).getFullYear());
   pMemoizeClear(getDetails);
 };
 
@@ -92,6 +94,27 @@ const updateTags = async (refund: PurchaseRefundFields) => {
   logger.debug("add update tags completed");
 };
 
+const updateReasonValue = async (refundDetails: PurchaseRefundFields) => {
+  let startTime = new Date();
+  const logger = getLogger("updateReasonValue", serviceLogger);
+
+  if (refundDetails.reasonId && isUuid(refundDetails.reasonId)) {
+    const reasonList = await getDefaultIfError(() => refundReasonService.getReasonList(ConfigTypeStatus.Enable), []);
+    let matchedReason = reasonList.find((rsn) => rsn.id === refundDetails.reasonId) || null;
+
+    if (!matchedReason) {
+      const reasonId = refundDetails.reasonId;
+      matchedReason = await getDefaultIfError(() => refundReasonService.getReason(reasonId), null);
+    }
+
+    if (matchedReason) {
+      refundDetails.reasonValue = matchedReason.value;
+    }
+  }
+
+  logger.info("execution time =", subtractDates(null, startTime).toSeconds(), " sec");
+};
+
 export const addUpdateDbRefund = async (refunddetails: PurchaseRefundFields, loggerBase: LoggerBase) => {
   // here we don't have url or file prop in receipts
   const logger = getLogger("addUpdateDbRefund", loggerBase);
@@ -101,14 +124,14 @@ export const addUpdateDbRefund = async (refunddetails: PurchaseRefundFields, log
   const transformStart = new Date();
   const dbRefund: PurchaseRefundFields = {
     ...refunddetails,
-    refundDate: typeof refunddetails.refundDate === "string" ? parseTimestamp(refunddetails.refundDate) : refunddetails.refundDate,
+    refundDate: getDateInstance(refunddetails.refundDate),
+    description: refunddetails.description || "",
   };
   await updatePaymentAccount(dbRefund);
+  await updateReasonValue(dbRefund);
 
   convertAuditFieldsToDateInstance(dbRefund.auditDetails);
   dbRefund.receipts = dbRefund.receipts.map((rct) => ({ ...rct, relationId: dbRefund.id }));
-  await initializeRefundTags();
-  await updateTags(dbRefund);
 
   logger.info("transforming execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
   await refundDb.addUpdateItem(dbRefund);
@@ -166,24 +189,26 @@ export const addUpdateDetails = pMemoize(async (refunddetails: PurchaseRefundFie
     validateRefundBelongsTo(refunddetails);
     const data: PurchaseRefundFields = {
       ...refunddetails,
-      refundDate: refunddetails.refundDate instanceof Date ? formatTimestamp(refunddetails.refundDate) : refunddetails.refundDate,
+      refundDate: getDateString(refunddetails.refundDate),
       purchaseId: refunddetails.purchaseDetails?.id || refunddetails.purchaseId,
       purchaseDetails: undefined,
     };
     const response = await axios.post(rootPath, data);
+    const refundResponse = response.data as PurchaseRefundFields;
+    await updateTags(refundResponse);
 
     const refundReceipts = refunddetails.receipts.reduce((obj: Record<string, ReceiptProps>, rct) => {
       obj[rct.name] = rct;
       return obj;
     }, {});
 
-    const updateReceiptIdPromises = (response.data as PurchaseRefundFields).receipts.map(async (rct) => {
+    const updateReceiptIdPromises = refundResponse.receipts.map(async (rct) => {
       await receiptService.cacheReceiptFile(refundReceipts[rct.name], CacheAction.AddUpdateGet, undefined, rct);
     });
     await Promise.all(updateReceiptIdPromises);
 
     // cleaning memory if receipt object is removed
-    const existing = await refundDb.getItem(response.data.id);
+    const existing = await refundDb.getItem(refundResponse.id);
     if (existing) {
       const deleteReceiptPromises = existing.receipts.map(async (rct) => {
         if (!refundReceipts[rct.name]) {
@@ -193,8 +218,8 @@ export const addUpdateDetails = pMemoize(async (refunddetails: PurchaseRefundFie
       await Promise.all(deleteReceiptPromises);
     }
 
-    await addUpdateDbRefund(response.data, logger);
-    clearCache();
+    await addUpdateDbRefund(refundResponse, logger);
+    clearCache(refundResponse);
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
@@ -206,18 +231,21 @@ export const removeDetails = pMemoize(async (refundId: string) => {
 
   try {
     const response = await axios.delete(`${rootPath}/id/${refundId}`);
-    await addUpdateDbRefund(response.data, logger);
-    const deletingReceiptPromises = (response.data as PurchaseRefundFields).receipts.map(async (rct) => {
+    const refundResponse = response.data as PurchaseRefundFields;
+
+    await addUpdateDbRefund(refundResponse, logger);
+    const deletingReceiptPromises = refundResponse.receipts.map(async (rct) => {
       await receiptService.cacheReceiptFile(rct, CacheAction.Remove);
     });
     await Promise.all(deletingReceiptPromises);
-    clearCache();
+    clearCache(refundResponse);
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
   }
 }, getCacheOption("3 sec"));
 
-export const getTags = () => {
+export const getTags = pMemoize(async () => {
+  await initializeRefundTags();
   return tagService.getTags();
-};
+}, getCacheOption("30 sec"));

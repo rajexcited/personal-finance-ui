@@ -8,7 +8,7 @@ const statsDb = new MyLocalDatabase<StatsExpenseResource>(LocalDBStore.Statistic
 const rootPath = "/stats";
 const _logger = getLogger("service.home.stats", null, null, "DEBUG");
 
-export const clearStatsCache = (belongsTo: StatBelongsTo) => {
+export const clearStatsCache = async (belongsTo: StatBelongsTo, years: number | number[]) => {
   if (belongsTo === StatBelongsTo.PurchaseMinusRefund) {
     // do nothing
     return;
@@ -21,7 +21,12 @@ export const clearStatsCache = (belongsTo: StatBelongsTo) => {
     // if (belongsTo === StatBelongsTo.Income)
     pMemoizeClear(getIncomeStats);
   }
-  statsDb.delete(belongsTo);
+
+  const statsYears = Array.isArray(years) ? years : [years];
+  const statsDetailsPromiseList = statsYears.map((year) => statsDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, [belongsTo, year.toString()]));
+  const statDetailsList = await Promise.all(statsDetailsPromiseList);
+  const statDeletePromises = statDetailsList.flat().map((statDetails) => statsDb.delete(statDetails.id));
+  await Promise.all(statDeletePromises);
 };
 
 export const getRefundStats = pMemoize(async (year: string) => {
@@ -37,7 +42,7 @@ export const getRefundStats = pMemoize(async (year: string) => {
     const response = await axios.get(`${rootPath}/refund`, { params: { year: [year] } });
     logger.debug("response.data =", response.data);
     const refundStats: StatsExpenseResource = { ...response.data, id: uuidv4(), year: String(response.data.year) };
-    statsDb.addItem(refundStats);
+    statsDb.addUpdateItem(refundStats);
     return refundStats;
   } catch (e) {
     const err = e as Error;
@@ -61,7 +66,7 @@ export const getPurchaseStats = pMemoize(async (year: string) => {
     logger.debug("response.data =", response.data);
 
     const purchseStats: StatsExpenseResource = { ...response.data, id: uuidv4(), year: String(response.data.year) };
-    statsDb.addItem(purchseStats);
+    statsDb.addUpdateItem(purchseStats);
     return purchseStats;
   } catch (e) {
     const err = e as Error;
@@ -85,7 +90,7 @@ export const getIncomeStats = pMemoize(async (year: string) => {
     logger.debug("response.data =", response.data);
 
     const incomeStats: StatsExpenseResource = { ...response.data, id: uuidv4(), year: String(response.data.year) };
-    statsDb.addItem(incomeStats);
+    statsDb.addUpdateItem(incomeStats);
     return incomeStats;
   } catch (e) {
     const err = e as Error;

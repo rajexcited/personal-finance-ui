@@ -10,12 +10,13 @@ import {
     TextArea,
     DropDownItemType,
     TagObject,
-    TagsInputSharePerson
+    TagsInputSharePerson,
+    CurrencySymbol
 } from "../../../../components";
 import { ExpenseBelongsTo, expenseService, ExpenseStatus, formatTimestamp, getLogger, PurchaseFields, PurchaseRefundFields, receiptService } from "../../services";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../components/receipt";
 import { PymtAccountFields } from "../../../pymt-accounts/services";
-import { ConfigResource, isNotBlank, parseTimestamp } from "../../../../shared";
+import { ConfigResource, getDateInstance, isNotBlank } from "../../../../shared";
 import { CurrencyProfileResource, SharePersonResource } from "../../../settings/services";
 
 
@@ -33,7 +34,7 @@ export interface PurchaseRefundFormProps {
     currencyProfiles: CurrencyProfileResource[];
 }
 
-const fcLogger = getLogger("FC.PurchaseRefundForm", null, null, "DISABLED");
+const fcLogger = getLogger("FC.PurchaseRefundForm", null, null, "DEBUG");
 const purchasePageMonths = 2;
 
 const getPurchaseDropdownTooltip = (purchaseDetails: PurchaseFields) => {
@@ -41,34 +42,38 @@ const getPurchaseDropdownTooltip = (purchaseDetails: PurchaseFields) => {
     let ddTooltip = "";
     ddTooltip = purchaseDetails.description ? purchaseDetails.description : "";
     if (isNotBlank(ddTooltip)) {
-        ddTooltipLines.push(" " + ddTooltip + "  ");
+        // ddTooltipLines.push(" " + ddTooltip + "  ");
+        ddTooltipLines.push(ddTooltip);
     }
-    ddTooltip = purchaseDetails.tags.length > 0 ? "Tags: " + purchaseDetails.tags.join(",") : "";
+    ddTooltip = purchaseDetails.tags.length > 0 ? "Tags:" + purchaseDetails.tags.join(",") : "";
     if (isNotBlank(ddTooltip)) {
-        ddTooltipLines.push(" " + ddTooltip + "  ");
+        // ddTooltipLines.push(" " + ddTooltip + "  ");
+        ddTooltipLines.push(ddTooltip);
     }
 
-    ddTooltip = purchaseDetails.purchaseTypeName ? "Type: " + purchaseDetails.purchaseTypeName + "; " : "";
+    ddTooltip = purchaseDetails.purchaseTypeName ? "Type:" + purchaseDetails.purchaseTypeName + "; " : "";
     if (isNotBlank(ddTooltip)) {
-        ddTooltipLines.push(" " + ddTooltip + "  ");
+        // ddTooltipLines.push(" " + ddTooltip + "  ");
+        ddTooltipLines.push(ddTooltip);
     }
-    return ddTooltipLines.join("&#10;&#13;");
+    // return ddTooltipLines.join("&#10;&#13;");
+    return ddTooltipLines.join("   ");
 };
 
 const getPurchaseDropdownContent = (purchaseDetails: PurchaseFields) => {
     let ddContent = "Billname: " + purchaseDetails.billName + "; ";
     ddContent += purchaseDetails.amount !== undefined ? "Amount: " + purchaseDetails.amount + "; " : "";
-    const purchasedDate = typeof purchaseDetails.purchasedDate === "string" ? parseTimestamp(purchaseDetails.purchasedDate) : purchaseDetails.purchasedDate;
-    ddContent += "Purchase Date: " + formatTimestamp(purchasedDate, "MM-DD-YYYY");
+    const purchasedDateInstance = getDateInstance(purchaseDetails.purchaseDate);
+    ddContent += "Purchase Date: " + formatTimestamp(purchasedDateInstance, "MM-DD-YYYY");
 
     return ddContent;
 };
 
 export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (props) => {
-    const [billName, setBillName] = useState(props.refundDetails?.billName || '');
-    const [amount, setAmount] = useState(props.refundDetails?.amount || '');
+    const [billName, setBillName] = useState("");
+    const [amount, setAmount] = useState("");
     const [description, setDescription] = useState(props.refundDetails?.description || '');
-    const [refundDate, setRefundDate] = useState(props.refundDetails?.refundDate as Date);
+    const [refundDate, setRefundDate] = useState(new Date());
     const [tags, setTags] = useState<string[]>(props.refundDetails?.tags || []);
     const [receipts, setReceipts] = useState<ReceiptProps[]>(props.refundDetails?.receipts || []);
     const [dropdownPymtAccountItems, setDropdownPymtAccountItems] = useState<DropDownItemType[]>([]);
@@ -89,6 +94,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
         const logger = getLogger("useEffect.dep[]", fcLogger);
 
         let purchasePymtAccId: string | undefined = undefined;
+        logger.debug("props.purchaseDetails =", props.purchaseDetails, " is selected as default purchase for refund.");
         if (props.purchaseDetails) {
             const myDdPurchaseDetail = {
                 id: props.purchaseDetails.id,
@@ -97,18 +103,43 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             };
             setSelectedDropdownPurchaseDetail(myDdPurchaseDetail);
             setDropdownPurchaseDetailList([myDdPurchaseDetail]);
-            if (amount === "" && props.refundDetails?.amount === undefined && props.purchaseDetails.amount !== undefined) {
-                setAmount(props.purchaseDetails.amount);
-            }
-            if (billName === "" && props.refundDetails?.billName === undefined) {
-                setBillName("Refund for " + props.purchaseDetails.billName);
-            }
+            logger.debug("refund amount =", props.refundDetails?.amount, ", and amount =", amount, " purchase amount =", props.purchaseDetails.amount);
+            setAmount(prev => {
+                if (props.refundDetails?.amount) {
+                    return props.refundDetails.amount;
+                } else if (props.purchaseDetails?.amount && amount === "" && props.refundDetails?.amount === undefined) {
+                    logger.debug("setting refund amount same as purchase amount");
+                    return props.purchaseDetails.amount;
+                }
+                return prev;
+            });
+            logger.debug("refund billname =", props.refundDetails?.billName, ", and billname =", billName, " purchase billname =", props.purchaseDetails.billName);
+            setBillName(prev => {
+                if (props.refundDetails?.billName) {
+
+                    logger.debug("setting refund billname as " + "Refund for " + props.refundDetails.billName);
+                    return props.refundDetails.billName;
+                } else if (props.purchaseDetails && billName === "") {
+                    logger.debug("setting refund billname as " + "Refund for " + props.purchaseDetails.billName);
+                    return "Refund for " + props.purchaseDetails.billName;
+                }
+                logger.debug("not changing refund billname " + prev);
+                return prev;
+            });
+            logger.debug("refund pymtAccId =", props.refundDetails?.paymentAccountId, " purchase pymtAccId =", props.purchaseDetails.paymentAccountId, "will configure selected pymtAcc if possible.");
             purchasePymtAccId = props.purchaseDetails.paymentAccountId;
+        } else {
+            setTimeout(() => {
+                loadMorePurchaseList();
+            }, 300);
         }
 
-        if (!props.refundDetails?.refundDate) {
-            setRefundDate(new Date());
-        }
+        setRefundDate(prev => {
+            if (props.refundDetails?.refundDate) {
+                return getDateInstance(props.refundDetails.refundDate);
+            }
+            return prev;
+        });
 
         const ddPymtAccList: DropDownItemType[] = props.paymentAccounts.map((pymtDetails) => ({
             id: pymtDetails.id,
@@ -143,12 +174,10 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             }
         }
         const ddreasonList: DropDownItemType[] = props.reasons.map((reasonCfg) => {
-            let dropdownTooltip = reasonCfg.description || "";
-            dropdownTooltip += reasonCfg.tags.length > 0 ? "; Tags: " + reasonCfg.tags.join(",") : "";
             return {
                 id: reasonCfg.id,
                 content: reasonCfg.name,
-                tooltip: dropdownTooltip
+                tooltip: reasonCfg.description
             };
         });
         setDropdownRefundReasons(ddreasonList);
@@ -191,6 +220,10 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             // this never gets called because it is required, but due to compilation added if condition
             throw new Error("Reason is not selected");
         }
+        if (!selectedDropdownPymtAccount) {
+            // this never gets called because it is required, but due to compilation added if condition
+            throw new Error("pymt acc is not selected");
+        }
 
         const formData = new FormData();
 
@@ -217,7 +250,8 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
         const data: PurchaseRefundFields = {
             id: props.refundId,
             billName: billName,
-            paymentAccountId: selectedDropdownPymtAccount?.id,
+            paymentAccountId: selectedDropdownPymtAccount.id,
+            paymentAccountName: selectedDropdownPymtAccount.content,
             amount: amount,
             description: description,
             refundDate: refundDate,
@@ -240,7 +274,9 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             if (value instanceof Date) value = formatTimestamp(value);
             else if (typeof value === "object") value = JSON.stringify(value);
             logger.debug("added to form, key=", key, ", value =", value);
-            formData.append(key, value);
+            if (value !== undefined) {
+                formData.append(key, value);
+            }
         });
 
         logger.info("data =", data);
@@ -283,6 +319,36 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
         });
     };
 
+    const onSelectPurchaseHandler = (selectedPurchase: DropDownItemType) => {
+        setSelectedDropdownPurchaseDetail(selectedPurchase);
+        const matchedPurchse = purchaseDetailList.find(prch => prch.id === selectedPurchase.id);
+        setAmount(prev => {
+            if (!prev) {
+                if (matchedPurchse?.amount) {
+                    return matchedPurchse.amount;
+                }
+            }
+            return prev;
+        });
+        setBillName(prev => {
+            if (!prev) {
+                if (matchedPurchse?.billName) {
+                    return "Refund for " + matchedPurchse.billName;
+                }
+            }
+            return prev;
+        });
+        setSelectedDropdownPymtAccount(prev => {
+            if (!prev) {
+                const pymtAccForSelectedPurchase = dropdownPymtAccountItems.find(pymtacc => (pymtacc.id === matchedPurchse?.paymentAccountId));
+                if (pymtAccForSelectedPurchase) {
+                    return pymtAccForSelectedPurchase;
+                }
+            }
+            return prev;
+        });
+
+    };
 
     function cacheReceiptFileHandler (receipt: ReceiptProps, cacheAction: CacheAction): Promise<DownloadReceiptResource> {
         return receiptService.cacheReceiptFile(receipt, cacheAction) as Promise<DownloadReceiptResource>;
@@ -296,50 +362,106 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
         <form onSubmit={ onSubmitHandler }>
             <div className="columns">
                 <div className="column">
+                    <DropDown
+                        id="purchase-dd"
+                        label="Purchase: "
+                        items={ dropdownPurchaseDetailList }
+                        key={ "purchase-dd" }
+                        onSelect={ onSelectPurchaseHandler }
+                        direction="down"
+                        selectedItem={ selectedDropdownPurchaseDetail }
+                        defaultItem={ selectedDropdownPurchaseDetail }
+                        loadMore={ loadMorePurchaseList }
+                        allowSearch={ true }
+                    />
+                </div>
+            </div>
+            <div className="columns">
+                <div className="column">
                     <div className="columns">
                         <div className="column">
-                            <Input
-                                id="refund-bill-name"
-                                label="Bill Name: "
-                                type="text"
-                                placeholder="Enter Refund billName"
-                                size={ 20 }
-                                initialValue={ billName }
-                                tooltip="It could be store name, online site or specific product. Have short name that you can recognize"
-                                leftIcon={ faStore }
-                                key={ "refund-bill-name" }
-                                onChange={ setBillName }
-                                required={ true }
-                                maxlength={ 50 }
-                                minlength={ 2 }
-                            />
+                            {
+                                !billName &&
+                                <Input
+                                    id="refund-bill-name-empty"
+                                    key="refund-bill-name-empty"
+                                    label="Bill Name: "
+                                    type="text"
+                                    placeholder="Enter Refund billName"
+                                    size={ 20 }
+                                    initialValue={ billName }
+                                    tooltip="It could be store name, online site or specific product. Have short name that you can recognize"
+                                    leftIcon={ faStore }
+                                    onChange={ setBillName }
+                                    required={ true }
+                                    maxlength={ 50 }
+                                    minlength={ 2 }
+                                />
+                            }
+                            {
+                                billName &&
+                                <Input
+                                    id="refund-bill-name"
+                                    key={ "refund-bill-name" }
+                                    label="Bill Name: "
+                                    type="text"
+                                    placeholder="Enter Refund billName"
+                                    size={ 20 }
+                                    initialValue={ billName }
+                                    tooltip="It could be store name, online site or specific product. Have short name that you can recognize"
+                                    leftIcon={ faStore }
+                                    onChange={ setBillName }
+                                    required={ true }
+                                    maxlength={ 50 }
+                                    minlength={ 2 }
+                                />
+                            }
                         </div>
                     </div>
                     <div className="columns">
                         <div className="column is-narrow">
-                            <p className="field">&nbsp;</p>
-                            <p className="field">
-                                <span className="tag is-link-is-light">{ defaultCurrencyProfile.name }</span>
-                            </p>
-                            <p className="field">
-                                <span className="tag is-link-is-light">{ defaultCurrencyProfile.value }</span>
-                            </p>
+                            <CurrencySymbol
+                                countryCode={ defaultCurrencyProfile.country.code }
+                                countryName={ defaultCurrencyProfile.country.name }
+                                currencyCode={ defaultCurrencyProfile.currency.code }
+                                currencyName={ defaultCurrencyProfile.currency.name }
+                            />
                         </div>
                         <div className="column">
-                            <Input
-                                id="refund-amount"
-                                label="Refund Amount: "
-                                type="number"
-                                placeholder="0.00"
-                                min={ -10000000 }
-                                max={ 10000000 }
-                                initialValue={ amount }
-                                leftIcon={ faDollarSign }
-                                className="is-medium"
-                                key={ "refund-amount" }
-                                onChange={ setAmount }
-                                step={ 0.01 }
-                            />
+                            {
+                                amount &&
+                                <Input
+                                    id="refund-amount"
+                                    key={ "refund-amount" }
+                                    label="Refund Amount: "
+                                    type="number"
+                                    placeholder="0.00"
+                                    min={ -10000000 }
+                                    max={ 10000000 }
+                                    initialValue={ amount }
+                                    leftIcon={ faDollarSign }
+                                    className="is-medium"
+                                    onChange={ setAmount }
+                                    step={ 0.01 }
+                                />
+                            }
+                            {
+                                !amount &&
+                                <Input
+                                    id="refund-amount-empty"
+                                    key="refund-amount-empty"
+                                    label="Refund Amount: "
+                                    type="number"
+                                    placeholder="0.00"
+                                    min={ -10000000 }
+                                    max={ 10000000 }
+                                    initialValue={ amount }
+                                    leftIcon={ faDollarSign }
+                                    className="is-medium"
+                                    onChange={ setAmount }
+                                    step={ 0.01 }
+                                />
+                            }
                         </div>
                     </div>
                     <div className="columns">
@@ -352,6 +474,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                 onSelect={ (selected: DropDownItemType) => setSelectedDropdownPymtAccount(selected) }
                                 selectedItem={ selectedDropdownPymtAccount }
                                 defaultItem={ selectedDropdownPymtAccount }
+                                required={ true }
                             />
                         </div>
                         <div className="column">
@@ -364,22 +487,6 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                 selectedItem={ selectedDropdownReason }
                                 defaultItem={ selectedDropdownReason }
                                 required={ true }
-                            />
-                        </div>
-                    </div>
-                    <div className="columns">
-                        <div className="column">
-                            <DropDown
-                                id="purchase-dd"
-                                label="Purchase: "
-                                items={ dropdownPurchaseDetailList }
-                                key={ "purchase-dd" }
-                                onSelect={ (selected) => setSelectedDropdownPurchaseDetail(selected as DropDownItemType) }
-                                direction="down"
-                                selectedItem={ selectedDropdownPurchaseDetail }
-                                defaultItem={ selectedDropdownPurchaseDetail }
-                                loadMore={ loadMorePurchaseList }
-                                allowSearch={ true }
                             />
                         </div>
                     </div>
@@ -455,13 +562,30 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             </div>
             <div className="columns">
                 <div className="column">
-                    <div className="buttons">
-                        <button className="button is-light" type="button" onClick={ onCancelHandler }> Cancel </button>
+                    <div className="buttons is-centered is-display-mobile">
+                        <button className="button is-dark is-large" type="submit">
+                            <span className="px-2-label">
+                                { props.submitLabel }
+                            </span>
+                        </button>
                     </div>
                 </div>
                 <div className="column">
-                    <div className="buttons has-addons is-centered">
-                        <button className="button is-dark is-medium" type="submit"> { props.submitLabel } </button>
+                    <div className="buttons">
+                        <button className="button is-light" type="button" onClick={ onCancelHandler }>
+                            <span className="px-2-label">
+                                Cancel
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                <div className="column">
+                    <div className="buttons is-centered is-hidden-mobile">
+                        <button className="button is-dark is-medium" type="submit">
+                            <span className="px-2-label">
+                                { props.submitLabel }
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>

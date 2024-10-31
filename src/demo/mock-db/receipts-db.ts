@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { getLogger, TagBelongsTo } from "../../shared";
+import { getLogger } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { isValidUuid } from "../services/common-validators";
 import { ExpenseBelongsTo } from "../../pages/expenses/services";

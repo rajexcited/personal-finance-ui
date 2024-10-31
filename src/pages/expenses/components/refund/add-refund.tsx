@@ -41,7 +41,7 @@ export const AddRefund: FunctionComponent = () => {
         const logger = getLogger("onRefundAdded", fcLogger);
         if (auth.userDetails.isAuthenticated) {
             // logger.debug("purchase added", data.purchaseId, data);
-            submit(formData, { action: getFullPath("addPurchaseRefund"), method: "post", encType: "multipart/form-data" });
+            submit(formData, { action: getFullPath("addPurchaseRefund", data.purchaseId || "unknown"), method: "post", encType: "multipart/form-data" });
         } else {
             //todo verify
             // this is probably never getting called.

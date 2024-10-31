@@ -17,7 +17,7 @@ export interface PurchaseItemFields extends BasePurchaseFields {}
 export interface PurchaseFields extends BasePurchaseFields {
   paymentAccountId?: string;
   paymentAccountName?: string;
-  purchasedDate: string | Date;
+  purchaseDate: string | Date;
   verifiedTimestamp?: Date | string;
   items?: PurchaseItemFields[];
   receipts: ReceiptProps[];

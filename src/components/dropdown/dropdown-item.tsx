@@ -2,7 +2,7 @@ import { FunctionComponent, useState } from "react";
 import { Input } from "../input";
 import './dropdown-item.css';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faInfoCircle, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faCross, faInfoCircle, faSpinner, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 
 interface WaitDropDownItemPropBase {
@@ -13,7 +13,7 @@ interface WaitDropDownItemPropBase {
 interface NonwaitDropDownItemPropBase {
     id: string;
     selectedId?: string;
-    onSelect (id: string): void;
+    onSelect (id: string | undefined): void;
 }
 
 interface TextDropDownItemProps extends NonwaitDropDownItemPropBase {
@@ -42,7 +42,11 @@ const DropDownItem: FunctionComponent<DropDownItemProps> = (props) => {
         event.preventDefault();
         event.stopPropagation();
         if ("onSelect" in props) {
-            props.onSelect(id);
+            if (props.selectedId !== id) {
+                props.onSelect(id);
+            } else {
+                props.onSelect(undefined);
+            }
         }
     };
 
@@ -62,13 +66,16 @@ const DropDownItem: FunctionComponent<DropDownItemProps> = (props) => {
                 onClick={ (e) => selectItemHandler(e, props.id) } >
 
                 { props.type === "text" &&
-                    <>
+                    <div className="unselectable">
                         <span>                        { props.content }                        </span>
                         {
                             props.tooltip &&
-                            <span className="icon has-text-info tooltip is-tooltip-multiline is-tooltip-right" data-tooltip={ props.tooltip.split(";").join("\n") }> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
+                            <span className={ `icon has-text-info${isActive ? "-light" : ""} tooltip is-tooltip-multiline is-tooltip-right` } data-tooltip={ props.tooltip.split(";").join("    ") }> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
                         }
-                    </>
+                        <span className={ "icon unselect has-text-info-light" }>
+                            <FontAwesomeIcon icon={ faXmark } />
+                        </span>
+                    </div>
                 }
                 { props.type === "input" &&
                     <Input className="is-small"

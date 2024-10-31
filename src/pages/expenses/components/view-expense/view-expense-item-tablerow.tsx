@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { getFullPath } from "../../../root";
 import { parseTimestamp } from "../../../../shared";
 import { useAuth } from "../../../auth";
+import { getExpenseDateInstance } from "../../services/expense";
 
 
 interface ExpenseItemTableRowProps {
@@ -18,7 +19,7 @@ interface ExpenseItemTableRowProps {
     onViewReceipt (expenseId: string, belongsTo: ExpenseBelongsTo): void;
 }
 
-const fcLogger = getLogger("FC.expenseItemTableRow");
+const fcLogger = getLogger("FC.expenseItemTableRow", null, null, "DISABLED");
 
 export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props) => {
     const [expenseDate, setExpenseDate] = useState<string>();
@@ -27,21 +28,9 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
     const auth = useAuth();
 
     useEffect(() => {
-        let xpnsDateStr = undefined;
-        if (props.details.belongsTo === ExpenseBelongsTo.Income) {
-            xpnsDateStr = props.details.incomeDate;
-        } else if (props.details.belongsTo === ExpenseBelongsTo.Purchase) {
-            xpnsDateStr = props.details.purchasedDate;
-        } else if (props.details.belongsTo === ExpenseBelongsTo.PurchaseRefund) {
-            xpnsDateStr = props.details.refundDate;
-        }
+        const logger = getLogger("useEffect.dep[]", fcLogger);
+        const xpnsDate = getExpenseDateInstance(props.details, logger);
 
-        let xpnsDate = undefined;
-        if (xpnsDateStr instanceof Date) {
-            xpnsDate = xpnsDateStr;
-        } else if (typeof xpnsDateStr === "string") {
-            xpnsDate = parseTimestamp(xpnsDateStr);
-        }
         if (xpnsDate) {
             setExpenseDate(formatTimestamp(xpnsDate, "MMM DD, YYYY"));
         }
@@ -91,7 +80,7 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
         event.preventDefault();
         event.stopPropagation();
         if (props.details.belongsTo === ExpenseBelongsTo.Purchase) {
-            navigate(getFullPath("addPurchase", props.details.id));
+            navigate(getFullPath("addPurchaseRefund", props.details.id));
         } else {
             logger.warn("cannot add refund for expense - " + props.details.belongsTo);
         }

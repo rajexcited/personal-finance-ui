@@ -7,7 +7,6 @@ import { getFullPath } from "../../../root";
 import { useDebounceState } from "../../../../hooks";
 import { ExpenseItemTableRow } from "./view-expense-item-tablerow";
 import { ExpenseTableHead, ExpenseTableHeadRefType } from "./expense-table-head";
-import "./view-expense-list.css";
 import { ViewReceipts } from "./receipt/view-receipts";
 
 
@@ -23,6 +22,7 @@ export const ExpenseList: FunctionComponent = () => {
     const [deletingExpense, setDeletingExpense] = useState<SelectedExpense>();
     const [isViewReceiptsEnable, setViewReceiptsEnable] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [errorDeletedExpense, setErrorDeletedExpense] = useState<SelectedExpense>();
 
     const submit = useSubmit();
     const [loading, setLoading] = useDebounceState(false, 500, true);
@@ -31,28 +31,33 @@ export const ExpenseList: FunctionComponent = () => {
     // do I need this useeffect? can i not set loader data directly to expenseList state?
     useEffect(() => {
         const logger = getLogger("useEffect.dep[loaderData, actionData]", fcLogger);
-        if (loaderData.type === "success") {
+        if (loaderData.type === "success" && !actionData) {
             setLoading(true);
             setErrorMessage("");
 
-            if (headerRef && headerRef.current && Object.keys(headerRef.current.sortDetails()).length) {
-                setExpenseList(getSortedExpenses(loaderData.data, headerRef.current.sortDetails(), logger));
-            } else {
-                const initialSortDetails: ExpenseSortStateType = {};
-                rowHeaders.forEach(rh => {
-                    if (rh.sortable) {
-                        initialSortDetails[rh.datafieldKey] = { ...rh };
-                    }
-                });
-                setExpenseList(getSortedExpenses(loaderData.data, initialSortDetails, logger));
-            }
+            setExpenseList(() => {
+                let sortMap;
+                if (headerRef.current && Object.keys(headerRef.current.sortDetails()).length) {
+                    sortMap = headerRef.current.sortDetails();
+                } else {
+                    sortMap = rowHeaders.reduce((obj: ExpenseSortStateType, rh) => {
+                        if (rh.sortable) {
+                            obj[rh.datafieldKey] = { ...rh };
+                        }
+                        return obj;
+                    }, {});
+                }
+                const result = getSortedExpenses(loaderData.data, sortMap, logger);
+                setLoading(false);
+                return result;
+            });
         } else if (actionData?.type === "success") {
             setErrorMessage("");
         } else if (loaderData.type === "error") {
             setErrorMessage(loaderData.errorMessage);
-        }
-        else if (actionData?.type === "error") {
+        } else if (actionData?.type === "error") {
             setErrorMessage(actionData.errorMessage);
+            setErrorDeletedExpense(selectedExpense);
         }
     }, [loaderData, actionData]);
 
@@ -62,9 +67,7 @@ export const ExpenseList: FunctionComponent = () => {
         logger.debug("sorting expenses and reloading with sortDetails =", sortDetails);
         setExpenseList(prev => {
             const newExp = getSortedExpenses(prev, sortDetails, logger);
-            setTimeout(() => {
-                setLoading(false);
-            }, 200);
+            setLoading(false);
             return newExp;
         });
     };
@@ -73,40 +76,59 @@ export const ExpenseList: FunctionComponent = () => {
         const expenseSelected: SelectedExpense = { id: expenseId, belongsTo: belongsTo };
         setSelectedExpense(expenseSelected);
         setDeletingExpense(expenseSelected);
+        setDeletingExpense(prev => {
+            if (expenseId === prev?.id && belongsTo === prev.belongsTo) {
+                return prev;
+            }
+            return undefined;
+        });
     };
 
     const onViewReceiptsRequestHandler = (expenseId: string, belongsTo: ExpenseBelongsTo) => {
         const expenseSelected: SelectedExpense = { id: expenseId, belongsTo: belongsTo };
         setSelectedExpense(expenseSelected);
         setViewReceiptsEnable(true);
+        setDeletingExpense(prev => {
+            if (expenseId === prev?.id && belongsTo === prev.belongsTo) {
+                return prev;
+            }
+            return undefined;
+        });
     };
 
     const onDeleteConfirmHandler = () => {
         const expenseToBeDeleted = expenseList.find(xpns => xpns.id === deletingExpense?.id && xpns.belongsTo === deletingExpense.belongsTo);
         if (expenseToBeDeleted) {
             const data: any = { ...expenseToBeDeleted };
-            submit(data, { action: getFullPath("expenseJournalRoot"), method: "delete" });
+            submit(data, { action: getFullPath("expenseJournalRoot") + "?index", method: "delete" });
             setDeletingExpense(undefined);
+            setErrorDeletedExpense(undefined);
         }
     };
 
-    fcLogger.debug(new Date(), "view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billName));
+    fcLogger.debug("view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billName), "errorMessage =", errorMessage, "errorDeletedExpense =", errorDeletedExpense);
     const selectedExpenseReceipts = (isViewReceiptsEnable && expenseList.find(xpns => xpns.id === selectedExpense?.id && selectedExpense.belongsTo === xpns.belongsTo)?.receipts) || [];
 
-    function onSelectRequestHandler (expenseId: string, belongsTo: ExpenseBelongsTo): void {
+    const onSelectRequestHandler = (expenseId: string, belongsTo: ExpenseBelongsTo) => {
         if (expenseId && belongsTo) {
             const expenseSelected: SelectedExpense = { id: expenseId, belongsTo: belongsTo };
             setSelectedExpense(expenseSelected);
+            setDeletingExpense(prev => {
+                if (expenseId === prev?.id && belongsTo === prev.belongsTo) {
+                    return prev;
+                }
+                return undefined;
+            });
         } else {
             setSelectedExpense(undefined);
         }
-    }
+    };
 
     return (
         <section>
             <LoadSpinner loading={ loading } />
 
-            <Animated animateOnMount={ false } isPlayIn={ !!errorMessage } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
+            <Animated animateOnMount={ false } isPlayIn={ !!errorMessage && !!errorDeletedExpense } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
                 <div className="columns is-centered">
                     <div className="column is-four-fifths">
                         <article className="message is-danger mb-3">

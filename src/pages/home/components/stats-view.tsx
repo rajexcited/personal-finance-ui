@@ -45,7 +45,6 @@ export const StatsViewPage: FunctionComponent = () => {
                 return prev;
             }, {});
 
-            const statsTableList: StatTableDetails[] = [];
             statTableDetailList.push({
                 belongsTo: StatBelongsTo.Income,
                 belongsToLabel: "Income",

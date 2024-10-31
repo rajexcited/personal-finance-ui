@@ -45,7 +45,7 @@ export const ExpenseJournalPage: FunctionComponent = () => {
                     </div>
                 </div>
             </div>
-            <section className="section is-narrow-y">
+            <section className="section is-px-0-mobile is-narrow-y">
                 <Outlet />
             </section>
         </>

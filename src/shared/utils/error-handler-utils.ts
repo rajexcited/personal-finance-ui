@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { HttpStatusCode } from "axios";
 import { json, redirect } from "react-router-dom";
 import { LoggerBase, getLogger } from "./logger";
 import { getFullPath } from "../../pages";
@@ -7,16 +7,37 @@ export { HttpStatusCode } from "axios";
 
 export class InvalidError extends Error {}
 
-export class RestError extends Error {}
+export class RestError extends Error {
+  public readonly httpStatusCode;
+
+  constructor(httpStatusCode?: HttpStatusCode, message?: string, cause?: Error) {
+    super(message, { cause: cause });
+    this.httpStatusCode = httpStatusCode || HttpStatusCode.ServiceUnavailable;
+  }
+}
 
 export class UnauthorizedError extends RestError {
   public readonly name = "UnauthorizedError";
-  public readonly httpStatusCode = axios.HttpStatusCode.Unauthorized;
+
+  constructor(message?: string, cause?: Error) {
+    super(axios.HttpStatusCode.Unauthorized, message, cause);
+  }
+}
+
+export class UnknownError extends RestError {
+  public readonly name = "UnknownError";
+
+  constructor(message?: string, cause?: Error) {
+    super(axios.HttpStatusCode.InternalServerError, message, cause);
+  }
 }
 
 export class NotFoundError extends RestError {
   public readonly name = "NotFoundError";
-  public readonly httpStatusCode = axios.HttpStatusCode.NotFound;
+
+  constructor(message?: string, cause?: Error) {
+    super(axios.HttpStatusCode.NotFound, message, cause);
+  }
 }
 
 interface ValidationErrorData {
@@ -26,11 +47,10 @@ interface ValidationErrorData {
 
 class BadRequestError extends RestError {
   public readonly name = "BadRequestError";
-  public readonly httpStatusCode = axios.HttpStatusCode.BadRequest;
   public readonly jsonData: ValidationErrorData[];
 
   constructor(jsonData: ValidationErrorData[], message?: string, cause?: Error) {
-    super(message, { cause: cause });
+    super(axios.HttpStatusCode.BadRequest, message, cause);
     this.jsonData = jsonData;
   }
 }
@@ -71,7 +91,7 @@ export const handleRestErrors = (e: Error, loggerBase: LoggerBase) => {
       logger.debug("throwing error", err);
       throw err;
     } else {
-      const err = Error("Unknown error: " + (e.response?.data || e.cause));
+      const err = new UnknownError("Unknown error: " + (e.response?.data || e.cause));
 
       logger.debug("throwing error", err);
       throw err;
@@ -92,22 +112,25 @@ interface RouteHandlerSuccessResponse<T> {
 
 export type RouteHandlerResponse<S, E> = RouteHandlerSuccessResponse<S> | RouteHandlerErrorResponse<E>;
 
-export const handleRouteActionError = (e: unknown) => {
+export const handleRouteActionError = (e: unknown, overrideMessages?: Record<string, string>) => {
   if (e instanceof UnauthorizedError) {
     return redirect(getFullPath("loginPage"));
   }
   if (e instanceof BadRequestError) {
     const err = e as BadRequestError;
     const response: RouteHandlerErrorResponse<ValidationErrorData[]> = { type: "error", errorMessage: err.message, data: err.jsonData };
+    overrideResponseError(response, overrideMessages, err);
     return json(response, { status: err.httpStatusCode });
   }
   if (e instanceof NotFoundError) {
     const err = e as NotFoundError;
     const response: RouteHandlerErrorResponse<null> = { type: "error", errorMessage: err.message, data: null };
+    overrideResponseError(response, overrideMessages, err);
     return json(response, { status: err.httpStatusCode });
   }
-  const err = e as Error;
+  const err = e as RestError;
   const response: RouteHandlerErrorResponse<null> = { type: "error", errorMessage: err.message, data: null };
+  overrideResponseError(response, overrideMessages, err);
   return json(response, { status: axios.HttpStatusCode.InternalServerError });
 };
 
@@ -126,4 +149,25 @@ export const handleAndRethrowServiceError = (e: Error, logger: LoggerBase) => {
   let errorMessage = e.name ? e.name + ": " : "";
   errorMessage += e.message ? e.message : "unknown error";
   throw Error(errorMessage);
+};
+
+const overrideResponseError = (
+  response: RouteHandlerErrorResponse<unknown>,
+  overrideMessages: Record<string, string> | undefined,
+  err: RestError
+) => {
+  const httpStatusCode = err.httpStatusCode || HttpStatusCode.InternalServerError;
+
+  let overridenErrorMessage = null;
+  if (overrideMessages) {
+    if (overrideMessages[httpStatusCode]) {
+      overridenErrorMessage = overrideMessages[httpStatusCode];
+    } else if (overrideMessages.default) {
+      overridenErrorMessage = overrideMessages.default;
+    }
+  }
+  if (overridenErrorMessage) {
+    response.data = response.data || response.errorMessage;
+    response.errorMessage = overridenErrorMessage;
+  }
 };

@@ -4,6 +4,7 @@ export { purchaseDetailLoaderHandler, purchaseDetailSupportingLoaderHandler } fr
 export { purchaseActionHandler } from "./purchase/action";
 
 export { expenseListLoaderHandler } from "./expense/loader";
+export { expenseActionHandler } from "./expense/action";
 
 export type { RefundDetailLoaderResource } from "./refund/loader";
 export { addRefundDetailLoaderHandler, modifyRefundDetailLoaderHandler } from "./refund/loader";

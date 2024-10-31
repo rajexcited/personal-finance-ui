@@ -9,12 +9,14 @@ import {
   subtractDates,
   getCacheOption,
   handleAndRethrowServiceError,
+  LoggerBase,
 } from "../../../../shared";
 import { ExpenseBelongsTo, ExpenseFields, ExpenseStatus } from "./field-types";
 import { PurchaseFields, purchaseService } from "../purchase";
 import { refundService } from "../refund";
 import { incomeService } from "../income";
 import { StatBelongsTo, statService } from "../../../home/services";
+import { getExpenseDateInstance } from "./utils";
 
 type ExpenseQueryParams = Record<"pageNo" | "status" | "pageMonths" | "belongsTo", string[]>;
 
@@ -27,6 +29,16 @@ const getExpenseCount = pMemoize(async (queryParams: ExpenseQueryParams) => {
   const countResponse = await axios.get(`${rootPath}/count`, { params: queryParams });
   return Number(countResponse.data);
 }, getCacheOption("3 min"));
+
+const isExpenseWithinRange = (expense: ExpenseFields, rangeStartDate: Date, rangeEndDate: Date, logger: LoggerBase) => {
+  const expenseDate = getExpenseDateInstance(expense, logger);
+  if (!expenseDate) {
+    logger.debug("expense date not found");
+    return false;
+  }
+
+  return expenseDate >= rangeStartDate && expenseDate <= rangeEndDate;
+};
 
 export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseStatus, pageMonths?: number, belongsTo?: ExpenseBelongsTo) => {
   const logger = getLogger("getExpenseList", _logger);
@@ -52,12 +64,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
 
       const rangeStartDate = datetime.addMonths(new Date(), queryPageMonths * -1 * pageNo);
       const rangeEndDate = datetime.addMonths(new Date(), queryPageMonths * -1 * (pageNo - 1));
-      const filteredExpenses = dbExpenses.filter((xpns) => {
-        if (xpns.auditDetails.updatedOn >= rangeStartDate && xpns.auditDetails.updatedOn <= rangeEndDate) {
-          return true;
-        }
-        return false;
-      });
+      const filteredExpenses = dbExpenses.filter((xpns) => isExpenseWithinRange(xpns, rangeStartDate, rangeEndDate, logger));
       logger.info("db expenses =", [...filteredExpenses]);
       expenseCount = await expenseCountPromise;
       if (filteredExpenses.length === expenseCount) {
@@ -92,18 +99,22 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
 
       apiStartTime = new Date();
       expenses = response.data;
+      const expenseYears = expenses.map((xpns) => getExpenseDateInstance(xpns, logger)?.getFullYear() as number).filter((yr) => yr !== undefined);
+
+      const years = [...new Set(expenseYears)];
 
       if (!belongsTo) {
-        statService.clearStatsCache(StatBelongsTo.Purchase);
-        statService.clearStatsCache(StatBelongsTo.Refund);
-        statService.clearStatsCache(StatBelongsTo.Income);
+        const statCacheClearPromiseList = [StatBelongsTo.Purchase, StatBelongsTo.Income, StatBelongsTo.Refund].map((statBelongsTo) =>
+          statService.clearStatsCache(statBelongsTo, years)
+        );
+        await Promise.all(statCacheClearPromiseList);
       } else if (belongsTo === ExpenseBelongsTo.Purchase) {
-        statService.clearStatsCache(StatBelongsTo.Purchase);
+        await statService.clearStatsCache(StatBelongsTo.Purchase, years);
       } else if (belongsTo === ExpenseBelongsTo.PurchaseRefund) {
-        statService.clearStatsCache(StatBelongsTo.Refund);
+        await statService.clearStatsCache(StatBelongsTo.Refund, years);
       } else {
         // if (belongsTo === ExpenseBelongsTo.Income)
-        statService.clearStatsCache(StatBelongsTo.Income);
+        await statService.clearStatsCache(StatBelongsTo.Income, years);
       }
     }
 

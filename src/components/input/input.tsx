@@ -67,7 +67,7 @@ const Input: FunctionComponent<InputProps> = (props) => {
     const debouncedTimeout = 300;
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            if (props.onChange && isValid) {
+            if (props.onChange && (isValid || inputValue === "")) {
                 props.onChange(("" + inputValue).trim());
             }
         }, debouncedTimeout);
