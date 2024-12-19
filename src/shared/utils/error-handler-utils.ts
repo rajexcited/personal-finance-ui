@@ -1,4 +1,4 @@
-import axios, { HttpStatusCode } from "axios";
+import { HttpStatusCode, isAxiosError } from "axios";
 import { json, redirect } from "react-router-dom";
 import { LoggerBase, getLogger } from "./logger";
 import { getFullPath } from "../../pages";
@@ -20,7 +20,7 @@ export class UnauthorizedError extends RestError {
   public readonly name = "UnauthorizedError";
 
   constructor(message?: string, cause?: Error) {
-    super(axios.HttpStatusCode.Unauthorized, message, cause);
+    super(HttpStatusCode.Unauthorized, message, cause);
   }
 }
 
@@ -28,7 +28,7 @@ export class UnknownError extends RestError {
   public readonly name = "UnknownError";
 
   constructor(message?: string, cause?: Error) {
-    super(axios.HttpStatusCode.InternalServerError, message, cause);
+    super(HttpStatusCode.InternalServerError, message, cause);
   }
 }
 
@@ -36,7 +36,7 @@ export class NotFoundError extends RestError {
   public readonly name = "NotFoundError";
 
   constructor(message?: string, cause?: Error) {
-    super(axios.HttpStatusCode.NotFound, message, cause);
+    super(HttpStatusCode.NotFound, message, cause);
   }
 }
 
@@ -50,19 +50,19 @@ class BadRequestError extends RestError {
   public readonly jsonData: ValidationErrorData[];
 
   constructor(jsonData: ValidationErrorData[], message?: string, cause?: Error) {
-    super(axios.HttpStatusCode.BadRequest, message, cause);
+    super(HttpStatusCode.BadRequest, message, cause);
     this.jsonData = jsonData;
   }
 }
 
 export const handleRestErrors = (e: Error, loggerBase: LoggerBase) => {
-  if (axios.isAxiosError(e)) {
+  if (isAxiosError(e)) {
     const logger = getLogger("handleRestErrors", loggerBase);
 
     logger.warn("rest call has errors: ", e, e.toJSON(), e.response, e.request, e.cause);
     logger.debug("rest call details, ", "config =", e.config, ", response json =", e.toJSON(), ", response =", e.response, "request =", e.request);
 
-    if (e.response?.status === axios.HttpStatusCode.BadRequest) {
+    if (e.response?.status === HttpStatusCode.BadRequest) {
       // validation error
       let err: BadRequestError = new BadRequestError([], "invalid data");
       if (e.response.data.message) {
@@ -78,24 +78,25 @@ export const handleRestErrors = (e: Error, loggerBase: LoggerBase) => {
 
       logger.debug("throwing error", err);
       throw err;
-    } else if (e.response?.status === axios.HttpStatusCode.Unauthorized || e.response?.status === axios.HttpStatusCode.Forbidden) {
+    }
+    if (e.response?.status === HttpStatusCode.Unauthorized || e.response?.status === HttpStatusCode.Forbidden) {
       const msg = "unauthorized user access";
       const err = new UnauthorizedError(msg);
 
       logger.debug("throwing error", err);
       throw err;
-    } else if (e.response?.status === axios.HttpStatusCode.NotFound) {
+    }
+    if (e.response?.status === HttpStatusCode.NotFound) {
       const msg = e.response.data;
       const err = new NotFoundError(msg);
 
       logger.debug("throwing error", err);
       throw err;
-    } else {
-      const err = new UnknownError("Unknown error: " + (e.response?.data || e.cause));
-
-      logger.debug("throwing error", err);
-      throw err;
     }
+    const err = new UnknownError("Unknown error: " + (e.response?.data || e.cause));
+
+    logger.debug("throwing error", err);
+    throw err;
   }
 };
 
@@ -114,6 +115,11 @@ export type RouteHandlerResponse<S, E> = RouteHandlerSuccessResponse<S> | RouteH
 
 export const handleRouteActionError = (e: unknown, overrideMessages?: Record<string, string>) => {
   if (e instanceof UnauthorizedError) {
+    if (overrideMessages && HttpStatusCode.Unauthorized in overrideMessages) {
+      const response: RouteHandlerErrorResponse<null> = { type: "error", errorMessage: "", data: null };
+      overrideResponseError(response, overrideMessages, e);
+      return json(response, { status: e.httpStatusCode });
+    }
     return redirect(getFullPath("loginPage"));
   }
   if (e instanceof BadRequestError) {
@@ -131,7 +137,7 @@ export const handleRouteActionError = (e: unknown, overrideMessages?: Record<str
   const err = e as RestError;
   const response: RouteHandlerErrorResponse<null> = { type: "error", errorMessage: err.message, data: null };
   overrideResponseError(response, overrideMessages, err);
-  return json(response, { status: axios.HttpStatusCode.InternalServerError });
+  return json(response, { status: HttpStatusCode.InternalServerError });
 };
 
 export const getDefaultIfError = async <T>(fn: () => Promise<T>, defaultValue: T) => {
