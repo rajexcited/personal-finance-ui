@@ -1,5 +1,15 @@
 import "./interceptors";
-import { LoggerBase, axios, getCacheOption, getLogger, handleRestErrors, isBlank, pMemoizeSync, subtractDates } from "../../../shared";
+import {
+  LoggerBase,
+  UnauthorizedError,
+  axios,
+  getCacheOption,
+  getLogger,
+  handleRestErrors,
+  isBlank,
+  pMemoizeSync,
+  subtractDates,
+} from "../../../shared";
 import {
   AccessTokenResource,
   CountryResource,
@@ -50,8 +60,14 @@ export const login = pMemoize(async (details: UserLoginResource) => {
     sessionStorage.setItem(authTokenSessionKey, JSON.stringify(tokenResponse));
     logger.debug("stored token session");
   } catch (e) {
-    const err = e as Error;
-    handleRestErrors(err, logger);
+    try {
+      const err = e as Error;
+      handleRestErrors(err, logger);
+    } catch (resterr) {
+      if (resterr instanceof UnauthorizedError) {
+        throw new Error("emailId or password invalid");
+      }
+    }
     logger.warn("not rest error", e);
     throw Error("unknown error");
   }
