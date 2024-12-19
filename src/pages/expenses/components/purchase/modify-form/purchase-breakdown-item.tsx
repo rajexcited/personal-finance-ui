@@ -1,9 +1,9 @@
-import { FunctionComponent, useEffect, useMemo, useState } from "react";
+import { FunctionComponent, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import { faTrashAlt } from "@fortawesome/free-regular-svg-icons";
-import { TagsInput, Input, DropDown, TextArea, DropDownItemType, InputValidators, InputValidateResponse } from "../../../../../components";
-import { PurchaseItemFields } from "../../../services";
+import { TagsInput, Input, DropDown, TextArea, DropDownItemType } from "../../../../../components";
+import { getLogger, PurchaseItemFields } from "../../../services";
 
 
 export interface PurchaseSubItemProps {
@@ -14,12 +14,15 @@ export interface PurchaseSubItemProps {
     itemDetail: PurchaseItemFields;
 }
 
+const fcLogger = getLogger("FC.PurchaseBreakDownItem", null, null, "DEBUG");
+
 export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (props) => {
     const [itemBillName, setItemBillName] = useState(props.itemDetail.billName || '');
     const [itemAmount, setItemAmount] = useState(props.itemDetail.amount || '');
     const [itemPurchaseType, setItemPurchaseType] = useState<DropDownItemType>();
     const [itemTags, setItemTags] = useState(props.itemDetail.tags || '');
     const [itemDescription, setItemDescription] = useState(props.itemDetail.description || '');
+    const [fieldRequired, setFieldRequired] = useState(false);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -60,26 +63,49 @@ export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (p
         props.onRemove(props.itemDetail.id || "");
     };
 
-    const billnameRequireValidator = useMemo(() => {
-        const isEmpty = !itemPurchaseType && itemDescription === "" && itemTags.length === 0 && itemAmount === "";
+    const onChangePurchaseTypeHandler = (newSelected: DropDownItemType | undefined) => {
+        const logger = getLogger("purchaseType.onchange", fcLogger);
 
-        return (inputBillNameValue: string): InputValidateResponse => {
-            return {
-                isValid: (isEmpty && inputBillNameValue === "") || (Number(itemAmount).toString() === itemAmount.toString().trim() && !inputBillNameValue),
-                errorMessage: "item name and item amount both must be provided",
-            };
-        };
-    }, [itemAmount, itemPurchaseType, itemDescription, itemTags]);
+        if (!newSelected && itemPurchaseType) {
+            logger.debug("row can be empty now", "call billName and amount validators to make fields valid");
+            setFieldRequired(false);
+        } else if (newSelected && !itemPurchaseType) {
+            logger.debug("row is not empty now", "call billName and amount validators to make fields invalid");
+            setFieldRequired(true);
+        }
+        setItemPurchaseType(newSelected);
+    };
 
-    const amountRequireValidator = useMemo(() => {
-        const isEmpty = !itemPurchaseType && itemDescription === "" && itemTags.length === 0 && itemBillName === "";
-        return (inputAmountValue: string): InputValidateResponse => {
-            return {
-                isValid: (isEmpty && inputAmountValue === "") || (Number(inputAmountValue).toString() === inputAmountValue.toString().trim() && !itemBillName),
-                errorMessage: "item amount and item name both must be provided",
-            };
-        };
-    }, [itemBillName, itemPurchaseType, itemDescription, itemTags]);
+    function onChangeItemDescriptionHandler (newValue: string): void {
+        const logger = getLogger("itemDescription.onchange", fcLogger);
+        const newValLength = newValue.trim().length;
+        const oldValLength = itemDescription.trim().length;
+        setItemDescription(newValue);
+        logger.debug("description's oldValue[", itemDescription, "] is changed to ", newValue);
+
+        if (newValLength === 0 && oldValLength > 0) {
+            logger.debug("row can be empty now", "call all 3 validators to make fields not required");
+            setFieldRequired(false);
+        } else if (newValLength > 0 && oldValLength === 0) {
+            logger.debug("row is not empty now", "call all 3 validators to make fields invalid");
+            setFieldRequired(true);
+        }
+    }
+
+    function onChangeItemTagsHandler (newTagList: string[]): void {
+        const logger = getLogger("itemTags.onchange", fcLogger);
+
+        const newValLength = newTagList.length;
+        const oldValLength = itemTags.length;
+        if (newValLength === 0 && oldValLength > 0) {
+            logger.debug("row can be empty now", "call all 3 validators to make fields valid");
+            setFieldRequired(false);
+        } else if (newValLength > 0 && oldValLength === 0) {
+            logger.debug("row is not empty now", "call all 3 validators to make fields invalid");
+            setFieldRequired(true);
+        }
+        setItemTags(newTagList);
+    }
 
     return (
         <div className="columns">
@@ -98,11 +124,11 @@ export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (p
                     placeholder="Enter Items"
                     size={ 20 }
                     initialValue={ itemBillName }
-                    key={ "purchase-item-bill-name" }
                     onChange={ setItemBillName }
                     className="is-large"
                     maxlength={ 50 }
-                    validate={ billnameRequireValidator }
+                    minlength={ fieldRequired ? 2 : 0 }
+                    required={ fieldRequired }
                 />
             </div>
             <div className="column">
@@ -116,10 +142,9 @@ export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (p
                     initialValue={ itemAmount }
                     leftIcon={ faDollarSign }
                     className="is-large"
-                    key={ "purchase-item-amount" }
                     onChange={ setItemAmount }
                     step={ 0.01 }
-                    validate={ amountRequireValidator }
+                    required={ fieldRequired }
                 />
             </div>
             <div className="column">
@@ -127,12 +152,12 @@ export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (p
                     id="purchase-item-type"
                     label="Item Purchase Type: "
                     items={ props.dropdownPurchaseTypeItems }
-                    key={ "purchase-item-type" }
-                    onSelect={ (selected: DropDownItemType) => setItemPurchaseType(selected) }
+                    onSelect={ onChangePurchaseTypeHandler }
                     direction="down"
                     selectedItem={ itemPurchaseType }
                     size="medium"
                     defaultItem={ itemPurchaseType }
+                    required={ fieldRequired }
                 />
             </div>
             <div className="column">
@@ -141,8 +166,7 @@ export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (p
                     label="Item Description: "
                     rows={ 2 }
                     value={ itemDescription }
-                    onChange={ setItemDescription }
-                    key={ "purchase-item-desc" }
+                    onChange={ onChangeItemDescriptionHandler }
                     maxlength={ 150 }
                 />
             </div>
@@ -152,8 +176,7 @@ export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (p
                     label="Item Tags: "
                     defaultValue={ itemTags }
                     placeholder="Add Item Tags"
-                    onChange={ setItemTags }
-                    key={ "purchase-item-tags" }
+                    onChange={ onChangeItemTagsHandler }
                     sourceValues={ props.sourceTags }
                     maxTags={ 10 }
                 />
