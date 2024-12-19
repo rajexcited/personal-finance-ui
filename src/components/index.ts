@@ -1,5 +1,5 @@
 export { Input, InputValidators } from "./input";
-export type { InputValidateResponse } from "./input";
+export type { InputValidateResponse, InputRef } from "./input";
 
 export { default as TagsInput } from "./tags-input";
 export { default as Calendar } from "./calendar";
