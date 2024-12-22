@@ -3,7 +3,7 @@ import "./animated.css";
 import "animate.css/animate.min.css";
 
 
-interface AnimatedProps {
+export interface AnimatedProps {
     children: JSX.Element | JSX.Element[] | React.ReactNode;
     animatedIn?: string;
     animatedOut?: string;

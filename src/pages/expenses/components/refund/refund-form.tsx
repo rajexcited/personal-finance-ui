@@ -1,6 +1,6 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { faStore, faDollarSign } from "@fortawesome/free-solid-svg-icons";
+import { faStore, faDollarSign, faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { getFullPath } from "../../../root";
 import {
     TagsInput,
@@ -11,14 +11,16 @@ import {
     DropDownItemType,
     TagObject,
     TagsInputSharePerson,
-    CurrencySymbol
+    CurrencySymbol,
+    ViewDialog,
+    Animated
 } from "../../../../components";
 import { ExpenseBelongsTo, expenseService, ExpenseStatus, formatTimestamp, getLogger, PurchaseFields, PurchaseRefundFields, receiptService } from "../../services";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../components/receipt";
 import { PymtAccountFields } from "../../../pymt-accounts/services";
 import { ConfigResource, getDateInstance, isNotBlank } from "../../../../shared";
 import { CurrencyProfileResource, SharePersonResource } from "../../../settings/services";
-
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 
 export interface PurchaseRefundFormProps {
@@ -34,26 +36,33 @@ export interface PurchaseRefundFormProps {
     currencyProfiles: CurrencyProfileResource[];
 }
 
+interface PurchaseDetailReference {
+    purchaseId: string;
+    purchaseItemId: string | null;
+    billName: string;
+    amount: string;
+    paymentAccountName: string;
+    taggingPersons: string[];
+}
+
 const fcLogger = getLogger("FC.PurchaseRefundForm", null, null, "DEBUG");
 const purchasePageMonths = 2;
+const MAX_ALLOWED_PURCHASE_DROPDOWN_ITEMS = 30;
 
 const getPurchaseDropdownTooltip = (purchaseDetails: PurchaseFields) => {
     const ddTooltipLines: string[] = [];
     let ddTooltip = "";
     ddTooltip = purchaseDetails.description ? purchaseDetails.description : "";
     if (isNotBlank(ddTooltip)) {
-        // ddTooltipLines.push(" " + ddTooltip + "  ");
         ddTooltipLines.push(ddTooltip);
     }
     ddTooltip = purchaseDetails.tags.length > 0 ? "Tags:" + purchaseDetails.tags.join(",") : "";
     if (isNotBlank(ddTooltip)) {
-        // ddTooltipLines.push(" " + ddTooltip + "  ");
         ddTooltipLines.push(ddTooltip);
     }
 
     ddTooltip = purchaseDetails.purchaseTypeName ? "Type:" + purchaseDetails.purchaseTypeName + "; " : "";
     if (isNotBlank(ddTooltip)) {
-        // ddTooltipLines.push(" " + ddTooltip + "  ");
         ddTooltipLines.push(ddTooltip);
     }
     // return ddTooltipLines.join("&#10;&#13;");
@@ -81,6 +90,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
     const [purchaseDetailList, setPurchaseDetailList] = useState<PurchaseFields[]>([]);
     const [dropdownPurchaseDetailList, setDropdownPurchaseDetailList] = useState<DropDownItemType[]>([]);
     const [selectedDropdownPurchaseDetail, setSelectedDropdownPurchaseDetail] = useState<DropDownItemType>();
+    const [selectedPurchaseReference, setSelectedPurchaseReference] = useState<PurchaseDetailReference>();
     const [purchaseListPageNo, setPurchaseListPageNo] = useState<number>(1);
     const [dropdownRefundReasons, setDropdownRefundReasons] = useState<DropDownItemType[]>([]);
     const [selectedDropdownReason, setSelectedDropdownReason] = useState<DropDownItemType>();
@@ -103,6 +113,20 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             };
             setSelectedDropdownPurchaseDetail(myDdPurchaseDetail);
             setDropdownPurchaseDetailList([myDdPurchaseDetail]);
+            const prchDtl = props.purchaseDetails;
+            setPurchaseDetailList([prchDtl]);
+            const spObj = props.sharePersons.reduce((prev: Record<string, string>, curr) => {
+                prev[curr.id] = curr.nickName || `${curr.firstName} ${curr.lastName}`;
+                return prev;
+            }, {});
+            setSelectedPurchaseReference({
+                billName: props.purchaseDetails.billName,
+                amount: props.purchaseDetails.amount || "-",
+                paymentAccountName: props.purchaseDetails.paymentAccountName || "-",
+                purchaseId: props.purchaseDetails.id,
+                purchaseItemId: null,
+                taggingPersons: props.purchaseDetails.personIds.map(pid => spObj[pid]).filter(sp => sp)
+            });
             logger.debug("refund amount =", props.refundDetails?.amount, ", and amount =", amount, " purchase amount =", props.purchaseDetails.amount);
             setAmount(prev => {
                 if (props.refundDetails?.amount) {
@@ -128,6 +152,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             });
             logger.debug("refund pymtAccId =", props.refundDetails?.paymentAccountId, " purchase pymtAccId =", props.purchaseDetails.paymentAccountId, "will configure selected pymtAcc if possible.");
             purchasePymtAccId = props.purchaseDetails.paymentAccountId;
+
         } else {
             setTimeout(() => {
                 loadMorePurchaseList();
@@ -290,6 +315,9 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
     };
 
     const loadMorePurchaseList = async () => {
+        if (purchaseDetailList.length > MAX_ALLOWED_PURCHASE_DROPDOWN_ITEMS) {
+            return;
+        }
         const existingPurchaseIds = purchaseDetailList.map(prchs => prchs.id);
         const purchaseList = await expenseService.getPurchaseList(purchaseListPageNo, purchasePageMonths);
 
@@ -319,9 +347,11 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
         });
     };
 
-    const onSelectPurchaseHandler = (selectedPurchase: DropDownItemType) => {
+    const onSelectPurchaseHandler = (selectedPurchase?: DropDownItemType) => {
+        const logger = getLogger("onSelectPurchaseHandler", fcLogger);
         setSelectedDropdownPurchaseDetail(selectedPurchase);
-        const matchedPurchse = purchaseDetailList.find(prch => prch.id === selectedPurchase.id);
+        const matchedPurchse = purchaseDetailList.find(prch => prch.id === selectedPurchase?.id);
+        logger.debug("selectedPurchase=", selectedPurchase, "; matchedPurchse=", matchedPurchse);
         setAmount(prev => {
             if (!prev) {
                 if (matchedPurchse?.amount) {
@@ -348,6 +378,24 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             return prev;
         });
 
+
+        if (matchedPurchse) {
+            const spObj = props.sharePersons.reduce((prev: Record<string, string>, curr) => {
+                prev[curr.id] = curr.nickName || `${curr.firstName} ${curr.lastName}`;
+                return prev;
+            }, {});
+
+            setSelectedPurchaseReference({
+                billName: matchedPurchse.billName,
+                amount: matchedPurchse.amount || "-",
+                paymentAccountName: matchedPurchse.paymentAccountName || "-",
+                purchaseId: matchedPurchse.id,
+                purchaseItemId: null,
+                taggingPersons: matchedPurchse.personIds.map(pid => spObj[pid]).filter(sp => sp)
+            });
+        } else {
+            setSelectedPurchaseReference(undefined);
+        }
     };
 
     function cacheReceiptFileHandler (receipt: ReceiptProps, cacheAction: CacheAction): Promise<DownloadReceiptResource> {
@@ -358,237 +406,325 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
         return receiptService.downloadReceipts(receipts);
     }
 
+    fcLogger.debug("purchaseDetailList.length=", purchaseDetailList.length, "; list=", purchaseDetailList);
+
     return (
-        <form onSubmit={ onSubmitHandler }>
-            <div className="columns">
-                <div className="column">
-                    <DropDown
-                        id="purchase-dd"
-                        label="Purchase: "
-                        items={ dropdownPurchaseDetailList }
-                        key={ "purchase-dd" }
-                        onSelect={ onSelectPurchaseHandler }
-                        direction="down"
-                        selectedItem={ selectedDropdownPurchaseDetail }
-                        defaultItem={ selectedDropdownPurchaseDetail }
-                        loadMore={ loadMorePurchaseList }
-                        allowSearch={ true }
-                    />
-                </div>
-            </div>
-            <div className="columns">
-                <div className="column">
-                    <div className="columns">
-                        <div className="column">
-                            {
-                                !billName &&
-                                <Input
-                                    id="refund-bill-name-empty"
-                                    key="refund-bill-name-empty"
-                                    label="Bill Name: "
-                                    type="text"
-                                    placeholder="Enter Refund billName"
-                                    size={ 20 }
-                                    initialValue={ billName }
-                                    tooltip="It could be store name, online site or specific product. Have short name that you can recognize"
-                                    leftIcon={ faStore }
-                                    onChange={ setBillName }
-                                    required={ true }
-                                    maxlength={ 50 }
-                                    minlength={ 2 }
-                                />
-                            }
-                            {
-                                billName &&
-                                <Input
-                                    id="refund-bill-name"
-                                    key={ "refund-bill-name" }
-                                    label="Bill Name: "
-                                    type="text"
-                                    placeholder="Enter Refund billName"
-                                    size={ 20 }
-                                    initialValue={ billName }
-                                    tooltip="It could be store name, online site or specific product. Have short name that you can recognize"
-                                    leftIcon={ faStore }
-                                    onChange={ setBillName }
-                                    required={ true }
-                                    maxlength={ 50 }
-                                    minlength={ 2 }
-                                />
-                            }
-                        </div>
+        <div>
+            <form onSubmit={ onSubmitHandler }>
+                <div className="columns">
+                    <div className="column is-narrow">
+                        <DropDown
+                            id="purchase-dd"
+                            label="Purchase: "
+                            items={ dropdownPurchaseDetailList }
+                            key={ "purchase-dd" }
+                            onSelect={ onSelectPurchaseHandler }
+                            direction="down"
+                            selectedItem={ selectedDropdownPurchaseDetail }
+                            defaultItem={ selectedDropdownPurchaseDetail }
+                            loadMore={ loadMorePurchaseList }
+                            allowSearch={ true }
+                        />
                     </div>
-                    <div className="columns">
-                        <div className="column is-narrow">
-                            <CurrencySymbol
-                                countryCode={ defaultCurrencyProfile.country.code }
-                                countryName={ defaultCurrencyProfile.country.name }
-                                currencyCode={ defaultCurrencyProfile.currency.code }
-                                currencyName={ defaultCurrencyProfile.currency.name }
-                            />
-                        </div>
-                        <div className="column">
-                            {
-                                amount &&
-                                <Input
-                                    id="refund-amount"
-                                    key={ "refund-amount" }
-                                    label="Refund Amount: "
-                                    type="number"
-                                    placeholder="0.00"
-                                    min={ -10000000 }
-                                    max={ 10000000 }
-                                    initialValue={ amount }
-                                    leftIcon={ faDollarSign }
-                                    className="is-medium"
-                                    onChange={ setAmount }
-                                    step={ 0.01 }
-                                />
-                            }
-                            {
-                                !amount &&
-                                <Input
-                                    id="refund-amount-empty"
-                                    key="refund-amount-empty"
-                                    label="Refund Amount: "
-                                    type="number"
-                                    placeholder="0.00"
-                                    min={ -10000000 }
-                                    max={ 10000000 }
-                                    initialValue={ amount }
-                                    leftIcon={ faDollarSign }
-                                    className="is-medium"
-                                    onChange={ setAmount }
-                                    step={ 0.01 }
-                                />
-                            }
-                        </div>
-                    </div>
-                    <div className="columns">
-                        <div className="column">
-                            <DropDown
-                                id="refund-pymt-acc"
-                                key={ "refund-pymt-acc" }
-                                label="Payment Account: "
-                                items={ dropdownPymtAccountItems }
-                                onSelect={ (selected: DropDownItemType) => setSelectedDropdownPymtAccount(selected) }
-                                selectedItem={ selectedDropdownPymtAccount }
-                                defaultItem={ selectedDropdownPymtAccount }
-                                required={ true }
-                            />
-                        </div>
-                        <div className="column">
-                            <DropDown
-                                id="refund-reason"
-                                key={ "refund-reason" }
-                                label="Refund Reason: "
-                                items={ dropdownRefundReasons }
-                                onSelect={ (selected: DropDownItemType) => setSelectedDropdownReason(selected) }
-                                selectedItem={ selectedDropdownReason }
-                                defaultItem={ selectedDropdownReason }
-                                required={ true }
-                            />
-                        </div>
-                    </div>
-                    <div className="columns">
-                        <div className="column">
-                            <TagsInputSharePerson
-                                id="person-tags"
-                                label="Tag Persons: "
-                                defaultValue={ selectedSharePersonTagItems }
-                                placeholder="Tag Person by Name"
-                                onChange={ setSelectedSharePersonTagItems }
-                                key={ "person-tags" }
-                                sourceValues={ sourceSharePersonTagItems }
-                                maxTags={ 10 }
-                            />
-                        </div>
-                    </div>
-                    <div className="columns">
-                        <div className="column">
-                            <TextArea
-                                id="refund-desc"
-                                label="Description: "
-                                rows={ 2 }
-                                value={ description }
-                                onChange={ setDescription }
-                                key={ "refund-desc" }
-                                maxlength={ 150 }
-                            />
-                        </div>
-                    </div>
-                    <div className="columns">
-                        <div className="column">
-                            <TagsInput
-                                id="refund-tags"
-                                label="Tags: "
-                                defaultValue={ tags }
-                                placeholder="Add Tags"
-                                onChange={ setTags }
-                                key={ "refund-tags" }
-                                sourceValues={ props.sourceTags }
-                                maxTags={ 10 }
-                            />
-                        </div>
+                    <div className="column">
+                        <div className="block"></div>
+                        <ViewDialog
+                            linkText="quickview"
+                            openDefault={ false }
+                            loading={ !selectedPurchaseReference }
+                            title="Selected Purchase Details"
+                            animateLink={ true }
+                            isLinkPlayIn={ !!selectedPurchaseReference }
+                        >
+                            <div className="block">
+                                <label>BillName: </label> <span>{ selectedPurchaseReference?.billName }</span>
+                            </div>
+                            <div className="block">
+                                <label>Amount: </label> <span>{ selectedPurchaseReference?.amount }</span>
+                            </div>
+                            <div className="block">
+                                <label>Payment Account: </label> <span>{ selectedPurchaseReference?.paymentAccountName }</span>
+                            </div>
+                            <div className="block">
+                                <label>Tag Persons: </label> <ul>{ selectedPurchaseReference?.taggingPersons.map(sp => (<li>{ sp }</li>)) }</ul>
+                            </div>
+                        </ViewDialog>
                     </div>
                 </div>
-                <div className="column is-one-third">
-                    <div className="columns">
-                        <div className="column">
-                            <UploadReceiptsModal
-                                receipts={ receipts }
-                                relationId={ props.refundId }
-                                onChange={ setReceipts }
-                                cacheReceiptFile={ cacheReceiptFileHandler }
-                                downloadReceipts={ downloadReceiptsHandler }
-                                belongsTo={ ExpenseBelongsTo.PurchaseRefund }
-                            />
+                <div className="columns">
+                    <div className="column">
+                        <div className="columns">
+                            <div className="column">
+                                {
+                                    !billName &&
+                                    <Input
+                                        id="refund-bill-name-empty"
+                                        key="refund-bill-name-empty"
+                                        label="Bill Name: "
+                                        type="text"
+                                        placeholder="Enter Refund billName"
+                                        size={ 20 }
+                                        initialValue={ billName }
+                                        tooltip="It could be store name, online site or specific product. Have short name that you can recognize"
+                                        leftIcon={ faStore }
+                                        onChange={ setBillName }
+                                        required={ true }
+                                        maxlength={ 50 }
+                                        minlength={ 2 }
+                                    />
+                                }
+                                {
+                                    billName &&
+                                    <Input
+                                        id="refund-bill-name"
+                                        key={ "refund-bill-name" }
+                                        label="Bill Name: "
+                                        type="text"
+                                        placeholder="Enter Refund billName"
+                                        size={ 20 }
+                                        initialValue={ billName }
+                                        tooltip="It could be store name, online site or specific product. Have short name that you can recognize"
+                                        leftIcon={ faStore }
+                                        onChange={ setBillName }
+                                        required={ true }
+                                        maxlength={ 50 }
+                                        minlength={ 2 }
+                                    />
+                                }
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                    <pre>
+                                        <span className="icon-text">
+                                            <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
+                                            <span> selected purchase's billName: { selectedPurchaseReference?.billName } </span>
+                                        </span>
+                                    </pre>
+                                </Animated>
+                            </div>
+                        </div>
+                        <div className="columns">
+                            <div className="column is-narrow">
+                                <CurrencySymbol
+                                    countryCode={ defaultCurrencyProfile.country.code }
+                                    countryName={ defaultCurrencyProfile.country.name }
+                                    currencyCode={ defaultCurrencyProfile.currency.code }
+                                    currencyName={ defaultCurrencyProfile.currency.name }
+                                />
+                            </div>
+                            <div className="column">
+                                {
+                                    amount &&
+                                    <Input
+                                        id="refund-amount"
+                                        key={ "refund-amount" }
+                                        label="Refund Amount: "
+                                        type="number"
+                                        placeholder="0.00"
+                                        min={ -10000000 }
+                                        max={ 10000000 }
+                                        initialValue={ amount }
+                                        leftIcon={ faDollarSign }
+                                        className="is-medium"
+                                        onChange={ setAmount }
+                                        step={ 0.01 }
+                                    />
+                                }
+                                {
+                                    !amount &&
+                                    <Input
+                                        id="refund-amount-empty"
+                                        key="refund-amount-empty"
+                                        label="Refund Amount: "
+                                        type="number"
+                                        placeholder="0.00"
+                                        min={ -10000000 }
+                                        max={ 10000000 }
+                                        initialValue={ amount }
+                                        leftIcon={ faDollarSign }
+                                        className="is-medium"
+                                        onChange={ setAmount }
+                                        step={ 0.01 }
+                                    />
+                                }
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                    <pre>
+                                        <span className="icon-text">
+                                            <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
+                                            <span>selected purchase's amount { selectedPurchaseReference?.amount }</span>
+                                        </span>
+                                    </pre>
+                                </Animated>
+                            </div>
+                        </div>
+                        <div className="columns">
+                            <div className="column">
+                                <DropDown
+                                    id="refund-pymt-acc"
+                                    key={ "refund-pymt-acc" }
+                                    label="Payment Account: "
+                                    items={ dropdownPymtAccountItems }
+                                    onSelect={ (selected: DropDownItemType) => setSelectedDropdownPymtAccount(selected) }
+                                    selectedItem={ selectedDropdownPymtAccount }
+                                    defaultItem={ selectedDropdownPymtAccount }
+                                    required={ true }
+                                />
+                            </div>
+                            <div className="column">
+                                <DropDown
+                                    id="refund-reason"
+                                    key={ "refund-reason" }
+                                    label="Refund Reason: "
+                                    items={ dropdownRefundReasons }
+                                    onSelect={ (selected: DropDownItemType) => setSelectedDropdownReason(selected) }
+                                    selectedItem={ selectedDropdownReason }
+                                    defaultItem={ selectedDropdownReason }
+                                    required={ true }
+                                />
+                            </div>
+                        </div>
+                        <div className="columns">
+                            <div className="column">
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                    <pre>
+                                        <span className="icon-text">
+                                            <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
+                                            <span>selected purchase's payment account { selectedPurchaseReference?.paymentAccountName || "-" }</span>
+                                        </span>
+                                    </pre>
+                                </Animated>
+                            </div>
+                        </div>
+                        <div className="columns">
+                            <div className="column">
+                                <TagsInputSharePerson
+                                    id="person-tags"
+                                    label="Tag Persons: "
+                                    defaultValue={ selectedSharePersonTagItems }
+                                    placeholder="Tag Person by Name"
+                                    onChange={ setSelectedSharePersonTagItems }
+                                    key={ "person-tags" }
+                                    sourceValues={ sourceSharePersonTagItems }
+                                    maxTags={ 10 }
+                                />
+                            </div>
+                        </div>
+                        <div className="columns">
+                            <div className="column">
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                    <pre>
+                                        <span className="icon-text">
+                                            <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
+                                            <span> selected purchase's tagged persons { selectedPurchaseReference?.taggingPersons.join(" , ") } </span>
+                                        </span>
+                                    </pre>
+                                </Animated>
+                            </div>
+                        </div>
+                        <div className="columns">
+                            <div className="column">
+                                <TextArea
+                                    id="refund-desc"
+                                    label="Description: "
+                                    rows={ 2 }
+                                    value={ description }
+                                    onChange={ setDescription }
+                                    key={ "refund-desc" }
+                                    maxlength={ 150 }
+                                />
+                            </div>
+                        </div>
+                        <div className="columns">
+                            <div className="column">
+                                <TagsInput
+                                    id="refund-tags"
+                                    label="Tags: "
+                                    defaultValue={ tags }
+                                    placeholder="Add Tags"
+                                    onChange={ setTags }
+                                    key={ "refund-tags" }
+                                    sourceValues={ props.sourceTags }
+                                    maxTags={ 10 }
+                                />
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                    <pre>
+                                        <span className="icon-text">
+                                            <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
+                                            <span> the selected purchase's tags will auto apply in dashboard total. No need to add same tags here. </span>
+                                        </span>
+                                    </pre>
+                                </Animated>
+                            </div>
                         </div>
                     </div>
-                    <div className="columns">
-                        <div className="column">
-                            <div className="my-1 py-1">
-                                <Calendar
-                                    key={ "refund-date" }
-                                    id="refund-date"
-                                    label="Refund Date: "
-                                    startDate={ refundDate }
-                                    onSelect={ (range) => { setRefundDate((prev) => (range.start || prev)); } }
+                    <div className="column is-one-third">
+                        <div className="columns">
+                            <div className="column">
+                                <UploadReceiptsModal
+                                    receipts={ receipts }
+                                    relationId={ props.refundId }
+                                    onChange={ setReceipts }
+                                    cacheReceiptFile={ cacheReceiptFileHandler }
+                                    downloadReceipts={ downloadReceiptsHandler }
+                                    belongsTo={ ExpenseBelongsTo.PurchaseRefund }
                                 />
+                            </div>
+                        </div>
+                        <div className="columns">
+                            <div className="column">
+                                <div className="my-1 py-1">
+                                    <Calendar
+                                        key={ "refund-date" }
+                                        id="refund-date"
+                                        label="Refund Date: "
+                                        startDate={ refundDate }
+                                        onSelect={ (range) => { setRefundDate((prev) => (range.start || prev)); } }
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div className="columns">
-                <div className="column">
-                    <div className="buttons is-centered is-display-mobile">
-                        <button className="button is-dark is-large" type="submit">
-                            <span className="px-2-label">
-                                { props.submitLabel }
-                            </span>
-                        </button>
+                <div className="columns is-hidden-mobile">
+                    <div className="column">
+                        <div className="buttons">
+                            <button className="button is-light" type="button" onClick={ onCancelHandler }>
+                                <span className="px-2-label">
+                                    Cancel
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <div className="column">
+                        <div className="buttons is-centered">
+                            <button className="button is-dark is-medium" type="submit">
+                                <span className="px-2-label">
+                                    { props.submitLabel }
+                                </span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div className="column">
-                    <div className="buttons">
-                        <button className="button is-light" type="button" onClick={ onCancelHandler }>
-                            <span className="px-2-label">
-                                Cancel
-                            </span>
-                        </button>
+                <div className="columns is-hidden-desktop">
+                    <div className="column">
+                        <div className="buttons is-right">
+                            <button className="button is-dark" type="submit">
+                                <span className="px-2-label">
+                                    { props.submitLabel }
+                                </span>
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div className="column">
-                    <div className="buttons is-centered is-hidden-mobile">
-                        <button className="button is-dark is-medium" type="submit">
-                            <span className="px-2-label">
-                                { props.submitLabel }
-                            </span>
-                        </button>
+                    <div className="column">
+                        <div className="buttons">
+                            <button className="button is-light" type="button" onClick={ onCancelHandler }>
+                                <span className="px-2-label">
+                                    Cancel
+                                </span>
+                            </button>
+                        </div>
                     </div>
+                    <div className="column"></div>
                 </div>
-            </div>
-        </form>
+            </form >
+        </div >
     );
 };
