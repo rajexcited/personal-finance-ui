@@ -20,3 +20,5 @@ export { refundReasonListActionHandler, refundReasonListLoaderHandler } from "./
 
 export { SharePersonPage } from "./components/share-person/share-person";
 export { sharePersonListActionHandler, sharePersonListLoaderHandler } from "./route-handlers/share-person-loader-action";
+
+export { GeneralSettings } from "./components/general-settings";
