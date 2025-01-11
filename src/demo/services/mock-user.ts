@@ -7,14 +7,15 @@ import datetime from "date-and-time";
 import { UserDetailsResource, UserLoginResource } from "../../pages/auth";
 import { UserStatus } from "../../pages/auth/services";
 import { getLogger } from "../../shared";
+import ms from "ms";
 
 type UserDetailsRsc = Omit<UserDetailsResource, "isAuthenticated" | "fullName">;
 
-const _rootLogger = getLogger("mock.api.user", null, null, "DEBUG");
+const _rootLogger = getLogger("mock.api.user", null, null, "DISABLED");
 
 export const MockUser = (demoMock: MockAdapter) => {
   const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#$%^&*])[\w!@#$%^&\(\)\=*]{8,25}$/;
-  const expiresInSec = 30 * 60;
+  const expiresInSec = ms(process.env.REACT_APP_MINIMUM_SESSION_TIME as string) / 500;
 
   const isInvalidDemoEmailId = (emailId: string) => {
     return !emailId.endsWith("@demo.com");
@@ -44,10 +45,10 @@ export const MockUser = (demoMock: MockAdapter) => {
     const response = tokenSessionData({
       expiresIn: expiresInSec,
       accessToken: uuidv4(),
-      expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime(),
+      expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime()
     });
 
-    return responseCreator.toCreateResponse(response);
+    return responseCreator.toCreateResponse({ expiresIn: response.expiresIn, expiryTime: response.expiryTime }, { Authorization: response.accessToken });
   });
 
   demoMock.onPost("/user/login").reply((config) => {
@@ -72,17 +73,17 @@ export const MockUser = (demoMock: MockAdapter) => {
       firstName: data.emailId.replace("@demo.com", ""),
       lastName: "demo",
       countryCode: "USA",
-      password: atob(data.password),
+      password: atob(data.password)
     };
 
     userSessionDetails({ ...responseData });
     const response = tokenSessionData({
       expiresIn: expiresInSec,
       accessToken: uuidv4(),
-      expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime(),
+      expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime()
     });
 
-    return responseCreator.toSuccessResponse(response);
+    return responseCreator.toSuccessResponse({ expiresIn: response.expiresIn, expiryTime: response.expiryTime }, { Authorization: response.accessToken });
   });
 
   demoMock.onPost("/user/logout").reply((config) => {
@@ -96,7 +97,7 @@ export const MockUser = (demoMock: MockAdapter) => {
     tokenSessionData({
       expiresIn: expiresInSec,
       accessToken: "",
-      expiryTime: -1,
+      expiryTime: -1
     });
 
     return responseCreator.toSuccessResponse("successfuly logged out");
@@ -112,9 +113,10 @@ export const MockUser = (demoMock: MockAdapter) => {
     const response = tokenSessionData({
       expiresIn: expiresInSec,
       accessToken: uuidv4(),
-      expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime(),
+      expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime()
     });
-    return responseCreator.toSuccessResponse(response);
+
+    return responseCreator.toSuccessResponse({ expiresIn: response.expiresIn, expiryTime: response.expiryTime }, { Authorization: response.accessToken });
   });
 
   demoMock.onGet("/user/details").reply((config) => {
@@ -129,7 +131,7 @@ export const MockUser = (demoMock: MockAdapter) => {
       emailId: details.emailId,
       firstName: details.firstName,
       lastName: details.lastName,
-      status: details.status as UserStatus,
+      status: details.status as UserStatus
     };
     return responseCreator.toSuccessResponse(response);
   });
@@ -178,7 +180,7 @@ export const MockUser = (demoMock: MockAdapter) => {
     logger.debug("mock api called, config =", { ...config });
     const data: UserLoginResource = {
       emailId: config.headers?.emailId,
-      password: config.headers?.password,
+      password: config.headers?.password
     };
     const missingErrors = missingValidation(data, ["emailId", "password"]);
     if (missingErrors.length > 0) {
@@ -204,14 +206,14 @@ export const MockUser = (demoMock: MockAdapter) => {
     }
 
     const respDetails = userSessionDetails({
-      status: UserStatus.DELETED_USER,
+      status: UserStatus.DELETED_USER
     });
 
     const response: UserDetailsRsc = {
       emailId: respDetails.emailId,
       firstName: respDetails.firstName,
       lastName: respDetails.lastName,
-      status: respDetails.status as UserStatus,
+      status: respDetails.status as UserStatus
     };
 
     logger.debug("responding success, response=", response);

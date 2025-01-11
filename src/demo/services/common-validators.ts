@@ -23,11 +23,7 @@ export const missingValidation = <T extends Object>(data: T | null | undefined, 
   return errors;
 };
 
-export const validateDataType = <T>(
-  data: T,
-  keys: (keyof T)[],
-  datatype: "string" | "number" | "uuid" | "array" | "arraynumber"
-): ValidationErrorResource<T>[] => {
+export const validateDataType = <T>(data: T, keys: (keyof T)[], datatype: "string" | "number" | "uuid" | "array" | "arraynumber"): ValidationErrorResource<T>[] => {
   const notmissingkeys = keys.filter((k) => isDefined(data[k]));
   if (datatype === "uuid") {
     const errors = stringTypeValidation(data, notmissingkeys);
@@ -88,7 +84,7 @@ export const validateAuthorization = (headers?: any) => {
   const token = hdr?.get("Authorization");
   const tokendata = tokenSessionData();
 
-  if (`Bearer ${tokendata.accessToken}` === token) {
+  if (tokendata.accessToken === token) {
     const remainingSeconds = datetime.subtract(new Date(tokendata.expiryTime), new Date()).toSeconds();
     return remainingSeconds > 1;
   }

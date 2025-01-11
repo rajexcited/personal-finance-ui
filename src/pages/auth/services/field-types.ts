@@ -12,9 +12,10 @@ export interface UserSignupResource {
 }
 
 export enum UserStatus {
+  PUBLIC_USER = "public-user",
   ACTIVE_USER = "active-user",
   DELETED_USER = "deleted-user",
-  DEACTIVATED_USER = "deactive-user",
+  DEACTIVATED_USER = "deactive-user"
 }
 
 export interface UserDetailsResource {
@@ -35,7 +36,7 @@ export interface UpdateUserPasswordResource {
 
 export interface AccessTokenResource {
   accessToken: string;
-  expiresIn: number;
+  expiresIn?: number;
   expiryTime: number;
 }
 
