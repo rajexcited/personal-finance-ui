@@ -1,7 +1,9 @@
 export { Input, InputValidators } from "./input";
 export type { InputValidateResponse, InputRef } from "./input";
 
-export { default as TagsInput } from "./tags-input";
+export { TagsInput, TagsInputSharePerson } from "./tags-input";
+export type { TagObject } from "./tags-input";
+
 export { default as Calendar } from "./calendar";
 export { default as TextArea } from "./textarea";
 export { default as Th } from "./table-head";
@@ -18,9 +20,8 @@ export { default as Switch } from "./switch";
 export { DropDown } from "./dropdown";
 export type { DropDownItemType } from "./dropdown";
 
-export { TagsInputSharePerson } from "./tags-input-share-person";
-export type { TagObject } from "./tags-input-share-person";
-
 export { CurrencySymbol } from "./currency-symbol";
 
 export { ViewDialog } from "./view-dialog";
+
+export { Radio } from "./radio";

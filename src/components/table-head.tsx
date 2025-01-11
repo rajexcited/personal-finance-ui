@@ -29,11 +29,7 @@ export interface ThProps {
 
 const Th: FunctionComponent<ThProps> = (props) => {
     const [sortdirection, setSortdirection] = useState(props.sortdirection || directions[0]);
-    const [sortdirectionChange, setSortdirectionChange] = useDebounceState(true, 500, true);
-
-    useEffect(() => {
-        setSortdirectionChange(false);
-    }, []);
+    const [sortdirectionChange, setSortdirectionChange] = useDebounceState(!!props.sortdirection, 500, true);
 
     useEffect(() => {
         setSortdirection(prev => props.sortdirection || prev);

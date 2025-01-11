@@ -2,13 +2,9 @@ import "./tags-input.css";
 import { FunctionComponent, useRef, useEffect, useState, useMemo } from "react";
 import BulmaTagsInput, { BulmaTagsInputOptions } from '@creativebulma/bulma-tagsinput';
 import "@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css";
-import { getLogger } from "../shared";
-
-export interface TagObject {
-  searchText: string;
-  displayText: string;
-  id: string;
-}
+import { getLogger, sleep } from "../../shared";
+import { DeviceMode, useOrientation } from "../../hooks";
+import { buildDropdown, initializeEventHandler, TagObject } from "./events";
 
 interface TagsInputSharePersonProps {
   id: string;
@@ -63,6 +59,7 @@ export const TagsInputSharePerson: FunctionComponent<TagsInputSharePersonProps> 
   const tagsRef = useRef<HTMLInputElement>(null);
   const [tagCount, setTagCount] = useState(0);
   const [bulmaTagsInput, setBulmaTagsInput] = useState<BulmaTagsInput>();
+  const { resultedDevice: deviceMode } = useOrientation(DeviceMode.Mobile);
 
   const defaultValueMap: Record<string, TagObject> = useMemo(() => ({}), []);
   const sourceValueMap: Record<string, TagObject> = useMemo(() => ({}), []);
@@ -87,6 +84,7 @@ export const TagsInputSharePerson: FunctionComponent<TagsInputSharePersonProps> 
   }, [props.defaultValue, defaultValueMap]);
 
   useEffect(() => {
+    const logger = getLogger("useEffect.dep[props.sourceValues, sourceValueMap, bulmaTagsInput]", fcLogger);
     // reset sources if any update received
     const kk = Object.keys(sourceValueMap);
     kk.forEach(k => delete sourceValueMap[k]);
@@ -96,7 +94,10 @@ export const TagsInputSharePerson: FunctionComponent<TagsInputSharePersonProps> 
     });
 
     updateSourceValueWrapper(undefined);
-  }, [props.sourceValues, sourceValueMap]);
+    if (bulmaTagsInput) {
+      buildDropdown(bulmaTagsInput, props.sourceValues, logger);
+    }
+  }, [props.sourceValues, sourceValueMap, bulmaTagsInput]);
 
   useEffect(() => {
     const logger = getLogger("useEffect.dep[tagsRef.current]", fcLogger);
@@ -108,6 +109,7 @@ export const TagsInputSharePerson: FunctionComponent<TagsInputSharePersonProps> 
 
     const options = {
       ...defaultOptions,
+      searchMinChars: deviceMode === DeviceMode.Mobile ? 0 : defaultOptions.searchMinChars,
       source: sourceValues as any[]
     };
 
@@ -122,6 +124,7 @@ export const TagsInputSharePerson: FunctionComponent<TagsInputSharePersonProps> 
 
     const tagsInput = new BulmaTagsInput(tagsRef.current, options);
     setBulmaTagsInput(tagsInput);
+    const unbindEvents = initializeEventHandler(tagsInput);
 
     tagsInput.on("after.add", (itemObj: { item: TagObject; }) => {
       // added item 
@@ -145,8 +148,16 @@ export const TagsInputSharePerson: FunctionComponent<TagsInputSharePersonProps> 
         props.onChange(selectedTagItems);
       }
       setTagCount(prev => prev - 1);
+      buildDropdown(tagsInput, props.sourceValues, logger);
     });
-
+    tagsInput.on("after.select", (itemObj) => {
+      // when selected in mobile device, trigger remove
+      if (deviceMode === DeviceMode.Mobile) {
+        const tagElement = itemObj.tag as HTMLSpanElement;
+        const deleteButton = tagElement.querySelector(".delete") as HTMLButtonElement | null;
+        sleep("300ms").then(() => deleteButton?.click());
+      }
+    });
     updateSourceValueWrapper(undefined);
     setTagCount(props.defaultValue.length);
     const selected = Object.values(defaultValueMap);
@@ -157,10 +168,10 @@ export const TagsInputSharePerson: FunctionComponent<TagsInputSharePersonProps> 
 
     return () => {
       logger.debug("tagsRef.current =", tagsRef.current, ", tagsInput =", tagsInput, ", tagsInput.container =", tagsInput.container, ", html =", tagsInput.container.parentElement?.outerHTML);
+      unbindEvents();
       tagsInput.flush();
       tagsInput.destroy();
 
-      // tagsInput.container.remove();
       document.removeEventListener("click", tagsInput._onDocumentClick);
     };
 
@@ -171,12 +182,19 @@ export const TagsInputSharePerson: FunctionComponent<TagsInputSharePersonProps> 
   return (
     <div className="field">
       <label className="label">{ props.label }</label>
+      {
+        deviceMode === DeviceMode.Mobile &&
+        <p className="help is-info">
+          tap on item to select tag from list or type comma to add written new tag
+        </p>
+      }
       <div className="control">
         <input ref={ tagsRef }
           type="text"
           placeholder={ props.placeholder }
           className="input is-large"
           data-type="tags"
+          autoCapitalize="off"
         />
       </div>
       <p className="help is-info has-text-right">

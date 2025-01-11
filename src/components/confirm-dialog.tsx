@@ -1,3 +1,4 @@
+import "./confirm-dialog.css";
 import { FunctionComponent, ReactNode, useEffect, useState } from "react";
 import { getLogger } from "../shared";
 
@@ -67,8 +68,10 @@ const ConfirmDialog: FunctionComponent<ConfirmDialogProps> = (props) => {
                     { content }
                 </section>
                 <footer className="modal-card-foot is-small">
-                    <button className="button" onClick={ onClickCloseOrCancelHandler }>{ props.noButtonContent || "No" }</button>
-                    <button className={ `button ${props.yesButtonClassname || ""}` } onClick={ onClickConfirmHandler }> { props.yesButtonContent || "Yes" } </button>
+                    <div className="buttons">
+                        <button className="button" onClick={ onClickCloseOrCancelHandler }>{ props.noButtonContent || "No" }</button>
+                        <button className={ `button ${props.yesButtonClassname || ""}` } onClick={ onClickConfirmHandler }> { props.yesButtonContent || "Yes" } </button>
+                    </div>
                 </footer>
             </div>
         </div>

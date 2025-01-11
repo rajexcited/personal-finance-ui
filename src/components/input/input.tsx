@@ -52,7 +52,9 @@ export type InputProps =
     | ColorInputProps;
 
 export interface InputRef {
-    triggerValidation: () => void;
+    triggerValidation (): void;
+    /** returns input value only if input is valid, otherwise null */
+    getValue (): string | null;
 }
 
 const fcLogger = getLogger("FC.Input", null, null, "DISABLED");
@@ -159,6 +161,12 @@ const Input = forwardRef((props: InputProps, ref) => {
                     fcLogger.debug("triggering input Validation for ", props.id);
                     validateInput(false);
                 });
+            },
+            getValue: () => {
+                if (isValid) {
+                    return inputValue;
+                }
+                return null;
             }
         };
     });

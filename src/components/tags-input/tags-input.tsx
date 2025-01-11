@@ -2,10 +2,12 @@ import "./tags-input.css";
 import { FunctionComponent, useRef, useEffect, useState } from "react";
 import BulmaTagsInput, { BulmaTagsInputOptions } from '@creativebulma/bulma-tagsinput';
 import "@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css";
-import { getLogger } from "../shared";
+import { getLogger, sleep } from "../../shared";
+import { DeviceMode, useOrientation } from "../../hooks";
+import { buildDropdown, initializeEventHandler } from "./events";
 
 
-export interface TagsInputProps {
+interface TagsInputProps {
   id: string;
   label: string;
   defaultValue: string[];
@@ -20,33 +22,34 @@ const defaultOptions: BulmaTagsInputOptions = {
   caseSensitive: false,
   clearSelectionOnTyping: false,
   closeDropdownOnItemSelect: true,
-  delimiter: ',',
+  delimiter: ",",
   freeInput: true,
   highlightDuplicate: true,
   highlightMatchesString: true,
   maxChars: 15,
   minChars: 2,
-  noResultsLabel: 'No results found',
+  noResultsLabel: "No results found",
   removable: true,
   searchMinChars: 1,
-  searchOn: 'text',
+  searchOn: "text",
   selectable: true,
-  tagClass: 'is-rounded is-link',
+  tagClass: "is-rounded is-link",
   trim: true,
   itemText: "val",
-  maxTags: 10,
+  maxTags: 10
 };
+
+
+const fcLogger = getLogger("FC.TagsInput", null, null, "DISABLED");
 
 /**
  * doc link - https://bulma-tagsinput.netlify.app/get-started/usage/
  * https://wikiki.github.io/
- * 
  **/
-const fcLogger = getLogger("FC.TagsInput", null, null, "DISABLED");
-
-const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
+export const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
   const tagsRef = useRef<HTMLInputElement>(null);
   const [tagCount, setTagCount] = useState(0);
+  const { resultedDevice: deviceMode } = useOrientation(DeviceMode.Mobile);
 
   useEffect(() => {
     const logger = getLogger("useEffect.dep[tagsRef.current]", fcLogger);
@@ -60,11 +63,14 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
     const options = {
       ...defaultOptions,
       ...props,
+      searchMinChars: deviceMode === DeviceMode.Mobile ? 0 : defaultOptions.searchMinChars,
       source: sourceValues
     };
     logger.debug("options =", options);
 
     const tagsInput = new BulmaTagsInput(tagsRef.current, options);
+    const unbindEvents = initializeEventHandler(tagsInput);
+    buildDropdown(tagsInput, props.sourceValues, logger);
 
     tagsInput.on("after.add", (itemObj: { item: string; }) => {
       // added item 
@@ -79,7 +85,16 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
       if (props.onChange) {
         props.onChange((tagsInput.value as string).split(","));
       }
+      buildDropdown(tagsInput, sourceValues, logger);
       setTagCount(prev => prev - 1);
+    });
+    tagsInput.on("after.select", (itemObj) => {
+      // when selected in mobile device, trigger remove
+      if (deviceMode === DeviceMode.Mobile) {
+        const tagElement = itemObj.tag as HTMLSpanElement;
+        const deleteButton = tagElement.querySelector(".delete") as HTMLButtonElement | null;
+        sleep("300ms").then(() => deleteButton?.click());
+      }
     });
 
     const updateSourceValues = (item: string) => {
@@ -96,10 +111,10 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
 
     return () => {
       logger.debug("tagsRef.current =", tagsRef.current, ", tagsInput =", tagsInput, ", tagsInput.container =", tagsInput.container, ", html =", tagsInput.container.parentElement?.outerHTML);
+      unbindEvents();
       tagsInput.flush();
       tagsInput.destroy();
 
-      // tagsInput.container.remove();
       document.removeEventListener("click", tagsInput._onDocumentClick);
     };
 
@@ -110,6 +125,12 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
   return (
     <div className="field">
       <label className="label">{ props.label }</label>
+      {
+        deviceMode === DeviceMode.Mobile &&
+        <p className="help is-info">
+          tap on item to select tag from list or type comma to add written new tag
+        </p>
+      }
       <div className="control">
         <input ref={ tagsRef }
           type="text"
@@ -117,6 +138,7 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
           className="input is-large"
           data-type="tags"
           defaultValue={ props.defaultValue.join(",") }
+          autoCapitalize="off"
         />
       </div>
       <p className="help is-info has-text-right">
@@ -125,5 +147,3 @@ const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
     </div>
   );
 };
-
-export default TagsInput;
