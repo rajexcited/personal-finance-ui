@@ -6,6 +6,10 @@ export const getCacheOption = (expiryAge: string) => {
   return { cache: new ExpiryMap(ms(expiryAge)), cacheKey: JSON.stringify };
 };
 
+export const getCacheOptionWithKey = (expiryAge: string, cachekey: string) => {
+  return { cache: new ExpiryMap(ms(expiryAge)), cacheKey: () => cachekey };
+};
+
 type AnySyncFunction = (...arguments_: any[]) => unknown | void;
 
 type Options<FunctionToMemoize extends AnySyncFunction, CacheKeyType> = {
@@ -24,4 +28,12 @@ export function pMemoizeSync<FunctionToMemoize extends AnySyncFunction, CacheKey
   }
 
   return memoizedFn;
+}
+
+export function pMemoizeSyncClear(fn: AnySyncFunction) {
+  const mfn = fn as unknown as any;
+  const cache = mfn.cache as ExpiryMap;
+  if (cache && typeof cache.clear === "function") {
+    cache.clear();
+  }
 }

@@ -17,3 +17,10 @@ export const isUuid = (id: string | null | undefined) => {
   }
   return false;
 };
+
+export const getShortForm = (text: string | string[] | undefined, fitlength: number, defaultValue: string) => {
+  if (Array.isArray(text)) {
+    text = text.join();
+  }
+  return text && text.length > fitlength ? text.substring(0, fitlength - 3).concat("...") : text || defaultValue;
+};

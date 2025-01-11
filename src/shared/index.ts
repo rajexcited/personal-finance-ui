@@ -6,7 +6,7 @@ export type {
   UpdateConfigStatusResource,
   UpdateConfigDetailsResource,
   DeleteConfigDetailsResource,
-  TagQueryParams,
+  TagQueryParams
 } from "./services";
 export {
   TagBelongsTo,
@@ -16,7 +16,7 @@ export {
   ConfigTypeStatus,
   ConfigTypeBelongsTo,
   ConfigAction,
-  axios,
+  axios
 } from "./services";
 
 export {
@@ -32,7 +32,9 @@ export {
   NotFoundError,
   UnauthorizedError,
   subtractDates,
+  subtractDatesDefaultToZero,
   getDateInstance,
+  getDateInstanceDefaultNewDate,
   getDateString,
   getDefaultIfError,
   LoggerBase,
@@ -43,6 +45,8 @@ export {
   pMemoizeSync,
   handleAndRethrowServiceError,
   isUuid,
+  getShortForm,
+  sleep
 } from "./utils";
 
 export type { RouteHandlerResponse } from "./utils";
