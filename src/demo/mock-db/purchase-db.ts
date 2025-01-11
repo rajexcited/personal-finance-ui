@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import datetime from "date-and-time";
 import { PurchaseFields, PurchaseItemFields, ExpenseStatus } from "../../pages/expenses";
-import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDateInstance, getLogger } from "../../shared";
+import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDateInstanceDefaultNewDate, getLogger } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { auditData } from "../services/userDetails";
 import { deleteReceiptFileData, updatePurchaseIdForReceipt } from "./receipts-db";
@@ -57,7 +57,7 @@ const init = async () => {
     status: ExpenseStatus.Enable,
     belongsTo: ExpenseBelongsTo.Purchase,
     personIds: [],
-    currencyProfileId: currencyProfileId,
+    currencyProfileId: currencyProfileId
   });
 
   await purchaseDb.addItem({
@@ -83,14 +83,14 @@ const init = async () => {
         amount: "14.34",
         tags: "kids,breaktime,hangout".split(","),
         description: "for breakfast, break time during play or evening hangout",
-        purchaseTypeId: typeId("hangout"),
+        purchaseTypeId: typeId("hangout")
       },
       {
         id: uuidv4(),
         billName: "breakfast",
         amount: "8.7",
         tags: "breakfast,dairy".split(","),
-        description: "milk, bread, butter, jaam",
+        description: "milk, bread, butter, jaam"
       },
       {
         id: uuidv4(),
@@ -98,9 +98,9 @@ const init = async () => {
         amount: "39.7",
         tags: "utensil,kitchen".split(","),
         purchaseTypeId: typeId("home stuffs"),
-        description: "",
-      },
-    ],
+        description: ""
+      }
+    ]
   });
 };
 
@@ -117,7 +117,7 @@ export const getPurchaseTags = async (purchasedYears: number[]) => {
   logger.debug("purchasedYears =", purchasedYears, ", purchasedYearRanges =", purchasedYears);
   const taglist = purchaseList
     .filter((pi) => {
-      const purchasedYear = getDateInstance(pi.purchaseDate).getFullYear();
+      const purchasedYear = getDateInstanceDefaultNewDate(pi.purchaseDate).getFullYear();
       return purchasedYears.includes(purchasedYear);
     })
     .flatMap((pi) => [...pi.tags, ...(pi.items?.flatMap((pii) => pii.tags) || [])]);
@@ -129,7 +129,7 @@ export const getPurchaseDetails = async (purchaseId: string) => {
   const existingPurchase = await purchaseDb.getItem(purchaseId);
   if (existingPurchase && existingPurchase.belongsTo === ExpenseBelongsTo.Purchase) {
     const details: PurchaseFields = {
-      ...existingPurchase,
+      ...existingPurchase
     };
     return { getDetails: details };
   }
@@ -152,11 +152,11 @@ const getReceiptsForPurchaseAddUpdate = async (
   const addedNewReceiptPromises = newPurchaseReceipts
     .filter((r) => !existingPurchaseReceipts[r.id])
     .map(async (r) => {
-      const receiptIdResult = await updatePurchaseIdForReceipt(newPurchaseId, oldPurchaseId, r.name);
+      const receiptIdResult = await updatePurchaseIdForReceipt(newPurchaseId, oldPurchaseId, r.id);
       if (receiptIdResult.error) {
         return { ...r, error: receiptIdResult.error };
       }
-      const rr: ReceiptProps = { ...r, relationId: "", id: receiptIdResult.id as string, url: "", file: undefined };
+      const rr: ReceiptProps = { ...r, id: receiptIdResult.id as string, url: "", file: undefined };
       return rr;
     });
   const addedNewReceipts = await Promise.all(addedNewReceiptPromises);
@@ -221,7 +221,7 @@ export const addUpdatePurchase = async (data: PurchaseFields) => {
       receipts: receiptResult.list || [],
       items: [...updatedExistingPurchaseIems, ...addedNewPurchaseIems],
       auditDetails: auditData(existingPurchase.auditDetails.createdBy, existingPurchase.auditDetails.createdOn),
-      currencyProfileId: await getDefaultCurrencyProfileId(),
+      currencyProfileId: await getDefaultCurrencyProfileId()
     };
     delete updatedPurchase.purchaseTypeName;
     delete updatedPurchase.paymentAccountName;
@@ -241,7 +241,7 @@ export const addUpdatePurchase = async (data: PurchaseFields) => {
     receipts: data.receipts.map((r) => ({ ...r, id: uuidv4(), relationId: "", url: "" })),
     items: data.items?.map((ei) => ({ ...ei, expenseCategoryName: undefined, id: uuidv4() })) || [],
     auditDetails: auditData(),
-    currencyProfileId: await getDefaultCurrencyProfileId(),
+    currencyProfileId: await getDefaultCurrencyProfileId()
   };
 
   await purchaseDb.addUpdateItem(addedPurchase);
@@ -254,7 +254,7 @@ export const deletePurchase = async (purchaseId: string) => {
     const deletingPurchase = {
       ...existingPurchase,
       status: ExpenseStatus.Deleted,
-      auditDetails: auditData(existingPurchase.auditDetails.createdBy, existingPurchase.auditDetails.createdOn),
+      auditDetails: auditData(existingPurchase.auditDetails.createdBy, existingPurchase.auditDetails.createdOn)
     };
     await purchaseDb.addUpdateItem(deletingPurchase);
     return { deleted: { ...deletingPurchase } as PurchaseFields };

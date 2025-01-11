@@ -118,9 +118,9 @@ export const MockIncome = (demoMock: MockAdapter) => {
       logger.debug("validationErrors =", validationErrors, "incomeId =", incomeId);
       return responseCreator.toValidationError(validationErrors);
     }
-    const receiptName = urlParts.slice(-1)[0];
+    const receiptId = urlParts.slice(-1)[0];
 
-    await saveReceiptFileData(filedata, incomeId, receiptName, ExpenseBelongsTo.Income);
+    await saveReceiptFileData(filedata, incomeId, receiptId, ExpenseBelongsTo.Income);
 
     return responseCreator.toSuccessResponse("saved");
   });

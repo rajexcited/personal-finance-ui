@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { ExpenseStatus } from "../../pages/expenses";
-import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDateInstance, getLogger } from "../../shared";
+import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDateInstanceDefaultNewDate, getLogger } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { auditData } from "../services/userDetails";
 import { deleteReceiptFileData, updateIncomeIdForReceipt } from "./receipts-db";
@@ -60,7 +60,7 @@ const init = async () => {
     belongsTo: ExpenseBelongsTo.Income,
     incomeTypeName: "salary",
     personIds: [],
-    currencyProfileId: currencyProfileId,
+    currencyProfileId: currencyProfileId
   });
 };
 
@@ -75,7 +75,7 @@ export const getIncomeTags = async (incomeYears: number[]) => {
   logger.debug("incomeYears =", incomeYears, ", incomeYearRanges =", incomeYears);
   const taglist = incomeList
     .filter((ii) => {
-      const incomeYear = getDateInstance(ii.incomeDate).getFullYear();
+      const incomeYear = getDateInstanceDefaultNewDate(ii.incomeDate).getFullYear();
       return incomeYears.includes(incomeYear);
     })
     .flatMap((ii) => ii.tags);
@@ -87,7 +87,7 @@ export const getIncomeDetails = async (incomeId: string) => {
   const existingIncome = await incomeDb.getItem(incomeId);
   if (existingIncome && existingIncome.belongsTo === ExpenseBelongsTo.Income) {
     const details: IncomeFields = {
-      ...existingIncome,
+      ...existingIncome
     };
     return { getDetails: details };
   }
@@ -110,7 +110,7 @@ const getReceiptsForIncomeAddUpdate = async (
   const addedNewReceiptPromises = newIncomeReceipts
     .filter((r) => !existingIncomeReceipts[r.id])
     .map(async (r) => {
-      const receiptIdResult = await updateIncomeIdForReceipt(newIncomeId, oldIncomeId, r.name);
+      const receiptIdResult = await updateIncomeIdForReceipt(newIncomeId, oldIncomeId, r.id);
       if (receiptIdResult.error) {
         return { ...r, error: receiptIdResult.error };
       }
@@ -160,7 +160,7 @@ export const addUpdateIncome = async (data: IncomeFields) => {
       status: ExpenseStatus.Enable,
       receipts: receiptResult.list || [],
       auditDetails: auditData(existingIncome.auditDetails.createdBy, existingIncome.auditDetails.createdOn),
-      currencyProfileId: await getDefaultCurrencyProfileId(),
+      currencyProfileId: await getDefaultCurrencyProfileId()
     };
 
     // delete updatedIncome.paymentAccountName;
@@ -179,7 +179,7 @@ export const addUpdateIncome = async (data: IncomeFields) => {
     status: ExpenseStatus.Enable,
     receipts: data.receipts.map((r) => ({ ...r, id: uuidv4(), relationId: "", url: "" })),
     auditDetails: auditData(),
-    currencyProfileId: await getDefaultCurrencyProfileId(),
+    currencyProfileId: await getDefaultCurrencyProfileId()
   };
 
   await incomeDb.addUpdateItem(addedIncome);
@@ -192,7 +192,7 @@ export const deleteIncome = async (incomeId: string) => {
     const deletingIncome = {
       ...existingIncome,
       status: ExpenseStatus.Deleted,
-      auditDetails: auditData(existingIncome.auditDetails.createdBy, existingIncome.auditDetails.createdOn),
+      auditDetails: auditData(existingIncome.auditDetails.createdBy, existingIncome.auditDetails.createdOn)
     };
     await incomeDb.addUpdateItem(deletingIncome);
     return { deleted: { ...deletingIncome } as IncomeFields };

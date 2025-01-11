@@ -28,9 +28,9 @@ export const getReceiptFileData = async (purchaseId: string, receiptId: string, 
   return { data: dbItem.filedata };
 };
 
-const updateRelationIdForReceipt = async (newRelationId: string, oldRelationId: string, receiptName: string, belongsTo: ExpenseBelongsTo) => {
+const updateRelationIdForReceipt = async (newRelationId: string, oldRelationId: string, receiptId: string, belongsTo: ExpenseBelongsTo) => {
   const logger = getLogger("updateRelationIdForReceipt." + belongsTo, _rootLogger);
-  const items = await receiptDb.getAllFromIndex(LocalDBStoreIndex.ExpenseReceiptName, [receiptName, oldRelationId]);
+  const items = await receiptDb.getAllFromIndex(LocalDBStoreIndex.ExpenseReceiptName, [receiptId, oldRelationId]);
   if (items.length !== 1 || items[0].belongsTo !== belongsTo) {
     return { error: "receipt not found" };
   }
@@ -40,30 +40,30 @@ const updateRelationIdForReceipt = async (newRelationId: string, oldRelationId: 
   logger.debug("updating relationId for receipt");
   const updatingDbItem: DbReceiptFileResource = {
     ...items[0],
-    relationId: newRelationId,
+    relationId: newRelationId
   };
   await receiptDb.addUpdateItem(updatingDbItem);
   return { id: updatingDbItem.id };
 };
 
-export const updatePurchaseIdForReceipt = async (newPurchaseId: string, oldPurchaseId: string, receiptName: string) => {
-  return await updateRelationIdForReceipt(newPurchaseId, oldPurchaseId, receiptName, ExpenseBelongsTo.Purchase);
+export const updatePurchaseIdForReceipt = async (newPurchaseId: string, oldPurchaseId: string, receiptId: string) => {
+  return await updateRelationIdForReceipt(newPurchaseId, oldPurchaseId, receiptId, ExpenseBelongsTo.Purchase);
 };
-export const updateIncomeIdForReceipt = async (newIncomeId: string, oldIncomeId: string, receiptName: string) => {
-  return await updateRelationIdForReceipt(newIncomeId, oldIncomeId, receiptName, ExpenseBelongsTo.Income);
+export const updateIncomeIdForReceipt = async (newIncomeId: string, oldIncomeId: string, receiptId: string) => {
+  return await updateRelationIdForReceipt(newIncomeId, oldIncomeId, receiptId, ExpenseBelongsTo.Income);
 };
-export const updateRefundIdForReceipt = async (newRefundId: string, oldRefundId: string, receiptName: string) => {
-  return await updateRelationIdForReceipt(newRefundId, oldRefundId, receiptName, ExpenseBelongsTo.PurchaseRefund);
+export const updateRefundIdForReceipt = async (newRefundId: string, oldRefundId: string, receiptId: string) => {
+  return await updateRelationIdForReceipt(newRefundId, oldRefundId, receiptId, ExpenseBelongsTo.PurchaseRefund);
 };
 
-export const saveReceiptFileData = async (file: File, relationId: string, receiptName: string, belongsTo: ExpenseBelongsTo) => {
+export const saveReceiptFileData = async (file: File, relationId: string, receiptId: string, belongsTo: ExpenseBelongsTo) => {
   const dbItem: DbReceiptFileResource = {
     filedata: await file.arrayBuffer(),
     id: uuidv4(),
-    name: receiptName,
+    name: receiptId,
     createdOn: new Date(),
     relationId: relationId,
-    belongsTo: belongsTo,
+    belongsTo: belongsTo
   };
   await receiptDb.addItem(dbItem);
 };

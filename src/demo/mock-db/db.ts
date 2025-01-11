@@ -6,7 +6,7 @@ export enum LocalDBStore {
   Receipt = "receipt-items-store",
   Expense = "expense-items-store",
   Config = "config-store",
-  PaymentAccount = "pymt-account-store",
+  PaymentAccount = "pymt-account-store"
 }
 
 export enum LocalDBStoreIndex {
@@ -15,7 +15,7 @@ export enum LocalDBStoreIndex {
   AuditUpdatedOn = "audit-updatedOn-index",
   ItemStatus = "item-status-index",
   BelongsTo = "belongsTo-index",
-  CacheUpdatedOn = "cache-updatedOn-index",
+  CacheUpdatedOn = "cache-updatedOn-index"
 }
 
 interface IndexDetailType {
@@ -39,7 +39,7 @@ interface DBType {
 
 const CacheIndex: IndexDetailType = {
   name: LocalDBStoreIndex.CacheUpdatedOn,
-  keyPath: "updatedOn",
+  keyPath: "updatedOn"
 };
 
 const DataBaseConfig: DBType = {
@@ -53,17 +53,17 @@ const DataBaseConfig: DBType = {
       indexes: [
         {
           name: LocalDBStoreIndex.AuditUpdatedOn,
-          keyPath: "auditDetails.updatedOn",
+          keyPath: "auditDetails.updatedOn"
         },
         {
           name: LocalDBStoreIndex.BelongsTo,
-          keyPath: "belongsTo",
+          keyPath: "belongsTo"
         },
         {
           name: LocalDBStoreIndex.ItemStatus,
-          keyPath: "status",
-        },
-      ],
+          keyPath: "status"
+        }
+      ]
     },
     {
       name: LocalDBStore.Config,
@@ -72,17 +72,17 @@ const DataBaseConfig: DBType = {
       indexes: [
         {
           name: LocalDBStoreIndex.BelongsTo,
-          keyPath: "belongsTo",
+          keyPath: "belongsTo"
         },
         {
           name: LocalDBStoreIndex.ItemStatus,
-          keyPath: ["belongsTo", "status"],
+          keyPath: ["belongsTo", "status"]
         },
         {
           name: LocalDBStoreIndex.AuditUpdatedOn,
-          keyPath: ["belongsTo", "auditDetails.updatedOn"],
-        },
-      ],
+          keyPath: ["belongsTo", "auditDetails.updatedOn"]
+        }
+      ]
     },
     {
       name: LocalDBStore.PaymentAccount,
@@ -90,13 +90,13 @@ const DataBaseConfig: DBType = {
       indexes: [
         {
           name: LocalDBStoreIndex.AuditUpdatedOn,
-          keyPath: "auditDetails.updatedOn",
+          keyPath: "auditDetails.updatedOn"
         },
         {
           name: LocalDBStoreIndex.ItemStatus,
-          keyPath: "status",
-        },
-      ],
+          keyPath: "status"
+        }
+      ]
     },
     {
       name: LocalDBStore.Receipt,
@@ -104,15 +104,15 @@ const DataBaseConfig: DBType = {
       indexes: [
         {
           name: LocalDBStoreIndex.ExpenseReceiptName,
-          keyPath: ["name", "expenseId"],
+          keyPath: ["name", "relationId"]
         },
         {
           name: LocalDBStoreIndex.ExpenseId,
-          keyPath: "expenseId",
-        },
-      ],
-    },
-  ],
+          keyPath: "relationId"
+        }
+      ]
+    }
+  ]
 };
 const rootLogger = getLogger("mock.demo.db", null, null, "DISABLED");
 const getItemKeyPath = (storeKeyPath: string | string[]) => {
@@ -150,7 +150,7 @@ const configureLocalDatabase = async () => {
           db.clear(storeConfig.name);
         }
       });
-    },
+    }
   });
 
   db.close();
@@ -281,7 +281,7 @@ export class MyLocalDatabase<T> {
     const dbItem: DbItem<T> = {
       item: item,
       createdOn: new Date().getTime(),
-      updatedOn: new Date().getTime(),
+      updatedOn: new Date().getTime()
     };
     const addPromise = db.add(this._storeConfig.name, dbItem);
     return await addPromise;
@@ -291,7 +291,7 @@ export class MyLocalDatabase<T> {
     const dbItem: DbItem<T> = {
       item: item,
       createdOn: dbRecord.createdOn,
-      updatedOn: new Date().getTime(),
+      updatedOn: new Date().getTime()
     };
     const updatePromise = db.put(this._storeConfig.name, dbItem);
     return await updatePromise;

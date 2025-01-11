@@ -118,9 +118,9 @@ export const MockRefund = (demoMock: MockAdapter) => {
       logger.debug("validationErrors =", validationErrors, "refundId =", refundId);
       return responseCreator.toValidationError(validationErrors);
     }
-    const receiptName = urlParts.slice(-1)[0];
+    const receiptId = urlParts.slice(-1)[0];
 
-    await saveReceiptFileData(filedata, refundId, receiptName, ExpenseBelongsTo.PurchaseRefund);
+    await saveReceiptFileData(filedata, refundId, receiptId, ExpenseBelongsTo.PurchaseRefund);
 
     return responseCreator.toSuccessResponse("saved");
   });

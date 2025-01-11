@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import datetime from "date-and-time";
 import { ExpenseStatus } from "../../pages/expenses";
-import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDateInstance, getLogger } from "../../shared";
+import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDateInstanceDefaultNewDate, getLogger } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { auditData } from "../services/userDetails";
 import { deleteReceiptFileData, updateRefundIdForReceipt } from "./receipts-db";
@@ -60,7 +60,7 @@ const init = async () => {
     billName: "returning " + matchedPurchedItem.billName,
     amount: matchedPurchedItem.amount as string,
     description: "this is dummy refund for demo purpose",
-    tags: "".split(","),
+    tags: [],
     paymentAccountId: pymtAccId("cash"),
     paymentAccountName: "",
     refundDate: formatTimestamp(datetime.addDays(new Date(), -1)),
@@ -72,7 +72,7 @@ const init = async () => {
     belongsTo: ExpenseBelongsTo.PurchaseRefund,
     purchaseId: matchedPurchase.id,
     personIds: [],
-    currencyProfileId: currencyProfileId,
+    currencyProfileId: currencyProfileId
   });
   await refundDb.addItem({
     id: uuidv4(),
@@ -90,7 +90,7 @@ const init = async () => {
     status: ExpenseStatus.Enable,
     belongsTo: ExpenseBelongsTo.PurchaseRefund,
     personIds: [],
-    currencyProfileId: currencyProfileId,
+    currencyProfileId: currencyProfileId
   });
 };
 
@@ -107,7 +107,7 @@ export const getRefundTags = async (years: number[]) => {
   logger.debug("years =", years);
   const taglist = refundList
     .filter((ri) => {
-      const year = getDateInstance(ri.refundDate).getFullYear();
+      const year = getDateInstanceDefaultNewDate(ri.refundDate).getFullYear();
       return years.includes(year);
     })
     .flatMap((ri) => ri.tags);
@@ -119,7 +119,7 @@ export const getRefundDetails = async (refundId: string) => {
   const existingRefund = await refundDb.getItem(refundId);
   if (existingRefund && existingRefund.belongsTo === ExpenseBelongsTo.PurchaseRefund) {
     const details: PurchaseRefundFields = {
-      ...existingRefund,
+      ...existingRefund
     };
     return { getDetails: details };
   }
@@ -142,7 +142,7 @@ const getReceiptsForRefundAddUpdate = async (
   const addedNewReceiptPromises = newRefundReceipts
     .filter((r) => !existingRefundReceipts[r.id])
     .map(async (r) => {
-      const receiptIdResult = await updateRefundIdForReceipt(newRefundId, oldRefundId, r.name);
+      const receiptIdResult = await updateRefundIdForReceipt(newRefundId, oldRefundId, r.id);
       if (receiptIdResult.error) {
         return { ...r, error: receiptIdResult.error };
       }
@@ -192,7 +192,7 @@ export const addUpdateRefund = async (data: PurchaseRefundFields) => {
       status: ExpenseStatus.Enable,
       receipts: receiptResult.list || [],
       auditDetails: auditData(existingRefund.auditDetails.createdBy, existingRefund.auditDetails.createdOn),
-      currencyProfileId: await getDefaultCurrencyProfileId(),
+      currencyProfileId: await getDefaultCurrencyProfileId()
     };
 
     // delete updatedRefund.paymentAccountName;
@@ -211,7 +211,7 @@ export const addUpdateRefund = async (data: PurchaseRefundFields) => {
     status: ExpenseStatus.Enable,
     receipts: data.receipts.map((r) => ({ ...r, id: uuidv4(), relationId: "", url: "" })),
     auditDetails: auditData(),
-    currencyProfileId: await getDefaultCurrencyProfileId(),
+    currencyProfileId: await getDefaultCurrencyProfileId()
   };
 
   await refundDb.addUpdateItem(addedRefund);
@@ -224,7 +224,7 @@ export const deleteRefund = async (refundId: string) => {
     const deletingRefund = {
       ...existingRefund,
       status: ExpenseStatus.Deleted,
-      auditDetails: auditData(existingRefund.auditDetails.createdBy, existingRefund.auditDetails.createdOn),
+      auditDetails: auditData(existingRefund.auditDetails.createdBy, existingRefund.auditDetails.createdOn)
     };
     await refundDb.addUpdateItem(deletingRefund);
     return { deleted: { ...deletingRefund } as PurchaseRefundFields };
