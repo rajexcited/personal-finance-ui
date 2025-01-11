@@ -81,7 +81,7 @@ export const SecurityPage: FunctionComponent = () => {
                     <h2 className="title">Security Settings</h2>
                 </div>
             </div>
-            <Animated animateOnMount={ false } isPlayIn={ !!errorMessage && userAction.state !== ActionState.UserSubmit } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
+            <Animated animateOnMount={ false } isPlayIn={ !!errorMessage && userAction.state !== ActionState.UserSubmit } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
                 <div className="columns">
                     <div className="column">
                         <article className="message is-danger mb-3">

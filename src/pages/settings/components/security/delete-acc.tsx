@@ -1,4 +1,4 @@
-import { FormEventHandler, FunctionComponent, MouseEventHandler, useState, useEffect, useMemo, SyntheticEvent } from "react";
+import { FormEventHandler, FunctionComponent, MouseEventHandler, useState, useEffect, useMemo } from "react";
 import { faEnvelope, faLock } from "@fortawesome/free-solid-svg-icons";
 import { ConfirmDialog, Input, InputValidators } from "../../../../components";
 import { UserLoginResource } from "../../../auth";
@@ -23,12 +23,18 @@ export const DeleteAccountSection: FunctionComponent<DeleteAccountSectionProps> 
     const [actionState, setActionState] = useState(ActionState.NoAction);
 
     useEffect(() => {
+        const _logger = getLogger("useEffect.dep[actionState]", fcLogger);
         if (actionState === ActionState.NoAction) {
-            const logger = getLogger("useEffect.dep[props.reset]", fcLogger);
-            logger.debug("reset. prev values, password =", password, " primaryEmailId =", primaryEmailId, " actionState =", actionState);
-            setPassword("");
-            setPrimaryEmailId("");
-            setInvalidFormElements(["emailId", "password"]);
+            const logger = getLogger("actionState.noaction", _logger);
+            setPassword(prev => {
+                logger.debug("password prev value=", prev);
+                return "";
+            });
+            setPrimaryEmailId(prev => {
+                logger.debug("primaryEmailId, prev value =", prev);
+                return "";
+            });
+            setInvalidFormElements(prev => ["emailId", "password"]);
         }
     }, [actionState]);
 
@@ -134,7 +140,7 @@ export const DeleteAccountSection: FunctionComponent<DeleteAccountSectionProps> 
                 autocomplete="new-password"
             />
         </form>;
-    }, [actionState]);
+    }, [actionState, password, primaryEmailId, validatePassword]);
 
     fcLogger.debug("actionState =", actionState);
 

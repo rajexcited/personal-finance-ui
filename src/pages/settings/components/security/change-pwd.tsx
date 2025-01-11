@@ -25,15 +25,21 @@ export const ChangePasswordSection: FunctionComponent<ChangePasswordSectionProps
     const [actionState, setActionState] = useState(ActionState.NoAction);
 
     useEffect(() => {
-        const logger = getLogger("useEffect.dep[props.reset]", fcLogger);
-        logger.debug("prev values, current password =", currentPassword, " newPassword =", newPassword, " actionState =", actionState);
+        const _logger = getLogger("useEffect.dep[actionState]", fcLogger);
         if (actionState === ActionState.NoAction) {
-            setCurrentPassword("");
-            setNewPassword("");
-            setInvalidFormElements(["password-current", "password-new"]);
+            const logger = getLogger("actionState.noaction", _logger);
+            setCurrentPassword(prev => {
+                logger.debug("prev value, current password =", prev);
+                return "";
+            });
+            setNewPassword(prev => {
+                logger.debug("prev value, newPassword =", prev);
+                return "";
+            });
+            setInvalidFormElements(prev => ["password-current", "password-new"]);
             logger.debug("password has been reset and invalidFormElement list has been re-initialized");
         }
-    }, [actionState, setCurrentPassword, setNewPassword, setInvalidFormElements]);
+    }, [actionState]);
 
     useEffect(() => {
         setActionState(prev => {

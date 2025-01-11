@@ -55,7 +55,21 @@ const ViewConfig: FunctionComponent<ViewConfigProps> = (props) => {
             <div className="columns">
                 <div className="column">
                     <label className="label">Tags: </label>
-                    <span>{ props.details.tags.join(",") || "-" }</span>
+                    <div className="tags">
+                        {
+                            props.details.tags.map(tagVal =>
+                                <span
+                                    className="tag is-link"
+                                    key={ tagVal + "-tag-key" }
+                                >
+                                    { tagVal }
+                                </span>
+                            )
+                        }
+                        { props.details.tags.length === 0 &&
+                            <span>-</span>
+                        }
+                    </div>
                 </div>
             </div>
             <div className="columns">

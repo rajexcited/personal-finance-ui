@@ -63,7 +63,7 @@ export const ProfileSettingsPage: FunctionComponent = () => {
         <section className="profile-settings">
             {
                 errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
+                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
                     <article className="message is-danger">
                         <div className="message-body">
                             <ReactMarkdown children={ errorMessage } />

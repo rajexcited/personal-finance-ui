@@ -8,10 +8,10 @@ import {
   UpdateSharePersonStatusResource,
   getLogger,
   handleRouteActionError,
-  sharePersonService,
+  sharePersonService
 } from "../services";
 
-const rhLogger = getLogger("route.handler.settings.sharePerson.loader", null, null, "DEBUG");
+const rhLogger = getLogger("route.handler.settings.sharePerson.loader", null, null, "DISABLED");
 
 export interface SharePersonLoaderResource {
   sharePersons: SharePersonResource[];
@@ -24,7 +24,7 @@ export const sharePersonListLoaderHandler = async () => {
 
     const response: RouteHandlerResponse<SharePersonLoaderResource, null> = {
       type: "success",
-      data: { sharePersons: sharePersonList },
+      data: { sharePersons: sharePersonList }
     };
 
     return response;
@@ -45,9 +45,9 @@ export const sharePersonListActionHandler = async ({ request }: ActionFunctionAr
     errorMessage: "action not supported",
     data: {
       request: {
-        method: request.method,
-      },
-    },
+        method: request.method
+      }
+    }
   };
   return json(error, { status: HttpStatusCode.InternalServerError });
 };
@@ -61,7 +61,7 @@ const sharePersonAddUpdateActionHandler = async (request: Request) => {
       await sharePersonService.addUpdateSharePerson(data);
       const response: RouteHandlerResponse<string, null> = {
         type: "success",
-        data: "share person updated",
+        data: "share person updated"
       };
       return response;
     }
@@ -70,7 +70,7 @@ const sharePersonAddUpdateActionHandler = async (request: Request) => {
       await sharePersonService.updateSharePersonStatus(data);
       const response: RouteHandlerResponse<string, null> = {
         type: "success",
-        data: `share person status is updated to ${data.status}`,
+        data: `share person status is updated to ${data.status}`
       };
       return response;
     }
@@ -81,9 +81,9 @@ const sharePersonAddUpdateActionHandler = async (request: Request) => {
       data: {
         request: {
           method: request.method,
-          data: data,
-        },
-      },
+          data: data
+        }
+      }
     };
     return json(error, { status: HttpStatusCode.InternalServerError });
   } catch (e) {
@@ -100,7 +100,7 @@ const sharePersonDeleteActionHandler = async (request: Request) => {
     await sharePersonService.deleteSharePerson(data.id);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: "share person is deleted",
+      data: "share person is deleted"
     };
     return response;
   } catch (e) {

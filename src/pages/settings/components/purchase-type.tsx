@@ -12,6 +12,7 @@ import { getFullPath } from "../../root";
 import { PurchaseTypeLoaderResource } from "../route-handlers/purchase-type-loader-action";
 import { useAuth } from "../../auth";
 import { ConfigAction } from "../../../shared";
+import { DeviceMode, useOrientation } from "../../../hooks";
 
 
 const fcLogger = getLogger("FC.settings.PurchaseTypePage", null, null, "DISABLED");
@@ -25,6 +26,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
     const [errorMessage, setErrorMessage] = useState("");
     const submit = useSubmit();
     const auth = useAuth();
+    const { resultedDevice: deviceMode } = useOrientation(DeviceMode.Mobile);
 
     useEffect(() => {
         const logger = getLogger("useEffect.dep[loaderData, actionData]", fcLogger);
@@ -45,10 +47,10 @@ export const PurchaseTypePage: FunctionComponent = () => {
                 id: cfg.id,
                 title: cfg.name + " - " + cfg.status,
                 description: cfg.description,
-                status: cfg.status === ConfigTypeStatus.Enable
+                status: cfg.status
             }));
             if (enableFilter) {
-                return list.filter(item => item.status);
+                return list.filter(item => item.status === ConfigTypeStatus.Enable);
             }
             return list;
         }
@@ -134,14 +136,14 @@ export const PurchaseTypePage: FunctionComponent = () => {
         }
     };
 
-    const controlsBeforeEllipsis: Control[] = [{ id: ActionId.View, content: "View", icon: faEye }];
+    const controlsBeforeEllipsis: Control[] = [{ id: ActionId.View, content: "View", icon: faEye, isActive: () => true }];
     const controlsInEllipsis: Control[] = [];
 
     if (!auth.readOnly) {
-        controlsInEllipsis.push({ id: ActionId.Update, content: "Edit", icon: faEdit });
-        controlsInEllipsis.push({ id: ActionId.Delete, content: "Delete", icon: faRemove });
-        controlsInEllipsis.push({ id: ActionId.ToggleEnable, content: "Change to Enable", icon: faToggleOn, isActive: (item: ListItem) => !item.status });
-        controlsInEllipsis.push({ id: ActionId.ToggleDisable, content: "Change to Disable", icon: faToggleOff, isActive: (item: ListItem) => item.status });
+        controlsInEllipsis.push({ id: ActionId.Update, content: "Edit", icon: faEdit, isActive: () => true });
+        controlsInEllipsis.push({ id: ActionId.Delete, content: "Delete", icon: faRemove, isActive: () => true });
+        controlsInEllipsis.push({ id: ActionId.ToggleEnable, content: "Change to Enable", icon: faToggleOn, isActive: item => (item as unknown as ConfigResource).status === ConfigTypeStatus.Disable });
+        controlsInEllipsis.push({ id: ActionId.ToggleDisable, content: "Change to Disable", icon: faToggleOff, isActive: item => (item as unknown as ConfigResource).status === ConfigTypeStatus.Enable });
     }
 
     const configInputProps: ConfigInputProps = {
@@ -158,6 +160,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
     };
 
     const purchaseTags = loaderData.type === "success" ? loaderData.data.purchaseTags : [];
+    const hideListInMobile = deviceMode === DeviceMode.Mobile && (action?.type === ActionId.Add || action?.type === ActionId.Update);
 
     return (
         <>
@@ -165,41 +168,54 @@ export const PurchaseTypePage: FunctionComponent = () => {
                 <div className="column has-text-centered">
                     <h1 className="title">List of Purchase Type</h1>
                 </div>
-                <div className="column"></div>
+                <div className="column">&nbsp;</div>
+                {
+                    deviceMode === DeviceMode.Mobile && !hideListInMobile &&
+                    <div className="column">
+                        <div className="buttons is-right">
+                            <button className="button is-link is-rounded" onClick={ onClickRequestAddPurchaseTypeHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
+                        </div>
+                    </div>
+                }
             </div>
             <div className="columns">
-                <div className="column is-two-fifths">
-                    {
-                        purchaseTypeItems.length > 0 &&
-                        <>
-
-                            <Switch
-                                initialStatus={ enableFilter }
-                                id="purchaseTypeEnableFilter"
-                                labelWhenOn="Filtered by enabled"
-                                labelWhenOff="All Purchase Types"
-                                tooltip="Toggle to filter by status enable or show all"
-                                onChange={ setEnableFilter }
-                            />
-
-                            <List
-                                items={ purchaseTypeItems }
-                                onControlRequest={ onRequestListControlPurchaseTypeHandler }
-                                controlsInEllipsis={ controlsInEllipsis }
-                                controlsBeforeEllipsis={ controlsBeforeEllipsis }
-                            />
-                        </>
-                    }
-
-                    {
-                        purchaseTypeItems.length === 0 &&
-                        <span>There are no Purchase Types configured.</span>
-                    }
-                </div>
-                <div className="column">
-                    <section>
+                {
+                    !hideListInMobile &&
+                    <div className="column is-two-fifths">
                         {
-                            !auth.readOnly &&
+                            purchaseTypeItems.length > 0 &&
+                            <>
+                                <Switch
+                                    initialStatus={ enableFilter }
+                                    id="purchaseTypeEnableFilter"
+                                    labelWhenOn="Filtered by enabled"
+                                    labelWhenOff="All Purchase Types"
+                                    tooltip="Toggle to filter by status enable or show all"
+                                    onChange={ setEnableFilter }
+                                />
+                                <List
+                                    items={ purchaseTypeItems }
+                                    onControlRequest={ onRequestListControlPurchaseTypeHandler }
+                                    controlsInEllipsis={ controlsInEllipsis }
+                                    controlsBeforeEllipsis={ controlsBeforeEllipsis }
+                                    viewActionContentInMobile={
+                                        action?.type === ActionId.View &&
+                                        <ViewConfig details={ action.item } />
+                                    }
+                                />
+                            </>
+                        }
+
+                        {
+                            purchaseTypeItems.length === 0 &&
+                            <span>There are no Purchase Types configured.</span>
+                        }
+                    </div>
+                }
+                <div className="column">
+                    {
+                        !auth.readOnly && deviceMode === DeviceMode.Desktop &&
+                        <section>
                             <div className="buttons is-right px-5 mx-5">
                                 {
                                     action && action.type === "view" &&
@@ -210,12 +226,12 @@ export const PurchaseTypePage: FunctionComponent = () => {
                                 }
                                 <button className="button is-link is-rounded" onClick={ onClickRequestAddPurchaseTypeHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
                             </div>
-                        }
-                    </section>
-                    <section className="mt-4 pt-4 px-4">
+                        </section>
+                    }
+                    <section className="view-update-config-section">
                         {
                             errorMessage &&
-                            <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
+                            <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
                                 <article className="message is-danger">
                                     <div className="message-body">
                                         <ReactMarkdown children={ errorMessage } />
@@ -224,7 +240,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
                             </Animated>
                         }
                         {
-                            action?.type === ActionId.View &&
+                            deviceMode === DeviceMode.Desktop && action?.type === ActionId.View &&
                             <ViewConfig details={ action.item } />
                         }
                         {

@@ -115,14 +115,26 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
                     </div>
                 </div>
                 <footer>
-                    <div className="columns">
+                    <div className="columns is-hidden-mobile">
                         <div className="column">
                             <div className="buttons">
                                 <button className="button" type="button" onClick={ onCancelHandler }> Cancel </button>
                             </div>
                         </div>
                         <div className="column">
-                            <div className="buttons has-addons is-centered">
+                            <div className="buttons is-centered">
+                                <button className="button is-dark" type="submit"> Save </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="level is-mobile is-hidden-desktop">
+                        <div className="level-left">
+                            <div className="level-item">
+                                <button className="button" type="button" onClick={ onCancelHandler }> Cancel </button>
+                            </div>
+                        </div>
+                        <div className="level-right">
+                            <div className="level-item">
                                 <button className="button is-dark" type="submit"> Save </button>
                             </div>
                         </div>

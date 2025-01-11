@@ -20,7 +20,7 @@ const convertConfigResourceToSharePerson = (cfg: ConfigResource, _logger: Logger
     firstName: list[0],
     lastName: list[1],
     nickName: list[2] || undefined,
-    phone: list[3] || undefined,
+    phone: list[3] || undefined
   };
 
   return sharePerson;
@@ -40,7 +40,7 @@ const convertSharePersonToConfigResource = (sharePerson: SharePersonResource, _l
     name: sharePerson.emailId,
     status: sharePerson.status,
     tags: [],
-    value: JSON.stringify(list),
+    value: JSON.stringify(list)
   };
 
   return cfg;
@@ -69,4 +69,10 @@ export const deleteSharePerson = async (sharePersonId: string) => {
 
 export const updateSharePersonStatus = async (sharePersonStatusData: UpdateSharePersonStatusResource) => {
   await configTypeService.updateConfigTypeStatus(sharePersonStatusData);
+};
+
+export const getSharePerson = async (sharePersonId: string) => {
+  const logger = getLogger("getSharePerson", rootLogger);
+  const sharePersonCfg = await configTypeService.getConfigType(sharePersonId);
+  return convertConfigResourceToSharePerson(sharePersonCfg, logger);
 };

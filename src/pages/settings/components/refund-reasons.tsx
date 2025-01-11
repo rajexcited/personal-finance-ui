@@ -12,6 +12,7 @@ import { getFullPath } from "../../root";
 import { RefundReasonLoaderResource } from "../route-handlers/refund-reason-loader-action";
 import { useAuth } from "../../auth";
 import { ConfigAction } from "../../../shared";
+import { DeviceMode, useOrientation } from "../../../hooks";
 
 
 const fcLogger = getLogger("FC.settings.RefundReasonPage", null, null, "DISABLED");
@@ -25,6 +26,7 @@ export const RefundReasonPage: FunctionComponent = () => {
     const [errorMessage, setErrorMessage] = useState("");
     const submit = useSubmit();
     const auth = useAuth();
+    const { resultedDevice: deviceMode } = useOrientation(DeviceMode.Mobile);
 
     useEffect(() => {
         const logger = getLogger("useEffect.dep[loaderData, actionData]", fcLogger);
@@ -134,13 +136,13 @@ export const RefundReasonPage: FunctionComponent = () => {
         }
     };
 
-    const controlsBeforeEllipsis: Control[] = [{ id: ActionId.View, content: "View", icon: faEye }];
+    const controlsBeforeEllipsis: Control[] = [{ id: ActionId.View, content: "View", icon: faEye, isActive: () => true }];
     const controlsInEllipsis: Control[] = [];
     if (!auth.readOnly) {
-        controlsInEllipsis.push({ id: ActionId.Update, content: "Edit", icon: faEdit });
-        controlsInEllipsis.push({ id: ActionId.Delete, content: "Delete", icon: faRemove });
-        controlsInEllipsis.push({ id: ActionId.ToggleEnable, content: "Change to Enable", icon: faToggleOn, isActive: (item: ListItem) => !item.status });
-        controlsInEllipsis.push({ id: ActionId.ToggleDisable, content: "Change to Disable", icon: faToggleOff, isActive: (item: ListItem) => item.status });
+        controlsInEllipsis.push({ id: ActionId.Update, content: "Edit", icon: faEdit, isActive: () => true });
+        controlsInEllipsis.push({ id: ActionId.Delete, content: "Delete", icon: faRemove, isActive: () => true });
+        controlsInEllipsis.push({ id: ActionId.ToggleEnable, content: "Change to Enable", icon: faToggleOn, isActive: (item: ListItem) => (item as unknown as ConfigResource).status === ConfigTypeStatus.Disable });
+        controlsInEllipsis.push({ id: ActionId.ToggleDisable, content: "Change to Disable", icon: faToggleOff, isActive: (item: ListItem) => (item as unknown as ConfigResource).status === ConfigTypeStatus.Enable });
     }
 
     const configInputProps: ConfigInputProps = {
@@ -157,6 +159,7 @@ export const RefundReasonPage: FunctionComponent = () => {
     };
 
     const reasonTags = loaderData.type === "success" ? loaderData.data.reasonTags : [];
+    const hideListInMobile = deviceMode === DeviceMode.Mobile && (action?.type === ActionId.Add || action?.type === ActionId.Update);
 
     return (
         <>
@@ -164,39 +167,53 @@ export const RefundReasonPage: FunctionComponent = () => {
                 <div className="column has-text-centered">
                     <h1 className="title">List of Refund Reason</h1>
                 </div>
-                <div className="column"></div>
+                <div className="column">&nbsp;</div>
+                {
+                    deviceMode === DeviceMode.Mobile && !hideListInMobile &&
+                    <div className="column">
+                        <div className="buttons is-right">
+                            <button className="button is-link is-rounded" onClick={ onClickRequestAddRefundReasonHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
+                        </div>
+                    </div>
+                }
             </div>
             <div className="columns">
-                <div className="column is-two-fifths">
-                    {
-                        refundReasonItems.length > 0 &&
-                        <>
-                            <Switch
-                                initialStatus={ enableFilter }
-                                id="refundReasonEnableFilter"
-                                labelWhenOn="Filtered by enabled"
-                                labelWhenOff="All Refund Reasons"
-                                tooltip="Toggle to filter by status enable or show all"
-                                onChange={ setEnableFilter }
-                            />
+                { !hideListInMobile &&
+                    <div className="column is-two-fifths">
+                        {
+                            refundReasonItems.length > 0 &&
+                            <>
+                                <Switch
+                                    initialStatus={ enableFilter }
+                                    id="refundReasonEnableFilter"
+                                    labelWhenOn="Filtered by enabled"
+                                    labelWhenOff="All Refund Reasons"
+                                    tooltip="Toggle to filter by status enable or show all"
+                                    onChange={ setEnableFilter }
+                                />
 
-                            <List
-                                items={ refundReasonItems }
-                                onControlRequest={ onRequestListControlRefundReasonHandler }
-                                controlsInEllipsis={ controlsInEllipsis }
-                                controlsBeforeEllipsis={ controlsBeforeEllipsis }
-                            />
-                        </>
-                    }
+                                <List
+                                    items={ refundReasonItems }
+                                    onControlRequest={ onRequestListControlRefundReasonHandler }
+                                    controlsInEllipsis={ controlsInEllipsis }
+                                    controlsBeforeEllipsis={ controlsBeforeEllipsis }
+                                    viewActionContentInMobile={
+                                        action?.type === ActionId.View &&
+                                        <ViewConfig details={ action.item } />
+                                    }
+                                />
+                            </>
+                        }
 
-                    {
-                        refundReasonItems.length === 0 &&
-                        <span>There are no Reasons configured for Refund.</span>
-                    }
-                </div>
+                        {
+                            refundReasonItems.length === 0 &&
+                            <span>There are no Reasons configured for Refund.</span>
+                        }
+                    </div>
+                }
                 <div className="column">
-                    <section>
-                        { !auth.readOnly &&
+                    { !auth.readOnly && deviceMode === DeviceMode.Desktop &&
+                        <section>
                             <div className="buttons is-right px-5 mx-5">
                                 {
                                     action && action.type === "view" &&
@@ -207,12 +224,12 @@ export const RefundReasonPage: FunctionComponent = () => {
                                 }
                                 <button className="button is-link is-rounded" onClick={ onClickRequestAddRefundReasonHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
                             </div>
-                        }
-                    </section>
-                    <section className="mt-4 pt-4 px-4">
+                        </section>
+                    }
+                    <section className="view-update-config-section">
                         {
                             errorMessage &&
-                            <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
+                            <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
                                 <article className="message is-danger">
                                     <div className="message-body">
                                         <ReactMarkdown children={ errorMessage } />
@@ -221,7 +238,7 @@ export const RefundReasonPage: FunctionComponent = () => {
                             </Animated>
                         }
                         {
-                            action?.type === ActionId.View &&
+                            deviceMode === DeviceMode.Desktop && action?.type === ActionId.View &&
                             <ViewConfig details={ action.item } />
                         }
                         {
