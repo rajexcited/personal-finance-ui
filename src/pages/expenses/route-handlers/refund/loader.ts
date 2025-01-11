@@ -9,11 +9,12 @@ import {
   PurchaseRefundFields,
   refundReasonService,
   purchaseService,
-  PurchaseFields,
+  PurchaseFields
 } from "../../services";
 import { PymtAccountFields, pymtAccountService } from "../../../pymt-accounts/services";
 import { ConfigTypeStatus, InvalidError, isUuid } from "../../../../shared";
 import { CurrencyProfileResource, currencyProfileService, SharePersonResource, sharePersonService } from "../../../settings/services";
+import { getMissingSharePersons } from "../common";
 
 const rhLogger = getLogger("route.handler.purchase.loader", null, null, "DISABLED");
 
@@ -57,9 +58,10 @@ export const modifyRefundDetailLoaderHandler = async ({ params }: LoaderFunction
       paymentAccountsPromise,
       refundTagsPromise,
       sharePersonsPromise,
-      currencyProfilePromise,
+      currencyProfilePromise
     ]);
     logger.debug("retrieved all info, now preparing response with all info to send to FC");
+    const missingSharePersonsPromise = getMissingSharePersons(sharePersonsPromise, null, details);
 
     const response: RouteHandlerResponse<RefundDetailLoaderResource, null> = {
       type: "success",
@@ -69,9 +71,9 @@ export const modifyRefundDetailLoaderHandler = async ({ params }: LoaderFunction
         paymentAccounts: await paymentAccountsPromise,
         refundReasons: await reasonListPromise,
         refundTags: await refundTagsPromise,
-        sharePersons: await sharePersonsPromise,
-        currencyProfiles: await currencyProfilePromise,
-      },
+        sharePersons: [...(await sharePersonsPromise), ...(await missingSharePersonsPromise)],
+        currencyProfiles: await currencyProfilePromise
+      }
     };
     return response;
   } catch (e) {
@@ -104,7 +106,7 @@ export const addRefundDetailLoaderHandler = async ({ params }: LoaderFunctionArg
       paymentAccountsPromise,
       refundTagsPromise,
       sharePersonsPromise,
-      currencyProfilePromise,
+      currencyProfilePromise
     ]);
 
     const response: RouteHandlerResponse<RefundDetailLoaderResource, null> = {
@@ -116,8 +118,8 @@ export const addRefundDetailLoaderHandler = async ({ params }: LoaderFunctionArg
         refundReasons: await reasonListPromise,
         refundTags: await refundTagsPromise,
         sharePersons: await sharePersonsPromise,
-        currencyProfiles: await currencyProfilePromise,
-      },
+        currencyProfiles: await currencyProfilePromise
+      }
     };
     return response;
   } catch (e) {

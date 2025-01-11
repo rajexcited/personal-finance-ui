@@ -10,6 +10,7 @@ import {
   getCacheOption,
   handleAndRethrowServiceError,
   LoggerBase,
+  subtractDatesDefaultToZero
 } from "../../../../shared";
 import { ExpenseBelongsTo, ExpenseFields, ExpenseStatus } from "./field-types";
 import { PurchaseFields, purchaseService } from "../purchase";
@@ -50,7 +51,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
       pageNo: [String(pageNo)],
       status: [status || ExpenseStatus.Enable],
       pageMonths: [String(queryPageMonths)],
-      belongsTo: belongsTo ? [String(belongsTo)] : [],
+      belongsTo: belongsTo ? [String(belongsTo)] : []
     };
 
     let expenses: ExpenseFields[] = [];
@@ -60,7 +61,11 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
       const expenseCountPromise = getExpenseCount(queryParams);
       await Promise.all([dbExpensePromise, expenseCountPromise]);
       const dbExpenses = await dbExpensePromise;
-      logger.info("expenseDb.getAllFromIndex and expenseCount.api execution time =", subtractDates(null, startTime).toSeconds(), " sec.");
+      logger.info(
+        "expenseDb.getAllFromIndex and expenseCount.api execution time =",
+        subtractDatesDefaultToZero(null, startTime).toSeconds(),
+        " sec."
+      );
 
       const rangeStartDate = datetime.addMonths(new Date(), queryPageMonths * -1 * pageNo);
       const rangeEndDate = datetime.addMonths(new Date(), queryPageMonths * -1 * (pageNo - 1));
@@ -74,7 +79,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
           ", filteredExpenses.length=",
           filteredExpenses.length,
           ", execution time =",
-          subtractDates(null, startTime).toSeconds(),
+          subtractDatesDefaultToZero(null, startTime).toSeconds(),
           " sec"
         );
         expenses = filteredExpenses;
@@ -90,12 +95,12 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
         "getExpenses api, queryParams =",
         queryParams,
         ", api execution time =",
-        subtractDates(null, apiStartTime).toSeconds(),
+        subtractDatesDefaultToZero(null, apiStartTime).toSeconds(),
         " sec and time diff from request start =",
         subtractDates(null, startTime),
         " sec"
       );
-      logger.info("api execution time =", subtractDates(null, apiStartTime).toSeconds(), " sec");
+      logger.info("api execution time =", subtractDatesDefaultToZero(null, apiStartTime).toSeconds(), " sec");
 
       apiStartTime = new Date();
       expenses = response.data;
@@ -129,7 +134,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
         return await incomeService.addUpdateDbIncome(expense, logger);
       }
     });
-    logger.info("transformed expense resources, execution time =", subtractDates(null, startTime).toSeconds(), " sec");
+    logger.info("transformed expense resources, execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
 
     const transformedExpenses = await Promise.all(promises);
     const returnResp = transformedExpenses.filter((xpns) => xpns !== undefined);
@@ -139,7 +144,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
   } finally {
-    logger.info("execution time =", subtractDates(null, startTime).toSeconds(), " sec");
+    logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
   }
 }, getCacheOption("3 min"));
 

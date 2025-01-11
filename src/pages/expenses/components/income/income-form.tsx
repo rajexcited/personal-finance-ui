@@ -18,6 +18,7 @@ import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal
 import { PymtAccountFields } from "../../../pymt-accounts/services";
 import { ConfigResource, getDateInstance } from "../../../../shared";
 import { CurrencyProfileResource, SharePersonResource } from "../../../settings/services";
+import { createSharePersonTagSourceList, filterSharePersons } from "../common";
 
 
 
@@ -56,8 +57,9 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
     useEffect(() => {
         const logger = getLogger("useEffect.dep[]", fcLogger);
 
-        if (props.incomeDetails?.incomeDate) {
-            setIncomeDate(getDateInstance(props.incomeDetails.incomeDate));
+        const dateInstance = getDateInstance(props.incomeDetails?.incomeDate);
+        if (props.incomeDetails?.incomeDate && dateInstance) {
+            setIncomeDate(dateInstance);
         }
 
         const ddPymtAccList: DropDownItemType[] = props.paymentAccounts.map((pymtDetails) => ({
@@ -101,21 +103,14 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
             setSelectedDropdownIncomeType(mySelectedType);
         }
 
-        const mySourceSharePersonTagItems = props.sharePersons.map(sp => {
-            const itm: TagObject = {
-                id: sp.id || "sharepersonIdNeverUsed",
-                displayText: sp.nickName || `${sp.firstName} ${sp.lastName}`,
-                searchText: [sp.nickName || "", sp.firstName, sp.lastName, sp.emailId].join(";")
-            };
-            return itm;
-        });
+        const mySourceSharePersonTagItems = createSharePersonTagSourceList(props.sharePersons);
         setSourceSharePersonTagItems(mySourceSharePersonTagItems);
         logger.info("props.sharePersons =", props.sharePersons, ", mySourceSharePersonTagItems =", mySourceSharePersonTagItems, ", props.details?.personIds =", props.incomeDetails?.personIds);
-        if (props.incomeDetails && props.incomeDetails.personIds.length > 0) {
-            const mySelectedSharePersons = mySourceSharePersonTagItems.filter(sspt => props.incomeDetails?.personIds.includes(sspt.id));
-            setSelectedSharePersonTagItems(mySelectedSharePersons);
-            logger.info("mySelectedSharePersons =", mySelectedSharePersons);
-        }
+
+        const mySelectedSharePersons = filterSharePersons(mySourceSharePersonTagItems, props.incomeDetails?.personIds);
+        setSelectedSharePersonTagItems(mySelectedSharePersons);
+        logger.info("mySelectedSharePersons =", mySelectedSharePersons);
+
 
         logger.debug("props.sourceTags =", props.sourceTags);
 

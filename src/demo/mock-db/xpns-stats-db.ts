@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { getExpenseDate } from "./expense-db";
 
 const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
-const _rootLogger = getLogger("mock.db.expense.stats", null, null, "DEBUG");
+const _rootLogger = getLogger("mock.db.expense.stats", null, null, "DISABLED");
 
 const getExpenseDateYear = (xpns: ExpenseFields, logger: LoggerBase) => {
   return getExpenseDate(xpns, logger).getFullYear();
@@ -32,7 +32,7 @@ export const getExpenseStats = async (belongsTo: StatBelongsTo, year: number) =>
     total: 0,
     count: 0,
     monthlyTotal: {},
-    description: "stat details for year " + year,
+    description: "stat details for year " + year
   };
 
   for (let i = 1; i < 13; i++) {
@@ -40,7 +40,7 @@ export const getExpenseStats = async (belongsTo: StatBelongsTo, year: number) =>
       total: 0,
       count: 0,
       monthName: getMonthName(i, year),
-      monthNo: i,
+      monthNo: i
     };
   }
 
@@ -58,7 +58,7 @@ export const getExpenseStats = async (belongsTo: StatBelongsTo, year: number) =>
   const convertedStatDetails: StatisticsBaseResource = {
     ...statDetails,
     total: String(statDetails.total),
-    monthlyTotal: Object.values(statDetails.monthlyTotal).map((mt) => ({ ...mt, total: String(mt.total) })),
+    monthlyTotal: Object.values(statDetails.monthlyTotal).map((mt) => ({ ...mt, total: String(mt.total) }))
   };
 
   const statResource: StatsExpenseResource = {
@@ -70,7 +70,7 @@ export const getExpenseStats = async (belongsTo: StatBelongsTo, year: number) =>
     byPymtAcc: [],
     byTags: [],
     byType: [],
-    byTypeTags: [],
+    byTypeTags: []
   };
 
   return { stats: statResource };

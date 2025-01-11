@@ -21,6 +21,7 @@ import { PymtAccountFields } from "../../../pymt-accounts/services";
 import { ConfigResource, getDateInstance, isNotBlank } from "../../../../shared";
 import { CurrencyProfileResource, SharePersonResource } from "../../../settings/services";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { createSharePersonTagSourceList, filterSharePersons } from "../common";
 
 
 export interface PurchaseRefundFormProps {
@@ -45,7 +46,7 @@ interface PurchaseDetailReference {
     taggingPersons: string[];
 }
 
-const fcLogger = getLogger("FC.PurchaseRefundForm", null, null, "DEBUG");
+const fcLogger = getLogger("FC.PurchaseRefundForm", null, null, "DISABLED");
 const purchasePageMonths = 2;
 const MAX_ALLOWED_PURCHASE_DROPDOWN_ITEMS = 30;
 
@@ -73,7 +74,9 @@ const getPurchaseDropdownContent = (purchaseDetails: PurchaseFields) => {
     let ddContent = "Billname: " + purchaseDetails.billName + "; ";
     ddContent += purchaseDetails.amount !== undefined ? "Amount: " + purchaseDetails.amount + "; " : "";
     const purchasedDateInstance = getDateInstance(purchaseDetails.purchaseDate);
-    ddContent += "Purchase Date: " + formatTimestamp(purchasedDateInstance, "MM-DD-YYYY");
+    if (purchasedDateInstance) {
+        ddContent += "Purchase Date: " + formatTimestamp(purchasedDateInstance, "MM-DD-YYYY");
+    }
 
     return ddContent;
 };
@@ -140,14 +143,13 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             logger.debug("refund billname =", props.refundDetails?.billName, ", and billname =", billName, " purchase billname =", props.purchaseDetails.billName);
             setBillName(prev => {
                 if (props.refundDetails?.billName) {
-
-                    logger.debug("setting refund billname as " + "Refund for " + props.refundDetails.billName);
+                    logger.debug("setting refund billname as Refund for ", props.refundDetails.billName);
                     return props.refundDetails.billName;
                 } else if (props.purchaseDetails && billName === "") {
-                    logger.debug("setting refund billname as " + "Refund for " + props.purchaseDetails.billName);
+                    logger.debug("setting refund billname as Refund for ", props.purchaseDetails.billName);
                     return "Refund for " + props.purchaseDetails.billName;
                 }
-                logger.debug("not changing refund billname " + prev);
+                logger.debug("not changing refund billname ", prev);
                 return prev;
             });
             logger.debug("refund pymtAccId =", props.refundDetails?.paymentAccountId, " purchase pymtAccId =", props.purchaseDetails.paymentAccountId, "will configure selected pymtAcc if possible.");
@@ -160,8 +162,9 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
         }
 
         setRefundDate(prev => {
-            if (props.refundDetails?.refundDate) {
-                return getDateInstance(props.refundDetails.refundDate);
+            const dateInstance = getDateInstance(props.refundDetails?.refundDate);
+            if (props.refundDetails?.refundDate && dateInstance) {
+                return dateInstance;
             }
             return prev;
         });
@@ -219,21 +222,14 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             setSelectedDropdownReason(mySelectedReason);
         }
 
-        const mySourceSharePersonTagItems = props.sharePersons.map(sp => {
-            const itm: TagObject = {
-                id: sp.id || "sharepersonIdNeverUsed",
-                displayText: sp.nickName || `${sp.firstName} ${sp.lastName}`,
-                searchText: [sp.nickName || "", sp.firstName, sp.lastName, sp.emailId].join(";")
-            };
-            return itm;
-        });
+        const mySourceSharePersonTagItems = createSharePersonTagSourceList(props.sharePersons);
         setSourceSharePersonTagItems(mySourceSharePersonTagItems);
         logger.info("props.sharePersons =", props.sharePersons, ", mySourceSharePersonTagItems =", mySourceSharePersonTagItems, ", props.details?.personIds =", props.refundDetails?.personIds);
-        if (props.refundDetails && props.refundDetails.personIds.length > 0) {
-            const mySelectedSharePersons = mySourceSharePersonTagItems.filter(sspt => props.refundDetails?.personIds.includes(sspt.id));
-            setSelectedSharePersonTagItems(mySelectedSharePersons);
-            logger.info("mySelectedSharePersons =", mySelectedSharePersons);
-        }
+
+        const mySelectedSharePersons = filterSharePersons(mySourceSharePersonTagItems, props.refundDetails?.personIds);
+        setSelectedSharePersonTagItems(mySelectedSharePersons);
+        logger.info("mySelectedSharePersons =", mySelectedSharePersons);
+
         logger.debug("props.sourceTags =", props.sourceTags);
 
     }, []);

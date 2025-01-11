@@ -7,11 +7,12 @@ import {
   handleRouteActionError,
   IncomeFields,
   incomeService,
-  incomeTypeService,
+  incomeTypeService
 } from "../../services";
 import { PymtAccountFields, pymtAccountService } from "../../../pymt-accounts/services";
 import { ConfigTypeStatus } from "../../../../shared";
 import { CurrencyProfileResource, currencyProfileService, SharePersonResource, sharePersonService } from "../../../settings/services";
+import { getMissingSharePersons } from "../common";
 
 const rhLogger = getLogger("route.handler.income.loader", null, null, "DISABLED");
 
@@ -43,6 +44,7 @@ export const modifyIncomeDetailLoaderHandler = async ({ params }: LoaderFunction
 
     await Promise.all([incomeTypesPromise, paymentAccountsPromise, incomeTagsPromise, sharePersonsPromise, currencyProfilePromise]);
     logger.debug("retrieved all info, now preparing response with all info to send to FC");
+    const missingSharePersonsPromise = getMissingSharePersons(sharePersonsPromise, null, details);
 
     const response: RouteHandlerResponse<IncomeDetailLoaderResource, null> = {
       type: "success",
@@ -51,9 +53,9 @@ export const modifyIncomeDetailLoaderHandler = async ({ params }: LoaderFunction
         paymentAccounts: await paymentAccountsPromise,
         incomeTypes: await incomeTypesPromise,
         incomeTags: await incomeTagsPromise,
-        sharePersons: await sharePersonsPromise,
-        currencyProfiles: await currencyProfilePromise,
-      },
+        sharePersons: [...(await sharePersonsPromise), ...(await missingSharePersonsPromise)],
+        currencyProfiles: await currencyProfilePromise
+      }
     };
     return response;
   } catch (e) {
@@ -79,8 +81,8 @@ export const addIncomeDetailLoaderHandler = async () => {
         incomeTypes: await incomeTypesPromise,
         incomeTags: await incomeTagsPromise,
         sharePersons: await sharePersonsPromise,
-        currencyProfiles: await currencyProfilePromise,
-      },
+        currencyProfiles: await currencyProfilePromise
+      }
     };
     return response;
   } catch (e) {

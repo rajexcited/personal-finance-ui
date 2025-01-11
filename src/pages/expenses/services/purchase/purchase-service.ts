@@ -5,7 +5,6 @@ import {
   getLogger,
   MyLocalDatabase,
   LocalDBStore,
-  subtractDates,
   LoggerBase,
   getDefaultIfError,
   ConfigTypeStatus,
@@ -17,6 +16,8 @@ import {
   getCacheOption,
   getDateInstance,
   getDateString,
+  subtractDatesDefaultToZero,
+  getDateInstanceDefaultNewDate
 } from "../../../../shared";
 import { PurchaseTypeService } from "./purchase-type-service";
 import { pymtAccountService } from "../../../pymt-accounts";
@@ -44,7 +45,7 @@ const getPurchaseTypeEnum = async () => {
     typeMap.set(ctg.id, ctg.value);
     typeMap.set(ctg.value, ctg.id);
   });
-  logger.info("transformed to type Map, ", typeMap, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
+  logger.info("transformed to type Map, ", typeMap, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
   return typeMap;
 };
 
@@ -58,7 +59,7 @@ const getDeletedPurchaseTypeEnum = async () => {
     typeMap.set(ctg.id, ctg.value);
     typeMap.set(ctg.value, ctg.id);
   });
-  logger.info("transformed to type Map, ", typeMap, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
+  logger.info("transformed to type Map, ", typeMap, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
   return typeMap;
 };
 
@@ -71,7 +72,7 @@ const getPaymentAccountMap = async () => {
   pymtAccs.forEach((acc) => {
     pymtAccMap.set(acc.id, acc.shortName);
   });
-  logger.info("transformed to pymt acc Map, ", pymtAccMap, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
+  logger.info("transformed to pymt acc Map, ", pymtAccMap, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
   return pymtAccMap;
 };
 
@@ -131,7 +132,7 @@ const updatePurchaseTypeAndPymtAccName = async (purchaseItem: PurchaseFields) =>
     const deletedPymtAcc = await getDefaultIfError(async () => await pymtAccountService.getPymtAccount(pymtAccId), null);
     purchaseItem.paymentAccountName = deletedPymtAcc?.shortName;
   }
-  logger.info("execution time =", subtractDates(null, startTime).toSeconds(), " sec");
+  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
 };
 
 const updatePurchaseTags = async (purchase: PurchaseFields) => {
@@ -153,17 +154,17 @@ export const addUpdateDbPurchase = async (purchase: PurchaseFields, loggerBase: 
   const transformStart = new Date();
   const dbPurchase: PurchaseFields = {
     ...purchase,
-    purchaseDate: getDateInstance(purchase.purchaseDate),
-    verifiedTimestamp: purchase.verifiedTimestamp ? getDateInstance(purchase.verifiedTimestamp) : undefined,
-    description: purchase.description || "",
+    purchaseDate: getDateInstanceDefaultNewDate(purchase.purchaseDate),
+    verifiedTimestamp: (purchase.verifiedTimestamp && getDateInstance(purchase.verifiedTimestamp)) || undefined,
+    description: purchase.description || ""
   };
   await updatePurchaseTypeAndPymtAccName(dbPurchase);
   convertAuditFieldsToDateInstance(dbPurchase.auditDetails);
-  dbPurchase.receipts = dbPurchase.receipts.map((rct) => ({ ...rct, purchaseId: purchase.id }));
+  dbPurchase.receipts = dbPurchase.receipts.map((rct) => ({ ...rct, relationId: purchase.id }));
 
-  logger.info("transforming execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
+  logger.info("transforming execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
   await purchaseDb.addUpdateItem(dbPurchase);
-  logger.info("dbPurchase =", dbPurchase, ", execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
+  logger.info("dbPurchase =", dbPurchase, ", execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
   return dbPurchase;
 };
 
@@ -175,7 +176,7 @@ const initializePurchaseTags = async () => {
 
   const thisYear = new Date().getFullYear();
   const queryParams: TagQueryParams = {
-    year: [String(thisYear), String(thisYear - 1)],
+    year: [String(thisYear), String(thisYear - 1)]
   };
   const response = await axios.get(`${rootPath}/tags`, { params: queryParams });
   await tagService.updateTags(response.data);
@@ -196,7 +197,7 @@ export const setClearExpenseListCacheHandler = (clearCache: Function) => {
 const clearCache = (purchaseData: PurchaseFields) => {
   clearExpenseListCache();
   pMemoizeClear(getPurchase);
-  statService.clearStatsCache(StatBelongsTo.Purchase, getDateInstance(purchaseData.purchaseDate).getFullYear());
+  statService.clearStatsCache(StatBelongsTo.Purchase, getDateInstanceDefaultNewDate(purchaseData.purchaseDate).getFullYear());
 };
 
 export const getPurchase = pMemoize(async (purchaseId: string) => {
@@ -232,9 +233,9 @@ export const addUpdatePurchase = pMemoize(async (purchase: PurchaseFields) => {
     await updatePurchaseTypeAndPymtAccName(purchase);
     const data: PurchaseFields = {
       ...purchase,
-      purchaseDate: getDateString(purchase.purchaseDate),
+      purchaseDate: getDateString(purchase.purchaseDate) as string,
       verifiedTimestamp: purchase.verifiedTimestamp ? getDateString(purchase.verifiedTimestamp) : undefined,
-      description: purchase.description || "",
+      description: purchase.description || ""
     };
     const response = await axios.post(rootPath, data);
     const purchaseResponse = response.data as PurchaseFields;

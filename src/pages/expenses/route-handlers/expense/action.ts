@@ -8,23 +8,31 @@ import {
   ExpenseBelongsTo,
   ExpenseFields,
   refundService,
-  incomeService,
+  incomeService
 } from "../../services";
+import { incrementPageNoToLoadMoreMonths } from "./share-list";
 
-const rhLogger = getLogger("route.handler.expense.action", null, null, "DEBUG");
+const rhLogger = getLogger("route.handler.expense.action", null, null, "DISABLED");
 
 export const expenseActionHandler = async ({ request }: ActionFunctionArgs) => {
+  let resp: Response | RouteHandlerResponse<any, any> | undefined = undefined;
   if (request.method === "DELETE") {
-    return await expenseDeleteActionHandler(request);
+    resp = await expenseDeleteActionHandler(request);
+  }
+  if (request.method === "POST") {
+    resp = await expensePostActionHandler(request);
+  }
+  if (resp) {
+    return resp;
   }
   const error: RouteHandlerResponse<null, any> = {
     type: "error",
     errorMessage: "action not supported",
     data: {
       request: {
-        method: request.method,
-      },
-    },
+        method: request.method
+      }
+    }
   };
   return json(error, { status: HttpStatusCode.InternalServerError });
 };
@@ -65,7 +73,7 @@ const expenseDeleteActionHandler = async (request: Request) => {
 
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: belongsTo + " is deleted",
+      data: belongsTo + " is deleted"
     };
     return response;
   } catch (e) {
@@ -80,5 +88,26 @@ const expenseDeleteActionHandler = async (request: Request) => {
       overrideMessages.default = "cannot delete " + belongsTo;
     }
     return handleRouteActionError(e, overrideMessages);
+  }
+};
+
+const expensePostActionHandler = async (request: Request) => {
+  const logger = getLogger("expensePostActionHandler", rhLogger);
+
+  try {
+    const formdata = await request.formData();
+    const loadMoreRequestBy = formdata.get("loadMore");
+    logger.debug("loadMoreRequestBy=", loadMoreRequestBy);
+    if (loadMoreRequestBy === "months") {
+      incrementPageNoToLoadMoreMonths();
+      const response: RouteHandlerResponse<string, null> = {
+        type: "success",
+        data: "submitted request to load expenses for more months"
+      };
+      return response;
+    }
+  } catch (e) {
+    logger.error("in action handler", e);
+    return handleRouteActionError(e);
   }
 };

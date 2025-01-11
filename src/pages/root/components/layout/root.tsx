@@ -50,7 +50,7 @@ const RootLayout: FunctionComponent = () => {
                     }
                 </div>
                 <div className="column mt-3 has-text-centered">
-                    <h2 className="title is-1">
+                    <h2 className="title page-title">
                         <span className="icon-text">
                             <span className="icon">
                                 <FontAwesomeIcon icon={ icon } />

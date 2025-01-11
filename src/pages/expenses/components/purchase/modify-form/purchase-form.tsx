@@ -20,6 +20,7 @@ import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal
 import { PymtAccountFields } from "../../../../pymt-accounts/services";
 import { CurrencyProfileResource, SharePersonResource } from "../../../../settings/services";
 import { getDateInstance, InvalidError } from "../../../../../shared";
+import { createSharePersonTagSourceList, filterSharePersons } from "../../common";
 
 
 export interface PurchaseFormProps {
@@ -123,11 +124,14 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
     useEffect(() => {
         const logger = getLogger("useEffect.dep[]", fcLogger);
 
-        if (props.details?.purchaseDate) {
-            setPurchaseDate(getDateInstance(props.details.purchaseDate));
+
+        const purchaseDateInstance = getDateInstance(props.details?.purchaseDate);
+        if (props.details?.purchaseDate && purchaseDateInstance) {
+            setPurchaseDate(purchaseDateInstance);
         }
-        if (props.details?.verifiedTimestamp) {
-            setVerifiedDateTime(getDateInstance(props.details.verifiedTimestamp));
+        const verifiedDateInstance = getDateInstance(props.details?.verifiedTimestamp);
+        if (props.details?.verifiedTimestamp && verifiedDateInstance) {
+            setVerifiedDateTime(verifiedDateInstance);
         }
 
         const myDropdownPurchaseTypeItems = props.purchaseTypes.map(ctg => {
@@ -176,21 +180,13 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
             setSelectedDropdownPymtAccount(mySelectedPaymentAcc);
         }
 
-        const mySourceSharePersonTagItems = props.sharePersons.map(sp => {
-            const itm: TagObject = {
-                id: sp.id || "sharepersonIdNeverUsed",
-                displayText: sp.nickName || `${sp.firstName} ${sp.lastName}`,
-                searchText: [sp.nickName || "", sp.firstName, sp.lastName, sp.emailId].join(";")
-            };
-            return itm;
-        });
+        const mySourceSharePersonTagItems = createSharePersonTagSourceList(props.sharePersons);
         setSourceSharePersonTagItems(mySourceSharePersonTagItems);
         logger.info("props.sharePersons =", props.sharePersons, ", mySourceSharePersonTagItems =", mySourceSharePersonTagItems, ", props.details?.personIds =", props.details?.personIds);
-        if (props.details && props.details.personIds.length > 0) {
-            const mySelectedSharePersons = mySourceSharePersonTagItems.filter(sspt => props.details?.personIds.includes(sspt.id));
-            setSelectedSharePersonTagItems(mySelectedSharePersons);
-            logger.info("mySelectedSharePersons =", mySelectedSharePersons);
-        }
+        const mySelectedSharePersons = filterSharePersons(mySourceSharePersonTagItems, props.details?.personIds);
+        setSelectedSharePersonTagItems(mySelectedSharePersons);
+        logger.info("mySelectedSharePersons =", mySelectedSharePersons);
+
 
         logger.info("props.sourceTags =", props.sourceTags);
 

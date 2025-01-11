@@ -6,7 +6,7 @@ import {
   RouteHandlerResponse,
   NotFoundError,
   handleRouteActionError,
-  PurchaseFields,
+  PurchaseFields
 } from "../../services";
 import { PymtAccountFields, pymtAccountService } from "../../../pymt-accounts/services";
 import {
@@ -14,8 +14,9 @@ import {
   CurrencyProfileResource,
   currencyProfileService,
   SharePersonResource,
-  sharePersonService,
+  sharePersonService
 } from "../../../settings/services";
+import { getMissingSharePersons } from "../common";
 
 const rhLogger = getLogger("route.handler.purchase.loader", null, null, "DISABLED");
 
@@ -45,6 +46,7 @@ export const purchaseDetailLoaderHandler = async ({ params }: LoaderFunctionArgs
     const currencyProfilePromise = currencyProfileService.getCurrencyProfiles();
 
     await Promise.all([purchaseTypesPromise, paymentAccountsPromise, purchaseTagsPromise, sharePersonsPromise, currencyProfilePromise]);
+    const missingSharePersonsPromise = getMissingSharePersons(sharePersonsPromise, null, details);
     logger.debug("retrieved all info, now preparing response with all info to send to FC");
 
     const response: RouteHandlerResponse<PurchaseDetailLoaderResource, null> = {
@@ -54,9 +56,9 @@ export const purchaseDetailLoaderHandler = async ({ params }: LoaderFunctionArgs
         paymentAccounts: await paymentAccountsPromise,
         purchaseTypes: await purchaseTypesPromise,
         purchaseTags: await purchaseTagsPromise,
-        sharePersons: await sharePersonsPromise,
-        currencyProfiles: await currencyProfilePromise,
-      },
+        sharePersons: [...(await sharePersonsPromise), ...(await missingSharePersonsPromise)],
+        currencyProfiles: await currencyProfilePromise
+      }
     };
     return response;
   } catch (e) {
@@ -82,8 +84,8 @@ export const purchaseDetailSupportingLoaderHandler = async () => {
         purchaseTypes: await purchaseTypesPromise,
         purchaseTags: await purchaseTagsPromise,
         sharePersons: await sharePersonsPromise,
-        currencyProfiles: await currencyProfilePromise,
-      },
+        currencyProfiles: await currencyProfilePromise
+      }
     };
     return response;
   } catch (e) {

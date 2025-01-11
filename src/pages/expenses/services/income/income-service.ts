@@ -5,7 +5,6 @@ import {
   getLogger,
   MyLocalDatabase,
   LocalDBStore,
-  subtractDates,
   LoggerBase,
   getDefaultIfError,
   TagsService,
@@ -17,7 +16,8 @@ import {
   isUuid,
   ConfigTypeStatus,
   getDateString,
-  getDateInstance,
+  subtractDatesDefaultToZero,
+  getDateInstanceDefaultNewDate
 } from "../../../../shared";
 import { pymtAccountService } from "../../../pymt-accounts";
 import { ExpenseBelongsTo, ExpenseFields } from "../expense/field-types";
@@ -42,7 +42,7 @@ export const setClearExpenseListCacheHandler = (clearCacheFn: Function) => {
 
 const clearCache = (incomeData: IncomeFields) => {
   clearExpenseListCache();
-  statService.clearStatsCache(StatBelongsTo.Income, getDateInstance(incomeData.incomeDate).getFullYear());
+  statService.clearStatsCache(StatBelongsTo.Income, getDateInstanceDefaultNewDate(incomeData.incomeDate).getFullYear());
   pMemoizeClear(getDetails);
 };
 
@@ -64,7 +64,7 @@ const updatePaymentAccount = async (incomeDetails: IncomeFields) => {
     }
   }
 
-  logger.info("execution time =", subtractDates(null, startTime).toSeconds(), " sec");
+  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
 };
 
 const updateIncomeType = async (incomeDetails: IncomeFields) => {
@@ -85,7 +85,7 @@ const updateIncomeType = async (incomeDetails: IncomeFields) => {
     }
   }
 
-  logger.info("execution time =", subtractDates(null, startTime).toSeconds(), " sec");
+  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
 };
 
 const updateTags = async (incomeDetails: IncomeFields) => {
@@ -106,7 +106,7 @@ export const addUpdateDbIncome = async (incomeDetails: IncomeFields, loggerBase:
   const transformStart = new Date();
   const dbIncome: IncomeFields = {
     ...incomeDetails,
-    incomeDate: getDateString(incomeDetails.incomeDate),
+    incomeDate: getDateString(incomeDetails.incomeDate) as string
   };
   await updatePaymentAccount(dbIncome);
   await updateIncomeType(dbIncome);
@@ -114,9 +114,9 @@ export const addUpdateDbIncome = async (incomeDetails: IncomeFields, loggerBase:
   convertAuditFieldsToDateInstance(dbIncome.auditDetails);
   dbIncome.receipts = dbIncome.receipts.map((rct) => ({ ...rct, relationId: dbIncome.id }));
 
-  logger.info("transforming execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
+  logger.info("transforming execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
   await incomeDb.addUpdateItem(dbIncome);
-  logger.info("dbIncome =", dbIncome, ", execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
+  logger.info("dbIncome =", dbIncome, ", execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
   return dbIncome;
 };
 
@@ -128,7 +128,7 @@ const initializeIncomeTags = async () => {
 
   const thisYear = new Date().getFullYear();
   const queryParams: TagQueryParams = {
-    year: [String(thisYear), String(thisYear - 1)],
+    year: [String(thisYear), String(thisYear - 1)]
   };
   const response = await axios.get(`${rootPath}/tags`, { params: queryParams });
   await tagService.updateTags(response.data);
@@ -170,7 +170,7 @@ export const addUpdateDetails = pMemoize(async (incomeDetails: IncomeFields) => 
     const data: IncomeFields = {
       ...incomeDetails,
       incomeDate: incomeDetails.incomeDate as string,
-      description: incomeDetails.description || "",
+      description: incomeDetails.description || ""
     };
     const response = await axios.post(rootPath, data);
     const incomeResponse = response.data as IncomeFields;

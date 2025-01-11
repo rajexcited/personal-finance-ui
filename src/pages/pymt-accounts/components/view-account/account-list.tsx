@@ -33,7 +33,7 @@ const AccountList: FunctionComponent = () => {
         <section className="container">
             {
                 errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
+                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
                     <div className="columns is-centered">
                         <div className="column is-four-fifths">
                             <article className="message is-danger mb-3">

@@ -14,7 +14,7 @@ export interface PurchaseSubItemProps {
     itemDetail: PurchaseItemFields;
 }
 
-const fcLogger = getLogger("FC.PurchaseBreakDownItem", null, null, "DEBUG");
+const fcLogger = getLogger("FC.PurchaseBreakDownItem", null, null, "DISABLED");
 
 export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (props) => {
     const [itemBillName, setItemBillName] = useState(props.itemDetail.billName || '');

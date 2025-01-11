@@ -10,3 +10,30 @@
     background-repeat: no-repeat;
     transform: rotate(-25deg);
 }
+
+@media screen and (max-width: 768px),
+print {
+    h2.page-title.title span.icon-text {
+        flex-wrap: nowrap;
+    }
+
+    h2.page-title.title span.icon-text .icon {
+        margin-top: 0.5rem;
+    }
+
+    h2.page-title.title span.icon-text span {
+        /* color: var(--bulma-title-color); */
+        font-size: var(--bulma-title-size);
+        /* font-weight: var(--bulma-title-weight); */
+        line-height: var(--bulma-title-line-height)
+    }
+}
+
+@media screen and (min-width: 768px),
+print {
+
+    h2.page-title.title span.icon-text span {
+        font-size: 3rem;
+        /* line-height: var(--bulma-title-line-height) */
+    }
+}

@@ -5,7 +5,6 @@ import {
   getLogger,
   MyLocalDatabase,
   LocalDBStore,
-  subtractDates,
   LoggerBase,
   getDefaultIfError,
   TagsService,
@@ -15,9 +14,10 @@ import {
   getCacheOption,
   handleAndRethrowServiceError,
   isUuid,
-  getDateInstance,
   getDateString,
   ConfigTypeStatus,
+  getDateInstanceDefaultNewDate,
+  subtractDatesDefaultToZero
 } from "../../../../shared";
 import { pymtAccountService } from "../../../pymt-accounts";
 import { ExpenseBelongsTo, ExpenseFields } from "../expense/field-types";
@@ -41,7 +41,7 @@ export const setClearExpenseListCacheHandler = (clearCacheFn: Function) => {
 
 const clearCache = (refundData: PurchaseRefundFields) => {
   clearExpenseListCache();
-  statService.clearStatsCache(StatBelongsTo.Refund, getDateInstance(refundData.refundDate).getFullYear());
+  statService.clearStatsCache(StatBelongsTo.Refund, getDateInstanceDefaultNewDate(refundData.refundDate).getFullYear());
   pMemoizeClear(getDetails);
 };
 
@@ -51,7 +51,7 @@ const getDefaultPaymentAccounts = async () => {
 
   const pymtAccs = await getDefaultIfError(pymtAccountService.getPymtAccountList, []);
 
-  logger.info("transformed to pymt acc, ", pymtAccs, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
+  logger.info("transformed to pymt acc, ", pymtAccs, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
   return pymtAccs;
 };
 
@@ -61,7 +61,7 @@ const getPaymentAccount = async (paymentAccId: string) => {
 
   const pymtAcc = await getDefaultIfError(async () => await pymtAccountService.getPymtAccount(paymentAccId), null);
 
-  logger.info("transformed to pymt acc, ", pymtAcc, ", execution Time =", subtractDates(null, startTime).toSeconds(), " sec");
+  logger.info("transformed to pymt acc, ", pymtAcc, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
   return pymtAcc;
 };
 
@@ -82,7 +82,7 @@ const updatePaymentAccount = async (refunditem: PurchaseRefundFields) => {
     }
   }
 
-  logger.info("execution time =", subtractDates(null, startTime).toSeconds(), " sec");
+  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
 };
 
 const updateTags = async (refund: PurchaseRefundFields) => {
@@ -112,7 +112,7 @@ const updateReasonValue = async (refundDetails: PurchaseRefundFields) => {
     }
   }
 
-  logger.info("execution time =", subtractDates(null, startTime).toSeconds(), " sec");
+  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
 };
 
 export const addUpdateDbRefund = async (refunddetails: PurchaseRefundFields, loggerBase: LoggerBase) => {
@@ -124,8 +124,8 @@ export const addUpdateDbRefund = async (refunddetails: PurchaseRefundFields, log
   const transformStart = new Date();
   const dbRefund: PurchaseRefundFields = {
     ...refunddetails,
-    refundDate: getDateInstance(refunddetails.refundDate),
-    description: refunddetails.description || "",
+    refundDate: getDateInstanceDefaultNewDate(refunddetails.refundDate),
+    description: refunddetails.description || ""
   };
   await updatePaymentAccount(dbRefund);
   await updateReasonValue(dbRefund);
@@ -133,9 +133,9 @@ export const addUpdateDbRefund = async (refunddetails: PurchaseRefundFields, log
   convertAuditFieldsToDateInstance(dbRefund.auditDetails);
   dbRefund.receipts = dbRefund.receipts.map((rct) => ({ ...rct, relationId: dbRefund.id }));
 
-  logger.info("transforming execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
+  logger.info("transforming execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
   await refundDb.addUpdateItem(dbRefund);
-  logger.info("dbPurchase =", dbRefund, ", execution time =", subtractDates(null, transformStart).toSeconds(), " sec");
+  logger.info("dbPurchase =", dbRefund, ", execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
   return dbRefund;
 };
 
@@ -147,7 +147,7 @@ const initializeRefundTags = async () => {
 
   const thisYear = new Date().getFullYear();
   const queryParams: TagQueryParams = {
-    year: [String(thisYear), String(thisYear - 1)],
+    year: [String(thisYear), String(thisYear - 1)]
   };
   const response = await axios.get(`${rootPath}/tags`, { params: queryParams });
   await tagService.updateTags(response.data);
@@ -189,9 +189,9 @@ export const addUpdateDetails = pMemoize(async (refunddetails: PurchaseRefundFie
     validateRefundBelongsTo(refunddetails);
     const data: PurchaseRefundFields = {
       ...refunddetails,
-      refundDate: getDateString(refunddetails.refundDate),
+      refundDate: getDateString(refunddetails.refundDate) as string,
       purchaseId: refunddetails.purchaseDetails?.id || refunddetails.purchaseId,
-      purchaseDetails: undefined,
+      purchaseDetails: undefined
     };
     const response = await axios.post(rootPath, data);
     const refundResponse = response.data as PurchaseRefundFields;
