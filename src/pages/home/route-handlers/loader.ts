@@ -2,7 +2,7 @@ import { authService } from "../../auth";
 import { getLogger, handleRouteActionError, RouteHandlerResponse, statService } from "../services";
 import { StatsExpenseResource } from "../services/field-types";
 
-const rhLogger = getLogger("route.handler.home.loader", null, null, "DEBUG");
+const rhLogger = getLogger("route.handler.home.loader", null, null, "DISABLED");
 
 export interface HomepageDetailLoaderResource {
   stats: StatsExpenseResource[];
@@ -23,16 +23,16 @@ export const homepageDetailsLoaderHandler = async () => {
       response = {
         type: "success",
         data: {
-          stats: [await purchaseStatsPromise, await refundStatsPromise, await incomeStatsPromise],
-        },
+          stats: [await purchaseStatsPromise, await refundStatsPromise, await incomeStatsPromise]
+        }
       };
     } else {
       logger.debug("since user is not authenticated, cannot retrieve any stats");
       response = {
         type: "success",
         data: {
-          stats: [],
-        },
+          stats: []
+        }
       };
     }
     return response;

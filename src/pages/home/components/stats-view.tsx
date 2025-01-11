@@ -8,7 +8,7 @@ import { StatsExpenseResource } from "../services/field-types";
 import { formatAmount } from "../../../formatters";
 
 
-const fcLogger = getLogger("FC.homepage.view.stats", null, null, "DEBUG");
+const fcLogger = getLogger("FC.homepage.view.stats", null, null, "DISABLED");
 
 interface StatTableDetails {
     belongsTo: StatBelongsTo;
@@ -45,32 +45,33 @@ export const StatsViewPage: FunctionComponent = () => {
                 return prev;
             }, {});
 
-            statTableDetailList.push({
+            const myStatTableDetailList = [];
+            myStatTableDetailList.push({
                 belongsTo: StatBelongsTo.Income,
                 belongsToLabel: "Income",
                 totalAmount: formatAmount(statsMap[StatBelongsTo.Income].details.total),
                 averageByMonth: formatAmount(Number(statsMap[StatBelongsTo.Income].details.total) / nMonths)
             });
             const purchaseAfterRefundTotalAmt = getNumber(statsMap[StatBelongsTo.Purchase].details.total) - getNumber(statsMap[StatBelongsTo.Refund].details.total);
-            statTableDetailList.push({
+            myStatTableDetailList.push({
                 belongsTo: StatBelongsTo.PurchaseMinusRefund,
                 belongsToLabel: "Purchase after getting refund",
                 totalAmount: formatAmount(purchaseAfterRefundTotalAmt),
                 averageByMonth: formatAmount(purchaseAfterRefundTotalAmt / nMonths)
             });
-            statTableDetailList.push({
+            myStatTableDetailList.push({
                 belongsTo: StatBelongsTo.Purchase,
                 belongsToLabel: "Purchase",
                 totalAmount: formatAmount(statsMap[StatBelongsTo.Purchase].details.total),
                 averageByMonth: formatAmount(getNumber(statsMap[StatBelongsTo.Purchase].details.total) / nMonths)
             });
-            statTableDetailList.push({
+            myStatTableDetailList.push({
                 belongsTo: StatBelongsTo.Refund,
                 belongsToLabel: "Refund",
                 totalAmount: formatAmount(statsMap[StatBelongsTo.Refund].details.total),
                 averageByMonth: formatAmount(getNumber(statsMap[StatBelongsTo.Refund].details.total) / nMonths)
             });
-
+            setStatTableDetailList(myStatTableDetailList);
 
         } else if (loaderData.type === "error") {
             setErrorMessage(loaderData.errorMessage);
@@ -81,7 +82,7 @@ export const StatsViewPage: FunctionComponent = () => {
 
     return (
         <section>
-            <Animated animateOnMount={ false } isPlayIn={ !!errorMessage } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
+            <Animated animateOnMount={ false } isPlayIn={ !!errorMessage } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
                 <div className="columns is-centered">
                     <div className="column is-four-fifths">
                         <article className="message is-danger mb-3">

@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 const statsDb = new MyLocalDatabase<StatsExpenseResource>(LocalDBStore.Statistics);
 
 const rootPath = "/stats";
-const _logger = getLogger("service.home.stats", null, null, "DEBUG");
+const _logger = getLogger("service.home.stats", null, null, "DISABLED");
 
 export const clearStatsCache = async (belongsTo: StatBelongsTo, years: number | number[]) => {
   if (belongsTo === StatBelongsTo.PurchaseMinusRefund) {
