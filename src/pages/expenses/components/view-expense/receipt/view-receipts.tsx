@@ -3,11 +3,12 @@ import ReactMarkdown from "react-markdown";
 import bulmaCaraosel, { BulmaCarouselOptions } from "bulma-carousel";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlassMinus, faMagnifyingGlassPlus } from "@fortawesome/free-solid-svg-icons";
-import { getLogger, receiptService, subtractDates } from "../../../services";
+import { getLogger, receiptService } from "../../../services";
 import { LoadSpinner } from "../../../../../components";
 import { ReceiptProps, ReceiptType } from "../../../../../components/receipt";
 import "bulma-carousel/dist/css/bulma-carousel.min.css";
 import "./view-receipts.css";
+import { subtractDatesDefaultToZero } from "../../../../../shared";
 
 
 interface ViewReceiptsProps {
@@ -21,6 +22,10 @@ const defaultOptions: BulmaCarouselOptions = {
     infinite: false,
     slidesToShow: 1,
     slidesToScroll: 1,
+};
+
+const getDiffSeconds = (startTime: Date) => {
+    return subtractDatesDefaultToZero(null, startTime).toSeconds();
 };
 
 const allowedScales = [0.125, 0.25, 0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
@@ -57,6 +62,19 @@ export const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
         return (prev * 100).toFixed(2) + "%";
     }, [scaleValue]);
 
+    const onShowCarouselItemHandler = useMemo(() => {
+        return (carousel: bulmaCaraosel) => {
+            const logger = getLogger("onShowCarouselItemHandler", fcLogger);
+            logger.info("slide index =", carousel.state.next, ", receipt =", receipts[carousel.state.next]);
+            const isImageType = receipts[carousel.state.next]?.contentType !== ReceiptType.PDF;
+
+            logger.info("isImageType =", isImageType, ", scale = 1, receiptLoading = true, downloading receipt");
+            setActiveItemImage(isImageType);
+            setScaleValue(1);
+        };
+    }, [receipts]);
+
+
     useEffect(() => {
         const logger = getLogger("useEffect.dep[]", fcLogger);
         logger.info("initialized component, props.receipts =", props.receipts);
@@ -67,7 +85,7 @@ export const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
             const startTime = new Date();
             receiptService.downloadReceipts(props.receipts)
                 .then(downloadReceipts => {
-                    logger.info("receipts are downloaded. downloadReceipts =", downloadReceipts, ". time taken:", subtractDates(new Date(), startTime).toSeconds(), "sec");
+                    logger.info("receipts are downloaded. downloadReceipts =", downloadReceipts, ". time taken:", getDiffSeconds(startTime), "sec");
                     const error = downloadReceipts.map(dr => dr.status === "fail" && dr.error).filter(dr => dr).join("\n\n");
                     setErrorMessage(error);
                     const receiptObj = props.receipts.reduce((obj: Record<string, ReceiptProps>, rct) => {
@@ -101,27 +119,22 @@ export const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
     }, []);
 
     useEffect(() => {
-        const logger = getLogger("useEffect.dep[receiptCarousel]", fcLogger);
-        logger.info("initialized receiptCarousel", receiptCarousel);
+        const _logger = getLogger("useEffect.dep[receiptCarousel]", fcLogger);
+        _logger.info("initialized receiptCarousel", receiptCarousel);
 
-        const onShowCarouselItemHandler = (carousel: bulmaCaraosel) => {
-            logger.info("on show event is emitted, slide index =", carousel.state.next, ", receipt =", receipts[carousel.state.next]);
-            const isImageType = receipts[carousel.state.next]?.contentType !== ReceiptType.PDF;
-
-            logger.info("isImageType =", isImageType, ", scale = 1, receiptLoading = true, downloading receipt");
-            setActiveItemImage(isImageType);
-            setScaleValue(1);
-        };
-
-        receiptCarousel?.on("show", onShowCarouselItemHandler);
+        const localHandler = onShowCarouselItemHandler;
+        const offHandler = receiptCarousel?.on("show", localHandler);
         if (receiptCarousel) {
-            onShowCarouselItemHandler(receiptCarousel);
+            localHandler(receiptCarousel);
         }
 
         return () => {
-            logger.info("destroyed, removed event");
+            _logger.info("destroyed, removed event");
+            if (offHandler) {
+                offHandler();
+            }
         };
-    }, [receiptCarousel]);
+    }, [receiptCarousel, onShowCarouselItemHandler]);
 
     useEffect(() => {
         const logger = getLogger("useEffect.dep[carouselRef.current]", fcLogger);

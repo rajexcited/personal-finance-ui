@@ -1,134 +1,119 @@
-import { FunctionComponent, useState, useEffect, useRef } from "react";
+import React, { FunctionComponent, useState, useEffect } from "react";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { Animated, ConfirmDialog, LoadSpinner } from "../../../../components";
-import { rowHeaders, ExpenseSortStateType, getLogger, RouteHandlerResponse, ExpenseFields, ExpenseBelongsTo, getSortedExpenses } from "../../services";
+import { getLogger, RouteHandlerResponse, ExpenseFields } from "../../services";
 import { getFullPath } from "../../../root";
-import { useDebounceState } from "../../../../hooks";
-import { ExpenseItemTableRow } from "./view-expense-item-tablerow";
-import { ExpenseTableHead, ExpenseTableHeadRefType } from "./expense-table-head";
+import { useOrientation, DeviceMode } from "../../../../hooks";
 import { ViewReceipts } from "./receipt/view-receipts";
-
+import { ReceiptProps } from "../../../../components/receipt";
+import { SelectedExpense } from "./common";
+import { ExpenseListTable } from "./expense-list-table";
+import { ExpenseListCards } from "./expense-list-cards";
+import { SharePersonResource } from "../../../settings/services";
+import { ExpenseListLoaderResource } from "../../route-handlers";
 
 const fcLogger = getLogger("FC.expense.view.ExpenseList", null, null, "DISABLED");
 
-type SelectedExpense = Pick<ExpenseFields, "id" | "belongsTo">;
-
 export const ExpenseList: FunctionComponent = () => {
-    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseFields[], null>;
+    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseListLoaderResource, null>;
     const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
     const [expenseList, setExpenseList] = useState<ExpenseFields[]>([]);
-    const [selectedExpense, setSelectedExpense] = useState<SelectedExpense>();
+    const [sharePersons, setSharePersons] = useState<SharePersonResource[]>([]);
     const [deletingExpense, setDeletingExpense] = useState<SelectedExpense>();
-    const [isViewReceiptsEnable, setViewReceiptsEnable] = useState(false);
-    const [errorMessage, setErrorMessage] = useState('');
-    const [errorDeletedExpense, setErrorDeletedExpense] = useState<SelectedExpense>();
+    const [expenseReceipts, setExpenseReceipts] = useState<ReceiptProps[]>([]);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [loadingExpenses, setLoadingExpenses] = useState(true);
+    const { resultedDevice: deviceMode } = useOrientation(DeviceMode.Mobile);
 
     const submit = useSubmit();
-    const [loading, setLoading] = useDebounceState(false, 500, true);
-    const headerRef = useRef<ExpenseTableHeadRefType>(null);
 
-    // do I need this useeffect? can i not set loader data directly to expenseList state?
+    /**
+     * do I need this useeffect? can i not set loader data directly to expenseList state?
+     * No, I can't. 
+     *  loaderdata and actiondata once initialized with value, they are not changing, which is useful for us.
+     * but when user wishes to load more expenses, the new requests replaces loaderdata with new incoming data.
+     * which may cause data loss on currectly viewable page.
+     * useEffect is only getting called if any updates on loaderdata or actiondata
+     * by splitting useEffect on each loaderdata and actiondata tells us 
+     *      when we received what event, useful in taking appropriate actions
+     **/
     useEffect(() => {
-        const logger = getLogger("useEffect.dep[loaderData, actionData]", fcLogger);
-        if (loaderData.type === "success" && !actionData) {
-            setLoading(true);
+        const logger = getLogger("useEffect.dep[loaderData]", fcLogger);
+        logger.debug("loaderdata.type=", loaderData.type, "loaderdata.data=", loaderData.data);
+        if (loaderData.type === "success") {
             setErrorMessage("");
-
-            setExpenseList(() => {
-                let sortMap;
-                if (headerRef.current && Object.keys(headerRef.current.sortDetails()).length) {
-                    sortMap = headerRef.current.sortDetails();
-                } else {
-                    sortMap = rowHeaders.reduce((obj: ExpenseSortStateType, rh) => {
-                        if (rh.sortable) {
-                            obj[rh.datafieldKey] = { ...rh };
-                        }
-                        return obj;
-                    }, {});
-                }
-                const result = getSortedExpenses(loaderData.data, sortMap, logger);
-                setLoading(false);
-                return result;
-            });
-        } else if (actionData?.type === "success") {
-            setErrorMessage("");
-        } else if (loaderData.type === "error") {
+            if (loaderData.data.expenseList.length > 0) {
+                setExpenseList(prev => [...loaderData.data.expenseList, ...prev]);
+                setSharePersons(loaderData.data.sharePersons);
+            }
+        } else {
             setErrorMessage(loaderData.errorMessage);
-        } else if (actionData?.type === "error") {
-            setErrorMessage(actionData.errorMessage);
-            setErrorDeletedExpense(selectedExpense);
         }
-    }, [loaderData, actionData]);
+    }, [loaderData]);
 
-    const onChangeExpenseSortHandler = (sortDetails: ExpenseSortStateType) => {
-        const logger = getLogger("onChangeExpenseSortHandler", fcLogger);
-        setLoading(true);
-        logger.debug("sorting expenses and reloading with sortDetails =", sortDetails);
-        setExpenseList(prev => {
-            const newExp = getSortedExpenses(prev, sortDetails, logger);
-            setLoading(false);
-            return newExp;
+    useEffect(() => {
+        const logger = getLogger("useEffect.dep[actionData]", fcLogger);
+        logger.debug("actiondata.type=", actionData?.type, "actiondata.data=", actionData?.data);
+        if (actionData?.type === "success") {
+            setErrorMessage("");
+        } else if (actionData) {
+            setErrorMessage(actionData.errorMessage);
+        }
+    }, [actionData]);
+
+    const onRemoveRequestHandler = (removingExpense: ExpenseFields) => {
+        setDeletingExpense(prev => {
+            if (removingExpense.id === prev?.id && removingExpense.belongsTo === prev.belongsTo) {
+                return prev;
+            }
+            return { ...removingExpense };
         });
     };
 
-    const onRemoveRequestHandler = (expenseId: string, belongsTo: ExpenseBelongsTo) => {
-        const expenseSelected: SelectedExpense = { id: expenseId, belongsTo: belongsTo };
-        setSelectedExpense(expenseSelected);
-        setDeletingExpense(expenseSelected);
-        setDeletingExpense(prev => {
-            if (expenseId === prev?.id && belongsTo === prev.belongsTo) {
-                return prev;
-            }
-            return undefined;
-        });
-    };
+    const onViewReceiptsRequestHandler = (selectedExpense: ExpenseFields) => {
+        const logger = getLogger("onViewReceiptsRequestHandler", fcLogger);
+        // const foundExpense = expenseList.find(xpns => xpns.id === selectedExpense.id && xpns.belongsTo === selectedExpense.belongsTo);
+        // if (foundExpense?.receipts) {
+        // setExpenseReceipts(foundExpense.receipts);
+        // }
 
-    const onViewReceiptsRequestHandler = (expenseId: string, belongsTo: ExpenseBelongsTo) => {
-        const expenseSelected: SelectedExpense = { id: expenseId, belongsTo: belongsTo };
-        setSelectedExpense(expenseSelected);
-        setViewReceiptsEnable(true);
-        setDeletingExpense(prev => {
-            if (expenseId === prev?.id && belongsTo === prev.belongsTo) {
-                return prev;
-            }
-            return undefined;
-        });
+        logger.debug("setting receipts to open view model. receipts.length=", selectedExpense.receipts.length, "receipts=", selectedExpense.receipts);
+        setExpenseReceipts(selectedExpense.receipts);
     };
 
     const onDeleteConfirmHandler = () => {
-        const expenseToBeDeleted = expenseList.find(xpns => xpns.id === deletingExpense?.id && xpns.belongsTo === deletingExpense.belongsTo);
-        if (expenseToBeDeleted) {
-            const data: any = { ...expenseToBeDeleted };
-            submit(data, { action: getFullPath("expenseJournalRoot") + "?index", method: "delete" });
-            setDeletingExpense(undefined);
-            setErrorDeletedExpense(undefined);
-        }
+        const data: any = { ...deletingExpense };
+        submit(data, { action: getFullPath("expenseJournalRoot") + "?index", method: "delete" });
+        setDeletingExpense(undefined);
+        setErrorMessage("");
+        setLoadingExpenses(true);
     };
 
-    fcLogger.debug("view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billName), "errorMessage =", errorMessage, "errorDeletedExpense =", errorDeletedExpense);
-    const selectedExpenseReceipts = (isViewReceiptsEnable && expenseList.find(xpns => xpns.id === selectedExpense?.id && selectedExpense.belongsTo === xpns.belongsTo)?.receipts) || [];
-
-    const onSelectRequestHandler = (expenseId: string, belongsTo: ExpenseBelongsTo) => {
-        if (expenseId && belongsTo) {
-            const expenseSelected: SelectedExpense = { id: expenseId, belongsTo: belongsTo };
-            setSelectedExpense(expenseSelected);
-            setDeletingExpense(prev => {
-                if (expenseId === prev?.id && belongsTo === prev.belongsTo) {
-                    return prev;
-                }
-                return undefined;
-            });
-        } else {
-            setSelectedExpense(undefined);
-        }
+    const expenseListRenderCompletedHandler = () => {
+        const logger = getLogger("expenseListRenderCompletedHandler", fcLogger);
+        setLoadingExpenses(false);
+        logger.debug("expense list child component loaded. setting loading indicator to false");
     };
+    const expenseListRenderStartedHandler = () => {
+        const logger = getLogger("expenseListRenderStartedHandler", fcLogger);
+        setLoadingExpenses(true);
+        logger.debug("expense list child component reloading. setting loading indicator to true");
+    };
+
+    const onClickLoadMoreHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
+        event.preventDefault();
+        event.stopPropagation();
+        // request expenses for more months from router
+        submit({ loadMore: "months" }, { action: getFullPath("expenseJournalRoot") + "?index", method: "post" });
+    };
+    fcLogger.debug("view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billName), "errorMessage =", errorMessage, "receipts=", expenseReceipts);
 
     return (
         <section>
-            <LoadSpinner loading={ loading } />
+            <LoadSpinner loading={ loadingExpenses } />
 
-            <Animated animateOnMount={ false } isPlayIn={ !!errorMessage && !!errorDeletedExpense } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
+            <Animated animateOnMount={ false } isPlayIn={ !!errorMessage } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
                 <div className="columns is-centered">
                     <div className="column is-four-fifths">
                         <article className="message is-danger mb-3">
@@ -140,49 +125,52 @@ export const ExpenseList: FunctionComponent = () => {
                 </div>
             </Animated>
 
-            <table className="table is-fullwidth is-hoverable">
-                <ExpenseTableHead
-                    ref={ headerRef }
-                    onChangeExpenseSort={ onChangeExpenseSortHandler }
+            {
+                deviceMode === DeviceMode.Desktop &&
+                <ExpenseListTable
+                    expenseList={ expenseList }
+                    onRemove={ onRemoveRequestHandler }
+                    onViewReceipts={ onViewReceiptsRequestHandler }
+                    onRenderCompleted={ expenseListRenderCompletedHandler }
+                    onRenderStart={ expenseListRenderStartedHandler }
                 />
-                <tbody>
-                    {
-                        expenseList.map(xpns =>
-                            <ExpenseItemTableRow
-                                key={ xpns.id + "-trow" }
-                                id={ xpns.id + "-trow" }
-                                details={ xpns }
-                                onSelect={ onSelectRequestHandler }
-                                isSelected={ selectedExpense?.id === xpns.id }
-                                onRemove={ onRemoveRequestHandler }
-                                onViewReceipt={ onViewReceiptsRequestHandler }
-                            />
-                        )
-                    }
-                    {
-                        !expenseList.length &&
-                        <tr>
-                            <td colSpan={ rowHeaders.length }>
-                                <p className="title">There are no expenses</p>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            }
+            {
+                deviceMode === DeviceMode.Mobile &&
+                <ExpenseListCards
+                    expenseList={ expenseList }
+                    onRemove={ onRemoveRequestHandler }
+                    onViewReceipts={ onViewReceiptsRequestHandler }
+                    onRenderCompleted={ expenseListRenderCompletedHandler }
+                    onRenderStart={ expenseListRenderStartedHandler }
+                    sharePersons={ sharePersons }
+                />
+            }
+            {
+                !expenseList.length &&
+                <p className="subtitle">There are no expenses</p>
+            }
+            {
+                !!expenseList.length &&
+                <div className="buttons is-centered">
+                    <button className="button is-large is-focused" disabled={ loaderData.data?.expenseList.length === 0 || loadingExpenses } onClick={ onClickLoadMoreHandler } >Load More</button>
+                </div>
+            }
+
             <ConfirmDialog
                 id="delete-expense-confirm-dialog"
-                content="Are you sure that you want to delete expense?"
-                title="Remove Expense"
+                content={ "Do you really want to delete expense " + deletingExpense?.belongsTo + "?" }
+                title={ "Remove " + deletingExpense?.belongsTo }
                 open={ !!deletingExpense?.id }
                 onConfirm={ onDeleteConfirmHandler }
                 onCancel={ () => setDeletingExpense(undefined) }
                 yesButtonClassname="is-danger"
             />
             <ViewReceipts
-                key={ "view-receipts-" + (isViewReceiptsEnable && selectedExpense?.id || "dummy") }
-                isShow={ isViewReceiptsEnable }
-                receipts={ selectedExpenseReceipts }
-                onHide={ () => setViewReceiptsEnable(false) }
+                key={ "view-receipts-" + ((expenseReceipts.length > 0 && expenseReceipts[0].relationId) || "dummy") }
+                isShow={ expenseReceipts.length > 0 }
+                receipts={ expenseReceipts }
+                onHide={ () => setExpenseReceipts([]) }
             />
         </section>
     );

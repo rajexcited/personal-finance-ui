@@ -5,9 +5,9 @@ import { ExpenseBelongsTo, ExpenseFields, formatTimestamp, getLogger } from "../
 import { formatAmount } from "../../../../formatters";
 import { useNavigate } from "react-router-dom";
 import { getFullPath } from "../../../root";
-import { parseTimestamp } from "../../../../shared";
 import { useAuth } from "../../../auth";
 import { getExpenseDateInstance } from "../../services/expense";
+import { getShortForm } from "../../../../shared";
 
 
 interface ExpenseItemTableRowProps {
@@ -15,11 +15,12 @@ interface ExpenseItemTableRowProps {
     details: ExpenseFields;
     onSelect (expenseId: string, belongsTo: ExpenseBelongsTo): void;
     isSelected: Boolean;
-    onRemove (expenseId: string, belongsTo: ExpenseBelongsTo): void;
-    onViewReceipt (expenseId: string, belongsTo: ExpenseBelongsTo): void;
+    onRemove (expense: ExpenseFields): void;
+    onViewReceipt (expense: ExpenseFields): void;
+    onRenderCompleted (expenseId: string): void;
 }
 
-const fcLogger = getLogger("FC.expenseItemTableRow", null, null, "DISABLED");
+const fcLogger = getLogger("FC.expense.view.expenseItemTableRow", null, null, "DISABLED");
 
 export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props) => {
     const [expenseDate, setExpenseDate] = useState<string>();
@@ -34,6 +35,7 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
         if (xpnsDate) {
             setExpenseDate(formatTimestamp(xpnsDate, "MMM DD, YYYY"));
         }
+        props.onRenderCompleted(props.details.id);
     }, []);
 
     const onClickToggleRowSelectionHandler: React.MouseEventHandler<HTMLTableRowElement> = event => {
@@ -46,7 +48,7 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
     const onClickTrashExpenseHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
         event.preventDefault();
         event.stopPropagation();
-        props.onRemove(props.details.id, props.details.belongsTo);
+        props.onRemove(props.details);
     };
 
     // const onClickViewExpenseHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
@@ -72,7 +74,7 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
     const onClickShowReceiptsHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
         event.preventDefault();
         event.stopPropagation();
-        props.onViewReceipt(props.details.id, props.details.belongsTo);
+        props.onViewReceipt(props.details);
     };
 
     const onClickAddRefundHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
@@ -84,13 +86,6 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
         } else {
             logger.warn("cannot add refund for expense - " + props.details.belongsTo);
         }
-    };
-
-    const getShortForm = (text?: string | string[]) => {
-        if (Array.isArray(text)) {
-            text = text.join();
-        }
-        return text && text.length > 15 ? text.substring(0, 12).concat("...") : text;
     };
 
     let belongsTo = "NA";
@@ -172,7 +167,7 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
                     className="is-smaller"
                     verifiedDateTime={ props.details.verifiedTimestamp as Date }
                 /> </td> */}
-                <td> <span title={ props.details.tags.join() }> { getShortForm(props.details.tags) || "-" } </span>  </td>
+                <td> <span title={ props.details.tags.join() }> { getShortForm(props.details.tags, 15, "-") } </span>  </td>
                 <td>
                     { actions.map(ae => ae) }
                     { actions.length === 0 && "-" }
