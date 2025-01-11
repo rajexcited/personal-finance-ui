@@ -1,6 +1,6 @@
-import { FunctionComponent, useState, useEffect } from "react";
+import { FunctionComponent, useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Input, LoadSpinner, Animated, InputValidators } from "../../../components";
+import { Input, LoadSpinner, Animated, InputValidators, InputRef } from "../../../components";
 import ReactMarkdown from "react-markdown";
 import useAuth from "../hooks/use-auth";
 import { getFullPath } from "../../root";
@@ -19,10 +19,12 @@ enum LoginSubmitStatus {
 const fcLogger = getLogger("FC.LoginPage", null, null, "DISABLED");
 
 const LoginPage: FunctionComponent = () => {
-    const [emailId, setEmailId] = useState('');
-    const [password, setPassword] = useState('');
+
+
     const [errorMessage, setErrorMessage] = useState('');
     const [submitStatus, setSubmitStatus] = useState(LoginSubmitStatus.NotStarted);
+    const emailRef = useRef<InputRef>();
+    const passwordRef = useRef<InputRef>();
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -44,6 +46,14 @@ const LoginPage: FunctionComponent = () => {
         event.preventDefault();
         try {
             setSubmitStatus(LoginSubmitStatus.InProgress);
+            const emailId = emailRef.current?.getValue();
+            const password = passwordRef.current?.getValue();
+            if (!emailId) {
+                throw new Error("emailId is not provided");
+            }
+            if (!password) {
+                throw new Error("password is not provided");
+            }
             await auth.login(emailId, password);
             setSubmitStatus(LoginSubmitStatus.CompletedSuccess);
         } catch (e) {
@@ -66,7 +76,7 @@ const LoginPage: FunctionComponent = () => {
             <LoadSpinner loading={ submitStatus === LoginSubmitStatus.InProgress } />
 
             { !!errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ submitStatus === LoginSubmitStatus.CompletedError } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
+                <Animated animateOnMount={ true } isPlayIn={ submitStatus === LoginSubmitStatus.CompletedError } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
                     <div className="columns is-centered">
                         <div className="column is-half">
                             <article className="message is-danger mb-3">
@@ -88,11 +98,11 @@ const LoginPage: FunctionComponent = () => {
                             label="Email Id "
                             placeholder="Enter Email id"
                             leftIcon={ faEnvelope }
-                            initialValue={ emailId }
-                            onChange={ setEmailId }
+                            initialValue={ "" }
                             maxlength={ 50 }
                             required={ true }
-                            autocomplete="username"
+                            autocomplete="email"
+                            ref={ emailRef }
                         />
                         <Input
                             id="password"
@@ -100,13 +110,13 @@ const LoginPage: FunctionComponent = () => {
                             label="Password "
                             placeholder="Enter password"
                             leftIcon={ faLock }
-                            initialValue={ password }
-                            onChange={ setPassword }
+                            initialValue={ "" }
                             maxlength={ 25 }
                             minlength={ 8 }
                             required={ true }
                             validate={ validatePassword }
                             autocomplete="current-password"
+                            ref={ passwordRef }
                         />
                     </div>
                 </div>

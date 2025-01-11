@@ -48,7 +48,7 @@ const SignupPage: FunctionComponent = () => {
         } else {
             setErrorMessage("We are unable to signing you up. Please try again.");
         }
-    }, [auth.userDetails.isAuthenticated, signupComplete]);
+    }, [auth.userDetails.isAuthenticated, signupComplete, navigate]);
 
     const onSubmitSignupHandler: React.FormEventHandler<HTMLFormElement> = async event => {
         event.preventDefault();
@@ -85,7 +85,7 @@ const SignupPage: FunctionComponent = () => {
 
             {
                 !!errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ !submitting } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
+                <Animated animateOnMount={ true } isPlayIn={ !submitting } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
                     <div className="columns is-centered">
                         <div className="column is-half">
                             <article className="message is-danger mb-5">
@@ -146,6 +146,7 @@ const SignupPage: FunctionComponent = () => {
                                     maxlength={ 50 }
                                     required={ true }
                                     disabled={ auth.userDetails.isAuthenticated }
+                                    autocomplete="email"
                                 />
                                 <Input
                                     id="password"
@@ -175,7 +176,7 @@ const SignupPage: FunctionComponent = () => {
                                     required={ true }
                                     validate={ validatePasswordRepeat }
                                     disabled={ auth.userDetails.isAuthenticated }
-                                    autocomplete="off"
+                                    autocomplete="new-password"
                                 />
                             </div>
                         </div>

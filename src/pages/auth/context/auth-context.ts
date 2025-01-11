@@ -7,6 +7,7 @@ interface AuthContextInfo {
   login(emailId: string, password: string): Promise<void>;
   logout(): Promise<void>;
   signup(details: UserSignupResource): Promise<void>;
+  validateExpiryStatusOnLocationChange(): void;
 }
 
 export const dummyUserDetails: UserDetailsResource = {
@@ -15,7 +16,7 @@ export const dummyUserDetails: UserDetailsResource = {
   lastName: "",
   fullName: "",
   isAuthenticated: false,
-  status: UserStatus.DEACTIVATED_USER,
+  status: UserStatus.DEACTIVATED_USER
 };
 
 const defaultAuthContext: AuthContextInfo = {
@@ -30,6 +31,7 @@ const defaultAuthContext: AuthContextInfo = {
   signup: async (details: UserSignupResource) => {
     /* do nothing */
   },
+  validateExpiryStatusOnLocationChange: () => {}
 };
 
 const AuthContext = createContext<AuthContextInfo>(defaultAuthContext);

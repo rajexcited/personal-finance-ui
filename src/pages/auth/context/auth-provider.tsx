@@ -4,6 +4,7 @@ import AuthContext, { dummyUserDetails } from "./auth-context";
 import { authService, UserDetailsResource, UserSignupResource } from "../services";
 import { Animated } from "../../../components";
 import { ObjectDeepDifference, getLogger } from "../../../shared";
+import { useLocation } from "react-router-dom";
 
 
 
@@ -19,6 +20,7 @@ enum ExpireStatus {
 }
 
 const ONE_SECOND_IN_MILLI = 1000;
+const NOTIFY_USER_REFRESH_LOGIN_SESSION = 60;
 
 const fcLogger = getLogger("FC.AuthContextProvider", null, null, "DISABLED");
 
@@ -73,7 +75,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
             const logger = getLogger("setAboutToExpire", _logger);
             const remainingExpiryTimeInSec = authService.getTokenExpiryTime();
             // logger.debug("remainingExpiryTimeInSec =", remainingExpiryTimeInSec);
-            if (remainingExpiryTimeInSec <= 32) {
+            if (remainingExpiryTimeInSec <= NOTIFY_USER_REFRESH_LOGIN_SESSION) {
                 logger.debug("updating context to expiring soon status");
                 setExpiringStatus(ExpireStatus.ExpiringSoon);
             } else if (expiringStatus === ExpireStatus.ExpiringSoon) {
@@ -115,6 +117,16 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
         };
 
     }, [userDetails, expiringStatus, setUserDetails, setExpiringStatus]);
+
+    const validateExpiryStatusOnLocationChange = () => {
+        // whenever path changes by user, change status if applicable to remove banner
+        setExpiringStatus(prev => {
+            if (prev === ExpireStatus.Expired) {
+                return ExpireStatus.Unknown;
+            }
+            return prev;
+        });
+    };
 
     const login = async (emailId: string, password: string) => {
         const logger = getLogger("login", fcLogger);
@@ -159,7 +171,8 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
                 readOnly: isUserAccountReadOnly,
                 login,
                 logout,
-                signup
+                signup,
+                validateExpiryStatusOnLocationChange
             }
         }>
             <Animated animateOnMount={ false } isPlayIn={ expiringStatus === ExpireStatus.ExpiringSoon || expiringStatus === ExpireStatus.Expired } animatedIn="slideInDown" animatedOut="slideOutUp" isVisibleAfterAnimateOut={ false } >
