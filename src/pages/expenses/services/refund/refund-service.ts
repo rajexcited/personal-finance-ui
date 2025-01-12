@@ -17,7 +17,8 @@ import {
   getDateString,
   ConfigTypeStatus,
   getDateInstanceDefaultNewDate,
-  subtractDatesDefaultToZero
+  subtractDatesDefaultToZero,
+  apiUtils
 } from "../../../../shared";
 import { pymtAccountService } from "../../../pymt-accounts";
 import { ExpenseBelongsTo, ExpenseFields } from "../expense/field-types";
@@ -149,7 +150,13 @@ const initializeRefundTags = async () => {
   const queryParams: TagQueryParams = {
     year: [String(thisYear), String(thisYear - 1)]
   };
-  const response = await axios.get(`${rootPath}/tags`, { params: queryParams });
+  const url = `${rootPath}/tags`;
+  const skipApiCall = await apiUtils.isApiCalled({ listSize: 0, withinTime: "1 hour" }, url, queryParams);
+  if (skipApiCall) {
+    return;
+  }
+
+  const response = await axios.get(url, { params: queryParams });
   await tagService.updateTags(response.data);
 };
 

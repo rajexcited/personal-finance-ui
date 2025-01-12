@@ -20,11 +20,15 @@ const fcLogger = getLogger("FC.expense.view.ExpenseListCards", null, null, "DISA
 export const ExpenseListCards: FunctionComponent<ExpenseListCardsProps> = props => {
     const [expenseList, setExpenseList] = useState<ExpenseFields[]>([]);
     const [selectedExpense, setSelectedExpense] = useState<SelectedExpense>();
-    const [renderedExpenseIds, setRenderedExpenseIds] = useState<string[]>([]);
+    const [renderedExpenseIds, setRenderedExpenseIds] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
         const logger = getLogger("useEffect.dep[loaderData, actionData]", fcLogger);
-        setRenderedExpenseIds([]);
+        logger.debug("changes in expense list, so re-rendering");
+        setRenderedExpenseIds(props.expenseList.reduce((obj: Record<string, true>, xpns) => {
+            obj[xpns.id] = true;
+            return obj;
+        }, {}));
         props.onRenderStart();
         setExpenseList(() => {
             const sortMap = rowHeaders.reduce((obj: ExpenseSortStateType, rh) => {
@@ -33,10 +37,11 @@ export const ExpenseListCards: FunctionComponent<ExpenseListCardsProps> = props 
                 }
                 return obj;
             }, {});
-
+            logger.debug("sorting expense list");
             const result = getSortedExpenses(props.expenseList, sortMap, logger);
             if (result.length === 0) {
-                sleep("0.3 sec").then(props.onRenderCompleted);
+                logger.debug("expense list is empty so triggering render complete event");
+                sleep("0.2 sec").then(props.onRenderCompleted);
             }
             return result;
         });
@@ -65,12 +70,13 @@ export const ExpenseListCards: FunctionComponent<ExpenseListCardsProps> = props 
     const onItemRowRenderCompletedHandler = (expenseId: string) => {
         const logger = getLogger("onItemRowRenderCompletedHandler", fcLogger);
         setRenderedExpenseIds(prev => {
-            const newList = [...prev, expenseId];
-            logger.debug("item row render completed for expenseId =", expenseId, "newList.length=", newList.length, "expenseList.length=", expenseList.length);
-            if (newList.length === expenseList.length) {
-                sleep("0.3 sec").then(props.onRenderCompleted);
+            logger.debug("item row render completed for expenseId =", expenseId, "updating rendering status to false to indicate render complete for expense");
+            const obj = { ...prev };
+            obj[expenseId] = false;
+            if (Object.values(obj).every(v => v === false)) {
+                sleep("30 ms").then(props.onRenderCompleted);
             }
-            return newList;
+            return obj;
         });
     };
 
@@ -89,6 +95,7 @@ export const ExpenseListCards: FunctionComponent<ExpenseListCardsProps> = props 
                         onViewReceipt={ onViewReceiptsRequestHandler }
                         onRenderCompleted={ onItemRowRenderCompletedHandler }
                         sharePersons={ props.sharePersons }
+                        startRendering={ !!renderedExpenseIds[xpns.id] }
                     />
 
                 )

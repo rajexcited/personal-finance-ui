@@ -12,6 +12,12 @@ import { ExpenseListTable } from "./expense-list-table";
 import { ExpenseListCards } from "./expense-list-cards";
 import { SharePersonResource } from "../../../settings/services";
 import { ExpenseListLoaderResource } from "../../route-handlers";
+import { sleep } from "../../../../shared";
+
+enum ExpenseListOperation {
+    Merge = "merge",
+    Replace = "replace"
+}
 
 const fcLogger = getLogger("FC.expense.view.ExpenseList", null, null, "DISABLED");
 
@@ -25,6 +31,7 @@ export const ExpenseList: FunctionComponent = () => {
     const [errorMessage, setErrorMessage] = useState("");
     const [loadingExpenses, setLoadingExpenses] = useState(true);
     const { resultedDevice: deviceMode } = useOrientation(DeviceMode.Mobile);
+    const [listOperation, setListOperation] = useState(ExpenseListOperation.Replace);
 
     const submit = useSubmit();
 
@@ -43,10 +50,17 @@ export const ExpenseList: FunctionComponent = () => {
         logger.debug("loaderdata.type=", loaderData.type, "loaderdata.data=", loaderData.data);
         if (loaderData.type === "success") {
             setErrorMessage("");
-            if (loaderData.data.expenseList.length > 0) {
-                setExpenseList(prev => [...loaderData.data.expenseList, ...prev]);
-                setSharePersons(loaderData.data.sharePersons);
-            }
+
+            setExpenseList(prev => {
+                if (listOperation === ExpenseListOperation.Merge) {
+                    logger.debug("merging new list with old expense list");
+                    return [...loaderData.data.expenseList, ...prev];
+                }
+                logger.debug("replacing new list");
+                return [...loaderData.data.expenseList];
+            });
+            setSharePersons(prev => [...loaderData.data.sharePersons]);
+
         } else {
             setErrorMessage(loaderData.errorMessage);
         }
@@ -88,6 +102,7 @@ export const ExpenseList: FunctionComponent = () => {
         setDeletingExpense(undefined);
         setErrorMessage("");
         setLoadingExpenses(true);
+        setListOperation(ExpenseListOperation.Replace);
     };
 
     const expenseListRenderCompletedHandler = () => {
@@ -104,6 +119,7 @@ export const ExpenseList: FunctionComponent = () => {
     const onClickLoadMoreHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
         event.stopPropagation();
+        setListOperation(ExpenseListOperation.Merge);
         // request expenses for more months from router
         submit({ loadMore: "months" }, { action: getFullPath("expenseJournalRoot") + "?index", method: "post" });
     };

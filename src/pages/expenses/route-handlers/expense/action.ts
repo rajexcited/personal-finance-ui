@@ -61,7 +61,7 @@ const expenseDeleteActionHandler = async (request: Request) => {
   let formdata: FormData | null = null;
   try {
     formdata = await request.formData();
-    const expenseId = getFormData(formdata, "id") + "-dummy";
+    const expenseId = getFormData(formdata, "id");
     const belongsTo = getFormData(formdata, "belongsTo");
     if (belongsTo === ExpenseBelongsTo.Purchase) {
       await purchaseService.removePurchase(expenseId);

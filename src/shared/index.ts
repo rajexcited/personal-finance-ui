@@ -1,13 +1,6 @@
 export { MyLocalDatabase, LocalDBStore, LocalDBStoreIndex } from "./db";
 
-export type {
-  AuditFields,
-  ConfigResource,
-  UpdateConfigStatusResource,
-  UpdateConfigDetailsResource,
-  DeleteConfigDetailsResource,
-  TagQueryParams
-} from "./services";
+export type { AuditFields, ConfigResource, UpdateConfigStatusResource, UpdateConfigDetailsResource, DeleteConfigDetailsResource, TagQueryParams } from "./services";
 export {
   TagBelongsTo,
   TagsService,
@@ -16,7 +9,8 @@ export {
   ConfigTypeStatus,
   ConfigTypeBelongsTo,
   ConfigAction,
-  axios
+  axios,
+  apiUtils
 } from "./services";
 
 export {

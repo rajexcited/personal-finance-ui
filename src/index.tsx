@@ -8,9 +8,12 @@ import { LoadSpinner } from './components';
 
 const App = () => {
     return (
-        <AuthContextProvider>
-            <RouterProvider router={ router } fallbackElement={ <LoadSpinner loading={ true } /> } />
-        </AuthContextProvider>
+        <section className="root">
+            <AuthContextProvider>
+                <RouterProvider router={ router } fallbackElement={ <LoadSpinner loading={ true } /> } />
+            </AuthContextProvider>
+            <p style={ { padding: "1rem" } }>&nbsp;</p>
+        </section>
     );
 };
 

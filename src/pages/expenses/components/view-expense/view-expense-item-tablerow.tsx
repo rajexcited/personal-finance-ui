@@ -18,25 +18,32 @@ interface ExpenseItemTableRowProps {
     onRemove (expense: ExpenseFields): void;
     onViewReceipt (expense: ExpenseFields): void;
     onRenderCompleted (expenseId: string): void;
+    startRendering: boolean;
 }
 
 const fcLogger = getLogger("FC.expense.view.expenseItemTableRow", null, null, "DISABLED");
 
 export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props) => {
     const [expenseDate, setExpenseDate] = useState<string>();
-    const rowRef = useRef<HTMLTableRowElement>(null);
     const navigate = useNavigate();
     const auth = useAuth();
 
     useEffect(() => {
         const logger = getLogger("useEffect.dep[]", fcLogger);
         const xpnsDate = getExpenseDateInstance(props.details, logger);
-
+        logger.debug("converting expense date to date instance and setting formatted value. also triggering render complete event");
         if (xpnsDate) {
             setExpenseDate(formatTimestamp(xpnsDate, "MMM DD, YYYY"));
         }
-        props.onRenderCompleted(props.details.id);
     }, []);
+
+    useEffect(() => {
+        const logger = getLogger("useEffect.dep[props.startRendering]", fcLogger);
+        logger.debug("start rendering flag? ", props.startRendering, "this called after no dep useEffect handler");
+        if (props.startRendering) {
+            props.onRenderCompleted(props.details.id);
+        }
+    }, [props.startRendering]);
 
     const onClickToggleRowSelectionHandler: React.MouseEventHandler<HTMLTableRowElement> = event => {
         event.preventDefault();
@@ -148,32 +155,29 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
         actions.push(viewReceiptsAction);
     }
 
-
-
+    fcLogger.debug("render updates");
 
     return (
-        <>
-            <tr ref={ rowRef } onClick={ onClickToggleRowSelectionHandler } className={ props.isSelected ? "is-selected" : "" }>
-                <td>{ belongsTo }</td>
-                { <td>{ expenseDate || "-" }</td> }
-                <td>{ props.details.paymentAccountName || "-" }</td>
-                <td>{ props.details.billName }</td>
-                <td>{ formatAmount(props.details.amount) }</td>
-                <td>{ expenseCategory || "-" }</td>
-                {/* <td> <VerifyIndicator
+        <tr onClick={ onClickToggleRowSelectionHandler } className={ props.isSelected ? "is-selected" : "" }>
+            <td>{ belongsTo }</td>
+            { <td>{ expenseDate || "-" }</td> }
+            <td>{ props.details.paymentAccountName || "-" }</td>
+            <td>{ props.details.billName }</td>
+            <td>{ formatAmount(props.details.amount) }</td>
+            <td>{ expenseCategory || "-" }</td>
+            {/* <td> <VerifyIndicator
                     id={ "purchase-verify-" + props.id }
                     key={ "purchase-verify-" + props.id }
                     disabled={ true }
                     className="is-smaller"
                     verifiedDateTime={ props.details.verifiedTimestamp as Date }
                 /> </td> */}
-                <td> <span title={ props.details.tags.join() }> { getShortForm(props.details.tags, 15, "-") } </span>  </td>
-                <td>
-                    { actions.map(ae => ae) }
-                    { actions.length === 0 && "-" }
-                </td>
-            </tr>
-        </>
+            <td> <span title={ props.details.tags.join() }> { getShortForm(props.details.tags, 15, "-") } </span>  </td>
+            <td>
+                { actions.map(ae => ae) }
+                { actions.length === 0 && "-" }
+            </td>
+        </tr>
     );
 };
 

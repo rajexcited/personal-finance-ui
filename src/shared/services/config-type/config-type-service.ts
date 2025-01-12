@@ -4,6 +4,7 @@ import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "../../db";
 import axios from "../axios-proxy";
 import { convertAuditFieldsToDateInstance } from "../audit-fields";
 import pMemoize, { pMemoizeClear } from "p-memoize";
+import * as apiUtils from "../api-response-cache";
 
 export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
   const configDb = new MyLocalDatabase<ConfigResource>(LocalDBStore.Config);
@@ -36,8 +37,14 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
       const countPromises = dbKeys.map(async (dbKey) => configDb.countFromIndex(dbIndex, dbKey));
       const totalCount = (await Promise.all(countPromises)).reduce((prev, curr) => curr + prev, 0);
       if (totalCount === 0) {
-        // no records
+        // no records found
+        const skipApiCall = await apiUtils.isApiCalled({ listSize: 0 }, rootPath, queyParams);
+        if (skipApiCall) {
+          return [];
+        }
+        // call api to get list
         const response = await axios.get(rootPath, { params: queyParams });
+        apiUtils.updateApiResponse(response);
         const configTypes = response.data as ConfigResource[];
         const dbAddPromises = configTypes.map(async (configType) => {
           convertAuditFieldsToDateInstance(configType.auditDetails);
@@ -98,7 +105,7 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
       const data = { ...configData };
       const response = await axios.post(rootPath, data);
       const configResponse: ConfigResource = {
-        ...response.data,
+        ...response.data
       };
       convertAuditFieldsToDateInstance(configResponse.auditDetails);
 
@@ -141,7 +148,7 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
     try {
       const response = await axios.post(`${rootPath}/id/${configstatusData.id}/status/${configstatusData.status}`);
       const configResponse: ConfigResource = {
-        ...response.data,
+        ...response.data
       };
       convertAuditFieldsToDateInstance(configResponse.auditDetails);
 
@@ -159,7 +166,13 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
    * @returns
    */
   const getConfigTags = async () => {
-    const response = await axios.get(`${rootPath}/tags`);
+    const url = `${rootPath}/tags`;
+    const skipApiCall = await apiUtils.isApiCalled({ listSize: 0 }, url);
+    if (skipApiCall) {
+      return [];
+    }
+    const response = await axios.get(url);
+    apiUtils.updateApiResponse(response);
     return response.data as string[];
   };
 
@@ -169,6 +182,6 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
     addUpdateConfigType,
     deleteConfigType,
     updateConfigTypeStatus,
-    getConfigTags,
+    getConfigTags
   };
 };

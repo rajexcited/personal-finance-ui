@@ -1,5 +1,4 @@
 import { FunctionComponent, useState, useEffect, useRef } from "react";
-import { LoadSpinner } from "../../../../components";
 import { rowHeaders, ExpenseSortStateType, getLogger, ExpenseFields, ExpenseBelongsTo, getSortedExpenses } from "../../services";
 import { ExpenseItemTableRow } from "./view-expense-item-tablerow";
 import { ExpenseTableHead, ExpenseTableHeadRefType } from "./expense-table-head";
@@ -20,13 +19,16 @@ const fcLogger = getLogger("FC.expense.view.ExpenseListTable", null, null, "DISA
 export const ExpenseListTable: FunctionComponent<ExpenseListTableProps> = props => {
     const [expenseList, setExpenseList] = useState<ExpenseFields[]>([]);
     const [selectedExpense, setSelectedExpense] = useState<SelectedExpense>();
-    const [renderedExpenseIds, setRenderedExpenseIds] = useState<string[]>([]);
+    const [renderedExpenseIds, setRenderedExpenseIds] = useState<Record<string, boolean>>({});
     const headerRef = useRef<ExpenseTableHeadRefType>(null);
 
     useEffect(() => {
         const logger = getLogger("useEffect.dep[loaderData, actionData]", fcLogger);
         logger.debug("changes in expense list, so re-rendering");
-        setRenderedExpenseIds([]);
+        setRenderedExpenseIds(props.expenseList.reduce((obj: Record<string, true>, xpns) => {
+            obj[xpns.id] = true;
+            return obj;
+        }, {}));
         props.onRenderStart();
         setExpenseList(() => {
             let sortMap;
@@ -40,9 +42,11 @@ export const ExpenseListTable: FunctionComponent<ExpenseListTableProps> = props 
                     return obj;
                 }, {});
             }
+            logger.debug("sorting expense list");
             const result = getSortedExpenses(props.expenseList, sortMap, logger);
             if (result.length === 0) {
-                sleep("0.3 sec").then(props.onRenderCompleted);
+                logger.debug("expense list is empty so triggering render complete event");
+                sleep("0.2 sec").then(props.onRenderCompleted);
             }
             return result;
         });
@@ -50,13 +54,22 @@ export const ExpenseListTable: FunctionComponent<ExpenseListTableProps> = props 
 
     const onChangeExpenseSortHandler = (sortDetails: ExpenseSortStateType) => {
         const logger = getLogger("onChangeExpenseSortHandler", fcLogger);
-        setRenderedExpenseIds([]);
+        logger.debug("re-sort list requested, so re-rendering");
+        setRenderedExpenseIds(props.expenseList.reduce((obj: Record<string, true>, xpns) => {
+            obj[xpns.id] = true;
+            return obj;
+        }, {}));
         props.onRenderStart();
         logger.debug("sorting expenses and reloading with sortDetails =", sortDetails);
         setExpenseList(prev => {
-            const newExp = getSortedExpenses(prev, sortDetails, logger);
-            // setLoading(false);
-            return newExp;
+            if (prev.length > 0) {
+                logger.debug("sorting expense list");
+                const newExp = getSortedExpenses(prev, sortDetails, logger);
+                return newExp;
+            }
+            logger.debug("expense list is empty so triggering render complete event");
+            sleep("0.2 sec").then(props.onRenderCompleted);
+            return prev;
         });
     };
 
@@ -70,7 +83,7 @@ export const ExpenseListTable: FunctionComponent<ExpenseListTableProps> = props 
         props.onViewReceipts(expenseSelected);
     };
 
-    fcLogger.debug("view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billName));
+    fcLogger.debug("view expense list", "list of billname", expenseList.map(xpns => xpns.billName), [...expenseList]);
 
     const onSelectRequestHandler = (expenseId: string, belongsTo: ExpenseBelongsTo) => {
         if (expenseId && belongsTo) {
@@ -84,12 +97,13 @@ export const ExpenseListTable: FunctionComponent<ExpenseListTableProps> = props 
     const onItemRowRenderCompletedHandler = (expenseId: string) => {
         const logger = getLogger("onItemRowRenderCompletedHandler", fcLogger);
         setRenderedExpenseIds(prev => {
-            const newList = [...prev, expenseId];
-            logger.debug("item row render completed for expenseId =", expenseId, "newList.length=", newList.length, "expenseList.length=", expenseList.length);
-            if (newList.length === expenseList.length) {
-                sleep("0.3 sec").then(props.onRenderCompleted);
+            logger.debug("item row render completed for expenseId =", expenseId, "updating rendering status to false to indicate render complete for expense");
+            const obj = { ...prev };
+            obj[expenseId] = false;
+            if (Object.values(obj).every(v => v === false)) {
+                sleep("30 ms").then(props.onRenderCompleted);
             }
-            return newList;
+            return obj;
         });
     };
 
@@ -113,6 +127,7 @@ export const ExpenseListTable: FunctionComponent<ExpenseListTableProps> = props 
                                 onRemove={ onRemoveRequestHandler }
                                 onViewReceipt={ onViewReceiptsRequestHandler }
                                 onRenderCompleted={ onItemRowRenderCompletedHandler }
+                                startRendering={ !!renderedExpenseIds[xpns.id] }
                             />
                         )
                     }

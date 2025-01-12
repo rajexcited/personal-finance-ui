@@ -11,6 +11,7 @@ import {
   TagBelongsTo,
   getCacheOption,
   isNotBlank,
+  apiUtils
 } from "../../../shared";
 import * as pymtAccountTypeService from "./account-type-service";
 import { PymtAccStatus, PymtAccountFields } from "./field-types";
@@ -57,17 +58,23 @@ export const getPymtAccountList = pMemoize(async (status?: PymtAccStatus) => {
       pymtAccounts.push(...statusPymtAccs);
     }
 
-    if (pymtAccounts.length > 0) {
+    if (pymtAccounts.length > 1) {
       await initializePymtAccountTags();
       return pymtAccounts;
     }
+    const queryParams = { status: [status || PymtAccStatus.Enable] };
+    const skipApiCall = await apiUtils.isApiCalled({ listSize: 1 }, rootPath, queryParams);
+    if (skipApiCall) {
+      return pymtAccounts;
+    }
 
-    const pymtAccListResponsePromise = axios.get(rootPath, { params: { status: status || PymtAccStatus.Enable } });
+    const pymtAccListResponsePromise = axios.get(rootPath, { params: queryParams });
     const accountTypesEnumPromise = getAccountTypesEnum();
     const pymtAccTagPromise = initializePymtAccountTags();
 
     await Promise.all([pymtAccListResponsePromise, accountTypesEnumPromise, pymtAccTagPromise]);
     const response = await pymtAccListResponsePromise;
+    apiUtils.updateApiResponse(response);
     const accountsResponse = response.data as PymtAccountFields[];
 
     const accountTypesEnum = await accountTypesEnumPromise;
@@ -183,7 +190,12 @@ const initializePymtAccountTags = async () => {
     return;
   }
 
-  const response = await axios.get(`${rootPath}/tags`);
+  const url = `${rootPath}/tags`;
+  const skipApiCall = await apiUtils.isApiCalled({ listSize: 0, withinTime: "1 hour" }, url);
+  if (skipApiCall) {
+    return;
+  }
+  const response = await axios.get(url);
   logger.debug("api call response", response);
   await tagService.updateTags(response.data);
 };

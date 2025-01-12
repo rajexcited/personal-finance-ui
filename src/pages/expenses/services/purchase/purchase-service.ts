@@ -17,7 +17,8 @@ import {
   getDateInstance,
   getDateString,
   subtractDatesDefaultToZero,
-  getDateInstanceDefaultNewDate
+  getDateInstanceDefaultNewDate,
+  apiUtils
 } from "../../../../shared";
 import { PurchaseTypeService } from "./purchase-type-service";
 import { pymtAccountService } from "../../../pymt-accounts";
@@ -178,7 +179,13 @@ const initializePurchaseTags = async () => {
   const queryParams: TagQueryParams = {
     year: [String(thisYear), String(thisYear - 1)]
   };
-  const response = await axios.get(`${rootPath}/tags`, { params: queryParams });
+  const url = `${rootPath}/tags`;
+  const skipApiCall = await apiUtils.isApiCalled({ listSize: 0, withinTime: "1 hour" }, url, queryParams);
+  if (skipApiCall) {
+    return;
+  }
+
+  const response = await axios.get(url, { params: queryParams });
   await tagService.updateTags(response.data);
 };
 

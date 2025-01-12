@@ -21,6 +21,7 @@ interface ExpenseItemCardProps {
     onViewReceipt (expense: ExpenseFields): void;
     onRenderCompleted (expenseId: string): void;
     sharePersons: SharePersonResource[];
+    startRendering: boolean;
 }
 
 const fcLogger = getLogger("FC.expense.view.ExpenseItemCard", null, null, "DISABLED");
@@ -37,12 +38,18 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
     useEffect(() => {
         const logger = getLogger("useEffect.dep[]", fcLogger);
         const xpnsDate = getExpenseDateInstance(props.details, logger);
-
+        logger.debug("converting expense date to date instance and setting formatted value. also triggering render complete event");
         if (xpnsDate) {
             setExpenseDate(formatTimestamp(xpnsDate, "MMM DD, YYYY"));
         }
-        props.onRenderCompleted(props.details.id);
     }, []);
+    useEffect(() => {
+        const logger = getLogger("useEffect.dep[props.startRendering]", fcLogger);
+        logger.debug("start rendering flag? ", props.startRendering, "this called after no dep useEffect handler");
+        if (props.startRendering) {
+            props.onRenderCompleted(props.details.id);
+        }
+    }, [props.startRendering]);
 
     const onClickBodyToggleHandler: React.MouseEventHandler<HTMLButtonElement | HTMLSpanElement> = event => {
         event.preventDefault();
