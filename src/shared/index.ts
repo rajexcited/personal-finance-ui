@@ -25,6 +25,7 @@ export {
   handleRouteActionError,
   NotFoundError,
   UnauthorizedError,
+  ConflictError,
   subtractDates,
   subtractDatesDefaultToZero,
   getDateInstance,

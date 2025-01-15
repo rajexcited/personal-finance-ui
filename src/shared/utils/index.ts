@@ -11,17 +11,19 @@ export {
   sleep
 } from "./date-utils";
 
+export { handleRouteActionError, getDefaultIfError } from "./error-handler-utils";
+export type { RouteHandlerResponse } from "./error-handler-utils";
 export {
-  handleRestErrors,
+  BadRequestError,
+  ConflictError,
   HttpStatusCode,
-  handleRouteActionError,
+  InvalidError,
   NotFoundError,
   UnauthorizedError,
-  getDefaultIfError,
-  InvalidError,
-  handleAndRethrowServiceError
-} from "./error-handler-utils";
-export type { RouteHandlerResponse } from "./error-handler-utils";
+  UnknownError,
+  handleAndRethrowServiceError,
+  handleRestErrors
+} from "./rest-error-utils";
 
 export { LoggerBase, getLogger } from "./logger";
 

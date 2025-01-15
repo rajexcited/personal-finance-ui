@@ -14,7 +14,7 @@ interface ApiResponseCacheResource {
 
 const db = new MyLocalDatabase<ApiResponseCacheResource>(LocalDBStore.Config);
 
-const _logger = getLogger("service.api.response.cache", null, null, "DEBUG");
+const _logger = getLogger("service.api.response.cache", null, null, "DISABLED");
 
 const getId = (url: string, params: Record<string, string[]> | null | undefined) => {
   return url + "_" + JSON.stringify(params || {});
