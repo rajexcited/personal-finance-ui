@@ -1,5 +1,5 @@
 import "./tags-input.css";
-import { FunctionComponent, useRef, useEffect, useState, useMemo } from "react";
+import { FunctionComponent, useRef, useEffect, useState, useMemo, useCallback } from "react";
 import BulmaTagsInput, { BulmaTagsInputOptions } from '@creativebulma/bulma-tagsinput';
 import "@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css";
 import { getLogger, sleep } from "../../shared";
@@ -65,9 +65,7 @@ export const TagsInputSharePerson: FunctionComponent<TagsInputSharePersonProps> 
   const sourceValueMap: Record<string, TagObject> = useMemo(() => ({}), []);
   const sourceValues: TagObject[] = useMemo(() => ([]), []);
 
-  const updateSourceValueWrapper = useMemo(() => {
-    return updateSourceValues.bind(null, sourceValues, defaultValueMap, sourceValueMap);
-  }, [sourceValues, defaultValueMap, sourceValueMap]);
+  const updateSourceValueWrapper = useCallback(updateSourceValues.bind(null, sourceValues, defaultValueMap, sourceValueMap), [sourceValues, defaultValueMap, sourceValueMap]);
 
   useEffect(() => {
     // allow only first time update, rest will be ignore

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faInfoCircle, faCheck, faEdit, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
@@ -86,61 +86,59 @@ const Input = forwardRef((props: InputProps, ref) => {
         };
     }, [inputValue, isValid]);
 
-    const validateInput = useMemo(() => {
-        return (shouldReportValidity: boolean) => {
-            let validity = true,
-                errorMessage = null;
-            // browser errors will be given priority
-            let hasInputError = false;
-            if (inputRef.current) {
-                const validity = inputRef.current.validity;
-                for (let key in validity) {
-                    if (key !== "customError" && key !== "valid" && validity[key as keyof typeof validity]) {
-                        hasInputError = true;
-                        break;
-                    }
+    const validateInput = useCallback((shouldReportValidity: boolean) => {
+        let validity = true,
+            errorMessage = null;
+        // browser errors will be given priority
+        let hasInputError = false;
+        if (inputRef.current) {
+            const validity = inputRef.current.validity;
+            for (let key in validity) {
+                if (key !== "customError" && key !== "valid" && validity[key as keyof typeof validity]) {
+                    hasInputError = true;
+                    break;
                 }
             }
-            if (hasInputError) {
-                validity = false;
-            } else if (props.validate) {
-                const validityObj = props.validate(inputValue);
-                validity = validityObj.isValid;
-                if (!validityObj.isValid) errorMessage = validityObj.errorMessage;
+        }
+        if (hasInputError) {
+            validity = false;
+        } else if (props.validate) {
+            const validityObj = props.validate(inputValue);
+            validity = validityObj.isValid;
+            if (!validityObj.isValid) errorMessage = validityObj.errorMessage;
+        }
+        if (validity !== isValid) {
+            setValid(validity);
+            const inpElm = inputRef.current;
+            if (inpElm) {
+                if (validity) {
+                    inpElm.setCustomValidity("");
+                    setError("");
+                } else {
+                    if (errorMessage !== null) inpElm.setCustomValidity(errorMessage);
+                    else inpElm.setCustomValidity("");
+
+                    if (shouldReportValidity) inpElm.reportValidity();
+                    else inpElm.checkValidity();
+
+                    setError(inpElm.validationMessage);
+                }
             }
-            if (validity !== isValid) {
-                setValid(validity);
-                const inpElm = inputRef.current;
-                if (inpElm) {
-                    if (validity) {
-                        inpElm.setCustomValidity("");
-                        setError("");
-                    } else {
-                        if (errorMessage !== null) inpElm.setCustomValidity(errorMessage);
-                        else inpElm.setCustomValidity("");
-
-                        if (shouldReportValidity) inpElm.reportValidity();
-                        else inpElm.checkValidity();
-
+        } else if (!validity) {
+            // in case of error state not change, display correct error message
+            const inpElm = inputRef.current;
+            if (inpElm) {
+                if (errorMessage !== null && errorMessage !== inpElm.validationMessage) {
+                    inpElm.setCustomValidity(errorMessage);
+                    setError(errorMessage);
+                } else if (errorMessage === null) {
+                    if (inpElm.validity.customError) inpElm.setCustomValidity("");
+                    if (error !== inpElm.validationMessage) {
                         setError(inpElm.validationMessage);
                     }
                 }
-            } else if (!validity) {
-                // in case of error state not change, display correct error message
-                const inpElm = inputRef.current;
-                if (inpElm) {
-                    if (errorMessage !== null && errorMessage !== inpElm.validationMessage) {
-                        inpElm.setCustomValidity(errorMessage);
-                        setError(errorMessage);
-                    } else if (errorMessage === null) {
-                        if (inpElm.validity.customError) inpElm.setCustomValidity("");
-                        if (error !== inpElm.validationMessage) {
-                            setError(inpElm.validationMessage);
-                        }
-                    }
-                }
             }
-        };
+        }
     }, [inputValue, props.validate, props.required, inputRef, setValid, setError]);
 
     useEffect(() => {

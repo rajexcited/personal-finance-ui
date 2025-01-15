@@ -1,4 +1,4 @@
-import { FunctionComponent, MouseEventHandler, useEffect, useMemo, useRef, useState } from "react";
+import { FunctionComponent, MouseEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import bulmaCaraosel, { BulmaCarouselOptions } from "bulma-carousel";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -62,16 +62,14 @@ export const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
         return (prev * 100).toFixed(2) + "%";
     }, [scaleValue]);
 
-    const onShowCarouselItemHandler = useMemo(() => {
-        return (carousel: bulmaCaraosel) => {
-            const logger = getLogger("onShowCarouselItemHandler", fcLogger);
-            logger.info("slide index =", carousel.state.next, ", receipt =", receipts[carousel.state.next]);
-            const isImageType = receipts[carousel.state.next]?.contentType !== ReceiptType.PDF;
+    const onShowCarouselItemHandler = useCallback((carousel: bulmaCaraosel) => {
+        const logger = getLogger("onShowCarouselItemHandler", fcLogger);
+        logger.info("slide index =", carousel.state.next, ", receipt =", receipts[carousel.state.next]);
+        const isImageType = receipts[carousel.state.next]?.contentType !== ReceiptType.PDF;
 
-            logger.info("isImageType =", isImageType, ", scale = 1, receiptLoading = true, downloading receipt");
-            setActiveItemImage(isImageType);
-            setScaleValue(1);
-        };
+        logger.info("isImageType =", isImageType, ", scale = 1, receiptLoading = true, downloading receipt");
+        setActiveItemImage(isImageType);
+        setScaleValue(1);
     }, [receipts]);
 
 
