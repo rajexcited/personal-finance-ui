@@ -1,6 +1,15 @@
 import BulmaTagsInput from "@creativebulma/bulma-tagsinput";
 import { getLogger, LoggerBase } from "../../shared";
 
+export enum KeyboardCode {
+  ArrowLeft = "ArrowLeft",
+  ArrowRight = "ArrowRight",
+  Enter = "Enter",
+  Backspace = "Backspace",
+  Delete = "Delete",
+  Escape = "Escape"
+}
+
 export const initializeEventHandler = (tagsInput: BulmaTagsInput) => {
   /**
    * keypressed is deprecated and latest browser versions are not supporting.
@@ -131,7 +140,7 @@ function updateFilterDropdown(this: any, e: KeyboardEvent) {
       });
   }
 
-  if (this._manualInputAllowed && (value.includes(this.options.delimiter) || e.code == KeyboardCode.Enter)) {
+  if (this._manualInputAllowed && (value.includes(this.options.delimiter) || e.code === KeyboardCode.Enter)) {
     // Prevent default behavior (ie: add char into input value)
     e.preventDefault();
 
@@ -139,7 +148,7 @@ function updateFilterDropdown(this: any, e: KeyboardEvent) {
     const values = value.split(this.options.delimiter);
     values.forEach((value) => {
       // check if empty text when delimiter is removed
-      if ((value = value.replace(this.options.delimiter, "")) != "") {
+      if ((value = value.replace(this.options.delimiter, "")) !== "") {
         // push to array and remove delimiter
         this.add(value);
       }
@@ -154,15 +163,6 @@ function updateFilterDropdown(this: any, e: KeyboardEvent) {
 
     return false;
   }
-}
-
-export enum KeyboardCode {
-  ArrowLeft = "ArrowLeft",
-  ArrowRight = "ArrowRight",
-  Enter = "Enter",
-  Backspace = "Backspace",
-  Delete = "Delete",
-  Escape = "Escape"
 }
 
 export interface TagObject {

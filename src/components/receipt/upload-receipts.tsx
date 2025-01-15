@@ -147,7 +147,7 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
     const onClickModalOpenHandler: MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
         props.downloadReceipts(receipts).then((downloadedReceipts) => {
-            const failedMessages = downloadedReceipts.map(dr => dr.status === "fail" && dr.error || "").filter(r => r);
+            const failedMessages = downloadedReceipts.map(dr => (dr.status === "fail" && dr.error) || "").filter(r => r);
             if (failedMessages.length > 0) {
                 setErrorMessage(failedMessages.join("\n"));
             }

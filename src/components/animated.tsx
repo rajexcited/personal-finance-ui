@@ -1,4 +1,4 @@
-import { FunctionComponent, useState, useRef, useEffect, ReactNode } from "react";
+import { FunctionComponent, useState, useRef, useEffect } from "react";
 import "./animated.css";
 import "animate.css/animate.min.css";
 import { getLogger, sleep } from "../shared";

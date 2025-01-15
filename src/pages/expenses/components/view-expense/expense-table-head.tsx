@@ -67,9 +67,9 @@ export const ExpenseTableHead = forwardRef<ExpenseTableHeadRefType, ExpenseTable
                         <Th label={ rh.label }
                             sortable={ rh.sortable }
                             key={ rh.label + "xpns-th" }
-                            sortdirection={ rh.sortable && sortDetails[rh.datafieldKey]?.sortDirection || "" }
+                            sortdirection={ (rh.sortable && sortDetails[rh.datafieldKey]?.sortDirection) || "" }
                             onChange={ (sortdirection) => onChangeSortDirection(sortdirection, rh) }
-                            type={ rh.sortable && rh.type || undefined }
+                            type={ (rh.sortable && rh.type) || undefined }
                         />
                     )
                 }
