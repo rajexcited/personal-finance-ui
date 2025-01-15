@@ -1,5 +1,5 @@
 # Build and Test - make sure code has no issues
-# 
+#
 
 name: UI Build
 
@@ -26,6 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Node Latest
+        # https://github.com/actions/setup-node
         uses: actions/setup-node@v4
         with:
           node-version: "latest"
@@ -47,10 +48,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Node Latest
+        # https://github.com/actions/setup-node
         uses: actions/setup-node@v4
         with:
           node-version: "latest"
           cache: "npm"
       - run: npm ci
-      - run: npm run build
       - run: npm run test --coverage
