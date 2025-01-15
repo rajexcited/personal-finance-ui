@@ -4,7 +4,7 @@ import { UserDetailsResource, UserSignupResource, UserStatus } from "../services
 interface AuthContextInfo {
   userDetails: UserDetailsResource;
   readOnly: boolean;
-  login(emailId: string, password: string): Promise<void>;
+  login(emailId: string, password: string, forceLogin: boolean): Promise<void>;
   logout(): Promise<void>;
   signup(details: UserSignupResource): Promise<void>;
   validateExpiryStatusOnLocationChange(): void;
@@ -22,7 +22,7 @@ export const dummyUserDetails: UserDetailsResource = {
 const defaultAuthContext: AuthContextInfo = {
   userDetails: { ...dummyUserDetails },
   readOnly: true,
-  login: async (id: string, pass: string) => {
+  login: async (id: string, pass: string, forceLogin: boolean) => {
     /* do nothing */
   },
   logout: async () => {

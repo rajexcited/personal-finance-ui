@@ -9,6 +9,8 @@ import { LoadSpinner } from './components';
 const App = () => {
     return (
         <section className="root">
+            <p>{ window.navigator.userAgent }</p>
+            {/* <p>{window.navigator.userAgentData}</p> */ }
             <AuthContextProvider>
                 <RouterProvider router={ router } fallbackElement={ <LoadSpinner loading={ true } /> } />
             </AuthContextProvider>

@@ -1,10 +1,17 @@
 import pMemoize, { pMemoizeClear } from "p-memoize";
-import { AuditFields, getCacheOption, getLogger, isBlank, LoggerBase, pMemoizeSync, subtractDatesDefaultToZero, UnauthorizedError } from "../../../shared";
-import { AccessTokenResource, UpdateUserDetailsResource, UserDetailsResource, UserStatus } from "./field-types";
 import { AxiosResponse, AxiosResponseHeaders } from "axios";
 import ms from "ms";
-import { getCacheOptionWithKey, pMemoizeSyncClear } from "../../../shared/utils/cache-utils";
 import { capitalize } from "lodash";
+import { AccessTokenResource, UpdateUserDetailsResource, UserDetailsResource, UserStatus } from "./field-types";
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////// to avoid circular dependency importing from specific files
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+import { getCacheOption, getCacheOptionWithKey, pMemoizeSync, pMemoizeSyncClear } from "../../../shared/utils/cache-utils";
+import { getLogger, LoggerBase } from "../../../shared/utils/logger";
+import { AuditFields } from "../../../shared/services/audit-fields";
+import { subtractDatesDefaultToZero } from "../../../shared/utils/date-utils";
+import { UnauthorizedError } from "../../../shared/utils/rest-error-utils";
+import { isBlank } from "../../../shared/utils/string-utils";
 
 // user logged in flag
 const userLoggedInKey = "ul";

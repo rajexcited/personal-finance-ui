@@ -1,5 +1,5 @@
 import "./interceptors";
-import { LoggerBase, UnauthorizedError, axios, getCacheOption, getLogger, handleRestErrors } from "../../../shared";
+import { LoggerBase, UnauthorizedError, axios, getCacheOption, getLogger, handleRestErrors, sleep } from "../../../shared";
 import {
   CountryResource,
   UpdateUserDetailsResource,
@@ -24,7 +24,7 @@ const rootPath = "/user";
 const MARGIN_ERROR_TIME_IN_SEC = 1;
 const _logger = getLogger("service.auth", null, null, "DISABLED");
 
-export const login = pMemoize(async (details: UserLoginResource) => {
+export const login = pMemoize(async (details: UserLoginResource, forceLogin: boolean) => {
   const logger = getLogger("login", _logger);
   try {
     if (isAuthenticated(logger)) {
@@ -34,7 +34,8 @@ export const login = pMemoize(async (details: UserLoginResource) => {
 
     const data = {
       emailId: details.emailId,
-      password: btoa(details.password)
+      password: btoa(details.password),
+      forceLogin: forceLogin
     };
 
     const response = await axios.post(`${rootPath}/login`, data);
@@ -49,6 +50,7 @@ export const login = pMemoize(async (details: UserLoginResource) => {
       if (resterr instanceof UnauthorizedError) {
         throw new Error("emailId or password invalid");
       }
+      throw resterr;
     }
     logger.warn("not rest error", e);
     throw Error("unknown error");
@@ -86,8 +88,10 @@ export const logout = pMemoize(async () => {
   const logger = getLogger("logout", _logger);
   logger.debug("session is cleared. calling api");
   try {
-    await axios.post(`${rootPath}/logout`);
+    // to make user experience better, not waiting for response. actual api call may take  upto 3 sec
+    axios.post(`${rootPath}/logout`);
     logger.debug("api successful");
+    await sleep("0.5 sec");
   } catch (e) {
     logger.debug("error logging out", e);
   } finally {

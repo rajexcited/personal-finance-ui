@@ -128,9 +128,9 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
         });
     };
 
-    const login = async (emailId: string, password: string) => {
+    const login = async (emailId: string, password: string, forceLogin: boolean) => {
         const logger = getLogger("login", fcLogger);
-        await authService.login({ emailId, password });
+        await authService.login({ emailId, password }, forceLogin);
         logger.debug("after login api success, calling user details get api call");
         const userDetails = await authService.getUserDetails();
         logger.debug("updating context with logged in user session data");
