@@ -25,3 +25,5 @@ export { CurrencySymbol } from "./currency-symbol";
 export { ViewDialog } from "./view-dialog";
 
 export { Radio } from "./radio";
+
+export { Anchor } from "./anchor";

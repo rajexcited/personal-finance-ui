@@ -1,6 +1,7 @@
 import { FunctionComponent, Children, isValidElement } from "react";
 import "./hero-tabs.css";
 import { getLogger } from "../shared";
+import { Anchor } from "./anchor";
 
 interface HeroType {
     propType: string;
@@ -105,7 +106,7 @@ const HeroTabs: FunctionComponent<HeroTabsProps> = (props) => {
                                         onClick={ onClickTabHeadHandler.bind(null, tbhd.id) }
                                         id={ tbhd.id + "-tabhead-li" }
                                         key={ tbhd.id + "-tabhead-key" }>
-                                        <a> { tbhd.element } </a>
+                                        <Anchor> { tbhd.element } </Anchor>
                                     </li>
                                 )
                             }

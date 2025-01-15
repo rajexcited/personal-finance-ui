@@ -8,6 +8,7 @@ import { getFullPath } from "../../../root";
 import { useAuth } from "../../../auth";
 import { getExpenseDateInstance } from "../../services/expense";
 import { getShortForm } from "../../../../shared";
+import { Anchor } from "../../../../components";
 
 
 interface ExpenseItemTableRowProps {
@@ -116,32 +117,32 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
     //     </span>
     // </a>);
 
-    const updateExpenseAction = (<a className="is-link" onClick={ onClickEditExpenseHandler } key={ "updt-purchase-action" + props.id }>
+    const updateExpenseAction = (<Anchor className="is-link" onClick={ onClickEditExpenseHandler } key={ "updt-purchase-action" + props.id }>
         <span className="icon tooltip" data-tooltip={ "Update " + belongsTo }>
             <FontAwesomeIcon icon={ faEdit } />
         </span>
-    </a>);
+    </Anchor>);
 
-    const removeExpenseAction = (<a className="is-link" onClick={ onClickTrashExpenseHandler } key={ "rmve-purchase-action" + props.id }>
+    const removeExpenseAction = (<Anchor className="is-link" onClick={ onClickTrashExpenseHandler } key={ "rmve-purchase-action" + props.id }>
         <span className="icon tooltip" data-tooltip={ "Remove " + belongsTo }>
             <FontAwesomeIcon icon={ faTrash } />
         </span>
-    </a>);
+    </Anchor>);
 
     const viewReceiptsAction = (
-        <a className="is-link" onClick={ onClickShowReceiptsHandler } key={ "view-receipts-action" + props.id }>
+        <Anchor className="is-link" onClick={ onClickShowReceiptsHandler } key={ "view-receipts-action" + props.id }>
             <span className="icon tooltip" data-tooltip="View Receipts">
                 <FontAwesomeIcon icon={ faReceipt } />
             </span>
-        </a>
+        </Anchor>
     );
 
     const addRefundAction = (
-        <a className="is-link" onClick={ onClickAddRefundHandler } key={ "add-refund-action" + props.id }>
+        <Anchor className="is-link" onClick={ onClickAddRefundHandler } key={ "add-refund-action" + props.id }>
             <span className="icon tooltip" data-tooltip="Add Refund">
                 <FontAwesomeIcon icon={ faCircleDollarToSlot } />
             </span>
-        </a>
+        </Anchor>
     );
 
     const actions = [];

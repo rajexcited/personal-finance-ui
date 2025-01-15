@@ -2,7 +2,7 @@ import { FunctionComponent, useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import AuthContext, { dummyUserDetails } from "./auth-context";
 import { authService, UserDetailsResource, UserSignupResource } from "../services";
-import { Animated } from "../../../components";
+import { Anchor, Animated } from "../../../components";
 import { ObjectDeepDifference, getLogger } from "../../../shared";
 import { useLocation } from "react-router-dom";
 
@@ -182,7 +182,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
                             <div className="notification is-link is-light">
                                 {
                                     expiringStatus === ExpireStatus.ExpiringSoon &&
-                                    <p>Time is running out. <a onClick={ onClickRefreshHandler }>click to continue</a> </p>
+                                    <p>Time is running out. <Anchor onClick={ onClickRefreshHandler }>click to continue</Anchor> </p>
                                 }
                                 {
                                     expiringStatus === ExpireStatus.Expired &&

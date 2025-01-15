@@ -2,7 +2,7 @@ import { FunctionComponent, useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import { faTrashAlt } from "@fortawesome/free-regular-svg-icons";
-import { TagsInput, Input, DropDown, TextArea, DropDownItemType } from "../../../../../components";
+import { TagsInput, Input, DropDown, TextArea, DropDownItemType, Anchor } from "../../../../../components";
 import { getLogger, PurchaseItemFields } from "../../../services";
 
 
@@ -110,11 +110,11 @@ export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (p
     return (
         <div className="columns">
             <div className="column is-one-twenty-fourth my-5 py-5">
-                <a className="mr-1 pr-1" onClick={ onCLickRemoveHandler }>
+                <Anchor className="mr-1 pr-1" onClick={ onCLickRemoveHandler }>
                     <span className="icon has-text-danger">
                         <FontAwesomeIcon icon={ faTrashAlt } size="lg" />
                     </span>
-                </a>
+                </Anchor>
             </div>
             <div className="column">
                 <Input
