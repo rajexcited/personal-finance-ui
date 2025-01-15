@@ -197,6 +197,7 @@ const initializePymtAccountTags = async () => {
   }
   const response = await axios.get(url);
   logger.debug("api call response", response);
+  apiUtils.updateApiResponse(response);
   await tagService.updateTags(response.data);
 };
 

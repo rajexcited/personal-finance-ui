@@ -137,6 +137,7 @@ const initializeIncomeTags = async () => {
     return;
   }
   const response = await axios.get(url, { params: queryParams });
+  apiUtils.updateApiResponse(response);
   await tagService.updateTags(response.data);
 };
 
