@@ -37,6 +37,14 @@
       "react-hooks/exhaustive-deps": "off"
     }
   },
+  "cssnano": {
+    "preset": [
+      "default",
+      {
+        "calc": false
+      }
+    ]
+  },
   "browserslist": {
     "production": [
       ">0.2%",
