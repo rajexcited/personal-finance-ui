@@ -158,7 +158,7 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
             <div className="control">
                 <div className={ `dropdown is-${props.direction === "down" ? "down" : "up"} ${isOpen ? "is-active" : ""}` } id={ props.id }>
                     <div className="dropdown-trigger">
-                        <button className={ `button ${props.size ? "is-" + props.size : ""}` } aria-haspopup="true" aria-controls={ dropdownMenuId } onClick={ toggleDropdownHandler }>
+                        <button className={ `button ${props.size ? "is-" + props.size : ""}` } onClick={ toggleDropdownHandler }>
                             <span>{ triggerItemPaddingBefore.map(pad => pad) }{ selectedTriggerContent }{ triggerItemPaddingAfter.map(pad => pad) }</span>
                             <span className="icon is-small">
                                 <FontAwesomeIcon icon={ props.direction !== "down" && isOpen ? faAngleUp : faAngleDown } size={ "sm" } />
@@ -166,7 +166,7 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
                         </button>
                     </div>
 
-                    <div className="dropdown-menu" id={ dropdownMenuId } role="menu">
+                    <div className="dropdown-menu" id={ dropdownMenuId }>
                         <div className="dropdown-content">
                             {
                                 props.allowSearch &&
