@@ -5,7 +5,7 @@
   "private": true,
   "homepage": "https://rajexcited.github.io/personal-finance-ui/",
   "scripts": {
-    "prestart": "npm run clean >null 2>&1 && copy envlocal .env.local && copy src\\demo\\demo.ts src\\demo\\index.ts",
+    "prestart": "npm run clean >dist/null 2>&1 && copy envlocal .env.local && copy src\\demo\\demo.ts src\\demo\\index.ts",
     "start": "react-scripts start",
     "clean": "del .env.local .env.production.local",
     "env-learn-link": "https://create-react-app.dev/docs/adding-custom-environment-variables/#what-other-env-files-can-be-used",

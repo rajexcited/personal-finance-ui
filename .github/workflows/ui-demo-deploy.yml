@@ -1,0 +1,47 @@
+# Build and Test - make sure code has no issues
+#
+
+name: Deploy Demo UI
+
+# list of trigger events https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows
+on:
+  workflow_run:
+    workflows: ["UI Build"]
+    types: [completed]
+    branches:
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  deploy_demo:
+    name: gh page build
+    runs-on: ubuntu-latest
+    # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs
+    if: contains(github.event.head_commit.message, 'deploy gh demo')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node Latest
+        # https://github.com/actions/setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "latest"
+          cache: "npm"
+      - run: npm ci
+      - run: cp src/demo/demo.ts src/demo/index.ts
+      - run: npm run build
+        env:
+          REACT_APP_BASE_PATH: ${{ vars.GH_REACT_APP_BASE_PATH }}
+          REACT_APP_REST_API_BASE_PATH: ${{ vars.GH_REACT_APP_REST_API_BASE_PATH }}
+          REACT_APP_MINIMUM_SESSION_TIME: ${{ vars.GH_REACT_APP_MINIMUM_SESSION_TIME }}
+          GENERATE_SOURCEMAP: ${{ vars.GH_GENERATE_SOURCEMAP }}
+          PUBLIC_URL: ${{ vars.GH_PUBLIC_URL }}
+      # - run: gh-pages -d build
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
