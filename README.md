@@ -1,6 +1,22 @@
 # finance-journal-ui
 
-my finance activities. it helps me track, set goals, configure budget, tele my expenses and alert me for fraudable item, etc. helps me to track investments and savings.
+The personal finance project is to help with finance activities. it helps with tracking expenses, payments; managing goals, configure budget, expense verification and alert me for fraudable item, etc. It helps in tracking investments and savings.
+
+# Project setup
+
+This UI developed on ReactJS and bulma libraries.
+
+## Pre-requisites
+
+## local setup
+
+## local deploy
+
+# Demo Site
+
+When there are new enhancements working functionally locally with demo setup. and all changes are in master branch.
+
+commit message "deploy gh demo" to master branch to deploy demo site to github pages with enhancements.
 
 ## Available Scripts
 
