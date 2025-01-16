@@ -10,3 +10,19 @@
 .modal.spinner .modal-background {
     background-color: inherit;
 }
+
+.nomodal.spinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    display: none;
+}
+
+.nomodal.spinner.is-active {
+    display: block;
+}
+
+.nomodal.spinner .icon {
+    background-color: inherit;
+    font-size: 4rem;
+}

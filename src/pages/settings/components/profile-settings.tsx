@@ -1,43 +1,76 @@
 import { FormEventHandler, FunctionComponent, MouseEventHandler, useEffect, useState } from "react";
-import { Input } from "../../../components";
-import { useLoaderData, useSubmit } from "react-router-dom";
-import { SecurityDetailType } from "../../auth/services/field-types";
-import { PAGE_URL } from "../../root";
+import { Animated, Input } from "../../../components";
+import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
+import { getFullPath } from "../../root";
+import { RouteHandlerResponse, getLogger } from "../services";
+import { ProfileDetailsLoaderResource } from "../route-handlers/profile-loader-action";
+import ReactMarkdown from "react-markdown";
+import { UpdateUserDetailsResource, useAuth } from "../../auth";
 
+const fcLogger = getLogger("FC.settings.ProfileSettings", null, null, "DISABLED");
 
-const ProfileSettings: FunctionComponent = () => {
-    const loaderData = useLoaderData() as SecurityDetailType;
+export const ProfileSettingsPage: FunctionComponent = () => {
+    const loaderData = useLoaderData() as RouteHandlerResponse<ProfileDetailsLoaderResource, null>;
+    const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
     const [updateNameRequest, setUpdateNameRequest] = useState(false);
-    const [firstName, setFirstName] = useState(loaderData.firstName || "");
-    const [lastName, setLastName] = useState(loaderData.lastName || "");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const submit = useSubmit();
+    const auth = useAuth();
 
     useEffect(() => {
-        if (loaderData.firstName && loaderData.firstName !== firstName) setFirstName(loaderData.firstName);
-        if (loaderData.lastName && loaderData.lastName !== lastName) setLastName(loaderData.lastName);
+        if (loaderData.type === "success") {
+            setFirstName(loaderData.data.nameDetails.firstName);
+            setLastName(loaderData.data.nameDetails.lastName);
+        }
     }, [loaderData]);
 
     const onClickChangeNameHandler: MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        setUpdateNameRequest(true);
+        if (!auth.readOnly) {
+            setUpdateNameRequest(true);
+        }
     };
 
     const onClickChangeNameCancelHandler: MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        setUpdateNameRequest(false);
-        setFirstName(loaderData.firstName || "");
-        setLastName(loaderData.lastName || "");
+        if (loaderData.type === "success") {
+            setUpdateNameRequest(false);
+
+            setFirstName(loaderData.data.nameDetails.firstName);
+            setLastName(loaderData.data.nameDetails.lastName);
+        }
     };
 
     const onSubmitNameChangeHandler: FormEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
-        submit({ firstName, lastName }, { action: PAGE_URL.profileSettings.fullUrl, method: "post" });
-        setUpdateNameRequest(false);
+        if (!auth.readOnly && loaderData.type === "success") {
+            if (firstName !== loaderData.data.nameDetails.firstName || lastName !== loaderData.data.nameDetails.lastName) {
+                const nameDetails: UpdateUserDetailsResource = {
+                    firstName: firstName,
+                    lastName: lastName
+                };
+                submit(nameDetails as any, { method: "post", action: getFullPath("profileSettings"), encType: "application/json" });
+            }
+            setUpdateNameRequest(false);
+        }
     };
 
+    fcLogger.debug("loaderData =", loaderData, ", actionData =", actionData);
+    const errorMessage = loaderData.type === "error" ? loaderData.errorMessage : actionData?.type === "error" ? actionData.errorMessage : null;
 
     return (
         <section className="profile-settings">
+            {
+                errorMessage &&
+                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
+                    <article className="message is-danger">
+                        <div className="message-body">
+                            <ReactMarkdown children={ errorMessage } />
+                        </div>
+                    </article>
+                </Animated>
+            }
             <div className="columns">
                 <div className="column is-offset-1">
                     <h2 className="title">Personal Details</h2>
@@ -86,7 +119,7 @@ const ProfileSettings: FunctionComponent = () => {
                                         </>
                                     }
                                     {
-                                        !updateNameRequest &&
+                                        !auth.readOnly && !updateNameRequest &&
                                         <button className="button is-dark" type="button" onClick={ onClickChangeNameHandler }>Change Name</button>
                                     }
                                 </div>
@@ -98,21 +131,24 @@ const ProfileSettings: FunctionComponent = () => {
             </div>
             <div className="columns">
                 <div className="column is-offset-1">
-                    <h2 className="title">Currency Profile</h2>
+                    <h2 className="title">Currency Profiles</h2>
                 </div>
             </div>
-            <div className="columns">
-                <div className="column is-narrow">
-                    <label className="label">Country: </label>
-                    <span> United States of America </span>
-                </div>
-                <div className="column">
-                    <label className="label">Currency: </label>
-                    <span> Dollar ( $ ) </span>
-                </div>
-            </div>
+            {
+                loaderData.type === "success" && loaderData.data.currencyProfiles.map(currencyProfile =>
+                    <div className="columns" key={ currencyProfile.id }>
+                        <div className="column is-narrow">
+                            <label className="label">Country: </label>
+                            <span> { currencyProfile.country.name } </span>
+                        </div>
+                        <div className="column">
+                            <label className="label">Currency: </label>
+                            <span> { currencyProfile.currency.name + " ( " + currencyProfile.currency.symbol + " )" } </span>
+                        </div>
+                    </div>
+                )
+            }
         </section>
     );
 };
 
-export default ProfileSettings;

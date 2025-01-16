@@ -13,6 +13,7 @@ interface SwitchProps {
     tooltipWhenOn?: string;
     tooltipWhenOff?: string;
     onChange (status: boolean): void;
+    disable?: boolean;
 }
 
 /**
@@ -33,7 +34,7 @@ const Switch: FunctionComponent<SwitchProps> = (props) => {
 
     return (
         <div className={ `switch-container field ${!tooltipContent ? "" : "tooltip"}` } data-tooltip={ tooltipContent }>
-            <input id={ id } type="checkbox" className="switch is-rounded is-info" defaultChecked={ status } onChange={ onChangeHandler } />
+            <input id={ id } type="checkbox" className="switch is-rounded is-info" defaultChecked={ status } onChange={ onChangeHandler } disabled={ props.disable } />
             <label htmlFor={ id }>{ label }</label>
         </div>
     );

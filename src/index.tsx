@@ -4,17 +4,18 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider } from 'react-router-dom';
 import { AuthContextProvider, router } from './pages';
 import { LoadSpinner } from './components';
-import axiosMock from "./demo";
-
-
-console.debug(axiosMock.history);
 
 
 const App = () => {
     return (
-        <AuthContextProvider>
-            <RouterProvider router={ router } fallbackElement={ <LoadSpinner loading={ true } /> } />
-        </AuthContextProvider>
+        <section className="root">
+            <p>{ window.navigator.userAgent }</p>
+            {/* <p>{window.navigator.userAgentData}</p> */ }
+            <AuthContextProvider>
+                <RouterProvider router={ router } fallbackElement={ <LoadSpinner loading={ true } /> } />
+            </AuthContextProvider>
+            <p style={ { padding: "1rem" } }>&nbsp;</p>
+        </section>
     );
 };
 

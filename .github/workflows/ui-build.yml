@@ -1,0 +1,52 @@
+# Build and Test - make sure code has no issues
+#
+
+name: UI Build
+
+# list of trigger events https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows
+on:
+  push:
+    branches:
+      - master
+      - development
+      - feature-**
+      - issue-**
+  fork:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node Latest
+        # https://github.com/actions/setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "latest"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run build
+
+  unittest:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node Latest
+        # https://github.com/actions/setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "latest"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run test --coverage

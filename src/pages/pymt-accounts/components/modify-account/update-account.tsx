@@ -1,31 +1,36 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import { useActionData, useLoaderData, useNavigation, useSubmit } from "react-router-dom";
-import { PymtAccountFields } from "../../services";
+import { PymtAccountFields, RouteHandlerResponse } from "../../services";
 import AccountForm from "./account-form";
-import { PAGE_URL } from "../../../root";
+import { getFullPath } from "../../../root";
 import { useAuth } from "../../../auth";
 import ReactMarkdown from "react-markdown";
-import { PymtAccountDetailLoaderType } from "../../route-handlers/account-loader";
+import { PymtAccountDetailLoaderResource } from "../../route-handlers/account-loader";
 
 
 const UpdateAccount: FunctionComponent = () => {
     const navigation = useNavigation();
     const submit = useSubmit();
-    const actionData: any = useActionData();
     const auth = useAuth();
     const [errorMessage, setErrorMessage] = useState("");
-    const loaderData = useLoaderData() as PymtAccountDetailLoaderType;
+    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountDetailLoaderResource, null>;
+    const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
 
 
     useEffect(() => {
-        if (actionData?.errorMessage && actionData.errorMessage !== errorMessage)
+        if (loaderData.type === "error") {
+            setErrorMessage(loaderData.errorMessage);
+        } else if (actionData?.type === "error") {
             setErrorMessage(actionData.errorMessage);
-    }, [errorMessage, actionData?.errorMessage]);
+        } else if (loaderData.type === "success" || actionData?.type === "success") {
+            setErrorMessage("");
+        }
+    }, [actionData, loaderData]);
 
     const onUpdateAccount = (data: PymtAccountFields) => {
-        if (auth.isAuthenticated) {
+        if (auth.userDetails.isAuthenticated) {
             const formData: any = { ...data };
-            submit(formData, { action: PAGE_URL.updatePymAccount.fullUrl, method: "post" });
+            submit(formData, { action: getFullPath("updatePymAccount", data.id), method: "post", encType: "application/json" });
         } else {
             setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
         }
@@ -44,19 +49,27 @@ const UpdateAccount: FunctionComponent = () => {
             }
             <div className="columns">
                 <div className="column">
-                    { loaderData.pymtAccountDetail &&
+                    { loaderData.type === "success" && !auth.readOnly && loaderData.data.pymtAccountDetail &&
                         <AccountForm
                             key="update-account-form"
-                            accountId={ loaderData.pymtAccountDetail.accountId }
+                            accountId={ loaderData.data.pymtAccountDetail.id }
                             submitLabel={ navigation.state === "submitting" ? "Saving Account details..." : "Update" }
                             onSubmit={ onUpdateAccount }
-                            details={ loaderData.pymtAccountDetail }
-                            sourceTags={ loaderData.pymtAccountTags }
-                            categoryTypes={ loaderData.categoryTypes }
+                            details={ loaderData.data.pymtAccountDetail }
+                            sourceTags={ loaderData.data.pymtAccountTags }
+                            categoryTypes={ loaderData.data.categoryTypes }
+                            currencyProfiles={ loaderData.data.currencyProfiles }
                         />
                     }
                 </div>
             </div>
+
+            { auth.readOnly &&
+                <div className="columns">
+                    <div className="column">
+                        <span>Not Allowed to update Payment Account</span>
+                    </div></div>
+            }
         </>
     );
 

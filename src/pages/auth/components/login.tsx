@@ -1,78 +1,104 @@
-import { FunctionComponent, useState, useEffect } from "react";
+import { FunctionComponent, useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Input, LoadSpinner, Animated, InputValidateResponse, InputValidators } from "../../../components";
+import { Input, LoadSpinner, Animated, InputValidators, InputRef, ConfirmDialog } from "../../../components";
 import ReactMarkdown from "react-markdown";
 import useAuth from "../hooks/use-auth";
-import { PAGE_URL } from "../../root";
+import { getFullPath } from "../../root";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock, faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
-import "./login.css";
+import { ConflictError, getLogger } from "../../../shared";
 
+
+enum LoginSubmitStatus {
+    NotStarted = "not-started",
+    InProgress = "in-progress",
+    CompletedSuccess = "success-response",
+    CompletedError = "error-response"
+}
+
+const fcLogger = getLogger("FC.LoginPage", null, null, "DISABLED");
 
 const LoginPage: FunctionComponent = () => {
-    const [emailId, setEmailId] = useState('');
-    const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
-    const [submitting, setSubmitting] = useState(false);
-    const [loginCompleted, setLoginCompleted] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState(LoginSubmitStatus.NotStarted);
+    const [existingSession, setExistingSession] = useState(false);
+    const emailRef = useRef<InputRef>();
+    const passwordRef = useRef<InputRef>();
 
     const location = useLocation();
     const navigate = useNavigate();
     const auth = useAuth();
 
     useEffect(() => {
-        if (auth.isAuthenticated) {
-            navigate(location.state?.from?.pathname || "/");
-        }
-    }, []);
+        const logger = getLogger("useEffect.dep[auth.userDetails.isAuthenticated, submitStatus]", fcLogger);
+        logger.debug("submitting =", submitStatus, ", auth.userDetails.isAuthenticated =", auth.userDetails.isAuthenticated);
+        if (submitStatus === LoginSubmitStatus.InProgress) return;
 
-    useEffect(() => {
-        if (!loginCompleted) return;
-        setSubmitting(false);
-        if (auth.isAuthenticated) {
+        if (auth.userDetails.isAuthenticated) {
             navigate(location.state?.from?.pathname || "/");
-        } else {
+        } else if (!errorMessage && submitStatus !== LoginSubmitStatus.NotStarted) {
             setErrorMessage("We are unable to logging you in. please try later in new browser window");
         }
-    }, [auth.isAuthenticated, loginCompleted]);
+    }, [auth.userDetails.isAuthenticated, submitStatus]);
 
-    const onSubmitLoginHandler: React.FormEventHandler<HTMLFormElement> = async event => {
-        event.preventDefault();
+    const loginHandler = async (forceLogin: boolean) => {
         try {
-            setSubmitting(true);
-            await auth.login(emailId, password);
-            navigate(location.state?.from?.pathname || "/");
+            setSubmitStatus(LoginSubmitStatus.InProgress);
+            const emailId = emailRef.current?.getValue();
+            const password = passwordRef.current?.getValue();
+            if (!emailId) {
+                throw new Error("emailId is not provided");
+            }
+            if (!password) {
+                throw new Error("password is not provided");
+            }
+            await auth.login(emailId, password, forceLogin);
+            setSubmitStatus(LoginSubmitStatus.CompletedSuccess);
         } catch (e) {
             const err = e as Error;
             setErrorMessage(err.message);
-            setSubmitting(false);
+            setSubmitStatus(LoginSubmitStatus.CompletedError);
+            if (e instanceof ConflictError) {
+                return true;
+            }
+        }
+        return false;
+    };
+    const onSubmitLoginHandler: React.FormEventHandler<HTMLFormElement> = async event => {
+        event.preventDefault();
+        const hasConflictError = await loginHandler(false);
+        if (hasConflictError) {
+            setExistingSession(true);
         }
     };
 
     const onClickSignupHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        navigate(PAGE_URL.signupPage.fullUrl);
+        setSubmitStatus(LoginSubmitStatus.NotStarted);
+        navigate(getFullPath("signupPage"));
+    };
+
+    const cleanupExistingSessionHandler = () => {
+        loginHandler(true);
     };
 
     const validatePassword = InputValidators.passwordValidator();
 
     return (
-        <section className="login-section">
-            <LoadSpinner loading={ submitting } />
+        <section className="login-section section is-px-0-mobile">
+            <LoadSpinner loading={ submitStatus === LoginSubmitStatus.InProgress } />
 
-            { !!errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ !submitting } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
-                    <div className="columns is-centered">
-                        <div className="column is-half">
-                            <article className="message is-danger mb-3">
-                                <div className="message-body">
-                                    <ReactMarkdown children={ errorMessage } />
-                                </div>
-                            </article>
-                        </div>
+            <Animated animateOnMount={ true } isPlayIn={ submitStatus === LoginSubmitStatus.CompletedError } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
+                <div className="columns is-centered">
+                    <div className="column is-half">
+                        <article className="message is-danger mb-3">
+                            <div className="message-body">
+                                <ReactMarkdown children={ errorMessage } />
+                            </div>
+                        </article>
                     </div>
-                </Animated>
-            }
+                </div>
+            </Animated>
 
             <form onSubmit={ onSubmitLoginHandler }>
                 <div className="columns is-centered">
@@ -83,11 +109,11 @@ const LoginPage: FunctionComponent = () => {
                             label="Email Id "
                             placeholder="Enter Email id"
                             leftIcon={ faEnvelope }
-                            initialValue={ emailId }
-                            onChange={ setEmailId }
+                            initialValue={ "" }
                             maxlength={ 50 }
                             required={ true }
-                            autocomplete="username"
+                            autocomplete="email"
+                            ref={ emailRef }
                         />
                         <Input
                             id="password"
@@ -95,20 +121,20 @@ const LoginPage: FunctionComponent = () => {
                             label="Password "
                             placeholder="Enter password"
                             leftIcon={ faLock }
-                            initialValue={ password }
-                            onChange={ setPassword }
+                            initialValue={ "" }
                             maxlength={ 25 }
                             minlength={ 8 }
                             required={ true }
                             validate={ validatePassword }
                             autocomplete="current-password"
+                            ref={ passwordRef }
                         />
                     </div>
                 </div>
-                <div className="p-5">&nbsp;</div>
+                <div className="p-5"> </div>
                 <div className="columns">
                     <div className="column">
-                        <div className="buttons is-centered">
+                        <div className="buttons is-centered is-hidden-mobile">
                             <button className="button is-link is-medium" type="button" onClick={ onClickSignupHandler }>
                                 <span className="icon">
                                     <FontAwesomeIcon icon={ faUserPlus } />
@@ -129,6 +155,22 @@ const LoginPage: FunctionComponent = () => {
                     </div>
                 </div>
             </form>
+
+            <ConfirmDialog
+                id="existing-session"
+                onCancel={ () => { setExistingSession(false); } }
+                onConfirm={ cleanupExistingSessionHandler }
+                open={ existingSession }
+                title="Another Active Session Found"
+                yesButtonContent="Punch Login"
+                content={
+                    <div>
+                        <p className="is-danger"> { errorMessage } </p>
+                        <p className="content">Do you wish to kickout other session and login ? </p>
+                    </div>
+                }
+
+            />
         </section>
     );
 };

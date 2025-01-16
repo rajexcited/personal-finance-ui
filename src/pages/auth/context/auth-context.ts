@@ -1,24 +1,39 @@
 import { createContext } from "react";
-import { SignupDetailType } from "../services";
+import { UserDetailsResource, UserSignupResource, UserStatus } from "../services";
 
-interface AuthContextType {
-  fullName: string;
-  isAuthenticated: boolean;
-  emailId: string;
-  login(emailId: string, password: string): Promise<void>;
-  logout(): void;
-  signup(details: SignupDetailType): Promise<void>;
+interface AuthContextInfo {
+  userDetails: UserDetailsResource;
+  readOnly: boolean;
+  login(emailId: string, password: string, forceLogin: boolean): Promise<void>;
+  logout(): Promise<void>;
+  signup(details: UserSignupResource): Promise<void>;
+  validateExpiryStatusOnLocationChange(): void;
 }
 
-export const defaultAuthContext: AuthContextType = {
+export const dummyUserDetails: UserDetailsResource = {
+  emailId: "",
+  firstName: "",
+  lastName: "",
   fullName: "",
   isAuthenticated: false,
-  emailId: "",
-  login: async (name: string, pass: string) => {},
-  logout: () => {},
-  signup: async (details: SignupDetailType) => {},
+  status: UserStatus.DEACTIVATED_USER
 };
 
-const AuthContext = createContext<AuthContextType>(defaultAuthContext);
+const defaultAuthContext: AuthContextInfo = {
+  userDetails: { ...dummyUserDetails },
+  readOnly: true,
+  login: async (id: string, pass: string, forceLogin: boolean) => {
+    /* do nothing */
+  },
+  logout: async () => {
+    /* do nothing */
+  },
+  signup: async (details: UserSignupResource) => {
+    /* do nothing */
+  },
+  validateExpiryStatusOnLocationChange: () => {}
+};
+
+const AuthContext = createContext<AuthContextInfo>(defaultAuthContext);
 
 export default AuthContext;

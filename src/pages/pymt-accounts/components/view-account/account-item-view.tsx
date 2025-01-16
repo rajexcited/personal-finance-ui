@@ -1,10 +1,11 @@
 import { faAngleUp, faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useState } from "react";
-import { PymtAccountFields } from "../../services";
+import { PymtAccountFields, PymtAccStatus } from "../../services";
 import { useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../../root";
+import { getFullPath } from "../../../root";
 import { Animated } from "../../../../components";
+import { useAuth } from "../../../auth";
 
 export interface AccountItemProps {
     id: string;
@@ -12,9 +13,10 @@ export interface AccountItemProps {
     onDeleteRequest (pymtAccountId: string): void;
 }
 
-const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
+export const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
     const [isBodyOpen, setBodyOpen] = useState(false);
     const navigate = useNavigate();
+    const auth = useAuth();
 
     const onClickBodyToggleHandler: React.MouseEventHandler<HTMLButtonElement | HTMLSpanElement> = event => {
         event.preventDefault();
@@ -23,12 +25,12 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
 
     const onClickUpdateHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        navigate(PAGE_URL.updatePymAccount.shortUrl.replace(":accountId", props.details.accountId));
+        navigate(getFullPath("updatePymAccount", props.details.id));
     };
 
     const onClickDeleteHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
-        props.onDeleteRequest(props.details.accountId);
+        props.onDeleteRequest(props.details.id);
     };
 
     return (
@@ -37,34 +39,34 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                 <header className="card-header">
                     <p className="card-header-title">
                         <span className="card-header-icon" onClick={ onClickBodyToggleHandler }>
-                            <span>
-                                { props.details.shortName }
-                            </span>
+                            <span> { props.details.shortName } </span>
                         </span>
                     </p>
-                    <button className="card-header-icon" onClick={ onClickUpdateHandler }>Update</button>
-                    <button className="card-header-icon" onClick={ onClickDeleteHandler }>Delete</button>
+                    {
+                        !auth.readOnly && [PymtAccStatus.Enable, PymtAccStatus.Immutable].includes(props.details.status) &&
+                        <button className="card-header-icon" onClick={ onClickUpdateHandler }>Update</button>
+                    }
+                    {
+                        !auth.readOnly && props.details.status === PymtAccStatus.Enable &&
+                        <button className="card-header-icon" onClick={ onClickDeleteHandler }>Delete</button>
+                    }
                     <button className="card-header-icon" aria-label="expand breakdown" onClick={ onClickBodyToggleHandler }>
                         <span className="icon">
                             <FontAwesomeIcon icon={ isBodyOpen ? faAngleUp : faAngleDown } />
                         </span>
                     </button>
                 </header>
-                <Animated animateOnMount={ false } isPlayIn={ isBodyOpen } animatedIn="fadeIn" animatedOut="zoomOut" isVisibleAfterAnimateOut={ false } >
+                <Animated animateOnMount={ false } isPlayIn={ isBodyOpen } animatedIn="fadeIn" animatedOut="fadeOut" isVisibleAfterAnimateOut={ false } >
                     <div className="card-content is-active">
                         <div className="content">
                             <div className="columns is-variable">
                                 <div className="column">
-                                    <label className="label">Account Name: </label>
-                                    <span>{ props.details.accountName }</span>
+                                    <label className="label">Account Name / Number: </label>
+                                    <span>{ props.details.accountIdNum }</span>
                                 </div>
                                 <div className="column">
                                     <label className="label">Institution Name: </label>
                                     <span>{ props.details.institutionName }</span>
-                                </div>
-                                <div className="column">
-                                    <label className="label">Account Number: </label>
-                                    <span>{ props.details.accountNumber }</span>
                                 </div>
                             </div>
                             <div className="columns is-variable">
@@ -77,15 +79,16 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                                     <div className="tags">
                                         {
                                             props.details.tags &&
-                                            props.details.tags.split(",").map(
-                                                tag => <span
+                                            props.details.tags.map(tag =>
+                                                <span
                                                     className="tag is-link"
                                                     key={ tag + "-tag-key" }
-                                                >{ tag }</span>
+                                                >
+                                                    { tag }
+                                                </span>
                                             )
                                         }
                                     </div>
-
                                 </div>
                                 <div className="column">&nbsp;</div>
                             </div>
@@ -100,9 +103,7 @@ const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                     <footer className="card-footer is-active"> </footer>
                 </Animated>
             </div>
-
         </section>
     );
 };
 
-export default AccountItemCard;

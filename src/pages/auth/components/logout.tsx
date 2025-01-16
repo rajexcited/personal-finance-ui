@@ -5,12 +5,12 @@ import { useLocation } from "react-router-dom";
 
 const LogoutPage: FunctionComponent = () => {
     const auth = useAuth();
-    const [name, setName] = useState(auth.fullName || "");
+    const [name, setName] = useState(auth.userDetails.fullName);
     const location = useLocation();
 
     useEffect(() => {
-        if (name !== auth.fullName) {
-            setName(auth.fullName);
+        if (name !== auth.userDetails.fullName) {
+            setName(auth.userDetails.fullName);
         }
         auth.logout();
     }, []);

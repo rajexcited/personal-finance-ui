@@ -111,7 +111,7 @@ declare module "bulma-carousel" {
      * @param {string} eventName
      * @param {function} listener
      */
-    on(eventName: EventType, listener: (itemOrObj: any) => void): void;
+    on(eventName: EventType, listener: (itemOrObj: any) => void): Function;
     /**
      * Emits event with specified name and params.
      *

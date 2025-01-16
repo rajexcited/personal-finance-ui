@@ -1,9 +1,10 @@
 import { FunctionComponent, useState, useRef, useEffect } from "react";
 import "./animated.css";
 import "animate.css/animate.min.css";
+import { getLogger, sleep } from "../shared";
 
 
-interface AnimatedProps {
+export interface AnimatedProps {
     children: JSX.Element | JSX.Element[] | React.ReactNode;
     animatedIn?: string;
     animatedOut?: string;
@@ -11,7 +12,20 @@ interface AnimatedProps {
     animateOnMount: boolean;
     resetOnAnimationEnd?: boolean;
     isVisibleAfterAnimateOut?: boolean;
+    scrollBeforePlayIn?: boolean;
 }
+
+const isElementInViewport = (animateElement: HTMLDivElement) => {
+    const elementRect = animateElement.getBoundingClientRect();
+    const screenHeight = (window.innerHeight || window.document.documentElement.clientHeight);
+    const screenWidth = (window.innerWidth || window.document.documentElement.clientWidth);
+
+    return elementRect.top >= 0
+        && elementRect.left >= 0
+        && (elementRect.bottom <= screenHeight || elementRect.height > screenHeight)
+        && (elementRect.right <= screenWidth || elementRect.width > screenWidth);
+};
+const fcLogger = getLogger("FC.Animated", null, null, "DISABLED");
 
 /**
  * doc link - https://animate.style/#utilities
@@ -55,17 +69,29 @@ const Animated: FunctionComponent<AnimatedProps> = (props) => {
             animatedRef.current?.removeEventListener("animationstart", animationStartHandler);
             animatedRef.current?.removeEventListener("transitionend", transitionEndHandler);
         };
-    }, []);
+    }, [animatedRef.current]);
 
     useEffect(() => {
+        const logger = getLogger("useEffect.dep[props.isPlayIn, props.animatedIn, props.animatedOut, animatedRef]", fcLogger);
+
+        let sleepPromise = Promise.resolve();
         if (props.isPlayIn !== isPlayIn) {
+            if (props.animatedIn && props.isPlayIn && animatedRef.current) {
+                if (!isElementInViewport(animatedRef.current)) {
+                    logger.debug("since child maynot be visible before animation, scrolling a bit higher");
+                    window.scrollBy(0, animatedRef.current.getBoundingClientRect().top - 30);
+                    sleepPromise = sleep("200ms");
+                }
+            }
             if ((props.animatedIn && props.isPlayIn) || (props.animatedOut && !props.isPlayIn)) {
-                setPlayIn(props.isPlayIn);
-                setVisible(true);
-                setHeightTransitionEnded(false);
+                sleepPromise.then(() => {
+                    setPlayIn(props.isPlayIn);
+                    setVisible(true);
+                    setHeightTransitionEnded(false);
+                });
             }
         }
-    }, [props.isPlayIn]);
+    }, [props.isPlayIn, props.animatedIn, props.animatedOut, animatedRef]);
 
     let animateClassname = visible || !props.resetOnAnimationEnd ? `animate__animated animate__${isPlayIn ? props.animatedIn : props.animatedOut}` : "";
     if (props.isVisibleAfterAnimateOut === false) {

@@ -1,15 +1,17 @@
 import { FunctionComponent, useState } from "react";
-import { ConfigType, ConfigTypeStatus } from "../../../services";
-import { Input, InputValidators, Switch, TextArea } from "../../../components";
+import { ConfigResource, ConfigTypeStatus, UpdateConfigDetailsResource } from "../services";
+import { Input, InputValidators, Switch, TagsInput, TextArea } from "../../../components";
+import { ConfigAction } from "../../../shared";
 
 export type ConfigInputProps = {
-    [key in keyof ConfigType]?: { placeholder?: string; tooltip?: string; idPrefix: string; };
+    [key in keyof ConfigResource]?: { placeholder?: string; tooltip?: string; idPrefix: string; };
 };
 
 interface UpdateConfigProps {
-    details: ConfigType;
+    details: ConfigResource;
     inputProps: ConfigInputProps;
-    onUpdate (details: ConfigType): void;
+    sourceTags: string[];
+    onUpdate (details: UpdateConfigDetailsResource): void;
     onCancel (): void;
 }
 
@@ -17,19 +19,22 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
     const [name, setName] = useState(props.details.name);
     const [color, setColor] = useState(props.details.color || "");
     const [description, setDescription] = useState(props.details.description);
-    const [status, setStatus] = useState(props.details.status === ConfigTypeStatus.enable);
+    const [status, setStatus] = useState(props.details.status === ConfigTypeStatus.Enable);
+    const [tags, setTags] = useState(props.details.tags);
 
     const validateName = InputValidators.nameValidator();
 
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
-        const configData: ConfigType = {
+        const configData: UpdateConfigDetailsResource = {
             ...props.details,
             name,
             value: name,
             color,
             description,
-            status: status ? ConfigTypeStatus.enable : ConfigTypeStatus.disable
+            status: status ? ConfigTypeStatus.Enable : ConfigTypeStatus.Disable,
+            tags,
+            action: ConfigAction.AddUpdateDetails
         };
         props.onUpdate(configData);
     };
@@ -45,7 +50,7 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
                 <div className="columns">
                     <div className="column">
                         <Input
-                            id={ props.inputProps.name?.idPrefix + "-ctgry-name" }
+                            id={ props.inputProps.name?.idPrefix + "-cfg-name" }
                             initialValue={ name }
                             type="text"
                             label="Name: "
@@ -62,7 +67,7 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
                 <div className="columns">
                     <div className="column">
                         <Switch
-                            id={ props.inputProps.status?.idPrefix + "-ctgry-status" }
+                            id={ props.inputProps.status?.idPrefix + "-cfg-status" }
                             initialStatus={ status }
                             labelWhenOn="Status is Enable"
                             labelWhenOff="Status is Disable"
@@ -73,7 +78,7 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
                 <div className="columns">
                     <div className="column is-2">
                         <Input
-                            id={ props.inputProps.name?.idPrefix + "-ctrgy-color" }
+                            id={ props.inputProps.name?.idPrefix + "-cfg-color" }
                             initialValue={ color }
                             type="color"
                             label="Color:"
@@ -84,26 +89,52 @@ const UpdateConfig: FunctionComponent<UpdateConfigProps> = (props) => {
                 <div className="columns">
                     <div className="column">
                         <TextArea
-                            id={ props.inputProps.name?.idPrefix + "-ctrgy-description" }
+                            id={ props.inputProps.name?.idPrefix + "-cfg-description" }
                             label="Description"
                             value={ description }
                             placeholder={ props.inputProps.description?.placeholder }
-                            maxlength={ 100 }
+                            maxlength={ 400 }
                             rows={ 2 }
                             cols={ 30 }
                             onChange={ setDescription }
                         />
                     </div>
                 </div>
+                <div className="columns">
+                    <div className="column">
+                        <TagsInput
+                            id="cfg-tags"
+                            label="Tags: "
+                            defaultValue={ tags }
+                            placeholder="Add Tags"
+                            onChange={ setTags }
+                            key={ "cfg-tags" }
+                            sourceValues={ props.sourceTags }
+                            maxTags={ 10 }
+                        />
+                    </div>
+                </div>
                 <footer>
-                    <div className="columns">
+                    <div className="columns is-hidden-mobile">
                         <div className="column">
                             <div className="buttons">
                                 <button className="button" type="button" onClick={ onCancelHandler }> Cancel </button>
                             </div>
                         </div>
                         <div className="column">
-                            <div className="buttons has-addons is-centered">
+                            <div className="buttons is-centered">
+                                <button className="button is-dark" type="submit"> Save </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="level is-mobile is-hidden-desktop">
+                        <div className="level-left">
+                            <div className="level-item">
+                                <button className="button" type="button" onClick={ onCancelHandler }> Cancel </button>
+                            </div>
+                        </div>
+                        <div className="level-right">
+                            <div className="level-item">
                                 <button className="button is-dark" type="submit"> Save </button>
                             </div>
                         </div>

@@ -1,164 +1,194 @@
-import { FunctionComponent, useState, useEffect, useRef } from "react";
-import { useActionData, useLoaderData, useNavigate, useSubmit } from "react-router-dom";
+import React, { FunctionComponent, useState, useEffect } from "react";
+import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { Animated, ConfirmDialog, LoadSpinner } from "../../../../components";
-import { rowHeaders, ExpenseFields, expenseComparator, ExpenseSortStateType } from "../../services";
-import { PAGE_URL } from "../../../root";
-import { useDebounceState } from "../../../../hooks";
-import ExpenseTableRow from "./view-expense-item-tablerow";
-import ExpenseTableHead, { ExpenseTableHeadRefType } from "./expense-table-head";
-import "./view-expense-list.css";
-import { difference } from "../../../../services";
-import ViewReceipts from "./view-receipts";
+import { getLogger, RouteHandlerResponse, ExpenseFields } from "../../services";
+import { getFullPath } from "../../../root";
+import { useOrientation, DeviceMode } from "../../../../hooks";
+import { ViewReceipts } from "./receipt/view-receipts";
+import { ReceiptProps } from "../../../../components/receipt";
+import { SelectedExpense } from "./common";
+import { ExpenseListTable } from "./expense-list-table";
+import { ExpenseListCards } from "./expense-list-cards";
+import { SharePersonResource } from "../../../settings/services";
+import { ExpenseListLoaderResource } from "../../route-handlers";
+import { sleep } from "../../../../shared";
 
-
-declare global {
-    interface Window {
-        prevSortDetails: any;
-    }
+enum ExpenseListOperation {
+    Merge = "merge",
+    Replace = "replace"
 }
 
-const ExpenseList: FunctionComponent = () => {
-    const loaderData = useLoaderData() as ExpenseFields[];
-    const actionData = useActionData() as { errorMessage: string; };
+const fcLogger = getLogger("FC.expense.view.ExpenseList", null, null, "DISABLED");
+
+export const ExpenseList: FunctionComponent = () => {
+    const loaderData = useLoaderData() as RouteHandlerResponse<ExpenseListLoaderResource, null>;
+    const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
     const [expenseList, setExpenseList] = useState<ExpenseFields[]>([]);
-    const [selectedExpenseId, setSelectedExpenseId] = useState("");
-    const [deletingExpenseId, setDeletingExpenseId] = useState("");
-    const [isViewReceiptsEnable, setViewReceiptsEnable] = useState(false);
-    const [errorMsg, setErrorMsg] = useState('');
-    const navigate = useNavigate();
+    const [sharePersons, setSharePersons] = useState<SharePersonResource[]>([]);
+    const [deletingExpense, setDeletingExpense] = useState<SelectedExpense>();
+    const [expenseReceipts, setExpenseReceipts] = useState<ReceiptProps[]>([]);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [loadingExpenses, setLoadingExpenses] = useState(true);
+    const { resultedDevice: deviceMode } = useOrientation(DeviceMode.Mobile);
+    const [listOperation, setListOperation] = useState(ExpenseListOperation.Replace);
+
     const submit = useSubmit();
-    const [loading, setLoading] = useDebounceState(false, 500, true);
-    const headerRef = useRef<ExpenseTableHeadRefType>(null);
 
-    // do I need this useeffect? can i not set loader data directly to expenseList state?
+    /**
+     * do I need this useeffect? can i not set loader data directly to expenseList state?
+     * No, I can't. 
+     *  loaderdata and actiondata once initialized with value, they are not changing, which is useful for us.
+     * but when user wishes to load more expenses, the new requests replaces loaderdata with new incoming data.
+     * which may cause data loss on currectly viewable page.
+     * useEffect is only getting called if any updates on loaderdata or actiondata
+     * by splitting useEffect on each loaderdata and actiondata tells us 
+     *      when we received what event, useful in taking appropriate actions
+     **/
     useEffect(() => {
-        if (Array.isArray(loaderData) && loaderData.length !== expenseList.length) {
-            setLoading(true);
-            const sortDetails: ExpenseSortStateType = {};
-            if (headerRef && headerRef.current && Object.keys(headerRef.current.sortDetails()).length) {
-                setExpenseList(getSortedExpenses(loaderData, headerRef.current.sortDetails()));
-            } else {
-                const initialSortDetails: ExpenseSortStateType = {};
-                rowHeaders.forEach(rh => {
-                    if (rh.sortable) {
-                        initialSortDetails[rh.datafieldKey] = { ...rh };
-                    }
-                });
-                setExpenseList(getSortedExpenses(loaderData, initialSortDetails));
+        const logger = getLogger("useEffect.dep[loaderData]", fcLogger);
+        logger.debug("loaderdata.type=", loaderData.type, "loaderdata.data=", loaderData.data);
+        if (loaderData.type === "success") {
+            setErrorMessage("");
+
+            setExpenseList(prev => {
+                if (listOperation === ExpenseListOperation.Merge) {
+                    logger.debug("merging new list with old expense list");
+                    return [...loaderData.data.expenseList, ...prev];
+                }
+                logger.debug("replacing new list");
+                return [...loaderData.data.expenseList];
+            });
+            setSharePersons(prev => [...loaderData.data.sharePersons]);
+
+        } else {
+            setErrorMessage(loaderData.errorMessage);
+        }
+    }, [loaderData]);
+
+    useEffect(() => {
+        const logger = getLogger("useEffect.dep[actionData]", fcLogger);
+        logger.debug("actiondata.type=", actionData?.type, "actiondata.data=", actionData?.data);
+        if (actionData?.type === "success") {
+            setErrorMessage("");
+        } else if (actionData) {
+            setErrorMessage(actionData.errorMessage);
+        }
+    }, [actionData]);
+
+    const onRemoveRequestHandler = (removingExpense: ExpenseFields) => {
+        setDeletingExpense(prev => {
+            if (removingExpense.id === prev?.id && removingExpense.belongsTo === prev.belongsTo) {
+                return prev;
             }
-        }
-        if (actionData?.errorMessage && errorMsg !== actionData.errorMessage) {
-            // should i seperate the use effect since both have different outcomes?
-            setErrorMsg(actionData?.errorMessage);
-        }
-    }, [loaderData, actionData]);
-
-    const getSortedExpenses = (expenses: ExpenseFields[], sortDetails: ExpenseSortStateType): ExpenseFields[] => {
-        const sortedExpenses = [...expenses];
-        sortedExpenses.sort(expenseComparator.bind(null, sortDetails));
-        // console.log("getSortedExpenses", new Date(), "sortDetails", JSON.stringify(sortDetails), "diff: ", difference(sortDetails, window.prevSortDetails || sortDetails));
-        window.prevSortDetails = sortDetails;
-        return sortedExpenses;
-    };
-
-    const onChangeExpenseSortHandler = (sortDetails: ExpenseSortStateType) => {
-        setLoading(true);
-        setExpenseList(prev => {
-            const newExp = getSortedExpenses(prev, sortDetails);
-            setTimeout(() => {
-                setLoading(false);
-            }, 10);
-            return newExp;
+            return { ...removingExpense };
         });
     };
 
-    const onEditRequestExpenseHandler = (expenseId: string) => {
-        navigate(PAGE_URL.updateExpense.shortUrl.replace(":expenseId", expenseId));
-    };
+    const onViewReceiptsRequestHandler = (selectedExpense: ExpenseFields) => {
+        const logger = getLogger("onViewReceiptsRequestHandler", fcLogger);
+        // const foundExpense = expenseList.find(xpns => xpns.id === selectedExpense.id && xpns.belongsTo === selectedExpense.belongsTo);
+        // if (foundExpense?.receipts) {
+        // setExpenseReceipts(foundExpense.receipts);
+        // }
 
-    const onRemoveRequestHandler = (expenseId: string) => {
-        setSelectedExpenseId(expenseId);
-        setDeletingExpenseId(expenseId);
-    };
-
-    const onViewReceiptsRequestHandler = (expenseId: string) => {
-        setSelectedExpenseId(expenseId);
-        setViewReceiptsEnable(true);
+        logger.debug("setting receipts to open view model. receipts.length=", selectedExpense.receipts.length, "receipts=", selectedExpense.receipts);
+        setExpenseReceipts(selectedExpense.receipts);
     };
 
     const onDeleteConfirmHandler = () => {
-        const deletingExpense = expenseList.find(xpns => xpns.expenseId === deletingExpenseId);
         const data: any = { ...deletingExpense };
-        submit(data, { action: PAGE_URL.expenseJournalRoot.fullUrl, method: "delete" });
-        setDeletingExpenseId("");
+        submit(data, { action: getFullPath("expenseJournalRoot") + "?index", method: "delete" });
+        setDeletingExpense(undefined);
+        setErrorMessage("");
+        setLoadingExpenses(true);
+        setListOperation(ExpenseListOperation.Replace);
     };
 
-    // console.log(new Date(), "view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billname));
+    const expenseListRenderCompletedHandler = () => {
+        const logger = getLogger("expenseListRenderCompletedHandler", fcLogger);
+        setLoadingExpenses(false);
+        logger.debug("expense list child component loaded. setting loading indicator to false");
+    };
+    const expenseListRenderStartedHandler = () => {
+        const logger = getLogger("expenseListRenderStartedHandler", fcLogger);
+        setLoadingExpenses(true);
+        logger.debug("expense list child component reloading. setting loading indicator to true");
+    };
+
+    const onClickLoadMoreHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
+        event.preventDefault();
+        event.stopPropagation();
+        setListOperation(ExpenseListOperation.Merge);
+        // request expenses for more months from router
+        submit({ loadMore: "months" }, { action: getFullPath("expenseJournalRoot") + "?index", method: "post" });
+    };
+    fcLogger.debug("view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billName), "errorMessage =", errorMessage, "receipts=", expenseReceipts);
 
     return (
         <section>
-            <LoadSpinner loading={ loading } />
+            <LoadSpinner loading={ loadingExpenses } />
 
-            <Animated animateOnMount={ false } isPlayIn={ !!errorMsg } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } >
+            <Animated animateOnMount={ false } isPlayIn={ !!errorMessage } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
                 <div className="columns is-centered">
                     <div className="column is-four-fifths">
                         <article className="message is-danger mb-3">
                             <div className="message-body">
-                                <ReactMarkdown children={ errorMsg } />
+                                <ReactMarkdown children={ errorMessage } />
                             </div>
                         </article>
                     </div>
                 </div>
             </Animated>
 
-            <table className="table is-fullwidth is-hoverable">
-                <ExpenseTableHead
-                    ref={ headerRef }
-                    onChangeExpenseSort={ onChangeExpenseSortHandler }
+            {
+                deviceMode === DeviceMode.Desktop &&
+                <ExpenseListTable
+                    expenseList={ expenseList }
+                    onRemove={ onRemoveRequestHandler }
+                    onViewReceipts={ onViewReceiptsRequestHandler }
+                    onRenderCompleted={ expenseListRenderCompletedHandler }
+                    onRenderStart={ expenseListRenderStartedHandler }
                 />
-                <tbody>
-                    {
-                        expenseList.map(xpns =>
-                            <ExpenseTableRow
-                                key={ xpns.expenseId + "-trow" }
-                                id={ xpns.expenseId + "-trow" }
-                                details={ xpns }
-                                onSelect={ setSelectedExpenseId }
-                                isSelected={ selectedExpenseId === xpns.expenseId }
-                                onEditRequest={ onEditRequestExpenseHandler }
-                                onRemove={ onRemoveRequestHandler }
-                                onViewReceipt={ onViewReceiptsRequestHandler }
-                            />
-                        )
-                    }
-                    {
-                        !expenseList.length &&
-                        <tr>
-                            <td colSpan={ rowHeaders.length }>
-                                <p className="title">There are no expenses</p>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            }
+            {
+                deviceMode === DeviceMode.Mobile &&
+                <ExpenseListCards
+                    expenseList={ expenseList }
+                    onRemove={ onRemoveRequestHandler }
+                    onViewReceipts={ onViewReceiptsRequestHandler }
+                    onRenderCompleted={ expenseListRenderCompletedHandler }
+                    onRenderStart={ expenseListRenderStartedHandler }
+                    sharePersons={ sharePersons }
+                />
+            }
+            {
+                !expenseList.length &&
+                <p className="subtitle">There are no expenses</p>
+            }
+            {
+                !!expenseList.length &&
+                <div className="buttons is-centered">
+                    <button className="button is-large is-focused" disabled={ loaderData.data?.expenseList.length === 0 || loadingExpenses } onClick={ onClickLoadMoreHandler } >Load More</button>
+                </div>
+            }
+
             <ConfirmDialog
                 id="delete-expense-confirm-dialog"
-                content="Are you sure that you want to delete expense?"
-                title="Remove Expense"
-                open={ !!deletingExpenseId }
+                content={ "Do you really want to delete expense " + deletingExpense?.belongsTo + "?" }
+                title={ "Remove " + deletingExpense?.belongsTo }
+                open={ !!deletingExpense?.id }
                 onConfirm={ onDeleteConfirmHandler }
-                onCancel={ () => setDeletingExpenseId("") }
+                onCancel={ () => setDeletingExpense(undefined) }
                 yesButtonClassname="is-danger"
             />
             <ViewReceipts
-                key={ "view-receipts-" + (isViewReceiptsEnable ? selectedExpenseId : "dummy") }
-                isShow={ isViewReceiptsEnable }
-                receipts={ isViewReceiptsEnable && expenseList.find(xpns => xpns.expenseId === selectedExpenseId)?.receipts || [] }
-                onHide={ () => setViewReceiptsEnable(false) }
+                key={ "view-receipts-" + ((expenseReceipts.length > 0 && expenseReceipts[0].relationId) || "dummy") }
+                isShow={ expenseReceipts.length > 0 }
+                receipts={ expenseReceipts }
+                onHide={ () => setExpenseReceipts([]) }
             />
         </section>
     );
 };
 
-export default ExpenseList;

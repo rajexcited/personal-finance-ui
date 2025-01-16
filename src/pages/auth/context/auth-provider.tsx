@@ -1,18 +1,16 @@
 import { FunctionComponent, useState, useEffect } from "react";
-import AuthContext from "./auth-context";
-import { AuthenticationService, SignupDetailType, UserDetailType } from "../services";
-import dateutil from "date-and-time";
-import { Animated } from "../../../components";
 import ReactMarkdown from "react-markdown";
+import AuthContext, { dummyUserDetails } from "./auth-context";
+import { authService, UserDetailsResource, UserSignupResource } from "../services";
+import { Anchor, Animated } from "../../../components";
+import { ObjectDeepDifference, getLogger } from "../../../shared";
+import { useLocation } from "react-router-dom";
 
 
-const authService = AuthenticationService();
 
 interface AuthContextProviderProps {
     children: JSX.Element;
 }
-
-const defaultAuthState = () => ({ emailId: "", fullName: "", isAuthenticated: false, expiryDate: dateutil.parse("1/1", "M/D") });
 
 enum ExpireStatus {
     Unknown = "status-unknown-expire",
@@ -21,83 +19,160 @@ enum ExpireStatus {
     Expired = "status-expired",
 }
 
-const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ children }) => {
-    const [authState, setAuthState] = useState<UserDetailType>(defaultAuthState());
-    const [expiringStatus, setExpiringStatus] = useState(ExpireStatus.Unknown);
+const ONE_SECOND_IN_MILLI = 1000;
+const NOTIFY_USER_REFRESH_LOGIN_SESSION = 60;
 
+const fcLogger = getLogger("FC.AuthContextProvider", null, null, "DISABLED");
+
+const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ children }) => {
+
+    const [userDetails, setUserDetails] = useState<UserDetailsResource>({ ...dummyUserDetails });
+    const [expiringStatus, setExpiringStatus] = useState(ExpireStatus.Unknown);
+    const [isUserAccountReadOnly, setUserAccountReadOnly] = useState(false);
+
+    // first time - when component initilizes
     useEffect(() => {
-        const authStat = authService.getUserDetails();
-        if (authStat.isAuthenticated) setAuthState(authStat);
+        const logger = getLogger("useEffect.dep[]", fcLogger);
+        const userDetailsPromise = authService.getUserDetails();
+        userDetailsPromise.then(userDetails => {
+            logger.debug("received userDetail =", userDetails, "setting to context if not null");
+            if (userDetails.isAuthenticated) setUserDetails({ ...userDetails });
+            authService.isUserAccountReadOnly().then(setUserAccountReadOnly);
+        });
     }, []);
 
     useEffect(() => {
-        const intervalId = setInterval(() => {
+        const _logger = getLogger("useEffect.dep[userDetails, expiringStatus]", fcLogger);
+        let intervalId: NodeJS.Timer | undefined = undefined;
 
-            if (!authState.isAuthenticated && (expiringStatus === ExpireStatus.Expired || expiringStatus === ExpireStatus.Unknown)) {
-                // public user or logged out user
-                return;
+        const setAuthenExpire = () => {
+            const logger = getLogger("setAuthenExpire", _logger);
+            const diffUserDetails = ObjectDeepDifference({ ...userDetails }, { ...dummyUserDetails });
+            if (Object.keys(diffUserDetails).length > 0) {
+                logger.debug("updating context to dummy user");
+                setUserDetails({ ...dummyUserDetails });
             }
-            // could be logged in user or about to logged out
-            const authStat = authService.getUserDetails();
-            // false auth state or logged in user or about to log out
-            if (!authStat.isAuthenticated) {
-                // update the current state
-                if (authState.isAuthenticated) setAuthState(authStat);
-                // logged out user, but false status. update status
-                else setExpiringStatus(ExpireStatus.Unknown);
+            if (expiringStatus !== ExpireStatus.Expired && expiringStatus !== ExpireStatus.Unknown) {
+                logger.debug("updating context to expired status");
+                setExpiringStatus(ExpireStatus.Expired);
             }
+        };
 
-            if (authStat.isAuthenticated) {
-                const diffTime = dateutil.subtract(authStat?.expiryDate || authState.expiryDate, new Date());
+        const setAuthenNotExpired = async () => {
+            const logger = getLogger("setAuthenNotExpired", _logger);
+            if (!userDetails.isAuthenticated) {
+                logger.debug("authen is false, so calling api and updating context user details");
+                const userDetails = await authService.getUserDetails();
+                setUserDetails({ ...userDetails });
+            }
+            if (expiringStatus === ExpireStatus.Expired || expiringStatus === ExpireStatus.Unknown) {
+                logger.debug("updating context to not expired indicating user logged in");
+                setExpiringStatus(ExpireStatus.NotExpire);
+            }
+        };
 
-                if (diffTime.toSeconds() - 30 <= 0) {
-                    // about to expire scenario
-                    if (expiringStatus !== ExpireStatus.ExpiringSoon) setExpiringStatus(ExpireStatus.ExpiringSoon);
-                } else if (diffTime.toSeconds() > 0) {
-                    if (expiringStatus !== ExpireStatus.NotExpire) setExpiringStatus(ExpireStatus.NotExpire);
-                } else if (expiringStatus !== ExpireStatus.Expired) {
-                    if (expiringStatus !== ExpireStatus.Unknown) {
-                        //idle user
-                        logout();
-                    }
-                    setExpiringStatus(ExpireStatus.Expired);
+        const setAboutToExpire = () => {
+            const logger = getLogger("setAboutToExpire", _logger);
+            const remainingExpiryTimeInSec = authService.getTokenExpiryTime();
+            // logger.debug("remainingExpiryTimeInSec =", remainingExpiryTimeInSec);
+            if (remainingExpiryTimeInSec <= NOTIFY_USER_REFRESH_LOGIN_SESSION) {
+                logger.debug("updating context to expiring soon status");
+                setExpiringStatus(ExpireStatus.ExpiringSoon);
+            } else if (expiringStatus === ExpireStatus.ExpiringSoon) {
+                setExpiringStatus(ExpireStatus.NotExpire);
+            }
+        };
+
+        if (!userDetails.isAuthenticated) {
+            // scenario 1 - page load / public user - do nothing
+            // scenario 2 - logout user - make sure to have correct userDetails and status
+            _logger.debug("user not authenticated. indicating scenario 1 (page load / public user) & 2 (logged out user) ");
+            setAuthenExpire();
+        } else {
+            // scenario 3 user signup   - configures interval check to run on every seconds. check authen session from service and update status
+            // scenario 4 user login   - same as signup
+            // scenario 5 session about to expire
+            // scenario 6 session is refreshed
+            // scenario 7 session is about to expire
+            intervalId = setInterval(async () => {
+                const startTime = Date.now();
+                const logger = getLogger("authenticated.setInterval", _logger);
+                logger.debug("periodic execution. verify and update context");
+                if (authService.isAuthenticated(logger)) {
+                    logger.debug("authen true from session/api. so update the context if required");
+                    await setAuthenNotExpired();
+                    setAboutToExpire();
+                    authService.isUserAccountReadOnly().then(setUserAccountReadOnly);
+                } else {
+                    logger.debug("authen false from session/api. so update the context if required");
+                    setAuthenExpire();
                 }
-            }
-        }, 1000);
+                logger.debug("execution time for interval function is ", (Date.now() - startTime), " ms");
+            }, ONE_SECOND_IN_MILLI);
+        }
 
         return () => {
+            _logger.debug("clearing old interval. will be configuring new interval in new use effect function call");
             clearInterval(intervalId);
         };
-    }, [authState, expiringStatus]);
 
-    const login = async (emailId: string, password: string) => {
-        await authService.login({ emailId, password });
-        setAuthState(authService.getUserDetails());
+    }, [userDetails, expiringStatus, setUserDetails, setExpiringStatus]);
+
+    const validateExpiryStatusOnLocationChange = () => {
+        // whenever path changes by user, change status if applicable to remove banner
+        setExpiringStatus(prev => {
+            if (prev === ExpireStatus.Expired) {
+                return ExpireStatus.Unknown;
+            }
+            return prev;
+        });
     };
 
-    const signup = async (details: SignupDetailType) => {
+    const login = async (emailId: string, password: string, forceLogin: boolean) => {
+        const logger = getLogger("login", fcLogger);
+        await authService.login({ emailId, password }, forceLogin);
+        logger.debug("after login api success, calling user details get api call");
+        const userDetails = await authService.getUserDetails();
+        logger.debug("updating context with logged in user session data");
+        setUserDetails({ ...userDetails });
+        setExpiringStatus(ExpireStatus.NotExpire);
+    };
+
+    const signup = async (details: UserSignupResource) => {
+        const logger = getLogger("signup", fcLogger);
         await authService.signup({ ...details });
-        setAuthState(authService.getUserDetails());
+        logger.debug("after signup api success, calling user details get api call");
+        const userDetails = await authService.getUserDetails();
+        logger.debug("updating context with logged in user session data");
+        setUserDetails({ ...userDetails });
+        setExpiringStatus(ExpireStatus.NotExpire);
     };
 
-    const logout = () => {
-        authService.logout();
-        setAuthState(defaultAuthState());
+    const logout = async () => {
+        const logger = getLogger("logout", fcLogger);
+        await authService.logout();
+        logger.debug("after logout api success, updating context with dummy user data and expired status");
+        setUserDetails({ ...dummyUserDetails });
+        setExpiringStatus(ExpireStatus.Expired);
     };
 
     const onClickRefreshHandler: React.MouseEventHandler<HTMLAnchorElement> = async event => {
         event.preventDefault();
         event.stopPropagation();
-        authService.ping();
+        const logger = getLogger("onClickRefreshHandler", fcLogger);
+        await authService.refreshToken();
+        logger.debug("auth refresh api call is successful.");
     };
 
     return (
         <AuthContext.Provider value={
             {
-                ...authState,
+                userDetails,
+                readOnly: isUserAccountReadOnly,
                 login,
                 logout,
-                signup
+                signup,
+                validateExpiryStatusOnLocationChange
             }
         }>
             <Animated animateOnMount={ false } isPlayIn={ expiringStatus === ExpireStatus.ExpiringSoon || expiringStatus === ExpireStatus.Expired } animatedIn="slideInDown" animatedOut="slideOutUp" isVisibleAfterAnimateOut={ false } >
@@ -107,11 +182,11 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
                             <div className="notification is-link is-light">
                                 {
                                     expiringStatus === ExpireStatus.ExpiringSoon &&
-                                    <p>Time is running out. <a onClick={ onClickRefreshHandler }>click to continue</a> </p>
+                                    <p>Time is running out. <Anchor onClick={ onClickRefreshHandler }>click to continue</Anchor> </p>
                                 }
                                 {
                                     expiringStatus === ExpireStatus.Expired &&
-                                    <ReactMarkdown children="You are logged out due to inactive" />
+                                    <ReactMarkdown children="You are logged out" />
                                 }
                                 {
                                     expiringStatus !== ExpireStatus.ExpiringSoon && expiringStatus !== ExpireStatus.Expired &&
@@ -124,7 +199,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
             </Animated>
 
             { children }
-        </AuthContext.Provider>
+        </AuthContext.Provider >
     );
 };
 

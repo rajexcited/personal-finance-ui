@@ -1,155 +1,184 @@
-import { FunctionComponent, useState, useRef } from "react";
-import { faSquarePlus, faSquareMinus, faEdit, faTrash, faReceipt } from "@fortawesome/free-solid-svg-icons";
+import { FunctionComponent, useEffect, useRef, useState } from "react";
+import { faEdit, faTrash, faReceipt, faCircleDollarToSlot } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { VerifyIndicator } from "../../../../components";
-import { CategoryService, ExpenseFields } from "../../services";
-import dateutil from "date-and-time";
+import { ExpenseBelongsTo, ExpenseFields, formatTimestamp, getLogger } from "../../services";
 import { formatAmount } from "../../../../formatters";
+import { useNavigate } from "react-router-dom";
+import { getFullPath } from "../../../root";
+import { useAuth } from "../../../auth";
+import { getExpenseDateInstance } from "../../services/expense";
+import { getShortForm } from "../../../../shared";
+import { Anchor } from "../../../../components";
 
-
-const categoryService = CategoryService();
 
 interface ExpenseItemTableRowProps {
     id: string;
     details: ExpenseFields;
-    onSelect (expenseId: string): void;
+    onSelect (expenseId: string, belongsTo: ExpenseBelongsTo): void;
     isSelected: Boolean;
-    onRemove (expenseId: string): void;
-    onEditRequest (expenseId: string): void;
-    onViewReceipt (expenseId: string): void;
+    onRemove (expense: ExpenseFields): void;
+    onViewReceipt (expense: ExpenseFields): void;
+    onRenderCompleted (expenseId: string): void;
+    startRendering: boolean;
 }
 
-const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props) => {
-    const [showBreakdown, setShowBreakdown] = useState(false);
-    const rowRef = useRef<HTMLTableRowElement>(null);
+const fcLogger = getLogger("FC.expense.view.expenseItemTableRow", null, null, "DISABLED");
 
-    const onClickToggleBreakdownRowsHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
-        event.preventDefault();
-        event.stopPropagation();
-        setShowBreakdown(prev => !prev);
-    };
+export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = (props) => {
+    const [expenseDate, setExpenseDate] = useState<string>();
+    const navigate = useNavigate();
+    const auth = useAuth();
+
+    useEffect(() => {
+        const logger = getLogger("useEffect.dep[]", fcLogger);
+        const xpnsDate = getExpenseDateInstance(props.details, logger);
+        logger.debug("converting expense date to date instance and setting formatted value. also triggering render complete event");
+        if (xpnsDate) {
+            setExpenseDate(formatTimestamp(xpnsDate, "MMM DD, YYYY"));
+        }
+    }, []);
+
+    useEffect(() => {
+        const logger = getLogger("useEffect.dep[props.startRendering]", fcLogger);
+        logger.debug("start rendering flag? ", props.startRendering, "this called after no dep useEffect handler");
+        if (props.startRendering) {
+            props.onRenderCompleted(props.details.id);
+        }
+    }, [props.startRendering]);
 
     const onClickToggleRowSelectionHandler: React.MouseEventHandler<HTMLTableRowElement> = event => {
         event.preventDefault();
         event.stopPropagation();
-        if (props.isSelected) props.onSelect("");
-        else props.onSelect(props.details.expenseId);
+        if (props.isSelected) props.onSelect("", props.details.belongsTo);
+        else props.onSelect(props.details.id, props.details.belongsTo);
     };
 
     const onClickTrashExpenseHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
         event.preventDefault();
         event.stopPropagation();
-        props.onRemove(props.details.expenseId);
+        props.onRemove(props.details);
     };
 
-    const onClickonEditStartExpenseHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
+    // const onClickViewExpenseHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
+    //     event.preventDefault();
+    //     event.stopPropagation();
+    //     if(props.details.belongsTo === ExpenseBelongsTo.Purchase) {
+    //         navigate(getFullPath("viewPurchase", props.details.id));
+    //     }
+    // };
+
+    const onClickEditExpenseHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
         event.preventDefault();
         event.stopPropagation();
-        props.onEditRequest(props.details.expenseId);
+        if (props.details.belongsTo === ExpenseBelongsTo.Purchase) {
+            navigate(getFullPath("updatePurchase", props.details.id));
+        } else if (props.details.belongsTo === ExpenseBelongsTo.PurchaseRefund) {
+            navigate(getFullPath("updatePurchaseRefund", props.details.id));
+        } else if (props.details.belongsTo === ExpenseBelongsTo.Income) {
+            navigate(getFullPath("updateIncome", props.details.id));
+        }
     };
 
     const onClickShowReceiptsHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
         event.preventDefault();
         event.stopPropagation();
-        props.onViewReceipt(props.details.expenseId);
+        props.onViewReceipt(props.details);
     };
 
-    const itemizeAmounts = props.details.expenseItems && props.details.expenseItems.map(it => Number(it.amount)).filter(n => !isNaN(n));
-    let totalItemizedAmount = 0;
-    if (itemizeAmounts) {
-        totalItemizedAmount = itemizeAmounts.reduce((t, n) => t + n, 0);
-    }
-    const expenseAmount = isNaN(Number(props.details.amount)) ? 0 : Number(props.details.amount);
-    const diffAmount = expenseAmount - totalItemizedAmount;
-
-    const getShortForm = (text?: string | string[]) => {
-        if (Array.isArray(text)) {
-            text = text.join();
+    const onClickAddRefundHandler: React.MouseEventHandler<HTMLAnchorElement> = event => {
+        const logger = getLogger("onClickAddRefundHandler", fcLogger);
+        event.preventDefault();
+        event.stopPropagation();
+        if (props.details.belongsTo === ExpenseBelongsTo.Purchase) {
+            navigate(getFullPath("addPurchaseRefund", props.details.id));
+        } else {
+            logger.warn("cannot add refund for expense - " + props.details.belongsTo);
         }
-        return text && text.length > 15 ? text.substring(0, 12).concat("...") : text;
     };
 
-    let itemBreakdownAction;
-    if (showBreakdown) {
-        itemBreakdownAction = (<a className="is-link" onClick={ onClickToggleBreakdownRowsHandler } key={ "item-breakdown-action" + props.id }>
-            <span className="icon tooltip" data-tooltip="Hide Breakdown">
-                <FontAwesomeIcon icon={ faSquareMinus } />
-            </span>
-        </a>);
-    } else {
-        itemBreakdownAction = (<a className="is-link" onClick={ onClickToggleBreakdownRowsHandler } key={ "item-breakdown-action" + props.id }>
-            <span className="icon tooltip" data-tooltip="Show Breakdown">
-                <FontAwesomeIcon icon={ faSquarePlus } />
-            </span>
-        </a>);
+    let belongsTo = "NA";
+    let expenseCategory = undefined;
+
+    if (props.details.belongsTo === ExpenseBelongsTo.Income) {
+        belongsTo = "Income";
+        expenseCategory = props.details.incomeTypeName;
+    } else if (props.details.belongsTo === ExpenseBelongsTo.Purchase) {
+        belongsTo = "Purchase";
+        expenseCategory = props.details.purchaseTypeName;
+    } else if (props.details.belongsTo === ExpenseBelongsTo.PurchaseRefund) {
+        belongsTo = "Refund";
+        expenseCategory = props.details.reasonValue;
     }
 
-    const updateExpenseAction = (<a className="is-link" onClick={ onClickonEditStartExpenseHandler } key={ "updt-xpns-action" + props.id }>
-        <span className="icon tooltip" data-tooltip="Update Expense">
+
+    // const viewExpenseAction = (<a className="is-link" onClick={ onClickViewExpenseHandler } key={ "updt-purchase-action" + props.id }>
+    //     <span className="icon tooltip" data-tooltip="Update Expense">
+    //         <FontAwesomeIcon icon={ faFileInvoiceDollar } />
+    //     </span>
+    // </a>);
+
+    const updateExpenseAction = (<Anchor className="is-link" onClick={ onClickEditExpenseHandler } key={ "updt-purchase-action" + props.id }>
+        <span className="icon tooltip" data-tooltip={ "Update " + belongsTo }>
             <FontAwesomeIcon icon={ faEdit } />
         </span>
-    </a>);
+    </Anchor>);
 
-    const removeExpenseAction = (<a className="is-link" onClick={ onClickTrashExpenseHandler } key={ "rmve-xpns-action" + props.id }>
-        <span className="icon tooltip" data-tooltip="Remove Expense">
+    const removeExpenseAction = (<Anchor className="is-link" onClick={ onClickTrashExpenseHandler } key={ "rmve-purchase-action" + props.id }>
+        <span className="icon tooltip" data-tooltip={ "Remove " + belongsTo }>
             <FontAwesomeIcon icon={ faTrash } />
         </span>
-    </a>);
+    </Anchor>);
 
     const viewReceiptsAction = (
-        <a className="is-link" onClick={ onClickShowReceiptsHandler } key={ "view-receipts-action" + props.id }>
+        <Anchor className="is-link" onClick={ onClickShowReceiptsHandler } key={ "view-receipts-action" + props.id }>
             <span className="icon tooltip" data-tooltip="View Receipts">
                 <FontAwesomeIcon icon={ faReceipt } />
             </span>
-        </a>
+        </Anchor>
     );
 
-    const actions = [updateExpenseAction, removeExpenseAction];
-    if (!!props.details.receipts.length) {
+    const addRefundAction = (
+        <Anchor className="is-link" onClick={ onClickAddRefundHandler } key={ "add-refund-action" + props.id }>
+            <span className="icon tooltip" data-tooltip="Add Refund">
+                <FontAwesomeIcon icon={ faCircleDollarToSlot } />
+            </span>
+        </Anchor>
+    );
+
+    const actions = [];
+    if (!auth.readOnly) {
+        actions.push(updateExpenseAction, removeExpenseAction);
+    }
+    if (props.details.belongsTo === ExpenseBelongsTo.Purchase && !auth.readOnly) {
+        actions.push(addRefundAction);
+    }
+    if (props.details.receipts.length > 0) {
         actions.push(viewReceiptsAction);
     }
-    if (!!props.details.expenseItems.length) {
-        actions.push(itemBreakdownAction);
-    }
+
+    fcLogger.debug("render updates");
 
     return (
-        <>
-            <tr ref={ rowRef } onClick={ onClickToggleRowSelectionHandler } className={ props.isSelected ? "is-selected" : "" }>
-                <td>{ props.details.pymtaccName || "-" }</td>
-                <td>{ dateutil.format(props.details.purchasedDate, "MMM DD, YYYY") }</td>
-                <td>{ props.details.billname }</td>
-                <td>{ formatAmount(props.details.amount) }</td>
-                <td>{ props.details.categoryName || "-" }</td>
-                <td> <VerifyIndicator
-                    id={ "xpns-verify-" + props.id }
-                    key={ "xpns-verify-" + props.id }
+        <tr onClick={ onClickToggleRowSelectionHandler } className={ props.isSelected ? "is-selected" : "" }>
+            <td>{ belongsTo }</td>
+            { <td>{ expenseDate || "-" }</td> }
+            <td>{ props.details.paymentAccountName || "-" }</td>
+            <td>{ props.details.billName }</td>
+            <td>{ formatAmount(props.details.amount) }</td>
+            <td>{ expenseCategory || "-" }</td>
+            {/* <td> <VerifyIndicator
+                    id={ "purchase-verify-" + props.id }
+                    key={ "purchase-verify-" + props.id }
                     disabled={ true }
                     className="is-smaller"
-                    verifiedDateTime={ props.details.verifiedDateTime }
-                /> </td>
-                <td> <span title={ props.details.tags }> { getShortForm(props.details.tags) || "-" } </span>  </td>
-                <td> <span title={ props.details.description } > { getShortForm(props.details.description) || "-" } </span>  </td>
-                <td>
-                    { actions.map(ae => ae) }
-                    { !actions.length && "-" }
-                </td>
-            </tr>
-            {
-                !!props.details.expenseItems && !!props.details.expenseItems.length &&
-                props.details.expenseItems.map(item =>
-                    <tr className={ `${showBreakdown ? "" : "is-hidden"} is-light ${props.isSelected ? "is-selected" : ""}` } key={ item.expenseId + "breakdownrow" }>
-                        <td colSpan={ 2 }> &nbsp; </td>
-                        <td> { item.billname } </td>
-                        <td> { formatAmount(item.amount) } </td>
-                        <td> { item.categoryName || "-" } </td>
-                        <td> &nbsp; </td>
-                        <td> { getShortForm(item.tags) || "-" } </td>
-                        <td colSpan={ 2 }> { getShortForm(item.description) || "-" } </td>
-                    </tr>
-                )
-            }
-        </>
+                    verifiedDateTime={ props.details.verifiedTimestamp as Date }
+                /> </td> */}
+            <td> <span title={ props.details.tags.join() }> { getShortForm(props.details.tags, 15, "-") } </span>  </td>
+            <td>
+                { actions.map(ae => ae) }
+                { actions.length === 0 && "-" }
+            </td>
+        </tr>
     );
 };
 
-export default ExpenseItemTableRow;

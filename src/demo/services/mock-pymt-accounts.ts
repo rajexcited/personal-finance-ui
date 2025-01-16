@@ -1,115 +1,83 @@
 import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
-import { validateUuid } from "./common-validators";
-import { v4 as uuidv4 } from "uuid";
-import { configSessionData } from "./mock-config-type";
-import { auditData } from "./userDetails";
+import { missingValidation, validateAuthorization, validateDataType } from "./common-validators";
+import { addUpdatePymtAccount, deletePymtAccount, getPymtAccountList } from "../mock-db/pymt-acc-db";
+import { PymtAccStatus, PymtAccountFields } from "../../pages/pymt-accounts/services";
+import { getLogger } from "../../shared";
 
-const MockPaymentAccounts = (demoMock: MockAdapter) => {
-  demoMock.onDelete(/\/accounts\/.+/).reply((config) => {
+export const MockPaymentAccounts = (demoMock: MockAdapter) => {
+  demoMock.onDelete(/\/payment\/accounts\/.+/).reply(async (config) => {
     const responseCreator = AxiosResponseCreator(config);
-    const accountId = (config.url || "").replace("/accounts/", "");
-    const error = validateUuid(accountId, "accountId");
-    if (error) {
-      return responseCreator.toValidationError(error);
+
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
     }
-    const result = PymtAccountsSessionData.deleteAccount(accountId);
+
+    const accountId = (config.url || "").split("/").slice(-1)[0];
+    const validationErrors = validateDataType({ paymentAccountId: accountId }, ["paymentAccountId"], "uuid");
+    if (validationErrors.length > 0) {
+      return responseCreator.toValidationError(validationErrors);
+    }
+    const result = await deletePymtAccount(accountId);
     if (result.error) {
-      return responseCreator.toValidationError([
-        { loc: ["accountId"], msg: "payment account with given accountId does not exist." },
-      ]);
+      return responseCreator.toNotFoundError(result.error);
     }
     return responseCreator.toSuccessResponse(result.deleted);
   });
 
-  demoMock.onPost("/accounts").reply((config) => {
+  demoMock.onPost("/payment/accounts").reply(async (config) => {
     const responseCreator = AxiosResponseCreator(config);
-    const data = JSON.parse(config.data);
-    let result: { added?: any; updated?: any };
-    if ("accountId" in data && data.accountId) {
-      // update
-      const err = validateUuid(data.accountId, "accountId");
-      if (err) {
-        return responseCreator.toValidationError(err);
-      }
-      result = PymtAccountsSessionData.addUpdateAccount({ ...data, ...auditData(data.createdBy, data.createdOn) });
-    } else {
-      result = PymtAccountsSessionData.addUpdateAccount({ ...data, accountId: uuidv4(), ...auditData() });
+
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
     }
+
+    const data = JSON.parse(config.data) as PymtAccountFields;
+    const missingErrors = missingValidation(data, ["id", "shortName", "tags"]);
+    const notUuidErrors = validateDataType(data, ["id", "typeId"], "uuid");
+    const notStringErrors = validateDataType(data, ["accountIdNum", "description", "institutionName", "shortName", "status"], "string");
+    const notArrayErrors = validateDataType(data, ["tags"], "array");
+    const validationErrors = [...missingErrors, ...notUuidErrors, ...notStringErrors, ...notArrayErrors];
+    if (validationErrors.length > 0) {
+      return responseCreator.toValidationError(validationErrors);
+    }
+
+    const result = await addUpdatePymtAccount(data);
 
     if (result.updated) return responseCreator.toSuccessResponse(result.updated);
     // add
     return responseCreator.toCreateResponse(result.added);
   });
 
-  demoMock.onGet("/accounts").reply((config) => {
+  demoMock.onGet("/payment/accounts/tags").reply(async (config) => {
+    const logger = getLogger("mock.pymtAcc.getTags", null, null, "DISABLED");
     const responseCreator = AxiosResponseCreator(config);
 
-    const result = PymtAccountsSessionData.getAccounts();
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+
+    const result = await getPymtAccountList(undefined, logger);
+    const responseList = result.list.flatMap((pa) => pa.tags);
+    logger.debug("payment account size=", result.list.length, ", tags size =", responseList.length);
+    return responseCreator.toSuccessResponse(responseList);
+  });
+
+  demoMock.onGet("/payment/accounts").reply(async (config) => {
+    const logger = getLogger("mock.pymtAcc.getAccountList", null, null, "DISABLED");
+    const responseCreator = AxiosResponseCreator(config);
+    logger.debug("baseUrl =", config.baseURL, ", url=", config.url);
+
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+
+    const statusParams: PymtAccStatus[] = [config.params.status || ""].flatMap((st) => st).filter((st) => st);
+    const result = await getPymtAccountList(statusParams, logger);
     return responseCreator.toSuccessResponse(result.list);
   });
 };
-
-function SessionData() {
-  const accounts: any[] = [];
-
-  const init = () => {
-    const accTypeId = (accTypeName: string) =>
-      configSessionData.getPaymentAccountTypes().list.find((item: any) => item.name === accTypeName)?.configId;
-
-    accounts.push({
-      accountId: uuidv4(),
-      shortName: "cash",
-      accountName: "cash",
-      typeId: accTypeId("cash"),
-      tags: "cash",
-      description: "my cash, notes or coins",
-    });
-    accounts.push({
-      accountId: uuidv4(),
-      shortName: "bofa demo checking",
-      accountName: "checking 1",
-      accountNumber: "ch1234",
-      typeId: accTypeId("checking"),
-      tags: "bank,primary",
-      institutionName: "bank of america",
-      description: "Bank of America checking dummy account",
-    });
-  };
-
-  const getAccounts = () => {
-    return { list: accounts };
-  };
-
-  const addUpdateAccount = (data: any) => {
-    const existingAccountIndex = accounts.findIndex((acc) => acc.accountId === data.accountId);
-    if (existingAccountIndex !== -1) {
-      accounts[existingAccountIndex] = data;
-      return { updated: data };
-    }
-    accounts.push(data);
-    return { added: data };
-  };
-
-  const deleteAccount = (accountId: string) => {
-    const existingAccount = accounts.find((acc) => acc.accountId === accountId);
-    if (existingAccount !== -1) {
-      const newAcc = [...accounts];
-      accounts.length = 0;
-      newAcc.filter((acc) => acc.accountId !== accountId).forEach((acc) => accounts.push(acc));
-      return { deleted: existingAccount };
-    }
-    return { error: "payment account not found" };
-  };
-
-  init();
-  return {
-    getAccounts,
-    addUpdateAccount,
-    deleteAccount,
-  };
-}
-
-export const PymtAccountsSessionData = SessionData();
-
-export default MockPaymentAccounts;

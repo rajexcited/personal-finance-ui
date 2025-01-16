@@ -1,36 +1,44 @@
-import { FunctionComponent, useState, useEffect } from "react";
+import { FunctionComponent, useState } from "react";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
-import AccountItemCard from "./account-item-view";
-import { PymtAccountFields } from "../../services";
+import { AccountItemCard } from "./account-item-view";
+import { PymtAccountFields, PymtAccStatus, RouteHandlerResponse } from "../../services";
 import { Animated, ConfirmDialog } from "../../../../components";
-import { PAGE_URL } from "../../../root";
+import { getFullPath } from "../../../root";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "../../../auth";
 
 
 const AccountList: FunctionComponent = () => {
-    const pymtAccList = useLoaderData() as PymtAccountFields[];
-    const actionData = useActionData() as { errorMessage: string; };
+    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountFields[], null>;
+    const actionData = useActionData() as RouteHandlerResponse<any, null> | null;
     const [deletingAccountId, setDeletingAccountId] = useState("");
     const submit = useSubmit();
+    const auth = useAuth();
 
     const onDeleteConfirmHandler = () => {
-        const deletingPymtAcc = pymtAccList.find(acc => acc.accountId === deletingAccountId);
-        // setPymtAccList(pymtAccList => pymtAccList.filter(acc => acc !== deletingPymtAcc));
-        const data: any = { ...deletingPymtAcc };
-        submit(data, { action: PAGE_URL.pymtAccountsRoot.fullUrl, method: "delete" });
-        setDeletingAccountId("");
+        if (loaderData.type === "success" && !auth.readOnly) {
+            const deletingPymtAcc = loaderData.data.find(acc => acc.id === deletingAccountId);
+            if (deletingPymtAcc && deletingPymtAcc.status === PymtAccStatus.Enable) {
+                const data: any = { ...deletingPymtAcc };
+                submit(data, { action: getFullPath("pymtAccountsRoot"), method: "delete", encType: "application/json" });
+                setDeletingAccountId("");
+            }
+        }
     };
+
+    const pymtAccList = loaderData.type === "success" ? loaderData.data : [];
+    const errorMessage = loaderData.type === "error" ? loaderData.errorMessage : actionData?.type === "error" ? actionData.errorMessage : null;
 
     return (
         <section className="container">
             {
-                actionData && actionData.errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp">
+                errorMessage &&
+                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
                     <div className="columns is-centered">
                         <div className="column is-four-fifths">
                             <article className="message is-danger mb-3">
                                 <div className="message-body">
-                                    <ReactMarkdown children={ actionData.errorMessage } />
+                                    <ReactMarkdown children={ errorMessage } />
                                 </div>
                             </article>
                         </div>
@@ -38,16 +46,17 @@ const AccountList: FunctionComponent = () => {
                 </Animated>
             }
             {
-                !pymtAccList.length &&
+                !errorMessage && !pymtAccList.length &&
                 <p className="title">There are no accounts</p>
             }
-            { pymtAccList.map(acc =>
-                <AccountItemCard
-                    key={ acc.accountId + "viewcard" }
-                    id={ acc.accountId + "viewcard" }
-                    details={ acc }
-                    onDeleteRequest={ setDeletingAccountId }
-                />)
+            {
+                pymtAccList.map(acc =>
+                    <AccountItemCard
+                        key={ acc.id + "viewcard" }
+                        id={ acc.id + "viewcard" }
+                        details={ acc }
+                        onDeleteRequest={ setDeletingAccountId }
+                    />)
             }
             <ConfirmDialog
                 id="delete-pymt-acc-confirm-dialog"

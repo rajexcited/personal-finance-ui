@@ -1,12 +1,12 @@
 import "./view-config.css";
 import { FunctionComponent } from "react";
-import { ConfigType } from "../../../services";
+import { ConfigResource } from "../services";
 import dateutil from "date-and-time";
 import { Input } from "../../../components";
 
 
 interface ViewConfigProps {
-    details: ConfigType;
+    details: ConfigResource;
 }
 
 const ViewConfig: FunctionComponent<ViewConfigProps> = (props) => {
@@ -23,10 +23,6 @@ const ViewConfig: FunctionComponent<ViewConfigProps> = (props) => {
                 <div className="column">
                     <label className="label">Status: </label>
                     <span>{ props.details.status }</span>
-                </div>
-                <div className="column">
-                    <label className="label">Relations: </label>
-                    <span>{ props.details.relations.join(", ") || "-" }</span>
                 </div>
             </div>
             <div className="columns">
@@ -49,10 +45,6 @@ const ViewConfig: FunctionComponent<ViewConfigProps> = (props) => {
                         />
                     }
                 </div>
-                <div className="column">
-                    <label className="label">Icon: </label>
-                    <span>{ props.details.icon || "-" }</span>
-                </div>
             </div>
             <div className="columns">
                 <div className="column">
@@ -62,12 +54,32 @@ const ViewConfig: FunctionComponent<ViewConfigProps> = (props) => {
             </div>
             <div className="columns">
                 <div className="column">
+                    <label className="label">Tags: </label>
+                    <div className="tags">
+                        {
+                            props.details.tags.map(tagVal =>
+                                <span
+                                    className="tag is-link"
+                                    key={ tagVal + "-tag-key" }
+                                >
+                                    { tagVal }
+                                </span>
+                            )
+                        }
+                        { props.details.tags.length === 0 &&
+                            <span>-</span>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div className="columns">
+                <div className="column">
                     <label className="label">Created Date: </label>
-                    <span>{ props.details.createdOn && dateutil.format(props.details.createdOn || "-", "MM-DD-YYYY hh:mm:ss A") || "-" }</span>
+                    <span>{ props.details.auditDetails.createdOn instanceof Date ? dateutil.format(props.details.auditDetails.createdOn, "MM-DD-YYYY hh:mm:ss A") : "-" }</span>
                 </div>
                 <div className="column">
                     <label className="label">Last Updated Date: </label>
-                    <span>{ props.details.updatedOn && dateutil.format(props.details.updatedOn, "MM-DD-YYYY hh:mm:ss A") || "-" }</span>
+                    <span>{ props.details.auditDetails.updatedOn instanceof Date ? dateutil.format(props.details.auditDetails.updatedOn, "MM-DD-YYYY hh:mm:ss A") : "-" }</span>
                 </div>
             </div>
         </section>

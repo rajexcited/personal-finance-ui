@@ -1,14 +1,36 @@
 import { FunctionComponent } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { PAGE_URL } from "../../root/components/navigation";
+import { getFullPath } from "../../root";
+import { useAuth } from "../../auth";
 
 
-const ExpenseJournalPage: FunctionComponent = () => {
+export const ExpenseJournalPage: FunctionComponent = () => {
     const navigate = useNavigate();
+    const auth = useAuth();
 
-    const onClickNavigateAddExpenseHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    const onClickNavigateAddPurchaseHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
-        navigate(PAGE_URL.addExpense.shortUrl);
+        if (!auth.readOnly) {
+            navigate(getFullPath("addPurchase"));
+        }
+    };
+    const onClickNavigateAddIncomeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+        event.preventDefault();
+        if (!auth.readOnly) {
+            navigate(getFullPath("addIncome"));
+        }
+    };
+
+    // const onClickNavigateAddInvestmentHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    //     event.preventDefault();
+    //     navigate(getFullPath("addPurchase"));
+    // };
+
+    const onClickNavigateAddPurchaseRefundHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+        event.preventDefault();
+        if (!auth.readOnly) {
+            navigate(getFullPath("addPurchaseRefund", "unknown"));
+        }
     };
 
     return (
@@ -16,15 +38,17 @@ const ExpenseJournalPage: FunctionComponent = () => {
             <div className="columns">
                 <div className="column">
                     <div className="buttons">
-                        <button className="button is-link" onClick={ onClickNavigateAddExpenseHandler }>Add Expense</button>
+                        <button className="button is-link" onClick={ onClickNavigateAddPurchaseHandler } disabled={ auth.readOnly } >Add Purchase</button>
+                        <button className="button is-link" onClick={ onClickNavigateAddIncomeHandler } disabled={ auth.readOnly }>Add Income</button>
+                        {/* <button className="button is-link" onClick={ onClickNavigateAddInvestmentHandler }>Add Investment</button> */ }
+                        <button className="button is-link" onClick={ onClickNavigateAddPurchaseRefundHandler } disabled={ auth.readOnly } >Add Refund</button>
                     </div>
                 </div>
             </div>
-            <section className="section is-narrow-y">
+            <section className="section is-px-0-mobile is-narrow-y">
                 <Outlet />
             </section>
         </>
     );
 };
 
-export default ExpenseJournalPage;

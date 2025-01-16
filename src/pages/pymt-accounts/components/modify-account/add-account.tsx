@@ -2,11 +2,11 @@ import { FunctionComponent, useState, useEffect } from "react";
 import { useNavigation, useSubmit, useActionData, useLoaderData } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import AccountForm from "./account-form";
-import { PymtAccountFields } from "../../services";
-import { PAGE_URL } from "../../../root";
+import { PymtAccountFields, RouteHandlerResponse } from "../../services";
+import { getFullPath } from "../../../root";
 import { useAuth } from "../../../auth";
 import ReactMarkdown from "react-markdown";
-import { PymtAccountDetailLoaderType } from "../../route-handlers/account-loader";
+import { PymtAccountDetailLoaderResource } from "../../route-handlers/account-loader";
 
 
 const AddAccount: FunctionComponent = () => {
@@ -15,9 +15,9 @@ const AddAccount: FunctionComponent = () => {
     const submit = useSubmit();
     const auth = useAuth();
     // for error
-    const actionData: any = useActionData();
+    const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
+    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountDetailLoaderResource, null>;
     const [errorMessage, setErrorMessage] = useState("");
-    const loaderData = useLoaderData() as PymtAccountDetailLoaderType;
 
     useEffect(() => {
         // creating temporary id
@@ -25,25 +25,24 @@ const AddAccount: FunctionComponent = () => {
     }, []);
 
     useEffect(() => {
-        if (actionData?.errorMessage && actionData.errorMessage !== errorMessage)
+        if (loaderData.type === "error") {
+            setErrorMessage(loaderData.errorMessage);
+        }
+        else if (actionData?.type === "error") {
             setErrorMessage(actionData.errorMessage);
-    }, [errorMessage, actionData?.errorMessage]);
+        } else if (actionData?.type === "success" || loaderData.type === "success") {
+            setErrorMessage("");
+        }
+    }, [actionData, loaderData]);
 
     const onAddedAccount = (data: PymtAccountFields) => {
-        if (auth.isAuthenticated) {
+        if (auth.userDetails.isAuthenticated) {
             const formData: any = {
-                accountId,
-                shortName: data.shortName,
-                institutionName: data.institutionName,
-                accountName: data.accountName,
-                accountNumber: data.accountNumber,
-                typeName: data.typeName,
-                tags: data.tags,
-                description: data.description,
-                icon: data.icon
+                ...data,
+                id: accountId,
             };
 
-            submit(formData, { action: PAGE_URL.addPymAccount.fullUrl, method: "post" });
+            submit(formData, { action: getFullPath("addPymAccount"), method: "post", encType: "application/json" });
         } else {
             setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
         }
@@ -60,18 +59,30 @@ const AddAccount: FunctionComponent = () => {
                 </article>
             }
 
-            <div className="columns">
-                <div className="column">
-                    <AccountForm
-                        key="add-account-form"
-                        accountId={ accountId }
-                        submitLabel={ navigation.state === "submitting" ? "Adding Account details..." : "Add" }
-                        onSubmit={ onAddedAccount }
-                        sourceTags={ loaderData.pymtAccountTags }
-                        categoryTypes={ loaderData.categoryTypes }
-                    />
+            {
+                loaderData.type === "success" && !auth.readOnly &&
+
+                <div className="columns">
+                    <div className="column">
+                        <AccountForm
+                            key="add-account-form"
+                            accountId={ accountId }
+                            submitLabel={ navigation.state === "submitting" ? "Adding Account details..." : "Add" }
+                            onSubmit={ onAddedAccount }
+                            sourceTags={ loaderData.data.pymtAccountTags }
+                            categoryTypes={ loaderData.data.categoryTypes }
+                            currencyProfiles={ loaderData.data.currencyProfiles }
+                        />
+                    </div>
                 </div>
-            </div>
+            }
+
+            { auth.readOnly &&
+                <div className="columns">
+                    <div className="column">
+                        <span>Not Allowed to add Payment Account</span>
+                    </div></div>
+            }
 
         </>
     );

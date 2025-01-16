@@ -1,26 +1,22 @@
-import { AuditFields } from "../../../services";
+import { AuditFields } from "../../../shared";
 
-export interface PymtAccountFields extends AuditFields {
-  accountId: string;
-  shortName: string;
-  accountName: string;
-  accountNumber: string;
-  typeId?: string;
-  typeName?: string;
-  tags: string;
-  institutionName: string;
-  description: string;
-  icon?: string;
+export enum PymtAccStatus {
+  Enable = "enable",
+  Deleted = "deleted",
+  Immutable = "immutable",
 }
 
-/**
- * General category. this is usually broad types. any specifics user can add as tags
- */
-// export enum AccountType {
-//   checking,
-//   savings,
-//   creditCard,
-//   investment,
-//   ira,
-//   loan,
-// }
+export interface PymtAccountFields {
+  id: string;
+  shortName: string;
+  accountIdNum?: string;
+  typeId: string;
+  typeName: string;
+  tags: string[];
+  institutionName?: string;
+  description: string;
+  status: PymtAccStatus;
+  auditDetails: AuditFields;
+  dropdownTooltip: string;
+  currencyProfileId: string;
+}

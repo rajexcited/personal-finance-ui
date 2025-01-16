@@ -1,2 +1,3 @@
-export { ErrorPage, router, PAGE_URL } from "./root";
+export { ErrorPage, router } from "./root";
 export { AuthContextProvider } from "./auth";
+export { getFullPath } from "./root";

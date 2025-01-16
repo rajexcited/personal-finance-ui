@@ -20,7 +20,7 @@ declare module "@creativebulma/bulma-tagsinput" {
     searchMinChars?: number; // How many characters should we enter before starting dynamic search ?
     searchOn?: string; // On what dropdown item data do we search the entered value : 'value' or 'text' ?
     selectable?: boolean; // Are tags selectable ?
-    source?: string | string[] | ((val: string) => string); // Array/Function/Promise to get external data
+    source?: string | string[] | ((val: string) => string[]); // Array/Function/Promise to get external data
     tagClass?: string; // Customize tags style by passing classes - They will be added to the tag element
     trim?: boolean; // Should we trim value before processing them ?
   }
@@ -45,13 +45,13 @@ declare module "@creativebulma/bulma-tagsinput" {
     /**
      * Get items
      */
-    items(): () => any;
-    source: any;
+    items: any[];
+    source: (value: string) => Promise<string[]>;
     container: Element;
     /**
      * Returns the internal input element
      */
-    input(): () => any;
+    get input(): HTMLInputElement;
     dropdown: Element;
     dropdownEmptyOption: Element;
     /**
@@ -187,6 +187,15 @@ declare module "@creativebulma/bulma-tagsinput" {
      *
      */
     _onDocumentClick(): void;
+    /** keydown event handler to handle backspace, delete, escape, left and right arrow keys */
+    _onInputKeyDown(e: KeyboardEvent): void;
+    /** key press event handler to create or update dropdown values by filtering entered keys */
+    _onInputKeyPress(e: KeyboardEvent): void;
+    _onInputClick(e: MouseEvent): void;
+    _onInputChange(ev: Event): void;
+    _createDropdownItem(item: Record<"text" | "value", string>): void;
+    _filterDropdownItems(value: string | null): boolean | undefined;
+    _emptyDropdown(): void;
   }
 
   export type EventType =

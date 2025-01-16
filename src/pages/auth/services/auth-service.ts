@@ -1,200 +1,265 @@
 import "./interceptors";
-import { axios, ConfigTypeService, ConfigTypeStatus, handleRestErrors } from "../../../services";
-import dateutils from "date-and-time";
-import { LoginDataType, UserDetailType, SignupDetailType, AuthDetailType, SecurityDetailType } from "./field-types";
-import { authTokenSessionKey, authUserSessionKey } from "./refresh-token";
-import { ConfigTypeBelongsTo } from "../../../services/config-type-service";
+import { LoggerBase, UnauthorizedError, axios, getCacheOption, getLogger, handleRestErrors, sleep } from "../../../shared";
+import {
+  CountryResource,
+  UpdateUserDetailsResource,
+  UpdateUserPasswordResource,
+  UserDetailsResource,
+  UserLoginResource,
+  UserSignupResource,
+  UserStatus
+} from "./field-types";
+import pMemoize from "p-memoize";
+import {
+  cleanupSession,
+  deleteUser,
+  getRemainingExpiryTimeInSeconds,
+  getValidUserDetails,
+  updateAuthorizationToken,
+  updateNameInDetails,
+  updateUserDetails
+} from "./auth-storage";
 
-interface AuthenticationService {
-  login(details: LoginDataType): Promise<void>;
-  isAuthenticated(): boolean;
-  logout(): void;
-  isAuthorized(pageid: string): Promise<boolean>;
-  destroy(): void;
-  getUserDetails(): UserDetailType;
-  signup(details: SignupDetailType): Promise<void>;
-  ping(): void;
-  getSecutiyDetails(): Promise<SecurityDetailType>;
-  updateSecurityDetails(details: SecurityDetailType): Promise<void>;
-}
+const rootPath = "/user";
+const MARGIN_ERROR_TIME_IN_SEC = 1;
+const _logger = getLogger("service.auth", null, null, "DISABLED");
 
-const AuthenticationServiceImpl = (): AuthenticationService => {
-  const authRoleConfigService = ConfigTypeService(ConfigTypeBelongsTo.Auth);
-
-  const login = async (details: LoginDataType) => {
-    try {
-      const data = { emailId: details.emailId, password: details.password };
-      const response = await axios.post("/login", data);
-      if (!(response.data.accessToken && response.data.expiresIn)) {
-        throw Error("user login unauthorized");
-      }
-      sessionStorage.setItem(
-        authTokenSessionKey,
-        JSON.stringify({ accessToken: response.data.accessToken, expiresIn: response.data.expiresIn })
-      );
-      const authResponse: AuthDetailType = {
-        ...response.data,
-        accessToken: undefined,
-        fullName: response.data.firstName + " " + response.data.lastName,
-        expiryDate: dateutils.addSeconds(new Date(), response.data.expiresIn),
-      };
-
-      const authDetails = {
-        ...authResponse,
-        expiryDate: authResponse.expiryDate.getTime(),
-      };
-      sessionStorage.setItem(authUserSessionKey, JSON.stringify(authDetails));
-    } catch (e) {
-      const err = e as Error;
-      handleRestErrors(err);
-      console.error("not rest error", e);
-      const msg = err.message || e;
-      throw Error(msg as string);
+export const login = pMemoize(async (details: UserLoginResource, forceLogin: boolean) => {
+  const logger = getLogger("login", _logger);
+  try {
+    if (isAuthenticated(logger)) {
+      logger.debug("already logged in");
+      throw new Error("You are already logged in.");
     }
-  };
 
-  const getValidAuthSessionDetails = () => {
-    const sessionDetails = sessionStorage.getItem(authUserSessionKey);
-    if (sessionDetails) {
-      const parsedDetails = JSON.parse(sessionDetails);
-      if (parsedDetails.expiryDate > new Date()) {
-        const authDetails: AuthDetailType = {
-          ...parsedDetails,
-          expiryDate: new Date(parsedDetails.expiryDate),
-        };
-        return authDetails;
-      }
-    }
-    sessionStorage.removeItem(authUserSessionKey);
-    return null;
-  };
-
-  const isAuthenticated = (): boolean => {
-    try {
-      const authDetails = getValidAuthSessionDetails();
-      return !!authDetails;
-    } catch (e) {
-      console.error("unknown error", e);
-    }
-    return false;
-  };
-
-  const logout = () => {
-    sessionStorage.removeItem(authUserSessionKey);
-    sessionStorage.removeItem(authTokenSessionKey);
-    axios.post("/logout");
-  };
-
-  const getUserDetails = (): UserDetailType => {
-    const authDetails = getValidAuthSessionDetails();
-    if (authDetails) {
-      return {
-        fullName: authDetails.fullName,
-        isAuthenticated: authDetails.isAuthenticated,
-        emailId: authDetails.emailId,
-        expiryDate: authDetails.expiryDate,
-      };
-    }
-    return {
-      fullName: "",
-      emailId: "",
-      isAuthenticated: false,
-      expiryDate: dateutils.parse("1/1/1000", "M/D/YYYY"),
+    const data = {
+      emailId: details.emailId,
+      password: btoa(details.password),
+      forceLogin: forceLogin
     };
-  };
 
-  const isAuthorized = async (pageid: string): Promise<boolean> => {
-    const authDetails = getValidAuthSessionDetails();
-    if (authDetails) {
-      const authConfigs = await authRoleConfigService.getConfigTypes([ConfigTypeStatus.enable]);
-      const authRoleCfgs = authConfigs.filter((cfg) => cfg.relations.includes("auth-roles"));
-      // const authRoleMatched = authRoleCfgs
-      //   .filter((cfg) => cfg.value === pageid)
-      //   .find((cfg) => authDetails.roles.includes(cfg.name));
-      // return !!authRoleMatched;
-      return false;
-    }
-    return false;
-  };
-
-  const signup = async (details: SignupDetailType) => {
-    if (isAuthenticated()) {
-      throw new Error("You are already logged in. Cannot sing you up.");
-    }
+    const response = await axios.post(`${rootPath}/login`, data);
+    logger.debug("received token response from api call");
+    updateAuthorizationToken(response);
+    logger.debug("stored token session");
+  } catch (e) {
     try {
-      const data = { ...details };
-      // default configs will be created with sign up
-      const response = await axios.post("/signup", data);
-      if (!(response.data.accessToken && response.data.expiresIn)) {
-        throw Error("user login unauthorized");
-      }
-      sessionStorage.setItem(
-        authTokenSessionKey,
-        JSON.stringify({ accessToken: response.data.accessToken, expiresIn: response.data.expiresIn })
-      );
-      const authResponse: AuthDetailType = {
-        ...response.data,
-        accessToken: undefined,
-        fullName: response.data.firstName + " " + response.data.lastName,
-        expiryDate: dateutils.addSeconds(new Date(), response.data.expiresIn),
-      };
-
-      const authDetails = {
-        ...authResponse,
-        isAuthenticated: true,
-        expiryDate: authResponse.expiryDate.getTime(),
-      };
-      sessionStorage.setItem(authUserSessionKey, JSON.stringify(authDetails));
-    } catch (e) {
       const err = e as Error;
-      handleRestErrors(err);
-      console.error("not rest error", e);
-      const msg = err.message || e;
-      throw Error(msg as string);
+      handleRestErrors(err, logger);
+    } catch (resterr) {
+      if (resterr instanceof UnauthorizedError) {
+        throw new Error("emailId or password invalid");
+      }
+      throw resterr;
     }
-  };
+    logger.warn("not rest error", e);
+    throw Error("unknown error");
+  }
+}, getCacheOption("3 sec"));
 
-  const ping = async () => {
-    axios.get("/health/ping");
-  };
+const isTokenSessionValid = (loggerBase: LoggerBase) => {
+  const logger = getLogger("isTokenSessionValid", loggerBase, null, "DISABLED");
+  const validSessionSeconds = getRemainingExpiryTimeInSeconds();
+  logger.debug("validSessionSeconds =", validSessionSeconds, ", responding boolean result = ", !(validSessionSeconds <= MARGIN_ERROR_TIME_IN_SEC));
+  if (validSessionSeconds <= MARGIN_ERROR_TIME_IN_SEC) {
+    cleanupSession();
+    return false;
+  }
 
-  const destroy = () => {
-    authRoleConfigService.destroy();
-  };
-
-  const getSecutiyDetails = async () => {
-    try {
-      const response = await axios.get("/security/details");
-      return response.data as SecurityDetailType;
-    } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
-    }
-  };
-
-  const updateSecurityDetails = async (details: SecurityDetailType) => {
-    try {
-      await axios.post("/security/details", details);
-    } catch (e) {
-      handleRestErrors(e as Error);
-      console.error("not rest error", e);
-      throw e;
-    }
-  };
-
-  return {
-    login,
-    logout,
-    isAuthenticated,
-    isAuthorized,
-    getUserDetails,
-    destroy,
-    signup,
-    ping,
-    getSecutiyDetails,
-    updateSecurityDetails,
-  };
+  return true;
 };
 
-export default AuthenticationServiceImpl;
+export const isAuthenticated = (loggerBase?: LoggerBase): boolean => {
+  const logger = getLogger("isAuthenticated", loggerBase);
+  try {
+    const authDetails = getValidUserDetails(logger);
+    if (authDetails?.isAuthenticated) {
+      logger.debug("authen is true");
+      return true;
+    }
+  } catch (e) {
+    logger.warn("unknown error", e);
+  }
+  logger.debug("authen is false");
+  return false;
+};
+
+export const logout = pMemoize(async () => {
+  const logger = getLogger("logout", _logger);
+  logger.debug("session is cleared. calling api");
+  try {
+    // to make user experience better, not waiting for response. actual api call may take  upto 3 sec
+    axios.post(`${rootPath}/logout`);
+    logger.debug("api successful");
+    await sleep("0.5 sec");
+  } catch (e) {
+    logger.debug("error logging out", e);
+  } finally {
+    cleanupSession();
+  }
+}, getCacheOption("3 sec"));
+
+/**
+ * call api to get user details and store to session
+ * It first attempts to fetch user details from session. if not available, will fetch from api
+ *
+ *  @returns user details
+ */
+export const getUserDetails = pMemoize(async () => {
+  const logger = getLogger("getUserDetails", _logger);
+  try {
+    if (!isTokenSessionValid(logger)) {
+      logger.debug("invalid token");
+      throw new Error("token is not valid");
+    }
+
+    logger.debug("having session data");
+    let validUserDetail = getValidUserDetails(logger);
+    if (validUserDetail?.isAuthenticated) {
+      return validUserDetail;
+    }
+
+    logger.debug("calling api as details in session are null");
+    const response = await axios.get(`${rootPath}/details`);
+    const userDetailsResponse = response.data as UserDetailsResource;
+
+    logger.debug("api response =", userDetailsResponse);
+    updateUserDetails(response);
+    logger.debug("stored user data session");
+    validUserDetail = getValidUserDetails(logger);
+    if (validUserDetail) {
+      return validUserDetail;
+    }
+  } catch (e) {
+    const err = e as Error;
+    handleRestErrors(err, logger);
+    logger.warn("not rest error", e);
+  }
+  logger.debug("responding dummy user data");
+  const dummyUserDetail: UserDetailsResource = {
+    emailId: "",
+    firstName: "",
+    lastName: "",
+    isAuthenticated: false,
+    fullName: "",
+    status: UserStatus.DELETED_USER
+  };
+  return dummyUserDetail;
+}, getCacheOption("3 sec"));
+
+export const signup = pMemoize(async (details: UserSignupResource) => {
+  const logger = getLogger("signup", _logger);
+  try {
+    if (isAuthenticated(logger)) {
+      logger.debug("logged in already");
+      throw new Error("You are already logged in.");
+    }
+
+    const data = { ...details, password: btoa(details.password) };
+    // default configs will be created with sign up
+    const response = await axios.post(`${rootPath}/signup`, data);
+    updateAuthorizationToken(response);
+    logger.debug("stored token session data");
+
+    updateUserDetails({
+      data: { ...details, isAuthenticated: true, status: UserStatus.ACTIVE_USER, fullName: "" }
+    });
+    logger.debug("stored user session data");
+  } catch (e) {
+    const err = e as Error;
+    handleRestErrors(err, logger);
+    logger.warn("not rest error", e);
+    throw Error("unknown error");
+  }
+}, getCacheOption("3 sec"));
+
+export const updateName = pMemoize(async (details: UpdateUserDetailsResource) => {
+  const logger = getLogger("updateName", _logger);
+  try {
+    const response = await axios.post(`${rootPath}/details`, details);
+
+    logger.debug("received response =", response, " overwriting user session data");
+    updateNameInDetails(details);
+  } catch (e) {
+    const err = e as Error;
+    handleRestErrors(err, logger);
+    logger.warn("not rest error", e);
+    throw Error("unknown error");
+  }
+}, getCacheOption("3 sec"));
+
+export const updatePassword = pMemoize(async (details: UpdateUserPasswordResource) => {
+  const logger = getLogger("updatePassword", _logger);
+  try {
+    // encode before sending over api call
+    const data: UpdateUserPasswordResource = {
+      password: btoa(details.password),
+      newPassword: btoa(details.newPassword)
+    };
+    const response = await axios.post(`${rootPath}/details`, data);
+    logger.debug("received response =", response);
+  } catch (e) {
+    const err = e as Error;
+    handleRestErrors(err, logger);
+    logger.warn("not rest error", e);
+    throw Error("unknown error");
+  }
+}, getCacheOption("3 sec"));
+
+export const getTokenExpiryTime = () => {
+  const logger = getLogger("getTokenExpiryTime", _logger, null, "DISABLED");
+  const validSessionSeconds = getRemainingExpiryTimeInSeconds();
+  logger.debug("validSessionSeconds =", validSessionSeconds, ", responding boolean result = ", !(validSessionSeconds <= MARGIN_ERROR_TIME_IN_SEC));
+  if (validSessionSeconds > MARGIN_ERROR_TIME_IN_SEC) {
+    return validSessionSeconds;
+  }
+
+  logger.debug("invalid token session, so time diff is negative");
+  return -1;
+};
+
+export const refreshToken = pMemoize(async () => {
+  const logger = getLogger("refreshToken", _logger);
+  try {
+    const response = await axios.post(`${rootPath}/refresh`);
+    updateAuthorizationToken(response);
+    logger.debug("stored refreshed token data to session");
+  } catch (e) {
+    const err = e as Error;
+    handleRestErrors(err, logger);
+    logger.warn("not rest error", e);
+    logger.debug("clearing session data");
+    logout();
+    throw Error("unknown error");
+  }
+}, getCacheOption("3 sec"));
+
+export const deleteUserAccount = pMemoize(async (details: UserLoginResource) => {
+  const logger = getLogger("deleteUserAccount", _logger);
+  try {
+    // encode before sending over api call
+    const data: UserLoginResource = {
+      emailId: details.emailId,
+      password: btoa(details.password)
+    };
+    const response = await axios.delete(`${rootPath}/details`, { headers: { ...data } });
+    logger.debug("response =", response);
+    deleteUser();
+  } catch (e) {
+    const err = e as Error;
+    handleRestErrors(err, logger);
+    logger.warn("not rest error", e);
+    throw Error("unknown error");
+  }
+}, getCacheOption("3 sec"));
+
+export const isUserAccountReadOnly = async () => {
+  const logger = getLogger("isUserAccountReadOnly", _logger);
+  const userDetails = getValidUserDetails(logger);
+  return !!userDetails?.isAuthenticated && userDetails.status !== UserStatus.ACTIVE_USER;
+};
+
+export const getCountryList = async () => {
+  const usa: CountryResource = { name: "United States of America", code: "USA" };
+  return [usa];
+};
