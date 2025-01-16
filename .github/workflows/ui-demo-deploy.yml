@@ -16,6 +16,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test_echo:
+    name: print context values
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo head commit message= ${{github.event.head_commit.message}}
+      - run: echo github context json values = $GITHUB_CONTEXT_JSON
+        env:
+          GITHUB_CONTEXT_JSON: $${{ toJSON(github) }}
   deploy_demo:
     name: gh page build
     runs-on: ubuntu-latest
