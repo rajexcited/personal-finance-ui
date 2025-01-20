@@ -93,8 +93,6 @@ Here’s a recommended workflow to integrate these tools:
 
 ---
 
-Let me know if you’d like specific templates or automation examples!
-
 # Question 2 - Que 2 - Q2: examples and templates
 
 Provide examples
