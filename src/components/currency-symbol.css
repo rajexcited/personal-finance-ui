@@ -1,8 +1,0 @@
-section.currency-symbol-section p.country-field,
-section.currency-symbol-section p.currency-field {
-    cursor: default;
-}
-
-section.currency-symbol-section p.country-field {
-    margin-bottom: .5rem;
-}
