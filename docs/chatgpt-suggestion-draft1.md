@@ -586,5 +586,3 @@ Use tools and queries to monitor progress across repos:
    ```
 
 ---
-
-Let me know if you'd like assistance in implementing these workflows or automations!
