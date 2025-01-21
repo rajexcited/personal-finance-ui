@@ -29,9 +29,10 @@ jobs:
       isTestExecution: ${{ steps.test-execution.outputs.hasTestExecutionLabel }}
       milestoneBranch: ${{ steps.test-execution.outputs.milestoneBranch }}
     steps:
-      - name: workflow event
-        run: echo event name = ${{ github.event_name }}
-      - run: echo event details= ${{ toJson(github.event) }}
+      - run: echo event name = ${{ github.event_name }}
+      - run: echo event details=$EVENT_CONTEXT_JSON
+        env:
+          EVENT_CONTEXT_JSON: ${{ toJson(github.event) }}
       - name: List all labels
         if: github.event_name == 'issues'
         run: |
