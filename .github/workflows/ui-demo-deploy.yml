@@ -33,10 +33,51 @@ jobs:
   #       env:
   #         GITHUB_CONTEXT_JSON: ${{ toJSON(github) }}
   #         VARS_JSON: ${{ toJSON(vars) }}
+  validate_run:
+    name: Validating Run condition
+    runs-on: ubuntu-latest
+    outputs:
+      wfdispatch_eligible: ${{ steps.wf_dispatch.outputs.milestone_dispatch_run }}
+      wfrun_eligible: ${{ steps.wf_run.outputs.master_run }}
+      wfdispatchrun_eligible: ${{ steps.wf_dispatch_run.outputs.deploy_run }}
+      wfdispatchrun2_eligible: ${{ steps.wf_dispatch_run2.outputs.deploy_run2 }}
+    steps:
+      - run: |
+          echo milestone_dispatch_run=true
+          echo milestone_dispatch_run=true >> $GITHUB_OUTPUT
+        id: wf_dispatch
+        if: github.event_name == 'workflow_dispatch' && startsWith(github.ref,'refs/heads/milestone/')
+      - run: |
+          echo master_run=true
+          echo master_run=true >> $GITHUB_OUTPUT
+        id: wf_run
+        if: github.event_name == 'workflow_run' && github.ref=='refs/heads/master'
+      - run: |
+          echo deploy_run=true
+          echo deploy_run=true >> $GITHUB_OUTPUT
+        id: wf_dispatch_run
+        if: (github.event_name == 'workflow_dispatch' && startsWith(github.ref,'refs/heads/milestone/')) || (github.event_name == 'workflow_run' && github.ref=='refs/heads/master')
+      - run: |
+          echo MILESTONE_RUN=$MILESTONE_RUN
+          echo MASTER_RUN=$MASTER_RUN
+          if [[ "$MILESTONE_RUN" = true ] || [ "$MASTER_RUN" = true ]]; then
+            echo deploy_run2=true
+            echo deploy_run2=true >> $GITHUB_OUTPUT
+          else
+            echo deploy_run2=false
+            echo deploy_run2=false >> $GITHUB_OUTPUT
+          fi
+        id: wf_dispatch_run2
+        env:
+          MILESTONE_RUN: ${{ steps.wf_dispatch.outputs.milestone_dispatch_run }}
+          MASTER_RUN: ${{ steps.wf_run.outputs.master_run }}
   build:
     name: Build
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && startsWith(github.ref,'refs/heads/milestone/')
+    needs: 
+      - validate_run
+    # if: github.event_name == 'workflow_dispatch' && startsWith(github.ref,'refs/heads/milestone/')
+    if: ${{ needs.validate_run.outputs.wfdispatch_eligible }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -73,9 +114,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: 
       - unittest
+      - validate_run
     # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs
     environment: github-pages
-    if: (github.event_name == 'workflow_dispatch' && startsWith(github.ref,'refs/heads/milestone/')) || (github.event_name == 'workflow_run' && github.ref=='refs/heads/master')
+    # if: (github.event_name == 'workflow_dispatch' && startsWith(github.ref,'refs/heads/milestone/')) || (github.event_name == 'workflow_run' && github.ref=='refs/heads/master')
+    if: always() && ${{ needs.validate_run.outputs.wfdispatchrun_eligible}}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
