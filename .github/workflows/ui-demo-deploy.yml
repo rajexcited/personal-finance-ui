@@ -60,7 +60,7 @@ jobs:
       - run: |
           echo MILESTONE_RUN=$MILESTONE_RUN
           echo MASTER_RUN=$MASTER_RUN
-          if [[ "$MILESTONE_RUN" = true ] || [ "$MASTER_RUN" = true ]]; then
+          if [ "$MILESTONE_RUN" = true ] || [ "$MASTER_RUN" = true ]; then
             echo deploy_run2=true
             echo deploy_run2=true >> $GITHUB_OUTPUT
           else
@@ -77,7 +77,7 @@ jobs:
     needs: 
       - validate_run
     # if: github.event_name == 'workflow_dispatch' && startsWith(github.ref,'refs/heads/milestone/')
-    if: ${{ needs.validate_run.outputs.wfdispatch_eligible }}
+    if: ${{ needs.validate_run.outputs.wfdispatch_eligible == 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -118,7 +118,7 @@ jobs:
     # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs
     environment: github-pages
     # if: (github.event_name == 'workflow_dispatch' && startsWith(github.ref,'refs/heads/milestone/')) || (github.event_name == 'workflow_run' && github.ref=='refs/heads/master')
-    if: always() && ${{ needs.validate_run.outputs.wfdispatchrun_eligible}}
+    if: ${{ always() && needs.validate_run.outputs.wfdispatchrun_eligible == 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
