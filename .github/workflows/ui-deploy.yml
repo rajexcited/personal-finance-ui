@@ -38,7 +38,7 @@ jobs:
         run: |
           echo issue is not supported for test artifact
           exit 1
-        if: ${{ !contains(github.event.issue.labels.*.name, 'test execution') }}
+        if: ${{ !contains(github.event.issue.labels.*.name, 'test execution') && github.event_name == 'issues' }}
       - id: test-execution-label-exists
         run: echo hasLabel=true >> $GITHUB_OUTPUT
         env:
