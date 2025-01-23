@@ -1,3 +1,10 @@
+# Page Navigations
+
+- [Question 1 - Q1 - beginner asking for suggestions](#question-1---que-1---q1---beginner-asking-for-suggestions)
+- [Question 2 - Que 2 - Q2: examples and templates](#question-2---que-2---q2-examples-and-templates)
+- [Question 3 - Que 3 - Q3: manage multi repo of project](#question-3---que-3---q3---manage-multi-repo-of-project)
+- [Question 4 - Que 4 - Q4: test template and best practices](#question-4---que-4---q4---test-template-and-best-practices)
+
 # Question 1 - Que 1 - Q1 - beginner asking for suggestions
 
 suggestions to use Github issues, discussions and project ? what working flow should I follow ? is there any best practices ? how can determine where all resolved issues and enhancements ready for my prod release ? how can I get summary or detail list of what is going into release? how do I determine % of completions for release ?
@@ -355,7 +362,7 @@ The CSV will include issue details, such as titles and assignees, for easy shari
 
 Would you like assistance implementing these templates or scripts into your repository?
 
-# Question 3 - Que 3 - Q3: manage multi repo of project
+# Question 3 - Que 3 - Q3 - manage multi repo of project
 
 My project is split between 2 repositories. How do I manage and integrate 2 repos with task and issues ?
 
@@ -582,5 +589,202 @@ Use tools and queries to monitor progress across repos:
    CLOSED_A=$(gh issue list --milestone "v1.0" --repo org/repo-a --state closed | wc -l)
    PERCENT_A=$((CLOSED_A * 100 / TOTAL_A))
    ```
+
+---
+
+# Question 4 - Que 4 - Q4 - test template and best practices
+
+I would like to record test scenario as github issue and label with feature, impact, regression enable, etc. I want to create test execution plan referencing all eligible test scenarios and details and want to record matrix for release / feature / patch deployment. Suggest a github template for test case, release test execution plan and regression test plan along with best practice guidelines.
+
+## Answer of Q4
+
+Here's a comprehensive approach to creating GitHub issue templates for test scenarios, test execution plans, and regression test plans. Additionally, I’ve provided best practices for managing test records and matrices for releases, features, and deployments.
+
+---
+
+### **GitHub Templates**
+
+#### **1. Test Case (Scenario) Template**
+
+This template is for logging test scenarios as GitHub issues, with relevant metadata for tracking.
+
+```yaml
+---
+name: Test Scenario
+about: Record a specific test scenario
+labels: [test-scenario, feature, impact, regression]
+---
+
+# Test Scenario
+
+**Title**:
+Provide a brief title for the test scenario.
+
+**Description**:
+Describe the test scenario, including context and purpose.
+
+**Preconditions**:
+List any prerequisites or setup steps (e.g., environment, configurations).
+
+**Steps to Execute**:
+1. Step 1
+2. Step 2
+3. Step 3
+
+**Expected Outcome**:
+Clearly state the expected result of the test scenario.
+
+**Impact Area**:
+Specify which part of the application this impacts (e.g., component/module).
+
+**Type of Test**:
+- [ ] Functional
+- [ ] Integration
+- [ ] Regression
+- [ ] Performance
+
+**Labels**:
+Apply relevant labels, e.g., `feature`, `regression`, `impact-high`.
+
+**Attachments**:
+Attach any screenshots, logs, or additional information if applicable.
+
+**Notes/Comments**:
+Any additional information or considerations.
+```
+
+---
+
+#### **2. Test Execution Plan Template**
+
+This template is for creating a plan for test execution, referencing multiple test scenarios and their statuses.
+
+```yaml
+---
+name: Test Execution Plan
+about: Create a plan for test execution
+labels: [test-plan, release-testing]
+---
+
+# Test Execution Plan
+
+**Release/Feature Name**:
+Specify the name of the release, feature, or patch.
+
+**Execution Scope**:
+- Release Version: [Version]
+- Environment: [Staging/Production/QA]
+- Target Deployment Date: [Date]
+
+**Test Scenarios**:
+| ID  | Title                      | Type       | Priority | Status     | Reference Issue ID |
+| ----|----------------------------|------------|----------|------------|--------------------|
+| 1   | Login Functionality        | Functional | High     | Pending    | #123               |
+| 2   | Cart Checkout              | Regression | Medium   | Passed     | #124               |
+| 3   | API Response Validation    | Integration| High     | Failed     | #125               |
+
+**Summary of Coverage**:
+- Total Scenarios: [Number]
+- Passed: [Number]
+- Failed: [Number]
+- Pending: [Number]
+
+**Risk Assessment**:
+Identify any high-risk areas based on test results.
+
+**Approvals/Reviewers**:
+- Reviewer 1: [Name/Handle]
+- Reviewer 2: [Name/Handle]
+
+**Notes/Comments**:
+Add any additional information about the execution plan.
+```
+
+---
+
+#### **3. Regression Test Plan Template**
+
+This template helps plan regression testing for releases and deployments.
+
+```yaml
+---
+name: Regression Test Plan
+about: Plan and track regression testing
+labels: [regression-testing, release-testing]
+---
+
+# Regression Test Plan
+
+**Regression Scope**:
+- Feature/Release: [Feature/Release Name]
+- Modules Impacted: [Modules/Components]
+- Test Environment: [Environment Name]
+
+**Test Scenarios for Regression**:
+| ID  | Title                     | Priority | Status     | Reference Issue ID |
+| ----|---------------------------|----------|------------|--------------------|
+| 1   | User Login Validation     | High     | Pending    | #101               |
+| 2   | Payment Gateway Testing   | Medium   | Passed     | #102               |
+| 3   | Profile Update API        | High     | Failed     | #103               |
+
+**Regression Test Results**:
+| Metric                  | Count | Percentage |
+|-------------------------|-------|------------|
+| Total Scenarios         | 10    | 100%       |
+| Passed                  | 8     | 80%        |
+| Failed                  | 2     | 20%        |
+
+**Pass/Fail Criteria**:
+Define the criteria for a successful regression test (e.g., all high-priority tests must pass).
+
+**Risk Mitigation**:
+- [Specific measures to address failed tests or risks]
+
+**Execution Timeline**:
+- Start Date: [Date]
+- End Date: [Date]
+
+**Approvals/Sign-offs**:
+- QA Lead: [Name/Handle]
+- Product Manager: [Name/Handle]
+
+**Notes/Comments**:
+Provide any additional context or considerations.
+```
+
+---
+
+### **Best Practices for Managing Test Scenarios, Plans, and Results**
+
+1. **Standardization**:
+
+   - Use consistent templates for test cases, execution plans, and regression plans.
+   - Define a clear naming convention for issues and labels (e.g., `feature`, `impact-high`, `regression`).
+
+2. **Automation**:
+
+   - Use **GitHub Actions** to trigger workflows when labels or statuses are updated (e.g., sending alerts for failed test cases).
+   - Link regression plans to automated test scripts for real-time tracking.
+
+3. **Tagging and Categorization**:
+
+   - Use labels like `impact-high`, `regression`, or `feature` to organize and filter test scenarios.
+   - Group test cases by modules or features for easier navigation.
+
+4. **Traceability**:
+
+   - Link each test scenario to a corresponding feature or release issue for better traceability.
+   - Use the `Projects` feature in GitHub to group issues for a specific release.
+
+5. **Version Control**:
+
+   - Maintain test cases and plans for previous releases in separate branches or markdown files for historical reference.
+
+6. **Collaborative Reviews**:
+
+   - Involve relevant stakeholders (QA leads, developers, product managers) in reviewing and approving test execution plans and results.
+
+7. **Visualization**:
+   - Use GitHub’s Projects or external tools like **Excel**, **Jira**, or **Trello** to create dashboards and visual summaries of test progress and results.
 
 ---
