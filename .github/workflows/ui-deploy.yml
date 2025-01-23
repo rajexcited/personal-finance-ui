@@ -56,11 +56,11 @@ jobs:
           # if test execution issue
           if [[ "$labelExists" == "true" ]]; then
               hasLabel=true
-              branchref=refs/heads/milestone/$milestoneExists
+              branchref=milestone/$milestoneExists
           fi
           echo hasLabel=$hasLabel and milestoneBranch=$branchref
           echo hasTestExecutionLabel=$hasLabel >> $GITHUB_OUTPUT
-          echo milestoneBranch=branchref >> $GITHUB_OUTPUT
+          echo milestoneBranch=$branchref >> $GITHUB_OUTPUT
         env:
           labelExists: ${{ steps.test-execution-label-exists.outputs.hasLabel }}
           milestoneExists: ${{ steps.milestone-exists.outputs.milestoneValue }}
