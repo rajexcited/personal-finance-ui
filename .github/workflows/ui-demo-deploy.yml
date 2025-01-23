@@ -11,8 +11,8 @@ on:
       - master
   # manual trigger allowed only for milestone branches
   workflow_dispatch:
-    
-# only 1 workflow can be allowed for repository. 
+
+# only 1 workflow can be allowed for repository.
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
@@ -71,10 +71,11 @@ jobs:
         env:
           MILESTONE_RUN: ${{ steps.wf_dispatch.outputs.milestone_dispatch_run }}
           MASTER_RUN: ${{ steps.wf_run.outputs.master_run }}
+
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: 
+    needs:
       - validate_run
     # if: github.event_name == 'workflow_dispatch' && startsWith(github.ref,'refs/heads/milestone/')
     if: ${{ needs.validate_run.outputs.wfdispatch_eligible == 'true' }}
@@ -112,7 +113,7 @@ jobs:
   deploy_demo:
     name: gh page build
     runs-on: ubuntu-latest
-    needs: 
+    needs:
       - unittest
       - validate_run
     # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs
