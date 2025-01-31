@@ -49,6 +49,9 @@ jobs:
           echo Artifact ID is ${{ steps.upload-artifact-step.outputs.artifact-id }}
           echo Artifact URL is ${{ steps.upload-artifact-step.outputs.artifact-url }}
           echo Artifact DIGEST is ${{ steps.upload-artifact-step.outputs.artifact-digest }}
+      - run: |
+          echo converted file path = ${{ steps.convert-tc-all.outputs.converted-file-path }} 
+          echo hashoutput = ${{ hashFiles(steps.convert-tc-all.outputs.converted-file-path) }}
       - uses: actions/cache@v4
         with:
           path: dist
@@ -60,6 +63,9 @@ jobs:
     needs: 
       - build_test
     steps:
+      - run: |
+          echo converted file path = ${{ needs.build_test.outputs.converted-file-path }}
+          echo hashoutput = ${{ hashFiles(needs.build_test.outputs.converted-file-path) }}
       - uses: actions/cache@v4
         with:
           path: dist
