@@ -1,0 +1,48 @@
+# Build and Test - make sure code has no issues
+#
+
+name: Test Execution Plan
+
+# list of trigger events https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows
+on:
+  # regardless of branch, run this default workflow to verify code
+  workflow_dispatch:
+    inputs:
+      milestone-version:
+        required: true
+        type: string
+        description: milestone version to release prod. e.g. 0.1.2
+      execution-type:
+        required: true
+        type: choice
+        description: What type of test execution is this for
+        options:
+          - regression
+          - feature
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: validate inputs
+    runs-on: ubuntu-latest
+    outputs:
+      milestone-branch: ${{ steps.check_branch.outputs.milestone-branch }}
+    steps:
+      - run: echo milestone version = ${{ github.event.inputs.milestone-version }}
+      - name: Check if the branch exists
+        id: check_branch
+        run: |
+          BRANCH_NAME=milestone/v${{ github.event.inputs.milestone-version }}
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/branches/$BRANCH_NAME)
+
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "Branch $BRANCH_NAME exists."
+            echo milestone-branch=$BRANCH_NAME >> $GITHUB_OUTPUT
+          else
+            echo "Branch $BRANCH_NAME does not exist."
+            exit 1  # exit with an error code if branch doesn't exist
+          fi
