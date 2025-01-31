@@ -5,6 +5,7 @@ name: Test Execution Plan
 
 # list of trigger events https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows
 on:
+  push:
 # regardless of branch, run this default workflow to verify code
   workflow_dispatch: 
     inputs:
@@ -72,7 +73,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: dist
-          key: ${{ hashFiles(steps.convert-tc-all.outputs.converted-file-path) }}
+          key: ${{ steps.convert-tc-all.outputs.converted-file-path }}
         
   template:
     name: Retrieve template
