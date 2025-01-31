@@ -28,5 +28,4 @@ envaws
 envdemo
 envlocal
 null
-/tests-scenarios
-
+__pycache__

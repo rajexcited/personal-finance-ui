@@ -1,0 +1,83 @@
+# Build and Test - make sure code has no issues
+#
+
+name: Test Execution Plan
+
+# list of trigger events https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows
+on:
+# regardless of branch, run this default workflow to verify code
+  workflow_dispatch: 
+    inputs:
+      milestone-version:
+        required: true
+        type: string
+        description: milestone version to release prod. e.g. 0.1.2
+      execution-type:
+        required: true
+        type: choice
+        description: What type of test execution is this for
+        options:
+          - regression
+          - feature
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: validate inputs
+    runs-on: ubuntu-latest
+    outputs:
+      milestone-branch: ${{ steps.check_branch.outputs.milestone-branch }}
+    steps:
+      - run: echo milestone version = ${{ github.event.inputs.milestone-version }}
+      - name: Check if the branch exists
+        id: check_branch
+        run: |
+          BRANCH_NAME=milestone/v${{ github.event.inputs.milestone-version }}
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/branches/$BRANCH_NAME)
+
+          if [ "$RESPONSE" -eq 200 ]; then
+            echo "Branch $BRANCH_NAME exists."
+            echo milestone-branch=$BRANCH_NAME >> $GITHUB_OUTPUT
+          else
+            echo "Branch $BRANCH_NAME does not exist."
+            exit 1  # exit with an error code if branch doesn't exist
+          fi
+
+  build:
+    name: convert test case files
+    runs-on: ubuntu-latest
+    outputs:
+      converted-file-path: ${{ steps.convert-tc-all.outputs.converted-file-path }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup python 
+        # https://github.com/actions/setup-python
+        uses: actions/setup-python@v5  
+        with:
+          cache: 'pip' # caching pip dependencies
+      - run: python --version
+      - run: pip install -r .github/scripts/requirements.txt
+      - run: pwd
+      - id: convert-tc-all
+        run: |
+          echo converting and validating test case files
+          echo python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases/
+          FILE_PATH=`python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases/`
+          echo converted-file-path=$FILE_PATH >> $GITHUB_OUTPUT
+      - uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ hashFiles(steps.convert-tc-all.outputs.converted-file-path) }}
+        
+  template:
+    name: Retrieve template
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo template
+
+

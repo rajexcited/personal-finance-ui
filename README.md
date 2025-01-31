@@ -1,35 +1,23 @@
-# Personal Finance UI
+# UI Testing
 
-The personal finance project is to help with finance activities. it helps with tracking expenses, payments; managing goals, configure budget, expense verification and alert me for fraudable item, etc. It helps in tracking investments and savings.
+Here, we are organizing test cases and relavant details. the all test cases are functional. the cosmetic issue fixes don't get recorded in test case, but screenshot will give away some idea on site UX.
 
-[![UI Deploy v0.1.0](https://github.com/rajexcited/personal-finance-ui/actions/workflows/ui-deploy.yml/badge.svg?event=workflow_run)](https://github.com/rajexcited/personal-finance-ui/actions/workflows/ui-deploy.yml)
+The testing can be performed on demo site or test environment too.
 
-#### Recommendation
+## Test case
 
-We recommend using google chrome for better user experience.
+Test case status - active or retire.  
+we will keep only active test case in repo. the retire test case will be delete from repo.
 
-## Demo
+each test case is its own directory. the test scenario details are recorded in md file.
 
-[![Demo deployment v0.1.0](https://github.com/rajexcited/personal-finance-ui/actions/workflows/ui-demo-deploy.yml/badge.svg?event=workflow_run)](https://github.com/rajexcited/personal-finance-ui/actions/workflows/ui-demo-deploy.yml)
+capture and attach the files to markdown test case file. all related files goes in attachment directory.
 
-User can launch demo site to get experience of features available.
-https://rajexcited.github.io/personal-finance-ui/
+tag/label features, components, pages, regression enablement, imact (high, medium, low), type, involvement, manual/automated, milestone version added, positive/negative, etc.
 
-for login, use the email Id ending with `@demo.com` with any password.
-for example,
+type:
 
-> emailId: user@demo.com  
-> password: P@ssword1234
+- Integration Testing
+- End to end Testing
 
-## Contributors
-
-- If you are facing issue with site, report issue [here](https://github.com/rajexcited/personal-finance-ui/issues)
-
-- If you have a question, you can ask away [here](https://github.com/rajexcited/personal-finance-ui/discussions/categories/q-a).
-- If you have answer to questions or usage, please feel free to reply.
-
-- To request new feature or enhancement, either create an issue or submit idea [here](https://github.com/rajexcited/personal-finance-ui/discussions/new?category=ideas)
-
-- Go to [issues page](https://github.com/rajexcited/personal-finance-ui/issues) to view other issues.
-
-- Go to [discussions page](https://github.com/rajexcited/personal-finance-ui/discussions) to view Ideas.
+involvement can be backend and/or frontend

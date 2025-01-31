@@ -1,0 +1,96 @@
+<hr />
+<ul>
+    <li>id: login-logout-tc1</li>
+    <li>name: Login Successful after logout</li>
+    <li>about: user is logged in successful after logout</li>
+    <li>labels: [test-scenario, login, logout, impact-low, positive]</li>
+</ul>
+<hr />
+<h1>Login success</h1>
+<h2>Title:</h2>
+<p>User login successful after logout</p>
+<h2>Description:</h2>
+<p>logged in user tries to logout successful. upon logging out, user tries to login again. when successful user can
+    access all secured features e.g. add purchase, view settings, etc.</p>
+<h2>Preconditions:</h2>
+<p>User is on login page.</p>
+<h2>Steps to Execute:</h2>
+<ol>
+    <li>user fills out details as following,</li>
+    <li>emailId: <code>sardar.vallabhbhai.patel@example.com</code></li>
+    <li>password: <code>$Ardar123</code></li>
+    <li>user clicks on login button</li>
+    <li>login is successful, and logout link is displayed.</li>
+    <li>user clicks on logout link</li>
+    <li>user logs out successfully.</li>
+    <li>user attempts login with same credential immediately</li>
+</ol>
+<h2>Expected Outcome:</h2>
+<ul>
+    <li>The loading indicator is displayed for few seconds (~5).</li>
+    <li>user is navigated to <code>secured homepage</code>.</li>
+    <li>secured links like, expenses, payment accounts, settings, logout, etc. are showing and navigational.</li>
+</ul>
+<h2>Impact Area:</h2>
+<h3>frontend</h3>
+<ul>
+    <li>login page</li>
+    <li>homepage</li>
+    <li>logout page</li>
+</ul>
+<h3>backend api</h3>
+<ul>
+    <li>login api</li>
+    <li>stats api</li>
+    <li>userdetails api</li>
+    <li>logout api</li>
+</ul>
+<h2>Type of Test:</h2>
+<ul>
+    <li>Integration</li>
+    <li>Demo site testable</li>
+</ul>
+<h2>Tags:</h2>
+<h5>feature</h5>
+<ul>
+    <li>login</li>
+    <li>logout</li>
+</ul>
+<h5>execution</h5>
+<ul>
+    <li>manual</li>
+</ul>
+<h5>impact</h5>
+<ul>
+    <li>low</li>
+</ul>
+<h5>type</h5>
+<ul>
+    <li>positive</li>
+</ul>
+<h2>Affected Versions:</h2>
+<p>v0.1.0</p>
+<h2>Attachments:</h2>
+<p>Screenshots</p>
+<h2>Average Performance Time:</h2>
+<h3>Test:</h3>
+<p>total=1 min</p>
+<h3>Browser:</h3>
+<h4>network calls:</h4>
+<h6>index.html</h6>
+<p>450 ms</p>
+<ul>
+    <li>api/user/login/post=1.8 sec</li>
+    <li>api/user/details/get=2.3 sec</li>
+    <li>api/stats/purchase/get=1.44 sec</li>
+    <li>api/stats/refund/get=1.24 sec</li>
+    <li>api/stats/income/get=768 ms</li>
+</ul>
+<h3>Lambda:</h3>
+<h6>login</h6>
+<ul>
+    <li>bill duration</li>
+    <li>1122 ms</li>
+</ul>
+<h2>Notes/Comments:</h2>
+<p>Any additional information or considerations.</p>
