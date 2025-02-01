@@ -33,8 +33,8 @@ jobs:
         run: |
           echo converting and validating test case files
           echo python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases/
-          FILE_PATH=`python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases/`
-          echo converted-file-path=$FILE_PATH >> $GITHUB_OUTPUT
+          python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases/
+          echo converted-file-path=dist/converted-tcs.json >> $GITHUB_OUTPUT
       - name: upload artifact
         id: upload-artifact-step
         uses: actions/upload-artifact@v4
@@ -49,9 +49,7 @@ jobs:
           echo Artifact ID is ${{ steps.upload-artifact-step.outputs.artifact-id }}
           echo Artifact URL is ${{ steps.upload-artifact-step.outputs.artifact-url }}
           echo Artifact DIGEST is ${{ steps.upload-artifact-step.outputs.artifact-digest }}
-      - run: |
-          echo converted file path = ${{ steps.convert-tc-all.outputs.converted-file-path }} 
-          echo hashoutput = ${{ hashFiles(steps.convert-tc-all.outputs.converted-file-path) }}
+      - run: echo converted file path = ${{ steps.convert-tc-all.outputs.converted-file-path }} 
       - uses: actions/cache@v4
         with:
           path: dist
@@ -62,16 +60,34 @@ jobs:
     runs-on: ubuntu-latest
     needs: 
       - build_test
+    strategy:
+      matrix:
+        analysis-key: 
+          - Type of Test
+          - Impact Area
+          - Tags.impact
+          - Tags.feature
     steps:
-      - run: |
-          echo converted file path = ${{ needs.build_test.outputs.converted-file-path }}
-          echo hashoutput = ${{ needs.build_test.outputs.converted-file-path }}
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup python 
+        # https://github.com/actions/setup-python
+        uses: actions/setup-python@v5 
+        with:
+          cache: 'pip' # caching pip dependencies
+      - run: python --version
+      - run: pip install -r .github/scripts/requirements.txt
+      - run: pwd
       - uses: actions/cache@v4
         with:
           path: dist
           key: converted-file-path
-      - run: |
-          echo listing cached files
-          pwd
-          ls -lrt dist
-          cat ${{ needs.build_test.outputs.converted-file-path }}
+      - id: summary-tc
+        run: |
+          SUMMARY_FILENAME="${ANALYSIS_KEY// /_}"
+          python .github/scripts/summary_tc.py --analyze --converted-tc-path $CONVERTED_FILE_PATH --summary-filename $SUMMARY_FILENAME --key-path $ANALYSIS_KEY
+          echo showing summary outputs
+          cat dist/$SUMMARY_FILENAME.json
+        env:
+          CONVERTED_FILE_PATH: ${{ needs.build_test.outputs.converted-file-path }}
+          ANALYSIS_KEY: ${{ matrix.analysis-key }}

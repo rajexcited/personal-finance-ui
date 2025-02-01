@@ -119,7 +119,7 @@ def get_relative_path(base_dir: Path, file_path: Path):
     return file_path.relative_to(base_dir)
 
 
-def convert_all_tc(base_tc_dir: Path):
+def convert_all_tc(base_tc_dir: Path, converted_filename: str):
     all_dict = dict()
     errored_files = list()
     for tc_file in base_tc_dir.rglob("*.md"):
@@ -146,19 +146,19 @@ def convert_all_tc(base_tc_dir: Path):
     if len(errored_files) > 0:
         raise AssertionError(json.dumps(errored_files, indent=4))
 
-    save_tc(all_dict)
+    save_dict(all_dict, converted_filename)
 
 
-def save_tc(d: dict, name="tcs"):
+def save_dict(d: dict, name="converted-tcs"):
     dist_dir = Path("dist")
     dist_dir.mkdir(exist_ok=True)
-    json_file = Path(f"converted-{name}.json")
+    json_file = Path(f"{name}.json")
     file_path = dist_dir/json_file
 
     f = file_path.open("w")
     f.write(json.dumps(d, indent=4))
     f.close()
-    print(f"{file_path}")
+    print(f"dictionary is saved as json to file, {file_path}")
 
 
 if __name__ == "__main__":
@@ -166,12 +166,14 @@ if __name__ == "__main__":
     parser.add_argument("--convert", action="store_true",
                         help="[Required] convert test case")
     parser.add_argument(
-        "--tc-dir", help="[Required] enter test case base directory. ex. '../test-cases/'")
+        "--tc-dir", help="[Required] provide test case base directory. ex. '../test-cases/'")
+    parser.add_argument("--converted-filename", default="converted-tcs",
+                        help="[Optional] provide file name where to save the converted test case details. ex. 'converted'")
     args = parser.parse_args()
 
     try:
-        if args.convert == False:
-            raise ValueError("convert is not requested")
+        if not args.convert:
+            raise ValueError("convert arg is not provided")
 
         # print("tc dir=", args.tc_dir)
         base_tc = Path(args.tc_dir)
@@ -180,8 +182,12 @@ if __name__ == "__main__":
             raise ValueError("test case directory not exists")
         if len(list(base_tc.rglob("*.md"))) == 0:
             raise ValueError("there are no files")
+
+        no_errors = True
     except Exception as e:
+        no_errors = False
         print("error: ", e)
         parser.print_help()
 
-    convert_all_tc(base_tc)
+    if no_errors:
+        convert_all_tc(base_tc, args.converted_filename)
