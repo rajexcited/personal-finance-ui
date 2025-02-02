@@ -183,11 +183,13 @@ if __name__ == "__main__":
         if len(list(base_tc.rglob("*.md"))) == 0:
             raise ValueError("there are no files")
 
-        no_errors = True
+        no_error = True
     except Exception as e:
-        no_errors = False
+        no_error = False
         print("error: ", e)
         parser.print_help()
 
-    if no_errors:
-        convert_all_tc(base_tc, args.converted_filename)
+    if not no_error:
+        exit(1)
+
+    convert_all_tc(base_tc, args.converted_filename)

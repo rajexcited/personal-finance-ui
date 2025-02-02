@@ -5,6 +5,15 @@ import json
 from parse_test_cases import save_dict
 
 
+def add_value_to_dict(key: str, value: str, wrapper: Dict[str, List]):
+    kk = key.strip()
+    if kk.endswith("."):
+        kk = kk[:-1]
+    if kk not in wrapper:
+        wrapper[kk] = list()
+    wrapper[kk].append(value)
+
+
 def traverse_dict(key_depths: List[str], wrapper: Dict[str, Dict]):
     print("key_depths =", key_depths)
     if len(key_depths) == 0:
@@ -30,9 +39,7 @@ def append_list_summary(key_prefix: str, list_values: List, sd: Dict[str, List],
         for lv in list_values:
             if isinstance(lv, str):
                 skey = f"{key_prefix}+{lv}" if len(key_prefix) > 0 else lv
-                if skey not in sd:
-                    sd[skey] = list()
-                sd[skey].append(tc_key)
+                add_value_to_dict(skey, tc_key, sd)
             if isinstance(lv, list):
                 append_list_summary(key_prefix, lv, sd, tc_key)
 
@@ -40,9 +47,7 @@ def append_list_summary(key_prefix: str, list_values: List, sd: Dict[str, List],
 def append_dict_summary(dict_value: Dict, sd: Dict[str, List], tc_key: str):
     if isinstance(dict_value, dict):
         for k2, v2 in dict_value.items():
-            if k2 not in sd:
-                sd[k2] = list()
-            sd[k2].append(tc_key)
+            add_value_to_dict(k2, tc_key, sd)
             append_list_summary(k2, v2, sd, tc_key)
 
 
@@ -58,7 +63,7 @@ def get_all_testcases_summary(search_keys: str, converted_tc_details: Dict[str, 
 
     print(f"list of '{search_term}'", json.dumps(list(summary_dict.keys())))
 
-    print(f"'{search_term}' json", json.dumps(summary_dict, indent=4))
+    # print(f"'{search_term}' json", json.dumps(summary_dict, indent=4))
     return summary_dict
 
 
@@ -95,9 +100,14 @@ if __name__ == "__main__":
         if not args.summary_filename:
             raise ValueError("summary file name is not provided")
 
+        no_error = True
     except Exception as e:
+        no_error = False
         print("error: ", e)
         parser.print_help()
+
+    if not no_error:
+        exit(1)
 
     tc_details_dict = dict()
     with converted_tc.open("r", encoding="utf-8") as ctcf:

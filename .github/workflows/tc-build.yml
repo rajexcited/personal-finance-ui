@@ -5,7 +5,7 @@ name: Validate Test cases
 
 # list of trigger events https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows
 on:
-# regardless of branch, run this default workflow to verify code
+  # regardless of branch, run this default workflow to verify code
   push:
 
 concurrency:
@@ -21,11 +21,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup python 
+      - name: Setup python
         # https://github.com/actions/setup-python
-        uses: actions/setup-python@v5  
+        uses: actions/setup-python@v5
         with:
-          cache: 'pip' # caching pip dependencies
+          cache: "pip" # caching pip dependencies
       - run: python --version
       - run: pip install -r .github/scripts/requirements.txt
       - run: pwd
@@ -49,32 +49,37 @@ jobs:
           echo Artifact ID is ${{ steps.upload-artifact-step.outputs.artifact-id }}
           echo Artifact URL is ${{ steps.upload-artifact-step.outputs.artifact-url }}
           echo Artifact DIGEST is ${{ steps.upload-artifact-step.outputs.artifact-digest }}
-      - run: echo converted file path = ${{ steps.convert-tc-all.outputs.converted-file-path }} 
+      - run: echo converted file path = ${{ steps.convert-tc-all.outputs.converted-file-path }}
       - uses: actions/cache@v4
         with:
           path: dist
           key: converted-file-path
-  
-  summary:
+
+  analyze_tc:
     name: Summary of test cases
     runs-on: ubuntu-latest
-    needs: 
+    needs:
       - build_test
+    outputs:
+      matrix-analysis-keys: ${{ matrix.analysis-key }}
+      summary-file: ${{ steps.gen-summary.outputs.summary_file }}
+      analysis-key: ${{ matrix.analysis-key }}
     strategy:
       matrix:
-        analysis-key: 
+        analysis-key:
           - Type of Test
           - Impact Area
           - Tags.impact
           - Tags.feature
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup python 
+      - name: Setup python
         # https://github.com/actions/setup-python
-        uses: actions/setup-python@v5 
+        uses: actions/setup-python@v5
         with:
-          cache: 'pip' # caching pip dependencies
+          cache: "pip" # caching pip dependencies
       - run: python --version
       - run: pip install -r .github/scripts/requirements.txt
       - run: pwd
@@ -82,13 +87,51 @@ jobs:
         with:
           path: dist
           key: converted-file-path
-      - id: summary-tc
+      - name: generate summary
+        id: gen-summary
         run: |
           SUMMARY_FILENAME="${ANALYSIS_KEY// /_}"
           echo python .github/scripts/summary_tc.py --analyze --converted-tc-path "$CONVERTED_FILE_PATH" --summary-filename "$SUMMARY_FILENAME" --key-path "details.$ANALYSIS_KEY"
           python .github/scripts/summary_tc.py --analyze --converted-tc-path "$CONVERTED_FILE_PATH" --summary-filename "$SUMMARY_FILENAME" --key-path "details.$ANALYSIS_KEY"
           echo showing summary outputs
-          cat dist/$SUMMARY_FILENAME.json
+          echo summary_file = dist/$SUMMARY_FILENAME.json >> $GITHUB_OUTPUT
+          # cat dist/$SUMMARY_FILENAME.json
         env:
           CONVERTED_FILE_PATH: ${{ needs.build_test.outputs.converted-file-path }}
           ANALYSIS_KEY: ${{ matrix.analysis-key }}
+      - uses: actions/cache@v4
+        with:
+          path: dist
+          key: summary-file-${{ matrix.analysis-key }}
+
+  summary_output:
+    name: Summary of test cases
+    runs-on: ubuntu-latest
+    needs:
+      - analyze_tc
+    strategy:
+      matrix:
+        # output-key: ${{ needs.analyze_tc.outputs.matrix-analysis-key }}
+        summary-output:
+          - keys
+          - total
+          - values
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup python
+        # https://github.com/actions/setup-python
+        uses: actions/setup-python@v5
+        with:
+          cache: "pip" # caching pip dependencies
+      - run: python --version
+      - run: pip install -r .github/scripts/requirements.txt
+      - run: pwd
+      - id: summary-file
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: summary-file-${{ needs.analyze_tc.outputs.analysis-key }}
+      - name: show summary output ${{ matrix.summary-output }} for ${{ needs.analyze_tc.outputs.analysis-key }}
+        run: 
+          python .github/scripts/output_summary.py --output "${{ matrix.summary-output }}" --summary-filepath ${{ needs.analyze_tc.outputs.summary-file }}
