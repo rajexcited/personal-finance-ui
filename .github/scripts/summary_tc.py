@@ -6,18 +6,23 @@ from parse_test_cases import save_dict
 
 
 def traverse_dict(key_depths: List[str], wrapper: Dict[str, Dict]):
+    print("key_depths =", key_depths)
     if len(key_depths) == 0:
         return wrapper
 
     for k, v in wrapper.items():
         if k.lower() == key_depths[0].lower():
+            print(f"found matching key{k} and it has value {v}")
             return traverse_dict(key_depths[1:], v)
 
 
 def add_testcase_summary(search_key: List[str], sd: Dict, tc_key: str, tc_details: Dict[str, Dict]):
     v = traverse_dict(search_key, tc_details)
+    print("traversed the dictionary to analyze the key", sd)
     append_list_summary("", v, sd, tc_key)
+    print("after analyzing list, sd=", sd)
     append_dict_summary(v, sd, tc_key)
+    print("after analyzing dict, sd=", sd)
 
 
 def append_list_summary(key_prefix: str, list_values: List, sd: Dict[str, List], tc_key: str):

@@ -85,6 +85,7 @@ jobs:
       - id: summary-tc
         run: |
           SUMMARY_FILENAME="${ANALYSIS_KEY// /_}"
+          echo python .github/scripts/summary_tc.py --analyze --converted-tc-path "$CONVERTED_FILE_PATH" --summary-filename "$SUMMARY_FILENAME" --key-path "details.$ANALYSIS_KEY"
           python .github/scripts/summary_tc.py --analyze --converted-tc-path "$CONVERTED_FILE_PATH" --summary-filename "$SUMMARY_FILENAME" --key-path "$ANALYSIS_KEY"
           echo showing summary outputs
           cat dist/$SUMMARY_FILENAME.json
