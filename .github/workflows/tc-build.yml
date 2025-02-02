@@ -44,6 +44,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           overwrite: true
+          compression-level: 1
       - name: artifact Outputs
         run: |
           echo Artifact ID: ${{ steps.upload-converted-tc-artifact.outputs.artifact-id }}
@@ -84,54 +85,32 @@ jobs:
           path: dist
           key: converted-file-path
       - name: Generate Summary
+        id: generate-summary
         run: |
           SUMMARY_FILENAME="${ANALYSIS_KEY// /_}"
           echo python .github/scripts/summary_tc.py --analyze --converted-tc-path "$CONVERTED_FILE_PATH" --summary-filename "$SUMMARY_FILENAME" --key-path "details.$ANALYSIS_KEY"
           python .github/scripts/summary_tc.py --analyze --converted-tc-path "$CONVERTED_FILE_PATH" --summary-filename "$SUMMARY_FILENAME" --key-path "details.$ANALYSIS_KEY"
-          echo showing summary outputs
-          echo $SUMMARY_FILENAME.json >> dist/summary-file.txt
+          echo filepath=dist/$SUMMARY_FILENAME.json >> $GITHUB_OUTPUT
         env:
           ANALYSIS_KEY: ${{ matrix.analysis-key }}
           CONVERTED_FILE_PATH: ${{ needs.build_test.outputs.converted-file-path }}
-      - uses: actions/cache@v4
+      - name: Show Summary Output (keys)
+        run: 
+          python .github/scripts/output_summary.py --output "keys" --summary-filepath ${{ steps.generate-summary.outputs.filepath }}
+      - name: Show Summary Output (total)
+        run: 
+          python .github/scripts/output_summary.py --output "total" --summary-filepath ${{ steps.generate-summary.outputs.filepath }}
+      - name: Show Summary Output (values)
+        run: 
+          python .github/scripts/output_summary.py --output "values" --summary-filepath ${{ steps.generate-summary.outputs.filepath }}
+      - name: Upload Summary Artifact
+        uses: actions/upload-artifact@v4
         with:
-          path: dist
-          key: summary-file-${{ matrix.analysis-key }}
-
-  summary_output:
-    name: Summary of test cases
-    runs-on: ubuntu-latest
-    needs:
-      - analyze_tc
-    strategy:
-      matrix:
-        analysis-key:
-          - Type of Test
-          - Impact Area
-          - Tags.impact
-          - Tags.feature
-        summary-output:
-          - keys
-          - total
-          - values
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          cache: "pip" # caching pip dependencies
-          python-version: "3.13"
-      - run: python --version
-      - run: pip install -r .github/scripts/requirements.txt
-      - run: pwd
-      - uses: actions/cache@v4
-        with:
-          path: dist
-          key: summary-file-${{ matrix.analysis-key }}
-      - name: show summary output ${{ matrix.summary-output }} for ${{ matrix.analysis-key }}
-        run: |
-          FILE_NAME=`cat dist/summary-file.txt`
-          echo python .github/scripts/output_summary.py --output "${{ matrix.summary-output }}" --summary-filepath "dist/$FILE_NAME"
-          python .github/scripts/output_summary.py --output "${{ matrix.summary-output }}" --summary-filepath "dist/$FILE_NAME"
+          name: ${{ matrix.analysis-key }}-summary
+          path: ${{ steps.generate-summary.outputs.filepath }}
+          if-no-files-found: error
+          retention-days: 2
+          overwrite: true
+          compression-level: 0
+    
 
