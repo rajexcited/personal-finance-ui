@@ -62,8 +62,6 @@ jobs:
       - build_test
     outputs:
       matrix-analysis-keys: ${{ matrix.analysis-key }}
-      summary-file: ${{ steps.gen-summary.outputs.summary_file }}
-      analysis-key: ${{ matrix.analysis-key }}
     strategy:
       matrix:
         analysis-key:
@@ -88,14 +86,12 @@ jobs:
           path: dist
           key: converted-file-path
       - name: generate summary
-        id: gen-summary
         run: |
           SUMMARY_FILENAME="${ANALYSIS_KEY// /_}"
           echo python .github/scripts/summary_tc.py --analyze --converted-tc-path "$CONVERTED_FILE_PATH" --summary-filename "$SUMMARY_FILENAME" --key-path "details.$ANALYSIS_KEY"
           python .github/scripts/summary_tc.py --analyze --converted-tc-path "$CONVERTED_FILE_PATH" --summary-filename "$SUMMARY_FILENAME" --key-path "details.$ANALYSIS_KEY"
           echo showing summary outputs
-          echo summary_file = dist/$SUMMARY_FILENAME.json >> $GITHUB_OUTPUT
-          # cat dist/$SUMMARY_FILENAME.json
+          echo $SUMMARY_FILENAME.json >> dist/summary-file.txt
         env:
           CONVERTED_FILE_PATH: ${{ needs.build_test.outputs.converted-file-path }}
           ANALYSIS_KEY: ${{ matrix.analysis-key }}
@@ -111,7 +107,7 @@ jobs:
       - analyze_tc
     strategy:
       matrix:
-        # output-key: ${{ needs.analyze_tc.outputs.matrix-analysis-key }}
+        output-key: ${{ needs.analyze_tc.outputs.matrix-analysis-keys }}
         summary-output:
           - keys
           - total
@@ -131,7 +127,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: dist
-          key: summary-file-${{ needs.analyze_tc.outputs.analysis-key }}
-      - name: show summary output ${{ matrix.summary-output }} for ${{ needs.analyze_tc.outputs.analysis-key }}
-        run: 
-          python .github/scripts/output_summary.py --output "${{ matrix.summary-output }}" --summary-filepath ${{ needs.analyze_tc.outputs.summary-file }}
+          key: summary-file-${{ matrix.output-key }}
+      - name: show summary output ${{ matrix.summary-output }} for ${{ matrix.output-key }}
+        run: |
+          FILE_NAME=`cat dist/summary-file.txt`
+          echo python .github/scripts/output_summary.py --output "${{ matrix.summary-output }}" --summary-filepath "dist/$FILE_NAME"
+          python .github/scripts/output_summary.py --output "${{ matrix.summary-output }}" --summary-filepath "dist/$FILE_NAME"
+
