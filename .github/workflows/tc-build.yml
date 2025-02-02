@@ -14,18 +14,18 @@ concurrency:
 
 jobs:
   build_test:
-    name: convert and validate test case files
+    name: Convert and Validate Test Case Files
     runs-on: ubuntu-latest
     outputs:
       converted-file-path: ${{ steps.convert-tc-all.outputs.converted-file-path }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup python
-        # https://github.com/actions/setup-python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           cache: "pip" # caching pip dependencies
+          python-version: "3.13"
       - run: python --version
       - run: pip install -r .github/scripts/requirements.txt
       - run: pwd
@@ -35,33 +35,32 @@ jobs:
           echo python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases/
           python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases/
           echo converted-file-path=dist/converted-tcs.json >> $GITHUB_OUTPUT
-      - name: upload artifact
-        id: upload-artifact-step
+      - name: Upload Converted Test Case Artifact
+        id: upload-converted-tc-artifact
         uses: actions/upload-artifact@v4
         with:
-          name: converted-test-cases.json
+          name: converted-test-cases
           path: ${{steps.convert-tc-all.outputs.converted-file-path}}
           if-no-files-found: error
           retention-days: 7
           overwrite: true
       - name: artifact Outputs
         run: |
-          echo Artifact ID is ${{ steps.upload-artifact-step.outputs.artifact-id }}
-          echo Artifact URL is ${{ steps.upload-artifact-step.outputs.artifact-url }}
-          echo Artifact DIGEST is ${{ steps.upload-artifact-step.outputs.artifact-digest }}
-      - run: echo converted file path = ${{ steps.convert-tc-all.outputs.converted-file-path }}
+          echo Artifact ID: ${{ steps.upload-converted-tc-artifact.outputs.artifact-id }}
+          echo Artifact URL: ${{ steps.upload-converted-tc-artifact.outputs.artifact-url }}
+          echo Artifact DIGEST: ${{ steps.upload-converted-tc-artifact.outputs.artifact-digest }}
+      - run: |
+          echo Converted Filepath: ${{ steps.convert-tc-all.outputs.converted-file-path }}
       - uses: actions/cache@v4
         with:
           path: dist
           key: converted-file-path
 
   analyze_tc:
-    name: Summary of test cases
+    name: Analysing Test Cases
     runs-on: ubuntu-latest
     needs:
       - build_test
-    outputs:
-      matrix-analysis-keys: ${{ matrix.analysis-key }}
     strategy:
       matrix:
         analysis-key:
@@ -69,15 +68,14 @@ jobs:
           - Impact Area
           - Tags.impact
           - Tags.feature
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup python
-        # https://github.com/actions/setup-python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           cache: "pip" # caching pip dependencies
+          python-version: "3.13"
       - run: python --version
       - run: pip install -r .github/scripts/requirements.txt
       - run: pwd
@@ -85,7 +83,7 @@ jobs:
         with:
           path: dist
           key: converted-file-path
-      - name: generate summary
+      - name: Generate Summary
         run: |
           SUMMARY_FILENAME="${ANALYSIS_KEY// /_}"
           echo python .github/scripts/summary_tc.py --analyze --converted-tc-path "$CONVERTED_FILE_PATH" --summary-filename "$SUMMARY_FILENAME" --key-path "details.$ANALYSIS_KEY"
@@ -93,8 +91,8 @@ jobs:
           echo showing summary outputs
           echo $SUMMARY_FILENAME.json >> dist/summary-file.txt
         env:
-          CONVERTED_FILE_PATH: ${{ needs.build_test.outputs.converted-file-path }}
           ANALYSIS_KEY: ${{ matrix.analysis-key }}
+          CONVERTED_FILE_PATH: ${{ needs.build_test.outputs.converted-file-path }}
       - uses: actions/cache@v4
         with:
           path: dist
@@ -107,7 +105,11 @@ jobs:
       - analyze_tc
     strategy:
       matrix:
-        output-key: ${{ needs.analyze_tc.outputs.matrix-analysis-keys }}
+        analysis-key:
+          - Type of Test
+          - Impact Area
+          - Tags.impact
+          - Tags.feature
         summary-output:
           - keys
           - total
@@ -115,20 +117,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup python
-        # https://github.com/actions/setup-python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           cache: "pip" # caching pip dependencies
+          python-version: "3.13"
       - run: python --version
       - run: pip install -r .github/scripts/requirements.txt
       - run: pwd
-      - id: summary-file
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: dist
-          key: summary-file-${{ matrix.output-key }}
-      - name: show summary output ${{ matrix.summary-output }} for ${{ matrix.output-key }}
+          key: summary-file-${{ matrix.analysis-key }}
+      - name: show summary output ${{ matrix.summary-output }} for ${{ matrix.analysis-key }}
         run: |
           FILE_NAME=`cat dist/summary-file.txt`
           echo python .github/scripts/output_summary.py --output "${{ matrix.summary-output }}" --summary-filepath "dist/$FILE_NAME"
