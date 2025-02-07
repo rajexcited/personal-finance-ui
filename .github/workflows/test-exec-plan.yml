@@ -37,10 +37,10 @@ jobs:
       - name: Get Milestone ID
         id: get-milestone-id
         uses: actions/github-script@v7
+        # https://octokit.github.io/rest.js/v21/
         with:
           script: |
             const label = 'v${{ github.event.inputs.milestone-version }}';
-            # https://octokit.github.io/rest.js/v21/
             const milestones = await octokit.rest.issues.listMilestones({
               owner: context.repo.owner,
               repo: context.repo.repo,
