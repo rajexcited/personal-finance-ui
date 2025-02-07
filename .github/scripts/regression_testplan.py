@@ -1,0 +1,242 @@
+from argparse import ArgumentParser
+import os
+from pathlib import Path
+import re
+from collections import defaultdict, Counter
+from typing import List, Dict
+from parse_test_cases import parse_metadata, convert_all_tc
+from summary_tc import get_all_testcases_summary
+
+
+def get_variable_name(content):
+    return re.findall(r"\$[a-zA-Z0-9_\.]+", content)
+
+
+def is_list(content):
+    return re.match(r"^[-*+] (.+)", content)
+
+
+def get_value(milestone: Dict, converted_tc: Dict, regression_testcases: List[str], variable: str, tc_id: str = None):
+    testcases = regression_testcases if tc_id is None else [tc_id]
+    ia_list = set()
+    for tc in testcases:
+        if variable == "$details.impact_area":
+            for k, v in converted_tc[tc]["details"]["Impact Area"].items():
+                ia_list.add(k)
+                for lv in v:
+                    ia_list.add(lv)
+        elif variable.startswith("$milestone"):
+            key = variable.split(".")[1]
+            ia_list.add(milestone[key])
+        elif variable == "$details.tags.feature":
+            ia_list.update([v for v in converted_tc[tc]
+                           ["details"]["Tags"]["feature"]])
+        elif variable == "$details.tags.impact":
+            ia_list.update([fv for fv in converted_tc[tc]
+                           ["details"]["Tags"]["impact"]])
+        elif variable == "$details.title":
+            ia_list.add(converted_tc[tc]["details"]["Title"])
+        elif variable == "$metadata.id":
+            ia_list.add(converted_tc[tc]["metadata"]["id"])
+        elif variable == "$metadata.relative_file_path":
+            ia_list.add(converted_tc[tc]["metadata"]
+                        ["relative_file_path"].replace("\\", "/"))
+    if len(ia_list) == 0:
+        return [variable]
+    return sorted(ia_list)
+
+
+def replace_variables(milestone: Dict, converted_tc: Dict, regression_testcases: List, content_line: str, variables: List[str], tc_id: str = None):
+    content = ""
+    if is_list(content_line) and len(variables) == 1:
+        var = variables[0]
+        ll = get_value(milestone, converted_tc,
+                       regression_testcases, var, tc_id)
+        gmap = group_list_into_map(ll)
+        clist = []
+        for gv in gmap.values():
+            clist.append(content_line.replace(var, ", ".join(gv)))
+        content = "\n".join(clist)
+    else:
+        content = content_line
+        for var in variables:
+            ll = get_value(milestone, converted_tc,
+                           regression_testcases, var, tc_id)
+            content = content.replace(var, ", ".join(ll))
+    return content
+
+
+def group_list_into_map(items: List[str]) -> Dict[str, List[str]]:
+    keyword_count = Counter()
+    keyword_map = defaultdict(set)
+
+    exclude_keywords = ["api", "form", "add", "page"]
+    # Count occurrences of each keyword
+    for item in items:
+        keywords = item.split()
+        for keyword in keywords:
+            if keyword in exclude_keywords:
+                continue
+            keyword_count[keyword] += 1
+            keyword_map[keyword].add(item)
+
+    # Sort keywords by their occurrences in descending order
+    sorted_keywords = sorted(keyword_count.keys(),
+                             key=lambda k: -keyword_count[k])
+
+    # Create the final map with unique values
+    final_map = {}
+    seen_items = set()
+
+    for keyword in sorted_keywords:
+        unique_items = [item for item in keyword_map[keyword]
+                        if item not in seen_items]
+        if unique_items:
+            final_map[keyword] = unique_items
+            seen_items.update(unique_items)
+
+    return final_map
+
+
+def is_heading(line):
+    return re.match(r"^(#+) (.+)", line)
+
+
+def parse_regression_template(lines):
+    metadata, line_num = parse_metadata(lines)
+    if metadata == None:
+        raise ValueError("metadata not found")
+
+    result = {
+        "metadata": metadata,
+        "content": {}
+    }
+
+    heading_dict = None
+    for line_num, line in enumerate(lines[line_num+1:]):
+
+        heading_match = is_heading(line)
+        # print(heading_match)
+        if heading_match:
+            hlevel = len(heading_match.group(1))  # Number of `#`
+            htitle = heading_match.group(2).strip()
+            heading_dict = result["content"][line_num] = {
+                "headingLevel": hlevel, "headingTitle": htitle, "content": []}
+
+        if not heading_dict:
+            if len(line.strip()) == 0:
+                continue
+            heading_dict = result["content"][line_num] = {
+                "headingLevel": 0, "headingTitle": "", "content": []}
+
+        heading_dict["content"].append(line.strip())
+
+    return result
+
+
+def generate(parsed_template: Dict, converted_tc: Dict, summary_typeoftest: Dict, milestone: Dict):
+    sorted_line_numbers = sorted(parsed_template["content"].keys())
+    regression_testcases = summary_typeoftest["Regression"]
+    file_contents = []
+
+    for line_num in sorted_line_numbers:
+        content = parsed_template["content"][line_num]["content"]
+        variables_in_content = list()
+
+        for content_line in content:
+            variables = get_variable_name(content_line)
+            variables_in_content.extend(variables)
+            if "$ind" in variables and parsed_template["content"][line_num]["headingTitle"].startswith("Test Scenarios for Regression"):
+                for ind, tc in enumerate(regression_testcases):
+                    tc_content = content_line.replace("$ind", str(ind+1))
+                    file_contents.append(replace_variables(
+                        milestone, converted_tc, regression_testcases, tc_content, variables, tc))
+            else:
+                file_contents.append(
+                    replace_variables(milestone, converted_tc, regression_testcases, content_line, variables))
+    return file_contents
+
+
+def generate_regression_testplan(base_tc: Path, template_path: Path, generated_filename: str, milestone: Dict):
+    with open(template_path, "r") as f:
+        regression_template_lines = f.readlines()
+    parsed_template = parse_regression_template(regression_template_lines)
+
+    converted = convert_all_tc(base_tc)
+    summary_typeoftest = get_all_testcases_summary(
+        "details.Type of Test", converted)
+
+    file_contents = generate(parsed_template, converted,
+                             summary_typeoftest, milestone)
+    file_contents.insert(0, "---")
+    for k, v in parsed_template["metadata"].items():
+        file_contents.insert(0, f"{k}: {v}")
+    file_contents.insert(0, "---")
+
+    regression_filepath = f"dist/{generated_filename}.md"
+    with open(regression_filepath, "w") as f:
+        f.write("\n".join(file_contents))
+
+    # export to environment variable
+    github_env_filepath = os.getenv('GITHUB_ENV')
+    if github_env_filepath:
+        with open(github_env_filepath, 'a') as env_file:
+            for k, v in parsed_template["metadata"].items():
+                env_file.write(f"{k}={v}\n")
+                env_file.write(
+                    f"regression-testplan-file-path={regression_filepath}\n")
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser(
+        description="create regression test plan using template and test case data")
+    parser.add_argument("--generate", action="store_true",
+                        help="[Required] Generate regression test plan")
+    parser.add_argument("--template-path",
+                        help="[Required] Provide file path to regression template file")
+    parser.add_argument(
+        "--generated-filename", help="[Required] Provide filename which generated regression testplan should be saved. ex. 'regression-testplan'")
+    parser.add_argument(
+        "--tc-dir", help="[Required] provide test case base directory. ex. '../test-cases/'")
+    parser.add_argument(
+        "--milestone-id", help="[Required] provide milestone id")
+    parser.add_argument("--milestone-title",
+                        help="[Required] provide milestone title")
+    args = parser.parse_args()
+
+    try:
+        if not args.generate:
+            raise ValueError("generate flag is not provided")
+
+        # print("tc dir=", args.tc_dir)
+        template_path = Path(args.template_path)
+        if not template_path.exists():
+            raise ValueError("regression template not exists")
+
+        if not args.generated_filename:
+            raise ValueError(
+                "generated regression testplan file name is not provided")
+
+        base_tc = Path(args.tc_dir)
+        if not base_tc.exists():
+            # print("base test case directory not exists")
+            raise ValueError("test case directory not exists")
+        if len(list(base_tc.rglob("*.md"))) == 0:
+            raise ValueError("there are no files")
+
+        if not args.milestone_id or not args.milestone_title:
+            raise ValueError("milestone id or title not provided")
+
+        no_error = True
+    except Exception as e:
+        no_error = False
+        print("error: ", e)
+        parser.print_help()
+
+    if not no_error:
+        exit(1)
+
+    milestone_details = {"id": args.milestone_id,
+                         "title": args.milestone_title}
+    generate_regression_testplan(
+        base_tc, template_path, args.generated_filename, milestone_details)

@@ -14,14 +14,16 @@ def get_formatted_key(k: str):
     return kr
 
 
-def parse_metadata(lines):
+def parse_metadata(lines: List[str]):
     metadata = None
+    ln = 0
 
-    for line in lines:
+    for line_num, line in enumerate(lines):
         if line.strip() == "---":
             if metadata == None:
                 metadata = dict()
             else:
+                ln = line_num
                 break
         else:
             metadata_match = re.match(r"(.+):(.+)", line)
@@ -31,7 +33,8 @@ def parse_metadata(lines):
                 if key in metadata:
                     raise ValueError("duplicate metadata key")
                 metadata[key] = text
-    return metadata
+
+    return metadata, ln
 
 
 def convert_list_to_dict(key: str, list_values: List | str | dict):
@@ -73,7 +76,7 @@ def convert_tc(file: Path, base_file: Path):
     with file.open(mode="r", encoding="utf-8") as f:
         lines = f.readlines()
 
-    metadata = parse_metadata(lines)
+    metadata, ln = parse_metadata(lines)
     if "id" not in metadata:
         raise AssertionError(
             f"id is missing in metadata of file, {file.relative_to(base_file)}")
@@ -119,7 +122,7 @@ def get_relative_path(base_dir: Path, file_path: Path):
     return file_path.relative_to(base_dir)
 
 
-def convert_all_tc(base_tc_dir: Path, converted_filename: str):
+def convert_all_tc(base_tc_dir: Path):
     all_dict = dict()
     errored_files = list()
     for tc_file in base_tc_dir.rglob("*.md"):
@@ -146,7 +149,7 @@ def convert_all_tc(base_tc_dir: Path, converted_filename: str):
     if len(errored_files) > 0:
         raise AssertionError(json.dumps(errored_files, indent=4))
 
-    save_dict(all_dict, converted_filename)
+    return all_dict
 
 
 def save_dict(d: dict, name="converted-tcs"):
@@ -155,9 +158,9 @@ def save_dict(d: dict, name="converted-tcs"):
     json_file = Path(f"{name}.json")
     file_path = dist_dir/json_file
 
-    f = file_path.open("w")
-    f.write(json.dumps(d, indent=4))
-    f.close()
+    with open(file_path, "w") as f:
+        json.dump(d, f, indent=4)
+
     print(f"dictionary is saved as json to file, {file_path}")
 
 
@@ -168,7 +171,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--tc-dir", help="[Required] provide test case base directory. ex. '../test-cases/'")
     parser.add_argument("--converted-filename", default="converted-tcs",
-                        help="[Optional] provide file name where to save the converted test case details. ex. 'converted'")
+                        help="[Optional] Provide filename which converted test case details should be saved to. ex. 'converted'")
     args = parser.parse_args()
 
     try:
@@ -192,4 +195,5 @@ if __name__ == "__main__":
     if not no_error:
         exit(1)
 
-    convert_all_tc(base_tc, args.converted_filename)
+    converted_dict = convert_all_tc(base_tc)
+    save_dict(converted_dict, args.converted_filename)

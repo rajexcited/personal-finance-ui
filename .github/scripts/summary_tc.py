@@ -27,11 +27,11 @@ def traverse_dict(key_depths: List[str], wrapper: Dict[str, Dict]):
 
 def add_testcase_summary(search_key: List[str], sd: Dict, tc_key: str, tc_details: Dict[str, Dict]):
     v = traverse_dict(search_key, tc_details)
-    print("traversed the dictionary to analyze the key", sd)
+    # print("traversed the dictionary to analyze the key", sd)
     append_list_summary("", v, sd, tc_key)
-    print("after analyzing list, sd=", sd)
+    # print("after analyzing list, sd=", sd)
     append_dict_summary(v, sd, tc_key)
-    print("after analyzing dict, sd=", sd)
+    # print("after analyzing dict, sd=", sd)
 
 
 def append_list_summary(key_prefix: str, list_values: List, sd: Dict[str, List], tc_key: str):
@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     tc_details_dict = dict()
     with converted_tc.open("r", encoding="utf-8") as ctcf:
-        tc_details_dict = json.loads(ctcf.read())
+        tc_details_dict = json.load(ctcf)
 
     summary_dict = get_all_testcases_summary(
         args.key_path.strip(), tc_details_dict)

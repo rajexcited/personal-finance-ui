@@ -1,61 +1,61 @@
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 import json
 from tabulate import tabulate
 
 
 def print_summary_total(summary_dict: Dict):
     tabulate_data_by_key = dict()
-    first_key = "---first-key---"
-    tabulate_data_by_key[first_key] = list()
 
     for k, v in summary_dict.items():
-        if "+" in k:
-            k_array = k.split("+")
-            if k_array[0] not in tabulate_data_by_key:
-                tabulate_data_by_key[k_array[0]] = list()
-            tabulate_data_by_key[k_array[0]].append([k_array[1], len(v)])
-        else:
-            tabulate_data_by_key[first_key].append([k, len(v)])
+        key_parts = k.rpartition("+")
+        main_key = key_parts[0]
+        sub_key = key_parts[2]
+        if main_key not in tabulate_data_by_key:
+            tabulate_data_by_key[main_key] = list()
+        tabulate_data_by_key[main_key].append([sub_key, len(v)])
+
+    headers = ["key", "Total Testcases"]
+    for k, v in tabulate_data_by_key.items():
+        if k == "":
+            print(tabulate(tabular_data=v, headers=headers, tablefmt="grid"))
 
     for k, v in tabulate_data_by_key.items():
-        if k == first_key:
-            print(tabulate(tabular_data=v, headers=[
-                  "key", "total testcases"], tablefmt="grid"))
-
-    for k, v in tabulate_data_by_key.items():
-        if k != first_key:
+        if k != "":
             print(f"\n{k} is further categorised into:")
-            print(tabulate(tabular_data=sorted(v), headers=[
-                "key", "total testcases"], tablefmt="grid"))
+            print(tabulate(tabular_data=sorted(v),
+                  headers=headers, tablefmt="grid"))
+
+
+def print_summary_keys(summary_dict: Dict):
+    tabulate_dataset = {k.rpartition("+")[2] for k in summary_dict.keys()}
+    tabulate_data = [[k] for k in sorted(tabulate_dataset)]
+    print(tabulate(tabular_data=tabulate_data,
+          headers=["Keys"], tablefmt="grid"))
+
+
+def print_summary_values(summary_dict: Dict):
+    tabulate_data = list()
+    for k, v in summary_dict.items():
+        tabulate_data.append([k, len(v), "\n".join(sorted(v))])
+    print(tabulate(tabular_data=tabulate_data, headers=[
+          "Key", "Total", "Testcases"], tablefmt="grid"))
 
 
 def print_human_readable_summary(output: str, summary_filepath: Path):
-    summary_dict = dict()
     with summary_filepath.open("r", encoding="utf-8") as spf:
-        summary_dict = json.loads(spf.read())
+        summary_dict = json.load(spf)
 
-    if len(summary_dict.keys()) == 0:
-        print("no summary data found")
-
-    elif output == "keys":
-        tabulate_data = list()
-        for k in sorted(summary_dict.keys()):
-            tabulate_data.append([k])
-        print(tabulate(tabular_data=tabulate_data,
-              headers=["keys"], tablefmt="grid"))
+    if not summary_dict or len(summary_dict.keys()) == 0:
+        print("No summary data found")
 
     elif output == "total":
         print_summary_total(summary_dict)
-
+    elif output == "keys":
+        print_summary_keys(summary_dict)
     elif output == "values":
-        tabulate_data = list()
-        for k, v in summary_dict.items():
-            tabulate_data.append([k, len(v), "\n".join(sorted(v))])
-
-        print(tabulate(tabular_data=tabulate_data, headers=[
-              "Key", "total", "Testcases"], tablefmt="grid"))
+        print_summary_values(summary_dict)
 
 
 if __name__ == "__main__":

@@ -32,8 +32,8 @@ jobs:
       - id: convert-tc-all
         run: |
           echo converting and validating test case files
-          echo python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases/
-          python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases/
+          echo python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases
+          python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases
           echo converted-file-path=dist/converted-tcs.json >> $GITHUB_OUTPUT
       - name: Upload Converted Test Case Artifact
         id: upload-converted-tc-artifact
@@ -44,7 +44,6 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           overwrite: true
-          compression-level: 1
       - name: artifact Outputs
         run: |
           echo Artifact ID: ${{ steps.upload-converted-tc-artifact.outputs.artifact-id }}
@@ -95,14 +94,11 @@ jobs:
           ANALYSIS_KEY: ${{ matrix.analysis-key }}
           CONVERTED_FILE_PATH: ${{ needs.build_test.outputs.converted-file-path }}
       - name: Show Summary Output (keys)
-        run: 
-          python .github/scripts/output_summary.py --output "keys" --summary-filepath ${{ steps.generate-summary.outputs.filepath }}
+        run: python .github/scripts/output_summary.py --output "keys" --summary-filepath ${{ steps.generate-summary.outputs.filepath }}
       - name: Show Summary Output (total)
-        run: 
-          python .github/scripts/output_summary.py --output "total" --summary-filepath ${{ steps.generate-summary.outputs.filepath }}
+        run: python .github/scripts/output_summary.py --output "total" --summary-filepath ${{ steps.generate-summary.outputs.filepath }}
       - name: Show Summary Output (values)
-        run: 
-          python .github/scripts/output_summary.py --output "values" --summary-filepath ${{ steps.generate-summary.outputs.filepath }}
+        run: python .github/scripts/output_summary.py --output "values" --summary-filepath ${{ steps.generate-summary.outputs.filepath }}
       - name: Upload Summary Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -111,6 +107,3 @@ jobs:
           if-no-files-found: error
           retention-days: 2
           overwrite: true
-          compression-level: 0
-    
-
