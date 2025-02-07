@@ -39,8 +39,9 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const label = '${{ github.event.inputs.milestone-version }}';
-            const milestones = await github.issues.listMilestones({
+            const label = 'v${{ github.event.inputs.milestone-version }}';
+            # https://octokit.github.io/rest.js/v21/
+            const milestones = await octokit.rest.issues.listMilestones({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open'
@@ -58,7 +59,7 @@ jobs:
         with:
           script: |
             const branch = `milestone/v${{ github.event.inputs.milestone-version }}`;
-            const response = await github.repos.getBranch({
+            const response = await octokit.rest.repos.getBranch({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 branch: branch
