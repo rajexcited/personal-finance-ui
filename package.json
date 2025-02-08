@@ -1,7 +1,7 @@
 {
   "name": "personal-finance-ui",
   "description": "UI app for managing my personal finance. it helps with tracking expenses, managing payment accounts.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "homepage": "https://rajexcited.github.io/personal-finance-ui/",
   "scripts": {
