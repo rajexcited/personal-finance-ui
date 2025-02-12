@@ -1,28 +1,32 @@
 ---
 id: add-purchase-tc1
+title: Add Purchase successful
+execution: manual
+created: 12/21/2024
+updated: 02/12/2025
 ---
 
 # Add Purchase - Success
 
 ## Title:
 
-Add purchase successfully
+Add purchase successful
 
 ## Description:
 
-logged in active user can submit new purchase
+Logged in active user can add purchase successfully
 
 ## Preconditions:
 
-user is logged in and active. expense view list page is launched
+User is logged in and active. User is on `view expenses` page.
 
 ## Steps to Execute:
 
-1. user clicks on `add purchase` button
-2. after few seconds of waiting, user is redirected to purchase add form
-3. verify all fields are empty or default initialized.
-4. there are 2 buttons, `add` and `cancel`, are displayed at the bottom of screen.
-5. user fills out below details,
+1. User clicks on `add purchase` button
+2. After few seconds of waiting, user is redirected to purchase add form
+3. Verify all fields are empty or default initialized.
+4. Verify 2 buttons, `add` and `cancel`, are displayed at the bottom of screen.
+5. User fills out below details,
    - bill name: `local grocery store`
    - bill amount: `123`. verify `USA-USD` and `dollar symbol` is displayed to amount field.
    - payment account: dropdown select is displayed. verify atleast item `cash` exists. choose `cash`
@@ -37,43 +41,50 @@ user is logged in and active. expense view list page is launched
      - click on button and choose an jpeg image. now the image is viewable with name. upon clicking on image it opens in fullscreen.
      - close the popup
    - click and expand `break into purchase items`. verify item count is 0 and all fields in row are empty.
-6. click on `add` button.
+6. User clicks on `add` button.
 
 ## Expected Outcome:
 
 - The loading indicator is displayed for few seconds (~3) while purchase is being added.
-- when successfully added, the expense list is showing new added purchase with filled out values.
+- When successfully added, the expense list is showing new added purchase with filled out values.
 - `view receipts` and `add refund` actions exist for the purchase.
-- in small screen, it can be expanded, verify details
+- In small/mobile screen, it can be expanded, verify details
 
 ## Impact Area:
 
 ### frontend
 
-- expense page
-- add purchase form
+- View Expenses page
+- Add Purchase page
+- navigation component
+- expenses module
+- purchase component
 
 ### backend api
 
-- expense list api
+- expense count api
+- expense api
+- purchase api
 - purchase type api
 - payment account api
 - share person api
 - purchase tags api
-- purchase api post
+- currency profile api
+- purchase receipt api
 
 ## Type of Test:
 
-- Integration
+- End to End
 - Regression
 - Demo site testable
 
 ## Tags:
 
-- feature=`expense,purchase,add`
+- feature=`expense`
 - execution=`manual`
 - impact=`high`
 - type=`positive`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
@@ -94,15 +105,10 @@ total=1 min
 #### network calls:
 
 - index.html=450 ms
-- api/user/login/post=1.8 sec
-- api/user/details/get=2.3 sec
-- api/stats/purchase/get=1.44 sec
-- api/stats/refund/get=1.24 sec
-- api/stats/income/get=768 ms
 
 ### Lambda:
 
-#### user-login
+#### add purchase
 
 - memory provisioned=256 MB
 - bill duration=1122 ms

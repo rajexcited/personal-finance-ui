@@ -79,7 +79,7 @@ User is logged in and active. User is on `view expenses` page.
 
 ## Tags:
 
-- feature=`expenses`
+- feature=`expense`
 - execution=`manual`
 - impact=`high`
 - type=`positive`

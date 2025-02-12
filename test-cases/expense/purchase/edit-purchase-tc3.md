@@ -1,5 +1,9 @@
 ---
 id: edit-purchase-tc3
+title: Update Purchase successful
+execution: manual
+created: 12/21/2024
+updated: 02/12/2025
 ---
 
 # Edit Purchase - Success
@@ -10,19 +14,19 @@ Edit purchase successfully
 
 ## Description:
 
-active user can update existing purchase details
+Logged in active user can update existing purchase details successfully
 
 ## Preconditions:
 
-user is logged in and active. expense view list page is launched with at least 1 purchase
+User is logged in and active. User is `view expenses` page and there is at least 1 purchase listed.
 
 ## Steps to Execute:
 
-1. user clicks on `update purchase` action from purchase view `local grocery store`
-2. after few seconds of waiting, user is redirected to purchase Edit form
-3. verify all fields are initialized with appropriate values of purchase.
-4. there are 2 buttons, `update` and `cancel`, are displayed at the bottom of screen.
-5. user updates details below,
+1. User clicks on `update purchase` action from purchase view `local grocery store`
+2. After few seconds of waiting, user is redirected to purchase Edit form
+3. Verify all fields are initialized with appropriate values of purchase.
+4. Verify 2 buttons, `update` and `cancel`, are displayed at the bottom of screen.
+5. User updates details below,
    - bill name: change to `local grocery store further`
    - bill amount: change to `12.3`. verify `USA-USD` and `dollar symbol` is displayed to amount field.
    - payment account: dropdown is `cash` selected. unselect the item.
@@ -38,43 +42,50 @@ user is logged in and active. expense view list page is launched with at least 1
      - close the popup and verify message `no receipt uploaded` is displayed.
    - click and expand `break into purchase items`. verify item count is 0 and all fields in row are empty.
    - enter item name to `snacks`, amount to `4.5`, purchase type to `food shopping`, tags to `daily, brakfast`
-6. click on `update` button.
+6. User clicks on `update` button.
 
 ## Expected Outcome:
 
 - The loading indicator is displayed for few seconds (~3) while purchase is being updated.
-- when successfully updated, the expense list is showing updated purchase with filled out values.
+- When successfully updated, the expense list is showing updated purchase with filled out values.
 - `view receipts` action is not showing for the purchase.
-- in small screen, it can be expanded. verify details
+- In small/mobile screen, it can be expanded. verify details
 
 ## Impact Area:
 
 ### frontend
 
-- expense page
-- update purchase form
+- View Expenses page
+- Edit Purchase page
+- navigation component
+- expenses module
+- purchase component
 
 ### backend api
 
-- expense list api
+- expense count api
+- expense api
+- purchase api
 - purchase type api
 - payment account api
 - share person api
-- purchase api get
 - purchase tags api
-- purchase api post
+- currency profile api
+- purchase receipt api
 
 ## Type of Test:
 
-- Integration
+- End to End
+- Regression
 - Demo site testable
 
 ## Tags:
 
-- feature=`expense,purchase,edit`
+- feature=`expense`
 - execution=`manual`
 - impact=`high`
 - type=`positive`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
@@ -95,15 +106,10 @@ total=1 min
 #### network calls:
 
 - index.html=450 ms
-- api/user/login/post=1.8 sec
-- api/user/details/get=2.3 sec
-- api/stats/purchase/get=1.44 sec
-- api/stats/refund/get=1.24 sec
-- api/stats/income/get=768 ms
 
 ### Lambda:
 
-#### user-login
+#### edit purchase
 
 - memory provisioned=256 MB
 - bill duration=1122 ms

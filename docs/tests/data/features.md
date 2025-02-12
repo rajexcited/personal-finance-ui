@@ -1,9 +1,9 @@
 # List of all high level features
 
 - auth (authentication / authorization)
-- expenses
-- payment accounts
-- settings
+- expense
+- payment account
+- setting
 
 # List of components / modules
 
