@@ -34,6 +34,7 @@ def parse_metadata(lines: List[str]):
                     raise ValueError("duplicate metadata key")
                 metadata[key] = text
 
+    # validate metadata fields
     return metadata, ln
 
 

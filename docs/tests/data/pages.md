@@ -1,0 +1,35 @@
+# List of all Pages
+
+- Home Public
+- Home Secured
+- About
+- FAQ
+- Terms of Service
+- Privacy Policy
+- Login
+- Signup
+- View Expenses
+- Add Purchase
+- Edit Purchase
+- Add Income
+- Edit Income
+- Add Refund
+- Edit Refund
+- View Payment Account
+- Add Payment Account
+- Edit Payment Account
+- General Settings
+- View Purchase Type
+- Add Purchase Type
+- Edit Purchase Type
+- View Income Type
+- Add Income Type
+- Edit Income Type
+- View Refund Reason
+- Add Refund Reason
+- Edit Refund Reason
+- View Share Person
+- Add Share Person
+- Edit Share Person
+- Profile
+- Security
