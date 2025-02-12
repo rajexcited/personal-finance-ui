@@ -1,32 +1,36 @@
 ---
 id: add-edit-income-tc4
+title: Income form UI validations
+execution: manual
+created: 12/21/2024
+updated: 02/11/2025
 ---
 
 # Income Form - UI validation
 
 ## Title:
 
-income form UI validation
+Income form UI validations
 
 ## Description:
 
-UI validation on income form
+Perform UI field validations on income form
 
 ## Preconditions:
 
-user is logged in and active. user is on add Income page
+The user is logged in and active. the user navigates to `add Income page`
 
 ## Steps to Execute:
 
-1. verify all fields are empty.
-2. user clicks on `add` button
+1. Verify all fields are empty.
+2. User clicks on `add` button
 3. UI validation fails and unable to proceed with add income
    - income name: error `please fill out this field`
    - income amount: error `please fill out this field`
    - income type: error `please select an item from dropdown`
    - payment account: error `please select an item from dropdown`
-4. user enters income name value to `s` but gets error message `Please lengthen this text to 2 characters or more (you are currently using 1 character).`
-5. user tries to add below 11 tags: gets error counter 10.
+4. User enters `income name` value to `a` but gets error message `Please lengthen this text to 2 characters or more (you are currently using 1 character).`
+5. User tries to add below 11 tags and gets error counter 10.
    - referrel
    - celebrate
    - transfer
@@ -37,22 +41,26 @@ user is logged in and active. user is on add Income page
    - reward
    - god gift
    - miscellaneous
-6. space in tag value is converted to dash format.
-7. there are no tag person list. user tries to add on the fly. user can't select or add. but shows what user typed in field.
-8. user tries to fill income name with `referrel "special"` and gets error message
-9. user tries to upload unsupported file. for example `fake.txt` file. system gives error message `fake.txt is not supported. Hence, the system cannot accept.`
-10. user clicks on `cancel` button.
+6. The space in tag value is converted to dash format.
+7. There is no tag person list. User tries to add on the fly. But user can't select or add, and input field shows what user typed.
+8. User tries to fill income name with `referrel "special"` and gets error message
+9. User tries to upload unsupported file. for example `fake.txt` file. system gives error message `fake.txt is not supported. Hence, the system cannot accept.`
+10. User clicks on `cancel` button.
 
 ## Expected Outcome:
 
-verify all UI validation errors on fields
+- Verify all UI validation errors on fields
+- When user clicks on cancel button, user is navigated to `view expenses` page.
 
 ## Impact Area:
 
 ### frontend
 
-- add income form
-- update income form
+- Add Income page
+- Edit Income page
+- navigation component
+- expenses module
+- income component
 
 ### backend api
 
@@ -60,6 +68,7 @@ verify all UI validation errors on fields
 - payment account api
 - share person api
 - income tags api
+- currency profile api
 
 ## Type of Test:
 
@@ -68,10 +77,11 @@ verify all UI validation errors on fields
 
 ## Tags:
 
-- feature=`expense,income,add,edit`
+- feature=`expenses`
 - execution=`manual`
 - impact=`medium`
 - type=`negative`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
@@ -91,20 +101,7 @@ total=1 min
 
 #### network calls:
 
-- index.html=450 ms
-- api/user/login/post=1.8 sec
-- api/user/details/get=2.3 sec
-- api/stats/purchase/get=1.44 sec
-- api/stats/refund/get=1.24 sec
-- api/stats/income/get=768 ms
-
 ### Lambda:
-
-#### user-login
-
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
 
 ## Notes/Comments:
 

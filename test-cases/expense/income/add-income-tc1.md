@@ -1,28 +1,32 @@
 ---
 id: add-income-tc1
+title: Add Income successful
+execution: manual
+created: 12/21/2024
+updated: 02/11/2025
 ---
 
 # Add Income - Success
 
 ## Title:
 
-Add income successfully
+Add income successful
 
 ## Description:
 
-logged in active user can submit new income
+Logged in active user can add income successfully
 
 ## Preconditions:
 
-user is logged in and active. expense view list page is launched
+User is logged in and active. User is on `view expenses` page.
 
 ## Steps to Execute:
 
-1. user clicks on `add income` button
-2. after few seconds of waiting, user is redirected to income add form
-3. verify all fields are empty or default initialized.
-4. there are 2 buttons, `add` and `cancel`, are displayed at the bottom of screen.
-5. user fills out below details,
+1. User clicks on `add income` button
+2. After few seconds of waiting, user is redirected to income add form
+3. Verify all fields are empty or default initialized.
+4. Verify 2 buttons, `add` and `cancel`, are displayed at the bottom of screen.
+5. User fills out below details,
    - income name: `primary job`
    - income amount: `1440`. verify `USA-USD` and `dollar symbol` is displayed to amount field.
    - payment account: dropdown select is displayed with error `please select an item from dropdown`. verify atleast item `cash` exists. choose `cash`
@@ -36,43 +40,50 @@ user is logged in and active. expense view list page is launched
      - when click on `upload receipt` button, a popup opens having button and message `there are no receipts`.
      - click on button and choose an pdf e.g. paycheck. now the embedded pdf is viewable with name. upon clicking on `view` button it opens in fullscreen.
      - close the popup
-6. click on `add` button.
+6. User clicks on `add` button.
 
 ## Expected Outcome:
 
 - The loading indicator is displayed for few seconds (~3) while income is being added.
-- when successfully added, the expense list is showing new added income with filled out values.
+- When successfully added, the expense list is showing new added income with filled out values.
 - `view receipts` action exist for the income.
-- in small screen, it can be expanded, verify details
+- In small/mobile screen, it can be expanded, verify details
 
 ## Impact Area:
 
 ### frontend
 
-- expense page
-- add income form
+- View Expenses page
+- Add Income page
+- navigation component
+- expenses module
+- income component
 
 ### backend api
 
-- expense list api
+- expense count api
+- expense api
+- income api
 - income type api
 - payment account api
 - share person api
 - income tags api
-- income api post
+- currency profile api
+- income receipt api
 
 ## Type of Test:
 
-- Integration
+- End to End
 - Regression
 - Demo site testable
 
 ## Tags:
 
-- feature=`expense,income,add`
+- feature=`expenses`
 - execution=`manual`
 - impact=`high`
 - type=`positive`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
@@ -93,15 +104,10 @@ total=1 min
 #### network calls:
 
 - index.html=450 ms
-- api/user/login/post=1.8 sec
-- api/user/details/get=2.3 sec
-- api/stats/purchase/get=1.44 sec
-- api/stats/refund/get=1.24 sec
-- api/stats/income/get=768 ms
 
 ### Lambda:
 
-#### user-login
+#### add income
 
 - memory provisioned=256 MB
 - bill duration=1122 ms

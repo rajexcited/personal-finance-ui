@@ -1,56 +1,66 @@
 ---
 id: edit-income-tc2
+title: Attempt to Update Income, but Cancel
+execution: manual
+created: 12/21/2024
+updated: 02/11/2025
 ---
 
 # Edit Income - cancel
 
 ## Title:
 
-Edit income and cancel
+Attempt to Update Income, but cancel
 
 ## Description:
 
-active user tried to update existing income details, but cancels
+Logged in active user tries to update existing income details, but cancels and income details are not saved
 
 ## Preconditions:
 
-user is logged in and active. expense view list page is launched with at least 1 income
+User is logged in and active. User is `view expenses` page and there is at least 1 income listed.
 
 ## Steps to Execute:
 
-1. user clicks on `update income` action from income view `primary job`
-2. after few seconds of waiting, user is redirected to income Edit form
-3. verify all fields are initialized with appropriate values of income.
-4. there are 2 buttons, `update` and `cancel`, are displayed at the bottom of screen.
-5. user updates details below,
+1. User clicks on `update income` action from income view `primary job`
+2. After few seconds of waiting, user is redirected to income Edit form
+3. Verify all fields are initialized with appropriate values of income.
+4. Verify 2 buttons, `update` and `cancel`, are displayed at the bottom of screen.
+5. User updates details below,
    - income name: change to `secondary job`
    - income amount: change to `2100`. verify `USA-USD` and `dollar symbol` is displayed to amount field.
    - income verified: click on verify indicator to change to verified.
    - income date: change to 1 month backword.
-6. click on `cancel` button.
+6. User clicks on `cancel` button.
 
 ## Expected Outcome:
 
 - The loading indicator is displayed for few seconds (~1) while income is being cancel.
-- on successful, the expense list is showing with no changes to income details.
+- On successful, the expense list is showing with no changes to income details.
 - `view receipts` action is still showing for the income.
-- in small screen, it can be expanded. verify details
+- In small/mobile screen, it can be expanded. verify details
 
 ## Impact Area:
 
 ### frontend
 
-- expense page
-- update income form
+- View Expenses page
+- Edit Income page
+- navigation component
+- expenses module
+- income component
 
 ### backend api
 
-- expense list api
+- expense count api
+- expense api
+- income api
 - income type api
 - payment account api
 - share person api
-- income api get
 - income tags api
+- currency profile api
+- income receipt api
 
 ## Type of Test:
 
@@ -59,10 +69,11 @@ user is logged in and active. expense view list page is launched with at least 1
 
 ## Tags:
 
-- feature=`expense,income,edit`
+- feature=`expenses`
 - execution=`manual`
 - impact=`medium`
 - type=`positive`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
@@ -82,20 +93,7 @@ total=1 min
 
 #### network calls:
 
-- index.html=450 ms
-- api/user/login/post=1.8 sec
-- api/user/details/get=2.3 sec
-- api/stats/purchase/get=1.44 sec
-- api/stats/refund/get=1.24 sec
-- api/stats/income/get=768 ms
-
 ### Lambda:
-
-#### user-login
-
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
 
 ## Notes/Comments:
 
