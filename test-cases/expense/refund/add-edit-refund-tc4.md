@@ -1,32 +1,36 @@
 ---
 id: add-edit-refund-tc4
+title: Refund form UI validations
+execution: manual
+created: 12/21/2024
+updated: 02/12/2025
 ---
 
 # Refund Form UI validation
 
 ## Title:
 
-refund form UI validation
+Refund form UI validations
 
 ## Description:
 
-UI validation on refund form
+Perform UI field validations on refund form
 
 ## Preconditions:
 
-user is logged in and active. user is on add Refund page
+The user is logged in and active. the user navigates to `add refund page`
 
 ## Steps to Execute:
 
-1. verify all fields are empty.
-2. user clicks on `add` button
+1. Verify all fields are empty.
+2. User clicks on `add` button
 3. UI validation fails and unable to proceed with add refund
    - bill name: error `please fill out this field`
    - refund amount: error `please fill out this field`
    - refund reason: error `please select an item from dropdown`
    - payment account: error `please select an item from dropdown`
-4. user enters bill name value to `s` but gets error message `Please lengthen this text to 2 characters or more (you are currently using 1 character).`
-5. user tries to add below 11 tags: gets error counter 10.
+4. User enters bill name value to `s` but gets error message `Please lengthen this text to 2 characters or more (you are currently using 1 character).`
+5. User tries to add below 11 tags: gets error counter 10.
    - invite
    - celebrate
    - hangout
@@ -38,30 +42,34 @@ user is logged in and active. user is on add Refund page
    - use and throw
    - cold drinks
    - water
-6. space in tag value is converted to dash format.
-7. there are no tag person list. user tries to add on the fly. user can't select or add. but shows what user typed in field.
-8. user tries to fill bill name with `refund for store "special"` and gets error message
-9. user tries to upload unsupported file. for example `fake.txt` file. system gives error message `fake.txt is not supported. Hence, the system cannot accept.`
-10. user clicks on `cancel` button.
+6. The space in tag value is converted to dash format.
+7. There are no tag person list. user tries to add on the fly. user can't select or add. but shows what user typed in field.
+8. User tries to fill bill name with `refund for store "special"` and gets error message
+9. User tries to upload unsupported file. for example `fake.txt` file. system gives error message `fake.txt is not supported. Hence, the system cannot accept.`
+10. User clicks on `cancel` button.
 
 ## Expected Outcome:
 
-verify all UI validation errors on fields
+- Verify all UI validation errors on fields
+- When user clicks on cancel button, user is navigated to `view expenses` page.
 
 ## Impact Area:
 
 ### frontend
 
-- add refund form
-- update refund form
+- Add Refund page
+- Edit Refund page
+- navigation component
+- expenses module
+- refund component
 
 ### backend api
 
 - refund reason api
 - payment account api
 - share person api
-- refund api get
-- refund tags api.
+- refund tags api
+- currency profile api
 
 ## Type of Test:
 
@@ -70,10 +78,11 @@ verify all UI validation errors on fields
 
 ## Tags:
 
-- feature=`expense,refund,add,edit`
+- feature=`expense`
 - execution=`manual`
 - impact=`medium`
 - type=`negative`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
@@ -93,20 +102,7 @@ total=1 min
 
 #### network calls:
 
-- index.html=450 ms
-- api/user/login/post=1.8 sec
-- api/user/details/get=2.3 sec
-- api/stats/purchase/get=1.44 sec
-- api/stats/refund/get=1.24 sec
-- api/stats/income/get=768 ms
-
 ### Lambda:
-
-#### user-login
-
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
 
 ## Notes/Comments:
 

@@ -1,5 +1,9 @@
 ---
 id: edit-refund-tc4
+title: Update Refund successful
+execution: manual
+created: 12/21/2024
+updated: 02/13/2025
 ---
 
 # Edit Refund - Success
@@ -10,19 +14,19 @@ Editing refund successfully
 
 ## Description:
 
-active user can update existing refund details
+Logged in active user can update existing refund details successfully
 
 ## Preconditions:
 
-user is logged in and active. expense view list page is launched with at least 1 refund
+User is logged in and active. User is `view expenses` page and there is at least 1 refund listed.
 
 ## Steps to Execute:
 
-1. user clicks on `update refund` action from refund view `refund for local grocery store`
-2. after few seconds of waiting, user is redirected to refund Edit form
-3. verify all fields are initialized with appropriate values of refund.
-4. there are 2 buttons, `update` and `cancel`, are displayed at the bottom of screen.
-5. user updates details below,
+1. User clicks on `update refund` action from refund view `refund for local grocery store`
+2. After few seconds of waiting, user is redirected to refund Edit form
+3. Verify all fields are initialized with appropriate values of refund.
+4. Verify 2 buttons, `update` and `cancel`, are displayed at the bottom of screen.
+5. User updates details below,
    - bill name: change to `refund for snacks`
    - bill amount: change to `5`. verify `USA-USD` and `dollar symbol` is displayed to amount field.
    - payment account: dropdown is `cash` selected. unselect the item.
@@ -36,43 +40,52 @@ user is logged in and active. expense view list page is launched with at least 1
      - a popup opens with thumbnail image view.
      - remove all uploaded receipts and verify message `there are no receipts`.
      - close the popup and verify message `no receipt uploaded` is displayed.
-6. click on `update` button.
+6. User clicks on `update` button.
 
 ## Expected Outcome:
 
 - The loading indicator is displayed for few seconds (~3) while refund is being updated.
-- when successfully updated, the expense list is showing updated refund with filled out values.
+- When successfully updated, the expense list is showing updated refund with filled out values.
 - `view receipts` action is not showing for the refund.
-- in small screen, it can be expanded. verify details
+- In small/mobile screen, it can be expanded. verify details
 
 ## Impact Area:
 
 ### frontend
 
-- expense page
-- update refund form
+- View Expenses page
+- Edit Refund page
+- navigation component
+- expenses module
+- refund component
 
 ### backend api
 
-- expense list api
-- refund type api
+- expense count api
+- expense api
+- refund api
+- refund reason api
 - payment account api
 - share person api
-- refund api get
 - refund tags api
-- refund api post.
+- currency profile api
+- refund receipt api
+- purchase type api
+- purchase api
 
 ## Type of Test:
 
-- Integration
+- End to End
+- Regression
 - Demo site testable
 
 ## Tags:
 
-- feature=`expense,refund,edit`
+- feature=`expense`
 - execution=`manual`
 - impact=`high`
 - type=`positive`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
@@ -92,16 +105,11 @@ total=1 min
 
 #### network calls:
 
-- index.html=450 ms
-- api/user/login/post=1.8 sec
-- api/user/details/get=2.3 sec
-- api/stats/purchase/get=1.44 sec
 - api/stats/refund/get=1.24 sec
-- api/stats/income/get=768 ms
 
 ### Lambda:
 
-#### user-login
+#### edit refund
 
 - memory provisioned=256 MB
 - bill duration=1122 ms

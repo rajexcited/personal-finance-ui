@@ -33,6 +33,7 @@ User is logged in and active. User is `view expenses` page and there is at least
 ## Expected Outcome:
 
 - The loading indicator is displayed for few seconds (~3) while income is being deleted.
+- verify the income is removed from view list.
 
 ## Impact Area:
 

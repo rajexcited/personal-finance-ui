@@ -1,5 +1,9 @@
 ---
 id: delete-refund-tc6
+title: Delete Income successful
+execution: manual
+created: 12/21/2024
+updated: 02/12/2025
 ---
 
 # Delete Refund - Success
@@ -10,20 +14,20 @@ Delete refund successfully
 
 ## Description:
 
-active user can delete existing refund details
+Logged in active user can delete existing refund details
 
 ## Preconditions:
 
-user is logged in and active. expense view list page is launched with at least 1 refund
+User is logged in and active. User is `view expenses` page and there is at least 1 refund listed.
 
 ## Steps to Execute:
 
-1. the refund has `delete refund` action enabled.
-2. user clicks on `delete refund` action link.
-3. system pops up dialog to confirm the action. `Do you really want to delete expense refund?`
-4. user choose to `no` the action. verify if expense is selected.
-5. user clicks on `delete refund` action link again.
-6. on confirm popup, user selects to `yes` to confirm.
+1. Verify the refund has `delete refund` action enabled.
+2. User clicks on `delete refund` action link.
+3. System pops up dialog to confirm the action. `Do you really want to delete expense refund?`
+4. User choose to `no` the action. verify if expense is selected.
+5. User clicks on `delete refund` action link again.
+6. On confirm popup, user selects to `yes` to confirm.
 
 ## Expected Outcome:
 
@@ -34,28 +38,34 @@ user is logged in and active. expense view list page is launched with at least 1
 
 ### frontend
 
-- expense page
-- delete refund
+- View Expenses page
+- expenses module
+- refund component
 
 ### backend api
 
-- expense list api
+- expense count api
+- expense api
+- income api
+- income type api
+- purchase api
+- purchase type api
+- refund api
 - refund reason api
 - payment account api
-- share person api
-- refund api delete.
 
 ## Type of Test:
 
-- Integration
+- End to End
 - Demo site testable
 
 ## Tags:
 
-- feature=`expense,refund,delete`
+- feature=`expense`
 - execution=`manual`
 - impact=`low`
 - type=`positive`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
@@ -76,15 +86,10 @@ total=1 min
 #### network calls:
 
 - index.html=450 ms
-- api/user/login/post=1.8 sec
-- api/user/details/get=2.3 sec
-- api/stats/purchase/get=1.44 sec
-- api/stats/refund/get=1.24 sec
-- api/stats/income/get=768 ms
 
 ### Lambda:
 
-#### user-login
+#### delete refund
 
 - memory provisioned=256 MB
 - bill duration=1122 ms
