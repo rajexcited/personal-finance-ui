@@ -64,6 +64,7 @@ User is logged in and active. User is on `view expenses` page and there is at le
 - navigation component
 - expenses module
 - refund component
+- upload receipts
 
 ### backend api
 

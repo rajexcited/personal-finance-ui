@@ -60,6 +60,7 @@ User is logged in and active. User is `view expenses` page and there is at least
 - navigation component
 - expenses module
 - purchase component
+- upload receipts
 
 ### backend api
 
