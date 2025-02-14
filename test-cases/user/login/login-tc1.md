@@ -1,61 +1,73 @@
 ---
 id: login-tc1
+title: User login successful
+execution: manual
+created: 12/21/2024
+updated: 02/13/2025
 ---
 
 # Login success
 
 ## Title:
 
-User attempts to login successfully
+User login successful
 
 ## Description:
 
-public user tries to login successful. upon login, user can access all secured features e.g. add purchase, view settings, etc.
+Public user logins successfully in first attempt. and user can access all secured features e.g. add purchase, view settings, etc.
 
 ## Preconditions:
 
-User has launched the public home page in chrome browser.
+User is not logged in and is on public home page.
 
 ## Steps to Execute:
 
-1. User navigates to login page
-2. user fills out details as following,
+1. User clicks on login navigation link
+2. Verify login page is loaded with emailId and password input fields
+3. Verify Signup and login buttons are displayed
+4. User fills out details as following,
    - emailId: `sardar.vallabhbhai.patel@example.com`
    - password: `$Ardar123`
-3. user clicks on login button
+5. User clicks on login button
 
 ## Expected Outcome:
 
-- The loading indicator is displayed for few seconds (~5).
-  -verify user is navigated to `secured homepage`.
-- verify secured links like, expenses, payment accounts, settings, logout, etc. are showing and navigational.
+- The loading indicator is displayed for few seconds (~5). Verify user is navigated to `secured homepage`.
+- Verify secured links like, expenses, payment accounts, settings, logout, etc. are showing and navigational.
 
 ## Impact Area:
 
 ### frontend
 
-- login page
-- homepage
+- Home Public page
+- Home Secured page
+- Login page
+- auth module
+- public module
+- navigation component
+- authen component
 
 ### backend api
 
-- login api
-- stats api
-- userdetails api
+- user login api
+- user details api
+- income stats api
+- purchase stats api
+- refund stats api
 
 ## Type of Test:
 
-- Integration
+- End to End
 - Regression
 - Demo site testable
 
 ## Tags:
 
-- feature=`login`
+- feature=`auth`
 - execution=`manual`
 - impact=`high`
 - type=`positive`
-- enablement=`regression`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
@@ -84,7 +96,19 @@ total=1 min
 
 ### Lambda:
 
-#### user-login
+#### user login
+
+- memory provisioned=256 MB
+- bill duration=1122 ms
+- init duration=687 ms
+
+#### user details
+
+- memory provisioned=256 MB
+- bill duration=1122 ms
+- init duration=687 ms
+
+#### stats
 
 - memory provisioned=256 MB
 - bill duration=1122 ms

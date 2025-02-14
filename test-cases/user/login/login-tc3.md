@@ -1,5 +1,9 @@
 ---
 id: login-tc3
+title: User login override successful
+execution: manual
+created: 01/21/2025
+updated: 02/13/2025
 ---
 
 # Login duplicate session
@@ -10,58 +14,72 @@ User attempts to login in different browser/tab/device
 
 ## Description:
 
-User has logged in successfully in windows chrome browser. And user tries to login to mobile and gets duplicate session notification.
+User tried login again in different device and gets successful. so overridding previous existing session with current. and gets logout from previous session.
 
 ## Preconditions:
 
-User has logged in successfully in chrome browser / tab. Now launched the site to another tab/browser and navigated to login page.
+User has active session in chrome browser of desktop. In incognito chrome browser or mobile browser, User has launched site and is on login page.
 
 ## Steps to Execute:
 
-1. user fills out details as following,
+1. Verify emailId and password input fields are displayed
+2. Verify login and signup buttons are displayed
+3. User fills out details as following,
    - emailId: `sardar.vallabhbhai.patel@example.com`
    - password: `$Ardar123`
-2. user clicks on login button
-3. user gets popup notifying duplicate session with active session info.
-4. user selects cancel, previous active session continues workable
-5. user tries to login again
-6. user gets popup notifying duplicate session with active session info.
-7. user selects `Punch login` or `force login`
+4. User clicks on login button
+5. User gets popup confirm dialog.
+   - verify notification of duplicate session and existing active session info
+   - verify 2 buttons, `cancel` and `Punch login`
+6. User clicks on cancel button
+7. Verify user is not loggedIn in current browser.
+8. Verify previous existing session is still active.
+9. Verify user can navigate to other secured pages in previous browser.
+10. User attempts to login again in incognito or mobile browser by following steps 3,4,5.
+11. User clicks `Punch login` button
 
 ## Expected Outcome:
 
-- The loading indicator is displayed for few seconds (~5).
-- verify user is navigated to `secured homepage` and secured links like, expenses, payment accounts, settings, logout, etc. are showing and navigational in current browser tab.
-- verify the other browser tab will be logged out as previous session is deactivated. and cannot take any action on previous tab.
+- The loading indicator is displayed for few seconds (~5). Verify user is navigated to `secured homepage`.
+- Verify secured links like, expenses, payment accounts, settings, logout, etc. are showing and navigational in current incognito/mobile browser.
+- Verify the previous browser session gets inactive. User cannot take any secured action or navigate on previous browser. Verify public home page is redirected.
 
 ## Impact Area:
 
 ### frontend
 
-- login page
-- homepage
+- Home Public page
+- Home Secured page
+- Login page
+- auth module
+- public module
+- navigation component
+- authen component
 
 ### backend api
 
-- login api
-- stats api
-- userdetails api
+- user login api
+- user details api
+- income stats api
+- purchase stats api
+- refund stats api
 
 ## Type of Test:
 
-- Integration
+- End to End
 - Demo site testable
 
 ## Tags:
 
-- feature=`login`
+- feature=`auth`
 - execution=`manual`
-- impact=`high`
+- impact=`medium`
 - type=`positive`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
-v0.1.0
+v0.2.0
 
 ## Attachments:
 
@@ -86,7 +104,19 @@ total=1 min
 
 ### Lambda:
 
-#### user-login
+#### user login
+
+- memory provisioned=256 MB
+- bill duration=1122 ms
+- init duration=687 ms
+
+#### user details
+
+- memory provisioned=256 MB
+- bill duration=1122 ms
+- init duration=687 ms
+
+#### stats
 
 - memory provisioned=256 MB
 - bill duration=1122 ms

@@ -1,41 +1,51 @@
 ---
 id: login-tc4
-name: Login error incorrect format
-about: user unable to login up because details are in incorrect format
-labels: [test-scenario, login, impact-medium, negative]
+title: login Form - UI validations
+execution: manual
+created: 12/21/2024
+updated: 02/13/2025
 ---
 
-# Login success
+# Login form UI validations
 
 ## Title:
 
-User attempts to login with incorrect format
+Login form UI validations
 
 ## Description:
 
-public user tries to login with incorrect format, but login is disable
+Perform login form UI field validations
 
 ## Preconditions:
 
-User has launched the public home page in chrome browser.
+User is not logged in and is on public home page.
 
 ## Steps to Execute:
 
-1. User navigates to login page
-2. user fills out details as following,
+1. Verify navigation has login link
+2. User clicks on login link
+3. Verify login page is loaded with emailId and password input fields
+4. Verify Signup and login buttons are displayed
+5. User fills out details as following,
    - emailId: `sardar.vallabhbhai.patel@example`
    - password: `sArdar`
 
 ## Expected Outcome:
 
-- verify The login button is disable and error messages are showing to respective fields.
+- Verify error messages are showing to respective fields
+- Verify The login button is disable
 
 ## Impact Area:
 
 ### frontend
 
-- login page
-- homepage
+- Home Public page
+- Login page
+- auth module
+- public module
+- authen component
+
+### backend api
 
 ## Type of Test:
 
@@ -44,10 +54,11 @@ User has launched the public home page in chrome browser.
 
 ## Tags:
 
-- feature=`login`
+- feature=`auth`
 - execution=`manual`
 - impact=`medium`
 - type=`negative`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 

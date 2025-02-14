@@ -1,5 +1,9 @@
 ---
 id: login-tc2
+title: User login gets access denied
+execution: manual
+created: 12/21/2024
+updated: 02/13/2025
 ---
 
 # Login fails
@@ -10,49 +14,54 @@ User attempts to login and gets access denied error
 
 ## Description:
 
-public user tries to login and fails because of incorrect credentials.
+Public user tries to login and fails because of incorrect credentials.
 
 ## Preconditions:
 
-User has launched the public home page in chrome browser.
+User is not logged in and is on public home page.
 
 ## Steps to Execute:
 
-1. User navigates to login page
-2. user fills out details as following,
+1. User clicks on login navigation link
+2. Verify login page is loaded with emailId and password input fields
+3. Verify Signup and login buttons are displayed
+4. User fills out details as following,
    - emailId: `sardar.vallabhbhai.patel@example.com`
    - password: `$Ardar1234`
-3. user clicks on login button
+5. user clicks on login button
 
 ## Expected Outcome:
 
 - The loading indicator is displayed for few seconds (~5).
-- verify the error message `unauthorize user` is shown.
-- verify there is no change in session or navigation links.
+- Verify the error message `unauthorize user` is shown.
+- Verify there is no change in session or navigation links.
 
 ## Impact Area:
 
 ### frontend
 
-- login page
-- homepage
+- Home Public page
+- Login page
+- auth module
+- public module
 
 ### backend api
 
-- login api
+- user login api
 
 ## Type of Test:
 
-- Integration
+- End to End
 - Regression
 - Demo site testable
 
 ## Tags:
 
-- feature=`login`
+- feature=`auth`
 - execution=`manual`
 - impact=`high`
 - type=`negative`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
@@ -74,14 +83,10 @@ total=1 min
 
 - index.html=450 ms
 - api/user/login/post=1.8 sec
-- api/user/details/get=2.3 sec
-- api/stats/purchase/get=1.44 sec
-- api/stats/refund/get=1.24 sec
-- api/stats/income/get=768 ms
 
 ### Lambda:
 
-#### user-login
+#### user login
 
 - memory provisioned=256 MB
 - bill duration=1122 ms
