@@ -1,20 +1,20 @@
 ---
-id: logout-tc1
-title: logout successful by user
+id: logout-tc3
+title: logout when session gets timeout
 execution: manual
 created: 12/21/2024
 updated: 02/14/2025
 ---
 
-# Logout success by user
+# Logout when session gets timeout
 
 ## Title:
 
-User logout successful by request
+User logout when session gets timeout
 
 ## Description:
 
-Logged in user tries to logout successfully. When successful, user is shown a success message and only public links are shown.
+Logged in user is automatically logged out when the session gets timeout after 30 min. User is redirected to the login page with a session expired message.
 
 ## Preconditions:
 
@@ -22,21 +22,21 @@ User is logged in and is on any secured pages e.g. secured home page.
 
 ## Steps to Execute:
 
-1. Verify logout link in navigation is displayed.
-2. User clicks on logout link.
+1. Wait for the session timeout duration. 30 minutes after login.
+2. Observe the application behavior after the session timeout.
 
 ## Expected Outcome:
 
-- The loading indicator is displayed for a few seconds (~2).
-- Verify user is redirected to logout page and is shown the success message.
-- Verify public navigation links are displayed.
+- Verify User is automatically logged out of the application.
+- Verify User is redirected to the login page.
+- Verify message is displayed indicating that the session has expired.
 - Verify user can't access secured pages or features.
 
 ## Impact Area:
 
 ### frontend
 
-- Logout page
+- Login page
 - Home Public page
 - auth module
 - authen component
@@ -78,7 +78,7 @@ total=1 min
 #### network calls:
 
 - index.html=450 ms
-- api/user/logout/post=1.8 sec
+- api/user/logout/timeout=1.8 sec
 
 ### Lambda:
 

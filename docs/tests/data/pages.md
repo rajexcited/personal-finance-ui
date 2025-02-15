@@ -8,6 +8,7 @@
 - Privacy Policy
 - Login
 - Signup
+- Logout
 - View Expenses
 - Add Purchase
 - Edit Purchase

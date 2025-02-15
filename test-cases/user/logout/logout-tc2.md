@@ -1,38 +1,46 @@
 ---
 id: logout-tc2
+title: User logout due to clearing browser site data
+execution: manual
+created: 01/25/2025
+updated: 02/14/2025
 ---
 
 # Logout abruptly
 
 ## Title:
 
-User gets logout because site data is cleared
+User gets logged out because browser site data is cleared
 
 ## Description:
 
-logged in user has access to secured features. now user tries to clear sitedata. user gets logout because session gets invalidated.
+Logged in user has access to secured features. User tries to clear browser site data. User gets logged out because session gets invalidated.
 
 ## Preconditions:
 
-User is logged in and is on any secured pages.
+User is logged in and is on any secured pages e.g. secured home page.
 
 ## Steps to Execute:
 
-1. user clicks and confirm to clear sitedata.
+1. User clicks to clear browser site data and confirms the action.
 
 ## Expected Outcome:
 
-- verify The session get invalidated immediately. Hence, user is logged out.
-- verify logout api is not called.
-- verify user is shown the success logout message.
-- verify public navigation links displayed and user can't access secured pages or features.
+- Verify the session gets invalidated immediately. Hence, user is logged out.
+- Verify user is redirected to logout page and is shown the success message.
+- Verify public navigation links are displayed
+- Verify user can't access secured pages or features.
 
 ## Impact Area:
 
 ### frontend
 
-- logout page
-- homepage
+- Logout page
+- Home Public page
+- auth module
+- authen component
+
+### backend api
 
 ## Type of Test:
 
@@ -41,14 +49,15 @@ User is logged in and is on any secured pages.
 
 ## Tags:
 
-- feature=`logout`
+- feature=`auth,logout`
 - execution=`manual`
 - impact=`medium`
 - type=`positive`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
-v0.1.0
+v0.2.0
 
 ## Attachments:
 
