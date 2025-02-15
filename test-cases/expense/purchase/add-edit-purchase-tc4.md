@@ -81,7 +81,7 @@ The user is logged in and active. the user navigates to `add Purchase page`
 
 ## Tags:
 
-- feature=`expense`
+- feature=`expense,purchase`
 - execution=`manual`
 - impact=`medium`
 - type=`negative`

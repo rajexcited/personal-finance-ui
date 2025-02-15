@@ -1,24 +1,38 @@
 ---
 id: signup-tc3
+title: Signup Form - UI validations
+execution: manual
+created: 12/21/2024
+updated: 02/14/2025
 ---
 
-# Signup error when incorrect format
+# Signup form UI validations
 
 ## Title:
 
-User attempts to sign up but details are in incorrect format
+Signup form UI validations
 
 ## Description:
 
-public user tries to sign up with incorrect format, so signup is disable
+Perform signup form UI field validations
 
 ## Preconditions:
 
-User has navigated to the signup page in chrome browser.
+User is not logged in and is on the public home page.
 
 ## Steps to Execute:
 
-1. user fills out following incorrect details,
+1. Verify navigation has signup link
+2. User clicks on signup navigation link
+3. Verify signup page is loaded with necessary input fields
+   - first name
+   - last name
+   - emailid
+   - password
+   - re-password
+   - country
+4. Verify Signup and login buttons are displayed
+5. User fills out details as following,
    - first name: `sardar >vallabhbhai`
    - last name: `patel^`
    - emailId: `sardar.vallabhbhai.patelexample.com`
@@ -28,26 +42,33 @@ User has navigated to the signup page in chrome browser.
 
 ## Expected Outcome:
 
-The signup button is disable and error messages are showing to respective fields.
+- Verify error messages are shown to respective fields
+- Verify the signup button is disabled
 
 ## Impact Area:
 
 ### frontend
 
-- signup page
+- Signup page
+- Home Public page
+- auth module
+- public module
+- authen component
+
+### backend api
 
 ## Type of Test:
 
 - Integration
-- Feature
 - Demo site testable
 
 ## Tags:
 
-- feature=`signup`
+- feature=`auth,signup`
 - execution=`manual`
 - impact=`medium`
 - type=`negative`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 

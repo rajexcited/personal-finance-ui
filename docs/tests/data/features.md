@@ -1,9 +1,17 @@
 # List of all high level features
 
 - auth (authentication / authorization)
+  - login
+  - logout
+  - signup
+  - security
+  - profile
 - expense
+  - purchase
+  - income
+  - refund
 - payment account
-- setting
+- settings
 
 # List of components / modules
 

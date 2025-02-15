@@ -57,7 +57,7 @@ User is not logged in and is on public home page.
 
 ## Tags:
 
-- feature=`auth`
+- feature=`auth,login`
 - execution=`manual`
 - impact=`high`
 - type=`negative`

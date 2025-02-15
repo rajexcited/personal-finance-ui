@@ -77,7 +77,7 @@ The user is logged in and active. the user navigates to `add Income page`
 
 ## Tags:
 
-- feature=`expense`
+- feature=`expense,income`
 - execution=`manual`
 - impact=`medium`
 - type=`negative`

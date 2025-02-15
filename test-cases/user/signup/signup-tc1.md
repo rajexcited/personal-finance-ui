@@ -1,64 +1,83 @@
 ---
 id: signup-tc1
+title: User signup successful
+execution: manual
+created: 12/21/2024
+updated: 02/14/2025
 ---
 
 # Signup success
 
 ## Title:
 
-User signs up first time successfully
+User signup successful
 
 ## Description:
 
-public user tries to sign up for first time and gets successful. upon signup, user can access all secured features e.g. add purchase, view settings, etc.
+Public user signs up successfully for the first time and can access all secured features e.g. add purchase, view settings, etc.
 
 ## Preconditions:
 
-User has launched the public home page in chrome browser.
+User is not logged in and is on the public home page. User does not have an existing account.
 
 ## Steps to Execute:
 
-1. User navigates to signup page
-2. user fills out details as following,
-   - first name: `sardar vallabhbhai`
-   - last name: `patel`
-   - emailId: `sardar.vallabhbhai.patel@example.com`
-   - password: `$Ardar123`
-   - re-password: `$Ardar123`
+1. User clicks on signup navigation link
+2. Verify signup page is loaded with necessary input fields
+   - first name
+   - last name
+   - emailid
+   - password
+   - re-password
+   - country
+3. Verify Signup and login buttons are displayed
+4. User fills out details as following,
+   - first name: `Steven`
+   - last name: `Jobs`
+   - emailId: `steven.jobs@example.com`
+   - password: `st<Ven987`
+   - re-password: `st<Ven987`
    - country: `USA`
-3. user clicks on signup button
+5. User clicks on signup button
 
 ## Expected Outcome:
 
-- The loading indicator is displayed for few seconds (~10).
-- verify user is navigated to `secured homepage`.
-- verify secured links like, expenses, payment accounts, settings, logout, etc. are showing and navigational.
+- The loading indicator is displayed for a few seconds (~10). Verify user is navigated to `secured homepage`.
+- Verify secured links like, expenses, payment accounts, settings, logout, etc. are showing and navigational.
 
 ## Impact Area:
 
 ### frontend
 
-- signup page
-- homepage
+- Signup page
+- Home Public page
+- Home Secured page
+- auth module
+- public module
+- navigation component
+- authen component
 
 ### backend api
 
-- signup api
-- stats api
+- user signup api
+- user details api
+- income stats api
+- purchase stats api
+- refund stats api
 
 ## Type of Test:
 
-- Integration
+- End to End
 - Regression
 - Demo site testable
 
 ## Tags:
 
-- feature=`signup`
+- feature=`auth,signup`
 - execution=`manual`
 - impact=`high`
 - type=`positive`
-- enablement=`regression`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
@@ -79,7 +98,7 @@ total=1 min
 #### network calls:
 
 - index.html=450 ms
-- api/user/login/post=1.8 sec
+- api/user/signup/post=1.8 sec
 - api/user/details/get=2.3 sec
 - api/stats/purchase/get=1.44 sec
 - api/stats/refund/get=1.24 sec
@@ -87,7 +106,19 @@ total=1 min
 
 ### Lambda:
 
-#### user-login
+#### user signup
+
+- memory provisioned=256 MB
+- bill duration=1122 ms
+- init duration=687 ms
+
+#### user details
+
+- memory provisioned=256 MB
+- bill duration=1122 ms
+- init duration=687 ms
+
+#### stats
 
 - memory provisioned=256 MB
 - bill duration=1122 ms

@@ -1,61 +1,76 @@
 ---
 id: signup-tc2
+title: User signup fails due to duplicate account
+execution: manual
+created: 12/21/2024
+updated: 02/14/2025
 ---
 
-# Signup fail duplicate email
+# Signup fail duplicate account
 
 ## Title:
 
-User attempts to sign up again with same emailId
+Failed sign up attempt sue to duplicate account
 
 ## Description:
 
-user already has an account with emailId. public user tries to sign up with same emailId and gets failure.
+Public user tries to sign up with the emailId for which account already exists. The signup gets failure.
 
 ## Preconditions:
 
-User has launched the public home page in chrome browser.
+User is not logged in and is on the public home page. User has an existing account with the emailId.
 
 ## Steps to Execute:
 
-1. User navigates to signup page
-2. user fills out same details as following,
+1. User clicks on signup navigation link
+2. Verify signup page is loaded with necessary input fields
+   - first name
+   - last name
+   - emailid
+   - password
+   - re-password
+   - country
+3. Verify Signup and login buttons are displayed
+4. User fills out details as following,
    - first name: `sardar vallabhbhai`
    - last name: `patel`
    - emailId: `sardar.vallabhbhai.patel@example.com`
-   - password: `$Ardar123`
-   - re-password: `$Ardar123`
+   - password: `$Ardar456`
+   - re-password: `$Ardar456`
    - country: `USA`
-3. user clicks on signup button
+5. User clicks on signup button
 
 ## Expected Outcome:
 
-- The loading indicator is displayed for few seconds (~4).
-- verify user is shown an error message `already exists`.
+- The loading indicator is displayed for a few seconds (~4).
+- Verify user is shown an error message `already exists`.
 
 ## Impact Area:
 
 ### frontend
 
-- signup page
-- homepage
+- Signup page
+- Home Public page
+- auth module
+- public module
 
 ### backend api
 
-- signup api
+- user signup api
 
 ## Type of Test:
 
-- Integration
-- Feature
+- End to End
+- Regression
 - Demo site testable
 
 ## Tags:
 
-- feature=`signup`
+- feature=`auth,signup`
 - execution=`manual`
 - impact=`medium`
 - type=`negative`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
@@ -76,15 +91,11 @@ total=1 min
 #### network calls:
 
 - index.html=450 ms
-- api/user/login/post=1.8 sec
-- api/user/details/get=2.3 sec
-- api/stats/purchase/get=1.44 sec
-- api/stats/refund/get=1.24 sec
-- api/stats/income/get=768 ms
+- api/user/signup/post=1.8 sec
 
 ### Lambda:
 
-#### user-login
+#### user signup
 
 - memory provisioned=256 MB
 - bill duration=1122 ms

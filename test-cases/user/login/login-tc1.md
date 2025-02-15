@@ -23,7 +23,9 @@ User is not logged in and is on public home page.
 ## Steps to Execute:
 
 1. User clicks on login navigation link
-2. Verify login page is loaded with emailId and password input fields
+2. Verify login page is loaded with necessary input fields
+   - emailId
+   - password
 3. Verify Signup and login buttons are displayed
 4. User fills out details as following,
    - emailId: `sardar.vallabhbhai.patel@example.com`
@@ -39,9 +41,9 @@ User is not logged in and is on public home page.
 
 ### frontend
 
+- Login page
 - Home Public page
 - Home Secured page
-- Login page
 - auth module
 - public module
 - navigation component
@@ -63,7 +65,7 @@ User is not logged in and is on public home page.
 
 ## Tags:
 
-- feature=`auth`
+- feature=`auth,login`
 - execution=`manual`
 - impact=`high`
 - type=`positive`

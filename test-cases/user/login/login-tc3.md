@@ -71,7 +71,7 @@ User has active session in chrome browser of desktop. In incognito chrome browse
 
 ## Tags:
 
-- feature=`auth`
+- feature=`auth,login`
 - execution=`manual`
 - impact=`medium`
 - type=`positive`

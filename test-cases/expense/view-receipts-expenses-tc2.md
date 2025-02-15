@@ -61,7 +61,7 @@ User is logged in and is `view expenses` page. There are at least 1 of purchase,
 
 ## Tags:
 
-- feature=`expense,view-list, receipt`
+- feature=`expense,purchase,income,refund`
 - execution=`manual`
 - impact=`medium`
 - type=`positive`

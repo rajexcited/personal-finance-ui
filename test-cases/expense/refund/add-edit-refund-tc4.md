@@ -78,7 +78,7 @@ The user is logged in and active. the user navigates to `add refund page`
 
 ## Tags:
 
-- feature=`expense`
+- feature=`expense,refund`
 - execution=`manual`
 - impact=`medium`
 - type=`negative`

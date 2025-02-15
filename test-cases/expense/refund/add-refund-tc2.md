@@ -88,7 +88,7 @@ User is logged in and active. User is on `view expenses` page and there is at le
 
 ## Tags:
 
-- feature=`expense`
+- feature=`expense,refund`
 - execution=`manual`
 - impact=`high`
 - type=`positive`
