@@ -16,6 +16,7 @@
 # List of components / modules
 
 - navigation
+- stats
 - public
 - authen
 - expenses
