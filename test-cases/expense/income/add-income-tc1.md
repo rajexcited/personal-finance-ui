@@ -22,25 +22,38 @@ User is logged in and active. User is on `view expenses` page.
 
 ## Steps to Execute:
 
-1. User clicks on `add income` button
-2. After few seconds of waiting, user is redirected to income add form
-3. Verify all fields are empty or default initialized.
-4. Verify 2 buttons, `add` and `cancel`, are displayed at the bottom of screen.
-5. User fills out below details,
-   - income name: `primary job`
-   - income amount: `1440`. verify `USA-USD` and `dollar symbol` is displayed to amount field.
-   - payment account: dropdown select is displayed with error `please select an item from dropdown`. verify atleast item `cash` exists. choose `cash`
-   - income type: dropdown select is displayed with error `please select an item from dropdown`. there are list of default values displayed. choose `salary`.
-   - tag person: verify this is empty and counter is 0. if there is any available to choose one person, otherwise leave empty.
-   - description: fill out `I received salary for my primary job`
-   - tags: verify this is empty and counter is 0. enter and select `job`
-   - income verified: verified the indicator is `income un-verified`. leave this default value.
-   - income date: verify the date is today. select previous month.
-   - upload receipt: verify message `no receipt uploaded` is displayed.
-     - when click on `upload receipt` button, a popup opens having button and message `there are no receipts`.
-     - click on button and choose an pdf e.g. paycheck. now the embedded pdf is viewable with name. upon clicking on `view` button it opens in fullscreen.
+1. Verify `add income` button is displayed
+2. User clicks on `add income` button
+3. After few seconds of waiting, user is redirected to income add form
+4. Verify add income page is displayed with necessary input fields:
+   - **income name:** empty
+   - **amount symbol:** default initialized to `USA-USD`
+   - **income amount:** empty
+   - **payment account:** dropdown select is displayed with error `please select an item from dropdown`. verify atleast item `cash` exists.
+   - **income type:** dropdown `select` is displayed with error `please select an item from dropdown`. there are list of default values displayed. Verify the list matches with all enabled income types.
+   - **tag person:** empty and counter is 0/10.
+   - **tags:** empty and counter is 0/10.
+   - **description:** empty and counter is 0/150
+   - **income verified:** verified the indicator is `income un-verified`.
+   - **income date:** today is selected
+   - **upload receipt:** verify message `no receipt uploaded` is displayed. when clicking on `upload receipt` button, a popup opens having button and message `there are no receipts`.
+5. Verify 2 buttons, `add` and `cancel`, are displayed at the bottom of screen.
+6. User fills out below details,
+   - **income name:** `primary job`
+   - **income amount:** `1440`
+   - **payment account:** choose `cash`
+   - **income type:** choose `salary`.
+   - **tag person:** if there is any available to choose one person, otherwise leave empty.
+   - **tags:** enter and select `job`
+   - **description:** fill out `I received salary for my primary job`
+   - **income verified:** do not change. leave this default value.
+   - **income date:** select previous month.
+   - **upload receipt:**
+     - click on button and choose an pdf e.g. paycheck.
+     - now the embedded pdf is viewable with name.
+     - upon clicking on `view` button it opens in fullscreen.
      - close the popup
-6. User clicks on `add` button.
+7. User clicks on `add` button.
 
 ## Expected Outcome:
 

@@ -6,7 +6,7 @@ created: 12/21/2024
 updated: 02/12/2025
 ---
 
-# Add Purchase - Success
+# Add Purchase - Successful
 
 ## Title:
 
@@ -14,7 +14,7 @@ Add purchase successful
 
 ## Description:
 
-Logged in active user can add purchase successfully
+Logged in active user can add purchase successfully.
 
 ## Preconditions:
 
@@ -22,26 +22,43 @@ User is logged in and active. User is on `view expenses` page.
 
 ## Steps to Execute:
 
-1. User clicks on `add purchase` button
-2. After few seconds of waiting, user is redirected to purchase add form
-3. Verify all fields are empty or default initialized.
-4. Verify 2 buttons, `add` and `cancel`, are displayed at the bottom of screen.
-5. User fills out below details,
-   - bill name: `local grocery store`
-   - bill amount: `123`. verify `USA-USD` and `dollar symbol` is displayed to amount field.
-   - payment account: dropdown select is displayed. verify atleast item `cash` exists. choose `cash`
-   - purchase type: dropdown select is displayed with error `please select an item from dropdown`. there are list of default values displayed. choose `food shopping`.
-   - tag person: verify this is empty and counter is 0. if there is any available to choose one person, otherwise leave empty.
-   - description: fill out `I am shopping food items from nearby grcerystore`
-   - tags: verify this is empty and counter is 0. enter and select `inviting`
-   - purchase verified: verified the indicator is `purchase un-verified`. leave this default value.
-   - purchase date: verify the date is today. select previous week.
-   - upload receipt: verify message `no receipt uploaded` is displayed.
-     - when click on `upload receipt` button, a popup opens having button and message `there are no receipts`.
-     - click on button and choose an jpeg image. now the image is viewable with name. upon clicking on image it opens in fullscreen.
+1. Verify `add purchase` button is displayed.
+2. User clicks on `add purchase` button.
+3. After a few seconds of waiting, user is redirected to the purchase add form.
+4. Verify add purchase page is displayed with necessary input fields:
+   - **bill name:** empty
+   - **amount symbol:** default initialized to `USA-USD`
+   - **bill amount:** empty
+   - **payment account:** dropdown select is displayed with error `please select an item from dropdown`. Verify at least one item `cash` exists.
+   - **purchase type:** dropdown select is displayed with error `please select an item from dropdown`. There are a list of default values displayed. Verify the list matches with all enabled purchase types.
+   - **tag person:** empty and counter is 0/10.
+   - **tags:** empty and counter is 0/10.
+   - **description:** empty and counter is 0/150
+   - **purchase verified:** verified the indicator is `purchase un-verified`.
+   - **purchase date:** today is selected.
+   - **upload receipt:** verify message `no receipt uploaded` is displayed. When clicking on `upload receipt` button, a popup opens having button and message `there are no receipts`.
+   - **Break into purchase items:** verify it is closed. verify expand action is displayed. Verify item count is 0. If expanded, there is a row displayed with empty necessary fields.
+5. Verify 2 buttons, `add` and `cancel`, are displayed at the bottom of screen.
+6. User fills out below details,
+   - **bill name:** `local grocery store`
+   - **bill amount:** `123`. verify `USA-USD` and `dollar symbol` is displayed to amount field.
+   - **payment account:** choose `cash`
+   - **purchase type:** choose `food shopping`.
+   - **tag person:** if there is any available to choose one person, otherwise leave empty.
+   - **tags:** enter and select `inviting`
+   - **description:** fill out `I am shopping food items from nearby grcerystore`
+   - **purchase verified:** do no change. leave this default value.
+   - **purchase date:** select previous week.
+   - **upload receipt:**
+     - click on button and choose an jpeg image.
+     - now the image is viewable with name.
+     - upon clicking on image it opens in fullscreen.
      - close the popup
-   - click and expand `break into purchase items`. verify item count is 0 and all fields in row are empty.
-6. User clicks on `add` button.
+   - **Break into purchase items:** click and expand. fill out row
+     - bill name: `snacks`
+     - bil amount: `25.5`
+     - purchase type: select `snacks`
+7. User clicks on `add` button.
 
 ## Expected Outcome:
 

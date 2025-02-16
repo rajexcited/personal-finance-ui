@@ -22,19 +22,19 @@ User is not logged in and is on public home page.
 
 ## Steps to Execute:
 
-1. User clicks on login navigation link
-2. Verify login page is loaded with necessary input fields
+1. User clicks on login navigation link.
+2. Verify login page is loaded with necessary input fields:
    - emailId
    - password
-3. Verify Signup and login buttons are displayed
-4. User fills out details as following,
+3. Verify Signup and login buttons are displayed.
+4. User fills out details as follows:
    - emailId: `sardar.vallabhbhai.patel@example.com`
    - password: `$Ardar123`
-5. User clicks on login button
+5. User clicks on login button.
 
 ## Expected Outcome:
 
-- The loading indicator is displayed for few seconds (~5). Verify user is navigated to `secured homepage`.
+- The loading indicator is displayed for a few seconds (~5). Verify user is navigated to `secured homepage`.
 - Verify secured links like, expenses, payment accounts, settings, logout, etc. are showing and navigational.
 
 ## Impact Area:

@@ -6,7 +6,7 @@
 | POST        | /api/user/signup                                                   | user signup api                 |
 | POST        | /api/user/logout                                                   | user logout api                 |
 | POST        | /api/user/details                                                  | user details api                |
-| POST        | /api/user/refresh                                                  | user renew session api          |
+| POST        | /api/user/refresh                                                  | user refresh session api        |
 | GET         | /api/user/details                                                  | user details api                |
 | DELETE      | /api/user/details                                                  | user details api                |
 | -           | -                                                                  | -                               |

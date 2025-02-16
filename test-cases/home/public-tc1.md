@@ -27,7 +27,7 @@ User is not logged in and is on new blank browser tab.
    - Home
    - Login
    - Signup
-3. Verify the footbar is displayed with necessary links and information.
+3. Verify the footbar is displayed with necessary links and information:
    - About
    - Contact
    - Feedback
