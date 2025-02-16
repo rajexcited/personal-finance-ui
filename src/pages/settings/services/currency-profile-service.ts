@@ -19,7 +19,7 @@ const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.CurrencyProfile)
  * @returns list of currency profile
  */
 export const getCurrencyProfiles = async () => {
-  const currencyProfiles = await configTypeService.getConfigTypeList([ConfigTypeStatus.Enable]);
+  const currencyProfiles = await configTypeService.getConfigTypeList([ConfigTypeStatus.Enable], 1);
   return currencyProfiles as CurrencyProfileResource[];
 };
 

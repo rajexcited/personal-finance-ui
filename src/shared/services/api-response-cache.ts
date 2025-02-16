@@ -47,6 +47,7 @@ interface CriteriaResource {
   /** time represents supported units by ms lib. sec, min, hour, week */
   withinTime?: string;
   listSize?: number;
+  minSize?: number;
 }
 
 /**
@@ -70,10 +71,18 @@ export const isApiCalled = async (criteria: CriteriaResource, url: string, query
       isValid = false;
     }
   }
+
   if (criteria.listSize !== undefined && isValid) {
     if (item.responseListSize !== criteria.listSize) {
       isValid = false;
     }
   }
+
+  if (criteria.minSize !== undefined && isValid) {
+    if (item.responseListSize < criteria.minSize) {
+      isValid = false;
+    }
+  }
+
   return isValid;
 };

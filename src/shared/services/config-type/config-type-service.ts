@@ -18,7 +18,7 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
    * @param filterByStatus if not provided, retrieves all otherwise filter by status
    * @returns list of config type
    */
-  const getConfigTypeList = pMemoize(async (filterByStatuses?: ConfigTypeStatus[]) => {
+  const getConfigTypeList = pMemoize(async (filterByStatuses?: ConfigTypeStatus[], minSize?: number) => {
     const logger = getLogger("getConfigTypes", _logger);
     try {
       let dbKeys: string[] | string[][];
@@ -36,9 +36,9 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
 
       const countPromises = dbKeys.map(async (dbKey) => configDb.countFromIndex(dbIndex, dbKey));
       const totalCount = (await Promise.all(countPromises)).reduce((prev, curr) => curr + prev, 0);
-      if (totalCount === 0) {
+      if (totalCount === 0 || (minSize && totalCount < minSize)) {
         // no records found
-        const skipApiCall = await apiUtils.isApiCalled({ listSize: 0 }, rootPath, queyParams);
+        const skipApiCall = await apiUtils.isApiCalled({ listSize: 0, minSize }, rootPath, queyParams);
         if (skipApiCall) {
           return [];
         }
