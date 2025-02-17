@@ -1,5 +1,5 @@
 ---
-id: add-edit-purchase-tc4
+id: purchase-ui-validations-tc4
 title: Purchase form UI validations
 execution: manual
 created: 12/21/2024
