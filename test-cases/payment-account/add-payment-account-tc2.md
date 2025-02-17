@@ -35,8 +35,8 @@ User is logged in and active. User is on the `view payment accounts` page.
    - **Description:** empty and counter is 0/150
 5. Verify 2 buttons, `add` and `cancel`, are displayed at the bottom of the screen.
 6. User fills out the details as follows:
-   - **Short Name:** `primary 1234`
-   - **Institution/Bank name:** `USA Federal`
+   - **Short Name:** primary 1234
+   - **Institution/Bank name:** USA Federal
    - **Account Number/Id:** 1234
    - **Account Type:** choose `checking`
    - **Tags:** enter and select `primary`, `single`, `job salary`
