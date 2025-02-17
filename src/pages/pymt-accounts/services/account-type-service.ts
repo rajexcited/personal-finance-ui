@@ -7,7 +7,7 @@ import {
   UpdateConfigStatusResource,
   TagBelongsTo,
   TagsService,
-  getCacheOption,
+  getCacheOption
 } from "../../../shared";
 
 const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.PaymentAccountType);
@@ -19,7 +19,7 @@ const tagService = TagsService(TagBelongsTo.PaymentAccountTypeConfig);
  */
 export const getAccountTypes = async (status?: ConfigTypeStatus) => {
   const paramStatuses = status ? [status] : [ConfigTypeStatus.Enable, ConfigTypeStatus.Disable];
-  const accountTypeListPromise = configTypeService.getConfigTypeList(paramStatuses);
+  const accountTypeListPromise = configTypeService.getConfigTypeList(paramStatuses, 1);
   await Promise.all([accountTypeListPromise, initializePymtAccTypeTags()]);
   return await accountTypeListPromise;
 };
