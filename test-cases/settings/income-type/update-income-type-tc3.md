@@ -18,7 +18,7 @@ A logged-in and active user can update an existing income type.
 
 ## Preconditions:
 
-User is logged in and active. User is on the `view income type` page. A income type exists. A income exists of income type `Office Supplies`
+User is logged in and active. User is on the `view income type` page. A income type exists. A income exists of income type `Wage`
 
 ## Steps to Execute:
 
