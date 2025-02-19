@@ -37,8 +37,10 @@ User is logged in and active. User is on the `view refund reason` page.
    - **Tags:** `refund, return` and counter is 2/10
 5. User clicks on the `Save` button.
 6. Verify the new refund reason is added to the list with the correct details.
-7. User navigated `add refund` page
-8. Verify `Product Return` exists in `refund reason` dropdown
+7. Verify `View` button next to `Product Return` row is displayed
+8. User clicks on `View` button for `Product Return`. verify details shown.
+9. User navigated `add refund` page
+10. Verify `Product Return` exists in `refund reason` dropdown
 
 ## Expected Outcome:
 
@@ -73,7 +75,7 @@ User is logged in and active. User is on the `view refund reason` page.
 - execution=`manual`
 - impact=`medium`
 - type=`positive`
-- devices=`desktop`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 

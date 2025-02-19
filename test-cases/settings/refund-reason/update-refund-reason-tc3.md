@@ -38,10 +38,11 @@ User is logged in and active. User is on the `view refund reason` page. A refund
    - **Tags:** `refund, return, updated` and counter is 3/10
 5. User clicks on the `Save` button.
 6. Verify the updated refund reason is displayed in the list with the correct details.
-7. User navigated `add refund` page
-8. Verify `Product Return Updated` exists in `refund reason` dropdown
-9. On `view expense page`, verify existing refund is showing updated refund reason name `Product Return Updated`
-10. User clicks `Edit` action on existing refund. On `update refund page`, verify selected refund reason label is updated.
+7. User clicks on `View` button for `Product Return Updated`. verify details shown.
+8. User navigated `add refund` page
+9. Verify `Product Return Updated` exists in `refund reason` dropdown
+10. On `view expense page`, verify existing refund is showing updated refund reason name `Product Return Updated`
+11. User clicks `Edit` action on existing refund. On `update refund page`, verify selected refund reason label is updated.
 
 ## Expected Outcome:
 
@@ -77,7 +78,7 @@ User is logged in and active. User is on the `view refund reason` page. A refund
 - execution=`manual`
 - impact=`medium`
 - type=`positive`
-- devices=`desktop`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 

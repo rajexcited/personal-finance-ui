@@ -37,8 +37,10 @@ User is logged in and active. User is on the `view purchase type` page.
    - **Tags:** `stationery, office` and counter is 2/10
 5. User clicks on the `Save` button.
 6. Verify the new purchase type is added to the list with the correct details.
-7. User navigated `add purchase` page
-8. Verify `Office supplies` exists in `purchase type` dropdown
+7. Verify `View` button next to `Office Supplies` row is displayed
+8. User clicks on `View` button for `Office Supplies`. verify details shown.
+9. User navigated `add purchase` page
+10. Verify `Office supplies` exists in `purchase type` dropdown
 
 ## Expected Outcome:
 
@@ -73,7 +75,7 @@ User is logged in and active. User is on the `view purchase type` page.
 - execution=`manual`
 - impact=`medium`
 - type=`positive`
-- devices=`desktop`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 

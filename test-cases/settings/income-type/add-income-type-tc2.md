@@ -37,8 +37,10 @@ User is logged in and active. User is on the `view income type` page.
    - **Tags:** `income, wage` and counter is 2/10
 5. User clicks on the `Save` button.
 6. Verify the new income type is added to the list with the correct details.
-7. User navigated `add income` page
-8. Verify `Wage` exists in `income type` dropdown
+7. Verify `View` button next to `Wage` row is displayed
+8. User clicks on `View` button for `Wage`. verify details shown.
+9. User navigated `add income` page
+10. Verify `Wage` exists in `income type` dropdown
 
 ## Expected Outcome:
 
@@ -73,7 +75,7 @@ User is logged in and active. User is on the `view income type` page.
 - execution=`manual`
 - impact=`medium`
 - type=`positive`
-- devices=`desktop`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 

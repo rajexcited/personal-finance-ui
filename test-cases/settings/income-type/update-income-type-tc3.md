@@ -37,10 +37,11 @@ User is logged in and active. User is on the `view income type` page. A income t
    - **Tags:** `income, wage, updated` and counter is 3/10
 5. User clicks on the `Save` button.
 6. Verify the updated income type is displayed in the list with the correct details.
-7. User navigated `add income` page
-8. Verify `Wage Updated` exists in `income type` dropdown
-9. On `view expense page`, verify existing income is showing updated income type name `Wage Updated`
-10. User clicks `Edit` action on existing income. On `update income page`, verify selected income type label is updated.
+7. User clicks on `View` button for `Wage Updated`. verify details shown.
+8. User navigated `add income` page
+9. Verify `Wage Updated` exists in `income type` dropdown
+10. On `view expense page`, verify existing income is showing updated income type name `Wage Updated`
+11. User clicks `Edit` action on existing income. On `update income page`, verify selected income type label is updated.
 
 ## Expected Outcome:
 
@@ -76,7 +77,7 @@ User is logged in and active. User is on the `view income type` page. A income t
 - execution=`manual`
 - impact=`medium`
 - type=`positive`
-- devices=`desktop`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 

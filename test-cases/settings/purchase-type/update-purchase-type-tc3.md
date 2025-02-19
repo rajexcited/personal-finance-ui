@@ -37,10 +37,11 @@ User is logged in and active. User is on the `view purchase type` page. A purcha
    - **Tags:** `stationery, office, updated` and counter is 3/10
 5. User clicks on the `Save` button.
 6. Verify the updated purchase type is displayed in the list with the correct details.
-7. User navigated `add purchase` page
-8. Verify `Office supplies Updated` exists in `purchase type` dropdown
-9. On `view expense page`, verify existing purchase is showing updated purchase type name `Office supplies Updated`
-10. User clicks `Edit` action on existing purchase. On `update purchase page`, verify selected purchase type label is updated.
+7. User clicks on `View` button for `Office Supplies Updated`. verify details shown.
+8. User navigated `add purchase` page
+9. Verify `Office Supplies Updated` exists in `purchase type` dropdown
+10. On `view expense page`, verify existing purchase is showing updated purchase type name `Office Supplies Updated`
+11. User clicks `Edit` action on existing purchase. On `update purchase page`, verify selected purchase type label is updated.
 
 ## Expected Outcome:
 
@@ -76,7 +77,7 @@ User is logged in and active. User is on the `view purchase type` page. A purcha
 - execution=`manual`
 - impact=`medium`
 - type=`positive`
-- devices=`desktop`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 

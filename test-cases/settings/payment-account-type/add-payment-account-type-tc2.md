@@ -37,8 +37,10 @@ User is logged in and active. User is on the `view payment account type` page.
    - **Tags:** `checking, personal` and counter is 2/10
 5. User clicks on the `Save` button.
 6. Verify the new payment account type is added to the list with the correct details.
-7. User navigated `add Payment Account` page
-8. Verify `Checking Account` exists in `payment account type` dropdown
+7. Verify `View` button next to `Checking Account` row is displayed
+8. User clicks on `View` button for `Checking Account`. verify details shown.
+9. User navigated `add Payment Account` page
+10. Verify `Checking Account` exists in `payment account type` dropdown
 
 ## Expected Outcome:
 
@@ -73,7 +75,7 @@ User is logged in and active. User is on the `view payment account type` page.
 - execution=`manual`
 - impact=`medium`
 - type=`positive`
-- devices=`desktop`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 

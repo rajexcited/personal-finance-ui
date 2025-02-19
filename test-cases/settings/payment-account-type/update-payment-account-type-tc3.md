@@ -38,10 +38,11 @@ User is logged in and active. User is on the `view payment account type` page. A
    - **Tags:** `checking, personal, updated` and counter is 3/10
 5. User clicks on the `Save` button.
 6. Verify the updated payment account type is displayed in the list with the correct details.
-7. User navigated `add payment account` page
-8. Verify `Checking Account Updated` exists in `payment account type` dropdown
-9. On `view payment account page`, verify existing payment account is showing updated payment account type name `Checking Account Updated`
-10. User clicks `Edit` action on existing payment account. On `update payment account page`, verify selected payment account type label is updated.
+7. User clicks on `View` button for `Checking Account Updated`. verify details shown.
+8. User navigated `add payment account` page
+9. Verify `Checking Account Updated` exists in `payment account type` dropdown
+10. On `view payment account page`, verify existing payment account is showing updated payment account type name `Checking Account Updated`
+11. User clicks `Edit` action on existing payment account. On `update payment account page`, verify selected payment account type label is updated.
 
 ## Expected Outcome:
 
@@ -77,7 +78,7 @@ User is logged in and active. User is on the `view payment account type` page. A
 - execution=`manual`
 - impact=`medium`
 - type=`positive`
-- devices=`desktop`
+- devices=`desktop,mobile`
 
 ## Affected Versions:
 
