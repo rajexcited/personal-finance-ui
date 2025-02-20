@@ -66,8 +66,11 @@ jobs:
         analysis-key:
           - Type of Test
           - Impact Area
-          - Tags.impact
           - Tags.feature
+          - Tags.impact
+          - Tags.execution
+          - Tags.devices
+          - Affected Versions
     steps:
       - name: Checkout
         uses: actions/checkout@v4

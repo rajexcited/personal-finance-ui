@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import re
 from collections import defaultdict, Counter
-from typing import List, Dict
+from typing import Any, List, Dict
 from parse_test_cases import parse_metadata, convert_all_tc
 from summary_tc import get_all_testcases_summary
 
@@ -16,7 +16,54 @@ def is_list(content):
     return re.match(r"^[-*+] (.+)", content)
 
 
+def traverse_dict(key_depths: List[str], wrapper: Dict[str, Dict] | List[str] | str):
+    if len(key_depths) == 0:
+        return wrapper
+
+    kdl = key_depths[0].lower().replace(" ", "_")
+    if isinstance(wrapper, dict):
+        for k, v in wrapper:
+            kl = k.lower().replace(" ", "_")
+            if kl == kdl:
+                return traverse_dict(key_depths[1:], v)
+
+    return []
+
+
+def flatten_values(value: Any):
+    result = []
+    if isinstance(value, list):
+        for v in value:
+            result.extend(flatten_values(v))
+    elif isinstance(value, dict):
+        for k, v in value.items():
+            result.extend(flatten_values(k))
+            result.extend(flatten_values(v))
+    elif isinstance(value, str):
+        result.append(value)
+    else:
+        result.append(str(value))
+    return result
+
+
 def get_value(milestone: Dict, converted_tc: Dict, regression_testcases: List[str], variable: str, tc_id: str = None):
+    testcases = regression_testcases if tc_id is not None else [tc_id]
+    ia_list = set()
+    for tc in testcases:
+        if variable.startswith("$milestone"):
+            key = variable.split(".")[1]
+            ia_list.add(milestone[key])
+        else:
+            key_depths = variable[1:].split(".")
+            value = traverse_dict(key_depths, converted_tc[tc])
+            ia_list.update(flatten_values(value))
+
+    if len(ia_list) == 0:
+        return [variable]
+    return sorted(ia_list)
+
+
+def get_value_hard_coded(milestone: Dict, converted_tc: Dict, regression_testcases: List[str], variable: str, tc_id: str = None):
     testcases = regression_testcases if tc_id is None else [tc_id]
     ia_list = set()
     for tc in testcases:
