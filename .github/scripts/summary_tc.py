@@ -30,7 +30,9 @@ def traverse_dict(key_depths: List[str], wrapper: Dict[str, Dict] | List[str] | 
 
 def add_testcase_summary(search_key: List[str], sd: Dict, tc_key: str, tc_details: Dict[str, Dict]):
     v = traverse_dict(search_key, tc_details)
-    # print("traversed the dictionary to analyze the key", sd)
+    # print("traversed the dictionary to analyze the key", v, sd)
+    if isinstance(v, str):
+        append_list_summary("", [v], sd, tc_key)
     append_list_summary("", v, sd, tc_key)
     # print("after analyzing list, sd=", sd)
     append_dict_summary(v, sd, tc_key)
