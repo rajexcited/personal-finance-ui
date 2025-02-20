@@ -101,8 +101,6 @@ total=1 min
 #### Network calls:
 
 - /api/payment-accounts/add/post=1.44 sec
-- /api/payment-accounts/add/post=1.44 sec
-- /api/payment-accounts/add/post=1.44 sec
 
 ### Lambda:
 

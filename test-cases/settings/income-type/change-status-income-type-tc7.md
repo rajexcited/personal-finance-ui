@@ -1,5 +1,5 @@
 ---
-id: change-status-income-type-tc6
+id: change-status-income-type-tc7
 title: Change to Enabled Status of Income Type
 execution: manual
 created: 12/21/2024

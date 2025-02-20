@@ -1,5 +1,5 @@
 ---
-id: update-payment-account-tc1
+id: update-payment-account-tc3
 title: Update Payment Account Successful
 execution: manual
 created: 12/21/2024
@@ -100,8 +100,6 @@ total=1 min
 
 #### Network calls:
 
-- /api/payment-accounts/update/post=1.44 sec
-- /api/payment-accounts/update/post=1.44 sec
 - /api/payment-accounts/update/post=1.44 sec
 
 ### Lambda:

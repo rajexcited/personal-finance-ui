@@ -1,5 +1,5 @@
 ---
-id: change-status-purchase-type-tc6
+id: change-status-purchase-type-tc7
 title: Change to Enabled Status of Purchase Type
 execution: manual
 created: 12/21/2024

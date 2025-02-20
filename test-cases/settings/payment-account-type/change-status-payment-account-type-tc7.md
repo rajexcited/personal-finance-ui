@@ -1,5 +1,5 @@
 ---
-id: change-status-payment-account-type-tc6
+id: change-status-payment-account-type-tc7
 title: Change to Enabled Status of Payment Account Type
 execution: manual
 created: 12/21/2024

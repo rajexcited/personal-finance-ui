@@ -85,8 +85,6 @@ total=1 min
 #### Network calls:
 
 - /api/settings/get=1.44 sec
-- /api/settings/get=1.44 sec
-- /api/settings/get=1.44 sec
 
 ### Lambda:
 
