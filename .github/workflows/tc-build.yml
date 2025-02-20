@@ -32,9 +32,9 @@ jobs:
       - id: convert-tc-all
         run: |
           echo converting and validating test case files
-          echo python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases
-          python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases
-          echo converted-file-path=dist/converted-tcs.json >> $GITHUB_OUTPUT
+          gen_converted_tcs_filename="converted-tcs-$(date +'%Y%m%d%H%M%S')"
+          python .github/scripts/parse_test_cases.py --convert --tc-dir test-cases --converted-filename $gen_converted_tcs_filename
+          echo converted-file-path=dist/$gen_converted_tcs_filename.json >> $GITHUB_OUTPUT
       - name: Upload Converted Test Case Artifact
         id: upload-converted-tc-artifact
         uses: actions/upload-artifact@v4
@@ -54,7 +54,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: dist
-          key: converted-file-path
+          key: ${{steps.convert-tc-all.outputs.converted-file-path}}
 
   analyze_tc:
     name: Analysing Test Cases
@@ -85,7 +85,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: dist
-          key: converted-file-path
+          key: ${{needs.build_test.outputs.converted-file-path}}
       - name: Generate Summary
         id: generate-summary
         run: |
