@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Dict, List
 import json
 from parse_test_cases import save_dict
-from regression_testplan import traverse_dict
 
 
 def add_value_to_dict(key: str, value: str, wrapper: Dict[str, List]):
@@ -15,15 +14,18 @@ def add_value_to_dict(key: str, value: str, wrapper: Dict[str, List]):
     wrapper[kk].append(value)
 
 
-# def traverse_dict(key_depths: List[str], wrapper: Dict[str, Dict]):
-    # print("key_depths =", key_depths)
-    # if len(key_depths) == 0:
-    #     return wrapper
+def traverse_dict(key_depths: List[str], wrapper: Dict[str, Dict] | List[str] | str):
+    if len(key_depths) == 0:
+        return wrapper
 
-    # for k, v in wrapper.items():
-    #     if k.lower() == key_depths[0].lower():
-    #         print(f"found matching key{k} and it has value {v}")
-    #         return traverse_dict(key_depths[1:], v)
+    kdl = key_depths[0].lower().replace(" ", "_")
+    if isinstance(wrapper, dict):
+        for k, v in wrapper.items():
+            kl = k.lower().replace(" ", "_")
+            if kl == kdl:
+                return traverse_dict(key_depths[1:], v)
+
+    return []
 
 
 def add_testcase_summary(search_key: List[str], sd: Dict, tc_key: str, tc_details: Dict[str, Dict]):

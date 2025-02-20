@@ -22,7 +22,7 @@ def traverse_dict(key_depths: List[str], wrapper: Dict[str, Dict] | List[str] | 
 
     kdl = key_depths[0].lower().replace(" ", "_")
     if isinstance(wrapper, dict):
-        for k, v in wrapper:
+        for k, v in wrapper.items():
             kl = k.lower().replace(" ", "_")
             if kl == kdl:
                 return traverse_dict(key_depths[1:], v)
