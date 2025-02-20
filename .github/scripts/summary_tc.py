@@ -9,6 +9,32 @@ def add_value_to_dict(key: str, value: str, wrapper: Dict[str, List]):
     kk = key.strip()
     if kk.endswith("."):
         kk = kk[:-1]
+
+    kk_l_plus = kk.lower().split("+")
+    kk_plus = kk.split("+")
+    for k in wrapper.keys():
+        if k.lower() == kk.lower():
+            kk = k
+            break
+
+        k_l_plus = k.lower().split("+")
+        k_plus = k.split("+")
+        if len(k_plus) == len(kk_plus):
+            found = False
+            for klv in k_l_plus:
+                if klv in kk_l_plus:
+                    found = True
+                    break
+            if found:
+                kk_temp = []
+                for i, klv in enumerate(k_l_plus):
+                    if klv in kk_l_plus:
+                        kk_temp.append(k_plus[i])
+                    else:
+                        kk_temp.append(kk_plus[i])
+                kk = "+".join(kk_temp)
+                break
+
     if kk not in wrapper:
         wrapper[kk] = list()
     wrapper[kk].append(value)
