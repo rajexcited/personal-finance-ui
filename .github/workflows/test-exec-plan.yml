@@ -36,7 +36,7 @@ jobs:
     steps:
       - run: echo milestone version = ${{ github.event.inputs.milestone-version }}
       - name: Get Milestone
-        id: get-milestone
+        id: get-milestone-issue
         uses: actions/github-script@v7
         # https://octokit.github.io/rest.js/v21/
         with:
@@ -55,25 +55,26 @@ jobs:
             }
             console.log("found matching milestone: ", matchedMilestone);
             const details = {
-              number: matchedMilestone.number,
+              issueNumber: matchedMilestone.number,
               title: matchedMilestone.title,
-              url: matchedMilestone.html_url,
-              id: matchedMilestone.id,
+              issueUrl: matchedMilestone.html_url,
+              milestoneId: matchedMilestone.id,
               dueOn: matchedMilestone.due_on.split('T')[0],
               openIssues: matchedMilestone.open_issues,
               closedIssues: matchedMilestone.closed_issues
             };
-            core.setOutput('milestone-details', JSON.stringify(details));
-            core.setOutput('milestone-details2', details);
-      - run: echo milestone details="${{ toJson(steps.get-milestone) }}"
-      - run: echo milestone details="${{ steps.get-milestone.outputs.result.mileston-details2 }}"
-      - run: echo milestone details="${{ steps.get-milestone.outputs.result.mileston-details }}"
-      - run: echo milestone details="${{ steps.get-milestone.outputs.mileston-details }}"
+            core.setOutput('details', details);
+      - run: echo milestone details="${{ toJson(steps.get-milestone-issue.outputs.details) }}"
+      - run: echo milestone details="${{ steps.get-milestone-issue.outputs.details }}"
+      - env:
+          MILESTON_DETAILS: ${{ toJson(steps.get-milestone-issue.outputs.details) }}
+        run: echo milestone issue details="$MILESTON_DETAILS"
+      - env:
+          MILESTON_DETAILS: ${{ steps.get-milestone-issue.outputs.details }}
+        run: echo milestone issue details="$MILESTON_DETAILS"
       - name: Get Milestone Branch
         id: get-milestone-branch
         uses: actions/github-script@v7
-        env:
-          MILESTON_DETAILS: ${{ steps.get-milestone.outputs.result.milestone-details }}
         with:
           script: |
             const branch = `milestone/v${{ github.event.inputs.milestone-version }}`;
@@ -83,24 +84,27 @@ jobs:
                 branch: branch
               });
             console.log("getBranchResponse: ", getBranchResponse);
-            core.setOutput('milestone-branch', getBranchResponse.name);
-        # run: |
-        #   BRANCH_NAME=milestone/v${{ github.event.inputs.milestone-version }}
-        #   RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-        #     https://api.github.com/repos/${{ github.repository }}/branches/$BRANCH_NAME)
-
-        #   if [ "$RESPONSE" -eq 200 ]; then
-        #     echo "Branch $BRANCH_NAME exists."
-        #     echo milestone-branch=$BRANCH_NAME >> $GITHUB_OUTPUT
-        #   else
-        #     echo "Branch $BRANCH_NAME does not exist."
-        #     # exit 1  # exit with an error code if branch doesn't exist
-        #   fi
+            core.setOutput('details', {
+                branchName: getbranchResponse.data.name, 
+                branchLink: getBranchResponse.data._links.html
+              });
+      - id: milestone-details
+        uses: actions/github-script@v7
+        env:
+          MILESTON_ISSUE_DETAILS: ${{ toJson(steps.get-milestone-issue.outputs.details) }}
+          MILESTON_BRANCH_DETAILS: ${{ toJson(steps.get-milestone-branch.outputs.details) }}
+        with:
+          script: |
+            const milestoneDetails = JSON.parse(process.env.MILESTON_ISSUE_DETAILS);
+            const milestoneBranchDetails = JSON.parse(process.env.MILESTON_BRANCH_DETAILS);
+            core.setOutput('result', {
+              ...milestoneDetails,
+              ...milestoneBranchDetails
+              });
       - name: Display outputs
         run: |
-          echo "Milestone ID: ${{ steps.get-milestone.outputs.result.milestone-id }}"
-          echo "Milestone Title: ${{ steps.get-milestone.outputs.result.milestone-title }}"
-          echo "Milestone Branch: ${{ steps.get-milestone-branch.outputs.result.milestone-branch }}"
+          echo "Milestone results: ${{ steps.milestone-details.outputs.result }}"
+          echo "Milestone issue Url: ${{ steps.milestone-details.outputs.result.issueUrl }}"
 
 
   generate_regression:
