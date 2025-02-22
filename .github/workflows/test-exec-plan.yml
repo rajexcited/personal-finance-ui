@@ -26,17 +26,17 @@ concurrency:
 
 jobs:
   validate_milestone:
-    name: validate inputs
+    name: validate Milestone
     runs-on: ubuntu-latest
     outputs:
-      milestone-id: ${{ steps.get-milestone-id.outputs.result.milestone-id }}
-      milestone-title: ${{ steps.get-milestone-id.outputs.result.milestone-title }}
+      milestone-id: ${{ steps.get-milestone.outputs.result.milestone-id }}
+      milestone-title: ${{ steps.get-milestone.outputs.result.milestone-title }}
       milestone-branch: ${{ steps.get-milestone-branch.outputs.result.milestone-branch }}
     if: ${{ github.event.inputs.testplan-type != 'sanity' }}
     steps:
       - run: echo milestone version = ${{ github.event.inputs.milestone-version }}
-      - name: Get Milestone ID
-        id: get-milestone-id
+      - name: Get Milestone
+        id: get-milestone
         uses: actions/github-script@v7
         # https://octokit.github.io/rest.js/v21/
         with:
@@ -54,11 +54,26 @@ jobs:
               throw new Error(`Milestone with label "${label}" is not found`);
             }
             console.log("found matching milestone: ", matchedMilestone);
-            core.setOutput('milestone-id', matchedMilestone.number);
-            core.setOutput('milestone-title', matchedMilestone.title);
+            const details = {
+              number: matchedMilestone.number,
+              title: matchedMilestone.title,
+              url: matchedMilestone.html_url,
+              id: matchedMilestone.id
+              due_on: matchedMilestone.due_on.split('T')[0],
+              open_issues: matchedMilestone.open_issues,
+              closed_issues: matchedMilestone.closed_issues
+            };
+            core.setOutput('milestone-details', JSON.stringify(details));
+            core.setOutput('milestone-details2', details);
+      - run: echo milestone details="${{ toJson(steps.get-milestone) }}"
+      - run: echo milestone details="${{ steps.get-milestone.outputs.result.mileston-details2 }}"
+      - run: echo milestone details="${{ steps.get-milestone.outputs.result.mileston-details }}"
+      - run: echo milestone details="${{ steps.get-milestone.outputs.mileston-details }}"
       - name: Get Milestone Branch
         id: get-milestone-branch
         uses: actions/github-script@v7
+        env:
+          MILESTON_DETAILS: ${{ steps.get-milestone.outputs.result.milestone-details }}
         with:
           script: |
             const branch = `milestone/v${{ github.event.inputs.milestone-version }}`;
@@ -100,7 +115,7 @@ jobs:
       labels: ${{ steps.generate.outputs.labels }}
     if: ${{ github.event.inputs.testplan-type == 'regression' }}
     steps:
-      - run: echo validate mileston json=${{ toJson(needs.validate_milestone) }}
+      - run: echo validate mileston output json="${{ toJson(needs.validate_milestone.outputs) }}"
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup python
