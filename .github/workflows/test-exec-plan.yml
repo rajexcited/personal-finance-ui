@@ -58,10 +58,10 @@ jobs:
               number: matchedMilestone.number,
               title: matchedMilestone.title,
               url: matchedMilestone.html_url,
-              id: matchedMilestone.id
-              due_on: matchedMilestone.due_on.split('T')[0],
-              open_issues: matchedMilestone.open_issues,
-              closed_issues: matchedMilestone.closed_issues
+              id: matchedMilestone.id,
+              dueOn: matchedMilestone.due_on.split('T')[0],
+              openIssues: matchedMilestone.open_issues,
+              closedIssues: matchedMilestone.closed_issues
             };
             core.setOutput('milestone-details', JSON.stringify(details));
             core.setOutput('milestone-details2', details);
@@ -98,8 +98,8 @@ jobs:
         #   fi
       - name: Display outputs
         run: |
-          echo "Milestone ID: ${{ steps.get-milestone-id.outputs.result.milestone-id }}"
-          echo "Milestone Title: ${{ steps.get-milestone-id.outputs.result.milestone-title }}"
+          echo "Milestone ID: ${{ steps.get-milestone.outputs.result.milestone-id }}"
+          echo "Milestone Title: ${{ steps.get-milestone.outputs.result.milestone-title }}"
           echo "Milestone Branch: ${{ steps.get-milestone-branch.outputs.result.milestone-branch }}"
 
 
