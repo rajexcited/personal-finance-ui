@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+import json
 import os
 from pathlib import Path
 import re
@@ -47,7 +48,7 @@ def flatten_values(value: Any):
 
 
 def get_value(milestone: Dict, converted_tc: Dict, regression_testcases: List[str], variable: str, tc_id: str = None):
-    testcases = regression_testcases if tc_id is not None else [tc_id]
+    testcases = regression_testcases if tc_id is None else [tc_id]
     ia_list = set()
     for tc in testcases:
         if variable.startswith("$milestone"):
@@ -55,6 +56,8 @@ def get_value(milestone: Dict, converted_tc: Dict, regression_testcases: List[st
             ia_list.add(milestone[key])
         else:
             key_depths = variable[1:].split(".")
+            # print("key_depths=", key_depths, "tc=", tc,
+            #       "has value in converted_tc? ", tc in converted_tc)
             value = traverse_dict(key_depths, converted_tc[tc])
             ia_list.update(flatten_values(value))
 
@@ -176,7 +179,7 @@ def parse_regression_template(lines):
             heading_dict = result["content"][line_num] = {
                 "headingLevel": 0, "headingTitle": "", "content": []}
 
-        heading_dict["content"].append(line.strip())
+        heading_dict["content"].append(line)
 
     return result
 
@@ -188,11 +191,11 @@ def generate(parsed_template: Dict, converted_tc: Dict, summary_typeoftest: Dict
 
     for line_num in sorted_line_numbers:
         content = parsed_template["content"][line_num]["content"]
-        variables_in_content = list()
+        # variables_in_content = list()
 
         for content_line in content:
             variables = get_variable_name(content_line)
-            variables_in_content.extend(variables)
+            # variables_in_content.extend(variables)
             if "$ind" in variables and parsed_template["content"][line_num]["headingTitle"].startswith("Test Scenarios for Regression"):
                 for ind, tc in enumerate(regression_testcases):
                     tc_content = content_line.replace("$ind", str(ind+1))
@@ -215,20 +218,27 @@ def generate_regression_testplan(base_tc: Path, template_path: Path, generated_f
 
     file_contents = generate(parsed_template, converted,
                              summary_typeoftest, milestone)
-    file_contents.insert(0, "---")
+    template_metadata = dict()
     for k, v in parsed_template["metadata"].items():
-        file_contents.insert(0, f"{k}: {v}")
-    file_contents.insert(0, "---")
+        val = replace_variables(milestone, converted, [
+                                "Unknown"], v, get_variable_name(v))
+        template_metadata[k] = val
 
+    file_contents.insert(0, "---\n\n")
+    for k, v in template_metadata.items():
+        file_contents.insert(0, f"{k}: {v}\n")
+    file_contents.insert(0, "---\n")
+
+    # json.dump(file_contents, Path("dist/temp-regression.json").open("w"))
     regression_filepath = f"dist/{generated_filename}.md"
     with open(regression_filepath, "w") as f:
-        f.write("\n".join(file_contents))
+        f.write("".join(file_contents))
 
     # export to environment variable
-    github_env_filepath = os.getenv('GITHUB_ENV')
+    github_env_filepath = os.getenv('GITHUB_OUTPUT')
     if github_env_filepath:
         with open(github_env_filepath, 'a') as env_file:
-            for k, v in parsed_template["metadata"].items():
+            for k, v in template_metadata.items():
                 env_file.write(f"{k}={v}\n")
                 env_file.write(
                     f"regression-testplan-file-path={regression_filepath}\n")
@@ -249,6 +259,8 @@ if __name__ == "__main__":
         "--milestone-id", help="[Required] provide milestone id")
     parser.add_argument("--milestone-title",
                         help="[Required] provide milestone title")
+    parser.add_argument("--milestone-branch",
+                        help="[Required] provide milestone branch")
     args = parser.parse_args()
 
     try:
@@ -271,8 +283,14 @@ if __name__ == "__main__":
         if len(list(base_tc.rglob("*.md"))) == 0:
             raise ValueError("there are no files")
 
-        if not args.milestone_id or not args.milestone_title:
-            raise ValueError("milestone id or title not provided")
+        if not args.milestone_id:
+            raise ValueError("milestone id is not provided")
+
+        if not args.milestone_title:
+            raise ValueError("milestone title is not provided")
+
+        if not args.milestone_branch:
+            raise ValueError("milestone branch is not provided")
 
         no_error = True
     except Exception as e:
@@ -283,7 +301,10 @@ if __name__ == "__main__":
     if not no_error:
         exit(1)
 
-    milestone_details = {"id": args.milestone_id,
-                         "title": args.milestone_title}
+    milestone_details = {
+        "id": args.milestone_id,
+        "title": args.milestone_title,
+        "branch": args.milestone_branch
+    }
     generate_regression_testplan(
         base_tc, template_path, args.generated_filename, milestone_details)

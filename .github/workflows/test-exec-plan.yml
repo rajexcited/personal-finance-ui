@@ -1,6 +1,5 @@
 # Build and Test - make sure code has no issues
 #
-
 name: Test Execution Plan
 
 # list of trigger events https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows
@@ -12,12 +11,14 @@ on:
         required: true
         type: string
         description: milestone version to release prod. e.g. 0.1.2
-      execution-type:
+      testplan-type:
         required: true
         type: choice
-        description: What type of test execution is this for
+        description: type of test plan to generate
         options:
           - regression
+          - sanity
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,10 +29,10 @@ jobs:
     name: validate inputs
     runs-on: ubuntu-latest
     outputs:
-      milestone-id: ${{ steps.get-milestone-id.outputs.milestone-id }}
-      milestone-branch: ${{ steps.get-milestone-branch.outputs.milestone-branch }}
-      milestone-id-r: ${{ steps.get-milestone-id.outputs.result.milestone-id }}
-      milestone-branch-r: ${{ steps.get-milestone-branch.outputs.result.milestone-branch }}
+      milestone-id: ${{ steps.get-milestone-id.outputs.result.milestone-id }}
+      milestone-title: ${{ steps.get-milestone-id.outputs.result.milestone-title }}
+      milestone-branch: ${{ steps.get-milestone-branch.outputs.result.milestone-branch }}
+    if: ${{ github.event.inputs.testplan-type != 'sanity' }}
     steps:
       - run: echo milestone version = ${{ github.event.inputs.milestone-version }}
       - name: Get Milestone ID
@@ -41,31 +42,33 @@ jobs:
         with:
           script: |
             const label = 'v${{ github.event.inputs.milestone-version }}';
-            const milestones = await github.rest.issues.listMilestones({
+            console.log("milestone label: ", label);
+            const listMilestonesResponse = await github.rest.issues.listMilestones({
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open'
             });
-            console.log(milestones);
-            const milestone = milestones.data.find(m => m.title === label);
-            if (!milestone) {
-              throw new Error(`Milestone with label "${label}" not found`);
+            console.log("listMilestonesResponse: ", listMilestonesResponse);
+            const matchedMilestone = listMilestonesResponse.data.find(m => m.title === label);
+            if (!matchedMilestone) {
+              throw new Error(`Milestone with label "${label}" is not found`);
             }
-            console.log("found matching milestone: ", milestone);
-            core.setOutput('milestone-id', milestone.number);
+            console.log("found matching milestone: ", matchedMilestone);
+            core.setOutput('milestone-id', matchedMilestone.number);
+            core.setOutput('milestone-title', matchedMilestone.title);
       - name: Get Milestone Branch
         id: get-milestone-branch
         uses: actions/github-script@v7
         with:
           script: |
             const branch = `milestone/v${{ github.event.inputs.milestone-version }}`;
-            const response = await github.rest.repos.getBranch({
+            const getBranchResponse = await github.rest.repos.getBranch({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 branch: branch
               });
-            console.log(response);
-            core.setOutput('milestone-branch', response.name);
+            console.log("getBranchResponse: ", getBranchResponse);
+            core.setOutput('milestone-branch', getBranchResponse.name);
         # run: |
         #   BRANCH_NAME=milestone/v${{ github.event.inputs.milestone-version }}
         #   RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -78,10 +81,12 @@ jobs:
         #     echo "Branch $BRANCH_NAME does not exist."
         #     # exit 1  # exit with an error code if branch doesn't exist
         #   fi
-      # - name: Display Milestone ID and Title
-      #   run: |
-      #     echo "Milestone ID: $MILESTONE_ID"
-      #     echo "Milestone Title: $MILESTONE_TITLE"
+      - name: Display outputs
+        run: |
+          echo "Milestone ID: ${{ steps.get-milestone-id.outputs.result.milestone-id }}"
+          echo "Milestone Title: ${{ steps.get-milestone-id.outputs.result.milestone-title }}"
+          echo "Milestone Branch: ${{ steps.get-milestone-branch.outputs.result.milestone-branch }}"
+
 
   generate_regression:
     name: Generate Regression Test Plan
@@ -89,13 +94,13 @@ jobs:
     needs:
       - validate_milestone
     outputs:
-      file-path: ${{ steps.generate.outputs.regression-testplan-file-path }}
+      file-path: ${{ steps.generate.outputs.file-path }}
       name: ${{ steps.generate.outputs.name }}
       title: ${{ steps.generate.outputs.title }}
       labels: ${{ steps.generate.outputs.labels }}
-    if: ${{ github.event.inputs.execution-type == 'regression' }}
+    if: ${{ github.event.inputs.testplan-type == 'regression' }}
     steps:
-      - run: echo needs json=${{ toJson(needs.validate_milestone) }}
+      - run: echo validate mileston json=${{ toJson(needs.validate_milestone) }}
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup python
@@ -109,32 +114,48 @@ jobs:
       - id: generate
         run: |
           echo generating regression test plan from test case files
-          python .github/scripts/regression_testplan.py  --generate --template-path .github\ISSUE_TEMPLATE\regression_test_plan_template.md --generated-filename regression-testplan --tc-dir test-cases --milestone-id ${{ needs.validate_milestone.outputs.milestone-id }} --milestone-branch ${{ needs.validate_milestone.outputs.milestone-branch }}
+          milestone_id=${{ needs.validate_milestone.outputs.milestone-id }}
+          milestone_title=${{ needs.validate_milestone.outputs.milestone-title }}
+          milestone_branch=${{ needs.validate_milestone.outputs.milestone-branch }}
+          gen_regression_testplan="regression-testplan-$(date +'%Y%m%d%H%M%S')"
+          python .github/scripts/regression_testplan.py  --generate --template-path .github\ISSUE_TEMPLATE\regression_test_plan_template.md --generated-filename "$gen_regression_testplan" --tc-dir "test-cases" --milestone-id "$milestone_id" --milestone-branch "$milestone_branch" --milestone-title "$milestone_title"
+          echo file-path=dist/$gen_regression_testplan.md >> $GITHUB_OUTPUT
       - uses: actions/cache@v4
         with:
           path: dist
-          key: regression-testplan-file-path
-
-  create_regression_issue:
-    name: Create Issue for Regression Test Plan
-    runs-on: ubuntu-latest
-    needs:
-      - generate_regression
-    if: ${{ github.event.inputs.execution-type == 'regression' }}
-    steps:
-      - run: echo needs json=${{ toJson(needs.generate_regression) }}
-      - uses: actions/cache@v4
+          key: ${{ steps.generate.outputs.file-path }}
+      - name: Create Regression Test Plan Issue
+        id: create-testplan-issue
+        uses: actions/github-script@v7
+        env:
+          TEST_PLAN_TITLE: ${{ steps.generate.outputs.title }}
+          FILE_PATH: ${{ steps.generate.outputs.file-path }}
+          MILESTONE_ID: ${{ needs.validate_milestone.outputs.milestone-id }}
+          ISSUE_LABELS: "regression,test plan"
         with:
-          path: dist
-          key: regression-testplan-file-path
-      - name: Create Issue
-        id: create-issue
-        uses: peter-evans/create-issue-from-file@v4
-        with:
-          title: ${{ needs.generate_regression.outputs.title }}
-          content-filepath: ${{ needs.generate_regression.outputs.file-path }}
-          # labels: regression,test-plan
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Issue Outputs
+          script: |
+            // https://octokit.github.io/rest.js/v21/#issues
+            const fs = require('fs');
+            const regressionTestplanContent = fs.readFileSync(process.env.FILE_PATH, 'utf8');
+            const issueResponse = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: process.env.TEST_PLAN_TITLE,
+              body: regression_test_plan_content,
+              milestone: process.env.MILESTONE_ID,
+              labels: process.env.ISSUE_LABELS.split(',')
+            });
+            console.log("issueResponse: ", issueResponse);
+            core.setOutput('issue-number', issueResponse.data.number);
+            const lockIssueResponse = await github.rest.issues.lock({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueResponse.data.number
+            });
+            console.log("lockIssueResponse: ", lockIssueResponse);
+      - name: Display outputs
         run: |
-          echo Issue Number: ${{ steps.create-issue.outputs.issue-number }}
+          echo "Regression Test Plan Issue Number: ${{ steps.create-testplan-issue.outputs.result.issue-number }}"
+          echo "Regression Test Plan Title: ${{ steps.generate.outputs.title }}"
+          echo "Regression Test Plan Labels: ${{ steps.generate.outputs.labels }}"
+
