@@ -28,7 +28,7 @@ jobs:
     name: validate Milestone
     runs-on: ubuntu-latest
     outputs:
-      milestone-result: ${{ steps.milestone-details.outputs.result }}
+      milestone-details: ${{ steps.milestone-details.outputs.details }}
     if: ${{ github.event.inputs.testplan-type != 'sanity' }}
     steps:
       - run: echo milestone version = ${{ github.event.inputs.milestone-version }}
@@ -84,14 +84,14 @@ jobs:
           script: |
             const milestoneIssueDetails = ${{ steps.get-milestone-issue.outputs.details }};
             const milestoneBranchDetails = ${{ steps.get-milestone-branch.outputs.details }};
-            core.setOutput('result', {
+            core.setOutput('details', {
               ...milestoneIssueDetails,
               ...milestoneBranchDetails
               });
       - name: Display outputs
         run: |
-          echo "Milestone results: ${{ steps.milestone-details.outputs.result }}"
-          echo "Milestone issue Url: ${{ steps.milestone-details.outputs.result.issueUrl }}"
+          echo "Milestone results: ${{ steps.milestone-details.outputs.details }}"
+          echo "Milestone issue Url: ${{ steps.milestone-details.outputs.details.issueUrl }}"
 
   generate_regression:
     name: Generate Regression Test Plan
@@ -105,7 +105,7 @@ jobs:
       labels: ${{ steps.generate.outputs.labels }}
     if: ${{ github.event.inputs.testplan-type == 'regression' }}
     steps:
-      - run: echo validate mileston output json="${{ needs.validate_milestone.outputs.milestone-result }}"
+      - run: echo validate mileston output json=${{ needs.validate_milestone.outputs.milestone-details }}
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup python
@@ -119,9 +119,9 @@ jobs:
       - id: generate
         run: |
           echo generating regression test plan from test case files
-          milestone_result=${{ needs.validate_milestone.outputs.milestone-result }}
+          milestone_result=${{ toJson(needs.validate_milestone.outputs.milestone-details) }}
           gen_regression_testplan="regression-testplan-$(date +'%Y%m%d%H%M%S')"
-          python .github/scripts/regression_testplan.py  --generate --template-path .github\ISSUE_TEMPLATE\regression_test_plan_template.md --generated-filename "$gen_regression_testplan" --tc-dir "test-cases" --milestone-details "$milestone_result"
+          python .github/scripts/regression_testplan.py  --generate --template-path .github/ISSUE_TEMPLATE/regression_test_plan_template.md --generated-filename "$gen_regression_testplan" --tc-dir "test-cases" --milestone-details "$milestone_result"
           echo file-path=dist/$gen_regression_testplan.md >> $GITHUB_OUTPUT
       - uses: actions/cache@v4
         with:
@@ -133,7 +133,7 @@ jobs:
         env:
           TEST_PLAN_TITLE: ${{ steps.generate.outputs.title }}
           FILE_PATH: ${{ steps.generate.outputs.file-path }}
-          MILESTONE_ID: ${{ needs.validate_milestone.outputs.milestone-result.milestoneId }}
+          MILESTONE_ID: ${{ needs.validate_milestone.outputs.milestone-details.milestoneId }}
           ISSUE_LABELS: "regression,test plan"
         with:
           script: |
