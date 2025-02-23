@@ -19,7 +19,6 @@ on:
           - regression
           - sanity
 
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -29,9 +28,7 @@ jobs:
     name: validate Milestone
     runs-on: ubuntu-latest
     outputs:
-      milestone-id: ${{ steps.get-milestone.outputs.result.milestone-id }}
-      milestone-title: ${{ steps.get-milestone.outputs.result.milestone-title }}
-      milestone-branch: ${{ steps.get-milestone-branch.outputs.result.milestone-branch }}
+      milestone-result: ${{ steps.milestone-details.outputs.result }}
     if: ${{ github.event.inputs.testplan-type != 'sanity' }}
     steps:
       - run: echo milestone version = ${{ github.event.inputs.milestone-version }}
@@ -62,16 +59,9 @@ jobs:
               dueOn: matchedMilestone.due_on.split('T')[0],
               openIssues: matchedMilestone.open_issues,
               closedIssues: matchedMilestone.closed_issues
+              issueBaseUrl: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/issues`
             };
             core.setOutput('details', details);
-      - run: echo milestone details="${{ toJson(steps.get-milestone-issue.outputs.details) }}"
-      - run: echo milestone details="${{ steps.get-milestone-issue.outputs.details }}"
-      - env:
-          MILESTON_DETAILS: ${{ toJson(steps.get-milestone-issue.outputs.details) }}
-        run: echo milestone issue details="$MILESTON_DETAILS"
-      - env:
-          MILESTON_DETAILS: ${{ steps.get-milestone-issue.outputs.details }}
-        run: echo milestone issue details="$MILESTON_DETAILS"
       - name: Get Milestone Branch
         id: get-milestone-branch
         uses: actions/github-script@v7
@@ -85,27 +75,23 @@ jobs:
               });
             console.log("getBranchResponse: ", getBranchResponse);
             core.setOutput('details', {
-                branchName: getbranchResponse.data.name, 
-                branchLink: getBranchResponse.data._links.html
+                branchName: getBranchResponse.data.name, 
+                branchUrl: getBranchResponse.data._links.html
               });
       - id: milestone-details
         uses: actions/github-script@v7
-        env:
-          MILESTON_ISSUE_DETAILS: ${{ toJson(steps.get-milestone-issue.outputs.details) }}
-          MILESTON_BRANCH_DETAILS: ${{ toJson(steps.get-milestone-branch.outputs.details) }}
         with:
           script: |
-            const milestoneDetails = JSON.parse(process.env.MILESTON_ISSUE_DETAILS);
-            const milestoneBranchDetails = JSON.parse(process.env.MILESTON_BRANCH_DETAILS);
+            const milestoneIssueDetails = ${{ steps.get-milestone-issue.outputs.details }};
+            const milestoneBranchDetails = ${{ steps.get-milestone-branch.outputs.details }};
             core.setOutput('result', {
-              ...milestoneDetails,
+              ...milestoneIssueDetails,
               ...milestoneBranchDetails
               });
       - name: Display outputs
         run: |
           echo "Milestone results: ${{ steps.milestone-details.outputs.result }}"
           echo "Milestone issue Url: ${{ steps.milestone-details.outputs.result.issueUrl }}"
-
 
   generate_regression:
     name: Generate Regression Test Plan
@@ -119,7 +105,7 @@ jobs:
       labels: ${{ steps.generate.outputs.labels }}
     if: ${{ github.event.inputs.testplan-type == 'regression' }}
     steps:
-      - run: echo validate mileston output json="${{ toJson(needs.validate_milestone.outputs) }}"
+      - run: echo validate mileston output json="${{ needs.validate_milestone.outputs.milestone-result }}"
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup python
@@ -133,11 +119,9 @@ jobs:
       - id: generate
         run: |
           echo generating regression test plan from test case files
-          milestone_id=${{ needs.validate_milestone.outputs.milestone-id }}
-          milestone_title=${{ needs.validate_milestone.outputs.milestone-title }}
-          milestone_branch=${{ needs.validate_milestone.outputs.milestone-branch }}
+          milestone_result=${{ needs.validate_milestone.outputs.milestone-result }}
           gen_regression_testplan="regression-testplan-$(date +'%Y%m%d%H%M%S')"
-          python .github/scripts/regression_testplan.py  --generate --template-path .github\ISSUE_TEMPLATE\regression_test_plan_template.md --generated-filename "$gen_regression_testplan" --tc-dir "test-cases" --milestone-id "$milestone_id" --milestone-branch "$milestone_branch" --milestone-title "$milestone_title"
+          python .github/scripts/regression_testplan.py  --generate --template-path .github\ISSUE_TEMPLATE\regression_test_plan_template.md --generated-filename "$gen_regression_testplan" --tc-dir "test-cases" --milestone-details "$milestone_result"
           echo file-path=dist/$gen_regression_testplan.md >> $GITHUB_OUTPUT
       - uses: actions/cache@v4
         with:
@@ -149,7 +133,7 @@ jobs:
         env:
           TEST_PLAN_TITLE: ${{ steps.generate.outputs.title }}
           FILE_PATH: ${{ steps.generate.outputs.file-path }}
-          MILESTONE_ID: ${{ needs.validate_milestone.outputs.milestone-id }}
+          MILESTONE_ID: ${{ needs.validate_milestone.outputs.milestone-result.milestoneId }}
           ISSUE_LABELS: "regression,test plan"
         with:
           script: |
@@ -174,7 +158,6 @@ jobs:
             console.log("lockIssueResponse: ", lockIssueResponse);
       - name: Display outputs
         run: |
-          echo "Regression Test Plan Issue Number: ${{ steps.create-testplan-issue.outputs.result.issue-number }}"
+          echo "Regression Test Plan Issue Number: ${{ steps.create-testplan-issue.outputs.issue-number }}"
           echo "Regression Test Plan Title: ${{ steps.generate.outputs.title }}"
           echo "Regression Test Plan Labels: ${{ steps.generate.outputs.labels }}"
-

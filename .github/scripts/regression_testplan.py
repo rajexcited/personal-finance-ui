@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from datetime import datetime
 import json
 import os
 from pathlib import Path
@@ -42,7 +43,7 @@ def flatten_values(value: Any):
             result.extend(flatten_values(v))
     elif isinstance(value, str):
         result.append(value)
-    else:
+    elif value is not None:
         result.append(str(value))
     return result
 
@@ -53,13 +54,15 @@ def get_value(milestone: Dict, converted_tc: Dict, regression_testcases: List[st
     for tc in testcases:
         if variable.startswith("$milestone"):
             key = variable.split(".")[1]
-            ia_list.add(milestone[key])
+            value = milestone[key] if key in milestone else None
+        elif variable == "$today":
+            value = datetime.now().strftime("%m-%d-%Y")
         else:
             key_depths = variable[1:].split(".")
             # print("key_depths=", key_depths, "tc=", tc,
             #       "has value in converted_tc? ", tc in converted_tc)
             value = traverse_dict(key_depths, converted_tc[tc])
-            ia_list.update(flatten_values(value))
+        ia_list.update(flatten_values(value))
 
     if len(ia_list) == 0:
         return [variable]
@@ -256,11 +259,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--tc-dir", help="[Required] provide test case base directory. ex. '../test-cases/'")
     parser.add_argument(
-        "--milestone-id", help="[Required] provide milestone id")
-    parser.add_argument("--milestone-title",
-                        help="[Required] provide milestone title")
-    parser.add_argument("--milestone-branch",
-                        help="[Required] provide milestone branch")
+        "--milestone-details", help="[Required] provide milestone json details")
     args = parser.parse_args()
 
     try:
@@ -283,14 +282,9 @@ if __name__ == "__main__":
         if len(list(base_tc.rglob("*.md"))) == 0:
             raise ValueError("there are no files")
 
-        if not args.milestone_id:
-            raise ValueError("milestone id is not provided")
-
-        if not args.milestone_title:
-            raise ValueError("milestone title is not provided")
-
-        if not args.milestone_branch:
-            raise ValueError("milestone branch is not provided")
+        if not args.milestone_details:
+            raise ValueError("milestone details json is not provided")
+        milestone_details = json.loads(args.milestone_details)
 
         no_error = True
     except Exception as e:
@@ -301,10 +295,5 @@ if __name__ == "__main__":
     if not no_error:
         exit(1)
 
-    milestone_details = {
-        "id": args.milestone_id,
-        "title": args.milestone_title,
-        "branch": args.milestone_branch
-    }
     generate_regression_testplan(
         base_tc, template_path, args.generated_filename, milestone_details)

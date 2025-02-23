@@ -9,8 +9,16 @@ title: "[Testplan]: Regression Test Plan for $milestone.title"
 
 ### Milestone:
 
-[milestone $milestone.title](https://github.com/rajexcited/personal-finance-ui/milestone/$milestone.id)  
-Branch: $milestone.branch
+[milestone $milestone.title]($milestone.issueUrl)
+
+**Branch:** [$milestone.branchName]($milestone.branchUrl)
+
+#### As Of $today
+
+- [$milestone.openIssues Open Issues]($milestone.issueBaseUrl?q=is%3Aissue%20state%3Aopen%20milestone%3A$milestone.title)
+- [$milestone.closedIssues Closed Issues]($milestone.issueBaseUrl?q=is%3Aissue%20state%3Aclosed%20milestone%3A$milestone.title)
+
+##### Release Date: $milestone.dueOn
 
 ### Impact Areas:
 
