@@ -248,7 +248,11 @@ def save_regression_testplan(testplan_name: str, file_contents: List[str]):
 
 
 def export_metadata_to_env(template_metadata: Dict[str, str]):
-    github_env_filepath = os.getenv('GITHUB_OUTPUT')
+    # print all os env variables
+    for k, v in os.environ.items():
+        print(f"{k}={v}")
+    github_env_filepath = os.getenv('GITHUB_ENV')
+    print("github_env_filepath=", github_env_filepath)
     if github_env_filepath:
         with open(github_env_filepath, 'a') as env_file:
             for k, v in template_metadata.items():
