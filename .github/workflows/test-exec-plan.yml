@@ -144,7 +144,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: process.env.TEST_PLAN_TITLE,
-              body: regression_test_plan_content,
+              body: regressionTestplanContent,
               milestone: process.env.MILESTONE_ID,
               labels: process.env.ISSUE_LABELS.split(',')
             });
