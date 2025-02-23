@@ -26,7 +26,7 @@ def parse_metadata(lines: List[str]):
                 ln = line_num
                 break
         else:
-            metadata_match = re.match(r"(.+):(.+)", line)
+            metadata_match = re.match(r"([^:]+):(.+)", line)
             if metadata_match:
                 key = metadata_match.group(1).strip()
                 text = metadata_match.group(2).strip()

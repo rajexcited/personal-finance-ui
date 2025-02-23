@@ -234,7 +234,7 @@ def generate_regression_testplan(base_tc: Path, template_path: Path, generated_f
 
     # json.dump(file_contents, Path("dist/temp-regression.json").open("w"))
     file_path = save_regression_testplan(generated_filename, file_contents)
-    template_metadata["file_path"] = file_path
+    template_metadata["file-path"] = file_path
     # export to environment variable
     export_metadata_to_env(template_metadata)
 

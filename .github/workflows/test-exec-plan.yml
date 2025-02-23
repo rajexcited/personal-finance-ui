@@ -158,11 +158,10 @@ jobs:
           milestone_result=${{ toJson(needs.validate_milestone.outputs.milestone-details) }}
           gen_regression_testplan="regression-testplan-$(date +'%Y%m%d%H%M%S')"
           python .github/scripts/regression_testplan.py --generate --template-path .github/ISSUE_TEMPLATE/regression_test_plan_template.md --generated-filename "$gen_regression_testplan" --tc-dir "test-cases" --milestone-details "$milestone_result"
-          # echo file-path=dist/$gen_regression_testplan.md >> $GITHUB_OUTPUT
-      - name: Display outputs
+      - name: Display outputs of Testplan generated
         run: |
           echo "Regression Test Plan Title: ${{ steps.generate.outputs.title }}"
-          echo "Regression Test Plan File Path: ${{ steps.generate.outputs.file-path }}"
+          echo "Regression Test Plan File Path: ${{ steps.generate.outputs.file_path }}"
           echo "Regression Test Plan Name: ${{ steps.generate.outputs.name }}"
       - name: Create Regression Test Plan Issue
         id: create-testplan-issue

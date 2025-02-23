@@ -1,6 +1,6 @@
 ---
 name: Regression Test Plan
-title: "[Testplan]: Regression Test Plan for $milestone.title"
+title: [Testplan]: Regression Test Plan for $milestone.title
 ---
 
 # Regression Test Plan
