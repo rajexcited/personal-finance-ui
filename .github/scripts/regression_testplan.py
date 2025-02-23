@@ -233,18 +233,26 @@ def generate_regression_testplan(base_tc: Path, template_path: Path, generated_f
     file_contents.insert(0, "---\n")
 
     # json.dump(file_contents, Path("dist/temp-regression.json").open("w"))
-    regression_filepath = f"dist/{generated_filename}.md"
-    with open(regression_filepath, "w") as f:
+    save_regression_testplan(generated_filename, file_contents)
+    # export to environment variable
+    export_metadata_to_env(template_metadata)
+
+
+def save_regression_testplan(testplan_name: str, file_contents: List[str]):
+    dist_dir = Path("dist")
+    dist_dir.mkdir(exist_ok=True)
+    file_name = Path(f"{testplan_name}.md")
+    file_path = dist_dir/file_name
+    with open(file_path, "w") as f:
         f.write("".join(file_contents))
 
-    # export to environment variable
+
+def export_metadata_to_env(template_metadata: Dict[str, str]):
     github_env_filepath = os.getenv('GITHUB_OUTPUT')
     if github_env_filepath:
         with open(github_env_filepath, 'a') as env_file:
             for k, v in template_metadata.items():
                 env_file.write(f"{k}={v}\n")
-                env_file.write(
-                    f"regression-testplan-file-path={regression_filepath}\n")
 
 
 if __name__ == "__main__":
