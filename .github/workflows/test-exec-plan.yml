@@ -168,8 +168,8 @@ jobs:
         with:
           script: |
             // https://octokit.github.io/rest.js/v21/#issues
-            const testPlanTitle = ${{ steps.generate.outputs.title }};
-            const testPlanPath = ${{ steps.generate.outputs.file_path }};
+            const testPlanTitle = "${{ steps.generate.outputs.title }}";
+            const testPlanPath = "${{ steps.generate.outputs.file_path }}";
             const milestoneDetails = ${{ needs.validate_milestone.outputs.milestone-details }};
             const fs = require('fs');
             const regressionTestplanContent = fs.readFileSync(testPlanPath, 'utf8');
