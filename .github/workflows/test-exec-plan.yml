@@ -140,8 +140,7 @@ jobs:
     steps:
       - name: Display milestone details
         run: |
-          echo validate mileston output json=${{ toJson(needs.validate_milestone.outputs.milestone-details) }}
-          echo validate mileston id=${{ needs.validate_milestone.outputs.milestone-details.milestoneId }}
+          echo validate mileston output json=${{ needs.validate_milestone.outputs.milestone-details }}
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup python
@@ -166,21 +165,20 @@ jobs:
       - name: Create Regression Test Plan Issue
         id: create-testplan-issue
         uses: actions/github-script@v7
-        env:
-          TEST_PLAN_TITLE: ${{ steps.generate.outputs.title }}
-          FILE_PATH: ${{ steps.generate.outputs.file-path }}
-          MILESTONE_ID: ${{ needs.validate_milestone.outputs.milestone-details.milestoneId }}
         with:
           script: |
             // https://octokit.github.io/rest.js/v21/#issues
+            const testPlanTitle = ${{ steps.generate.outputs.title }};
+            const testPlanPath = ${{ steps.generate.outputs.file_path }};
+            const milestoneDetails = ${{ needs.validate_milestone.outputs.milestone-details }};
             const fs = require('fs');
-            const regressionTestplanContent = fs.readFileSync(process.env.FILE_PATH, 'utf8');
+            const regressionTestplanContent = fs.readFileSync(testPlanPath, 'utf8');
             const issueResponse = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: process.env.TEST_PLAN_TITLE,
+              title: testPlanTitle,
               body: regressionTestplanContent,
-              milestone: process.env.MILESTONE_ID,
+              milestone: milestoneDetails.milestoneId,
               labels: process.env.ISSUE_LABELS.split(",")
             });
             console.log("issueResponse: ", issueResponse);
