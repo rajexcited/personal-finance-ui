@@ -58,7 +58,7 @@ jobs:
               milestoneId: matchedMilestone.id,
               dueOn: matchedMilestone.due_on.split('T')[0],
               openIssues: matchedMilestone.open_issues,
-              closedIssues: matchedMilestone.closed_issues
+              closedIssues: matchedMilestone.closed_issues,
               issueBaseUrl: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/issues`
             };
             core.setOutput('details', details);
