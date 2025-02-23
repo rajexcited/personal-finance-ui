@@ -112,13 +112,21 @@ jobs:
             const listIssuesResponse = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              milestone: milestoneLabel,
               labels: process.env.ISSUE_LABELS.split(","),
               state: 'open'
             });
             console.log("listIssuesResponse: ", listIssuesResponse);
-            if (listIssuesResponse.data.length !== 0) {
-              throw new Error(`Regression Test Plan Issue has already been existed for milestone ${milestoneLabel}`);
+            const foundRegressionIssue = listIssuesResponse.data.find(issue => {
+              console.log("issue title: ", issue.title);
+              if (issue.title.includes("Regression") && issue.milestone.title === milestoneLabel) {
+                return true;
+              }
+              return false;
+            });
+            if (foundRegressionIssue) {
+              console.error(`Found Issue title: ${foundRegressionIssue.title}`);
+              console.error(`Regression Test plan Issue link: ${foundRegressionIssue.html_url}`);
+              throw new Error(`Regression Test Plan Issue[${foundRegressionIssue.number}] has already been existed for milestone ${milestoneLabel}`);
             }
 
   generate_regression:
