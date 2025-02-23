@@ -233,7 +233,8 @@ def generate_regression_testplan(base_tc: Path, template_path: Path, generated_f
     file_contents.insert(0, "---\n")
 
     # json.dump(file_contents, Path("dist/temp-regression.json").open("w"))
-    save_regression_testplan(generated_filename, file_contents)
+    file_path = save_regression_testplan(generated_filename, file_contents)
+    template_metadata["file_path"] = file_path
     # export to environment variable
     export_metadata_to_env(template_metadata)
 
@@ -245,17 +246,19 @@ def save_regression_testplan(testplan_name: str, file_contents: List[str]):
     file_path = dist_dir/file_name
     with open(file_path, "w") as f:
         f.write("".join(file_contents))
+    return file_path
 
 
 def export_metadata_to_env(template_metadata: Dict[str, str]):
     # print all os env variables
-    for k, v in os.environ.items():
-        print(f"{k}={v}")
-    github_env_filepath = os.getenv('GITHUB_ENV')
-    print("github_env_filepath=", github_env_filepath)
-    if github_env_filepath:
-        with open(github_env_filepath, 'a') as env_file:
+    # for k, v in os.environ.items():
+    #     print(f"{k}={v}")
+    github_output_filepath = os.getenv('GITHUB_OUTPUT')
+    print("github_output_filepath=", github_output_filepath)
+    if github_output_filepath:
+        with open(github_output_filepath, 'a') as env_file:
             for k, v in template_metadata.items():
+                print(f"exporting output {k}={v}")
                 env_file.write(f"{k}={v}\n")
 
 

@@ -135,14 +135,13 @@ jobs:
     needs:
       - validate_milestone
       - validate_regression
-    outputs:
-      file-path: ${{ steps.generate.outputs.file-path }}
-      name: ${{ steps.generate.outputs.name }}
-      title: ${{ steps.generate.outputs.title }}
     permissions:
       issues: write
     steps:
-      - run: echo validate mileston output json=${{ needs.validate_milestone.outputs.milestone-details }}
+      - name: Display milestone details
+        run: |
+          echo validate mileston output json=${{ toJson(needs.validate_milestone.outputs.milestone-details) }}
+          echo validate mileston id=${{ needs.validate_milestone.outputs.milestone-details.milestoneId }}
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup python
@@ -158,12 +157,13 @@ jobs:
           echo generating regression test plan from test case files
           milestone_result=${{ toJson(needs.validate_milestone.outputs.milestone-details) }}
           gen_regression_testplan="regression-testplan-$(date +'%Y%m%d%H%M%S')"
-          python .github/scripts/regression_testplan.py  --generate --template-path .github/ISSUE_TEMPLATE/regression_test_plan_template.md --generated-filename "$gen_regression_testplan" --tc-dir "test-cases" --milestone-details "$milestone_result"
-          echo file-path=dist/$gen_regression_testplan.md >> $GITHUB_OUTPUT
-      - uses: actions/cache@v4
-        with:
-          path: dist
-          key: ${{ steps.generate.outputs.file-path }}
+          python .github/scripts/regression_testplan.py --generate --template-path .github/ISSUE_TEMPLATE/regression_test_plan_template.md --generated-filename "$gen_regression_testplan" --tc-dir "test-cases" --milestone-details "$milestone_result"
+          # echo file-path=dist/$gen_regression_testplan.md >> $GITHUB_OUTPUT
+      - name: Display outputs
+        run: |
+          echo "Regression Test Plan Title: ${{ steps.generate.outputs.title }}"
+          echo "Regression Test Plan File Path: ${{ steps.generate.outputs.file-path }}"
+          echo "Regression Test Plan Name: ${{ steps.generate.outputs.name }}"
       - name: Create Regression Test Plan Issue
         id: create-testplan-issue
         uses: actions/github-script@v7
@@ -192,7 +192,5 @@ jobs:
               issue_number: issueResponse.data.number
             });
             console.log("lockIssueResponse: ", lockIssueResponse);
-      - name: Display outputs
-        run: |
-          echo "Regression Test Plan Issue Number: ${{ steps.create-testplan-issue.outputs.issue-number }}"
-          echo "Regression Test Plan Title: ${{ steps.generate.outputs.title }}"
+            console.log("Regression Test Plan Issue created: ", issueResponse.data.html_url);
+            console.log("Regression Test Plan Issue Number: ", issueResponse.data.number);
