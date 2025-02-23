@@ -178,7 +178,7 @@ jobs:
               repo: context.repo.repo,
               title: testPlanTitle,
               body: regressionTestplanContent,
-              milestone: milestoneDetails.milestoneId,
+              milestone: milestoneDetails.issueNumber,
               labels: process.env.ISSUE_LABELS.split(",")
             });
             console.log("issueResponse: ", issueResponse);
