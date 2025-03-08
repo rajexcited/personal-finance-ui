@@ -1,0 +1,905 @@
+# Prepare UI artifact to deploy as statis site
+
+name: Provision/Deprovision Testplan Environment
+
+# list of trigger events https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows
+on:
+  issues:
+    types:
+      - opened
+      - labeled
+      - locked
+      - milestoned
+      - deleted
+      - closed
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.milestone.number }}
+  cancel-in-progress: true
+
+env:
+  ARTIFACT_NAME: personal-finance-ui-${{ github.event.issue.milestone.title }}
+
+permissions: 
+  issues: write
+
+jobs:
+  display_output:
+    name: Display Output
+    runs-on: ubuntu-latest
+    steps:
+      # https://docs.github.com/en/webhooks/webhook-events-and-payloads#issues
+      - run: |
+          echo "Issue number: ${{ github.event.issue.number }}"
+          echo "Issue id: ${{ github.event.issue.id }}"
+      - run: |
+          echo "Issue title: ${{ github.event.issue.title }}"
+      - run: |
+          echo "Issue body: ${{ github.event.issue.body }}"
+      - run: |
+          echo "Issue milestone: ${{ github.event.issue.milestone }}"
+          echo "Issue milestone title: ${{ github.event.issue.milestone.title }}"
+      - run: |
+          echo "Issue state: ${{ github.event.issue.state }}"
+          echo "Issue state reason: ${{ github.event.issue.state_reason }}"
+      - run: |
+          echo "Issue draft: ${{ github.event.issue.draft }}"
+          echo "Issue locked: ${{ github.event.issue.locked }}"
+          echo "Issue active lock reason: ${{ github.event.issue.active_lock_reason }}"
+      - run: |
+          echo "Issue labels name: ${{ github.event.issue.labels.*.name }}"
+      - run: |
+          echo "Issue total comments: ${{ github.event.issue.comments }}"
+      - run: |
+          echo "Issue updated at: ${{ github.event.issue.updated_at }}"
+          echo "Issue closed at: ${{ github.event.issue.closed_at }}"
+          echo "Issue created at: ${{ github.event.issue.created_at }}"
+      - run: |
+          echo "Issue author association: ${{ github.event.issue.author_association }}"
+      - run: |
+          echo "Issue sender login: ${{ github.event.sender.login }}"
+          echo "Issue sender type: ${{ github.event.sender.type }}"
+          echo "Issue sender id: ${{ github.event.sender.id }}"
+          echo "Issue sender view type: ${{ github.event.sender.user_view_type }}"
+      - run: |
+          echo "Issue user login: ${{ github.event.issue.user.login }}"
+          echo "Issue user type: ${{ github.event.issue.user.type }}"
+          echo "Issue user id: ${{ github.event.issue.user.id }}"
+          echo "Issue user view type: ${{ github.event.issue.user.user_view_type }}"
+      - run: |
+          echo "Issue assignee login: ${{ github.event.issue.assignee.login }}"
+          echo "Issue assignee type: ${{ github.event.issue.assignee.type }}"
+          echo "Issue assignee id: ${{ github.event.issue.assignee.id }}"
+          echo "Issue assignee view type: ${{ github.event.issue.assignee.user_view_type }}"
+      - run: |
+          echo "github actor: ${{ github.actor }}"
+          echo "github triggering actor: ${{ github.triggering_actor }}"
+          echo "Issue perfomed by app: ${{ github.event.issue.performed_via_github_app }}"
+      - run: |
+          echo "action: ${{ github.action }}"
+          echo "event name: ${{ github.event_name }}"
+          echo "event changes: ${{ github.event.changes }}"
+
+  update_request:
+    name: Start Request
+    runs-on: ubuntu-latest
+    if: >
+      contains(github.event.issue.labels.*.name, 'deployment') &&
+      contains(github.event.issue.labels.*.name, 'test plan') &&
+      startsWith(github.event.issue.author_association, 'OWNER') &&
+      startsWith(github.event.issue.title, '[Request] Provision Test Plan Environment') &&
+      startsWith(github.event.issue.title, '[Request] Deprovision Test Plan Environment') &&
+      github.event.issue.milestone != null &&
+      github.event.issue.locked == true
+    outputs:
+      failed-reason: ${{ steps.update_issue_start.outputs.failedReason }}
+    steps:
+      - run: |
+          echo "The issue has milestone assigned and locked.""
+          echo "The issue has required labels (deployment, test plan).""
+          echo "This request form is raised by owner."
+          echo "This request form title indicates that It is related to provision or deprovision test plan environment."
+          echo "We will validate request form issue details."
+      - id: update_issue_start
+        name: Update Issue - Start Processing
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const updateResponse = await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              title: "[Processing] " + context.payload.issue.title;
+            });
+            console.log("updateResponse: ", updateResponse);
+
+  validate_request:
+    name: Validate Request Form
+    runs-on: ubuntu-latest
+    needs: 
+      - update_request
+    outputs:
+      milestone-branch: ${{ steps.get-milestone.outputs.milestoneBranch }}
+      failed-reason: ${{ steps.get-milestone.outputs.failedReason || steps.testplan-issue.outputs.failedReason || steps.request-form.outputs.failedReason || steps.provision-stack.outputs.failedReason || steps.deprovision-stack.outputs.failedReason }}
+      testplan-type: ${{ steps.testplan-issue.outputs.testplanType }}
+      parent-issue: ${{ steps.testplan-issue.outputs.parentIssue }}
+      request-type: ${{ steps.request-form.outputs.request_type }}
+      deployment-scope: ${{ steps.request-form.outputs.deployment_scope }}
+      api-version: ${{ steps.request-form.outputs.api_version }}
+      stack-details: ${{ steps.provision-stack.outputs.stack_details || steps.deprovision-stack.outputs.stack_details }}
+    environment: testplan
+    steps:
+      - id: get-milestone
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              // verify milestone branch exists
+              console.log("issue have milestone title: ", context.payload.issue.milestone.title);
+              if(context.payload.issue.milestone.state != "open") {
+                throw new Error("Milestone is not in open state");
+              }
+              if(!context.payload.issue.milestone.due_on) {
+                throw new Error("Milestone due date is not set");
+              }
+              const milestoneDueOn = new Date(context.payload.issue.milestone.due_on);
+              if(milestoneDueOn < new Date()) {
+                throw new Error("Milestone due date is already passed");
+              }
+              const milestoneBranch = `milestone/${context.payload.issue.milestone.title}`;
+              const getBranchResponse = await github.rest.repos.getBranch({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  branch: milestoneBranch
+                });
+              console.log("getBranchResponse: ", getBranchResponse);
+              core.setOutput("milestoneBranch", {
+                  name: getBranchResponse.data.name, 
+                  url: getBranchResponse.data._links.html
+                });
+              // verify milestone branch commit has merged all of the master branch
+              const compareResponse = await github.rest.repos.compareCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                base: milestoneBranch,
+                head: "master"
+              });
+              console.log("milestone branch as base and master branch as head, compareResponse: ", compareResponse);
+              if (compareResponse.data.behind_by > 0) {
+                throw new Error(`Milestone branch [${milestoneBranch}] is behind master by ${compareResponse.data.behind_by} commits.`);
+              }
+            } catch (error) {
+              console.error("failed reason: "", error);
+              core.setOutput("failedReason", `Error during milestone validation, reason: ${error.message}`);
+              core.setFailed(error.message);
+            }
+      - id: testplan-issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              // verify if regression label exists ? if so find parent issue and set as output for further use
+              // if parent issue is not found, then set failed reason
+              const allowedTypes = ["regression"];
+              const foundTypeLabel = context.payload.issue.labels.find(label=>allowedTypes.includes(label.name));
+              core.setOutput("testplanType", foundLabel?.name || "unknown");
+              if(!foundLabel) {
+                throw new Error("Test plan type label not found in issue labels");
+              }
+              // find test plan issue with same milestone and type label
+              const listIssuesResponse = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: [foundLabel.name, "test plan"],
+                state: 'open',
+                milestone: context.payload.issue.milestone.number
+              });
+              console.log("listIssuesResponse: ", listIssuesResponse);
+              const testplanIssues = listIssuesResponse.data;
+              const parentChildIssuePromises = testplanIssues.map(async issue => {
+                  const subIssueResponse = await github.rest.issues.listSubIssues({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number
+                  });
+                  console.log("subIssueResponse: ", subIssueResponse);
+                  return {
+                    parentIssue: issue,
+                    subIssues: subIssueResponse.data
+                  };
+              });
+              const parentChildIssues = await Promise.all(parentChildIssuePromises);
+              const parentChildIssue = parentChildIssues.find(issue=> {
+                return !!issue.subIssues.find(subIssue=> subIssue.number === context.payload.issue.number);
+              });
+              console.log("parentChildIssue: ", parentChildIssue);
+              if(!parentchildIssue) {
+                throw new Error("Matching Parent Testplan issue not found for the request form issue");
+              }
+              if(parentChildIssue.parentIssue.milestone.number != context.payload.issue.milestone.number) {
+                throw new Error("Milestone for parent Testplan issue, does not match with milestone of the request form issue");
+              }
+              core.setOutput("parentIssue", parentChildIssue.parentIssue);
+            } catch(error) {
+              console.error("failed reason: ", error);
+              core.setOutput("failedReason", `Error during test plan validation, reason: ${error.message}`);
+              core.setFailed(error.message);
+            }
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          cache: "pip" # caching pip dependencies
+          python-version: "3.13"
+      - id: request-form
+        name: Validate Request form details
+        env:
+          PARENT_ISSUE_DETAIL: ${{ steps.testplan-issue.outputs.parentIssue }}
+          REQUEST_FORM_ISSUE_DETAIL: ${{ github.event.issue }}
+          TESTPLAN_TYPE: ${{ steps.testplan-issue.outputs.testplanType }}
+        run: |
+          python --version
+          pip install -r .github/scripts/requirements.txt
+          python .github/scripts/tpe_deploy_request.py --validate \
+              --parent-issue-details "$PARENT_ISSUE_DETAIL" \
+              --request-form-issue-details "$REQUEST_FORM_ISSUE_DETAIL" \
+              --testplan-type "$TESTPLAN_TYPE" > deploy_request_output.log 2>&1
+          RETURN_CODE=$?
+          cat deploy_request_output.log
+          if [ $RETURN_CODE -ne 0 ]; then
+            echo "failedReason=$(cat deploy_request_output.log)" >> $GITHUB_OUTPUT
+            exit $RETURN_CODE
+          fi
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: cdkSession
+      - id: provision-stack
+        if: ${{ steps.request-form.outputs.request_type == 'provision' }}
+        name: Verify milestone branch is deployable
+        env:
+          ENVID: ${{ vars.AWS_ENVID }}
+          MILESTONE_TITLE: ${{ github.event.issue.milestone.title }}
+          API_VERSION: ${{ steps.request-form.outputs.api_version }}
+        run: |
+          UI_STACK_NAME="prsfin-$ENVID-ui-deploy-stack"  
+          DESCRIBE_UI_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$UI_STACK_NAME")
+          RET_CODE=$?
+          if [[ $RET_CODE -ne 0 ]]; then
+            echo "UI Stack does not exist. milestone branch can be deployed."
+            exit 0
+          fi
+          
+          ENV_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='environment'].Value")
+          if [[ "$ENV_TAG_VALUE" != "$ENVID" ]]; then
+            FAILED_REASON="Stack is deployed for other environment '$ENV_TAG_VALUE' stack."
+            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            echo "Failed Reason: $FAILED_REASON"
+            exit 1
+          fi
+          
+          MILESTONE_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
+          if [[ "$MILESTONE_TAG_VALUE" != "$MILESTONE_TITLE" ]]; then
+            FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of '$MILESTONE_TAG_VALUE' tests."
+            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            echo "Failed Reason: $FAILED_REASON"
+            exit 1
+          fi
+          UI_CREATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
+          UI_UPDATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
+          UI_STACK_AUDIT='{"created_time":'$UI_CREATED_TIME',"updated_time":'$UI_UPDATED_TIME'}'
+          
+          if [[ -z "$API_VERSION" ]]; then
+            echo "Api version is not provided."
+            API_STACK_AUDIT='{}'
+          else
+            echo "Found UI stack and API version is provided. Proceeding with API stack validation."
+            API_STACK_NAME="prsfin-$ENVID-infra-stack"
+            DESCRIBE_API_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$API_STACK_NAME")
+
+            ENV_TAG_VALUE=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='environment'].Value")
+            if [[ "$ENV_TAG_VALUE" != "$ENVID" ]]; then
+              FAILED_REASON="API Stack is deployed for other environment '$ENV_TAG_VALUE' stack."
+              echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+              echo "Failed Reason: $FAILED_REASON"
+              exit 1
+            fi
+            
+            MILESTONE_TAG_VALUE=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
+            if [[ "$MILESTONE_TAG_VALUE" != "$API_VERSION" ]]; then
+              FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of '$MILESTONE_TAG_VALUE' tests."
+              echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+              echo "Failed Reason: $FAILED_REASON"
+              exit 1
+            fi
+            API_CREATED_TIME=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
+            API_UPDATED_TIME=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
+            API_STACK_AUDIT='{"created_time":'$API_CREATED_TIME',"updated_time":'$API_UPDATED_TIME'}'
+          fi
+
+          STACK_AUDIT='{"ui":'$UI_STACK_AUDIT',"api":'$API_STACK_AUDIT'}'
+          echo "stack_details=$STACK_AUDIT" >> $GITHUB_OUTPUT
+      - id: deprovision-stack
+        if: ${{ steps.request-form.outputs.request_type == 'deprovision' }}
+        name: Verify milestone branch is destroyable
+        env:
+          ENVID: ${{ vars.AWS_ENVID }}
+          MILESTONE_TITLE: ${{ github.event.issue.milestone.title }}
+          API_VERSION: ${{ steps.request-form.outputs.api_version }}
+        run: |
+          UI_STACK_NAME="prsfin-$ENVID-ui-deploy-stack"  
+          DESCRIBE_UI_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$UI_STACK_NAME")
+          RET_CODE=$?
+          if [[ $RET_CODE -ne 0 ]]; then
+            FAILED_REASON="UI Stack does not exist. milestone branch has already been destroyed."
+            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            echo "Failed Reason: $FAILED_REASON"
+            exit 1
+          fi
+          
+          ENV_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='environment'].Value")
+          if [[ "$ENV_TAG_VALUE" != "$ENVID" ]]; then
+            FAILED_REASON="Stack is deployed for other environment '$ENV_TAG_VALUE' stack."
+            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            echo "Failed Reason: $FAILED_REASON"
+            exit 1
+          fi
+          
+          MILESTONE_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
+          if [[ "$MILESTONE_TAG_VALUE" != "$MILESTONE_TITLE" ]]; then
+            FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of '$MILESTONE_TAG_VALUE' tests."
+            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            echo "Failed Reason: $FAILED_REASON"
+            exit 1
+          fi
+          UI_CREATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
+          UI_UPDATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
+          UI_STACK_AUDIT='{"created_time":'$UI_CREATED_TIME',"updated_time":'$UI_UPDATED_TIME'}'
+          
+          if [[ -z "$API_VERSION" ]]; then
+            echo "Api version is not provided."
+            API_STACK_AUDIT='{}'
+          else
+            echo "Found UI stack and API version is provided. Proceeding with API stack validation."
+            API_STACK_NAME="prsfin-$ENVID-infra-stack"
+            DESCRIBE_API_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$API_STACK_NAME")
+
+            ENV_TAG_VALUE=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='environment'].Value")
+            if [[ "$ENV_TAG_VALUE" != "$ENVID" ]]; then
+              FAILED_REASON="API Stack is deployed for other environment '$ENV_TAG_VALUE' stack."
+              echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+              echo "Failed Reason: $FAILED_REASON"
+              exit 1
+            fi
+            
+            MILESTONE_TAG_VALUE=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
+            if [[ "$MILESTONE_TAG_VALUE" != "$API_VERSION" ]]; then
+              FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of '$MILESTONE_TAG_VALUE' tests."
+              echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+              echo "Failed Reason: $FAILED_REASON"
+              exit 1
+            fi
+            API_CREATED_TIME=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
+            API_UPDATED_TIME=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
+            API_STACK_AUDIT='{"created_time":'$API_CREATED_TIME',"updated_time":'$API_UPDATED_TIME'}'
+          fi
+
+          STACK_AUDIT='{"ui":'$UI_STACK_AUDIT',"api":'$API_STACK_AUDIT'}'
+          echo "stack_details=$STACK_AUDIT" >> $GITHUB_OUTPUT
+
+  build_artifact:
+    name: create artifact
+    runs-on: ubuntu-latest
+    needs:
+      - validate_request
+    environment: static-site
+    if: needs.validate_request.outputs.request-type == 'provision'
+    outputs:
+      artifact-id: ${{ steps.upload-artifact-step.outputs.artifact-id }}
+      artifact-url: ${{ steps.upload-artifact-step.outputs.artifact-url }}
+      artifact-digest: ${{ steps.upload-artifact-step.outputs.artifact-digest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate_request.outputs.milestone-branch.name }}
+      - name: Setup Node Latest
+        # https://github.com/actions/setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "latest"
+          cache: "npm"
+      - name: Build Code
+        run: |
+          npm --version
+          npm ci
+          cp src/demo/dummy.ts src/demo/index.ts
+          npm run build
+        env:
+          REACT_APP_BASE_PATH: ${{ vars.REACT_APP_BASE_PATH }}
+          REACT_APP_REST_API_BASE_PATH: ${{ vars.REACT_APP_REST_API_BASE_PATH }}
+          REACT_APP_MINIMUM_SESSION_TIME: ${{ vars.REACT_APP_MINIMUM_SESSION_TIME }}
+          GENERATE_SOURCEMAP: "true"
+          PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+      - name: upload artifact
+        id: upload-artifact-step
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ./build/
+          if-no-files-found: error
+          retention-days: 2
+          overwrite: true
+      - name: artifact Outputs
+        run: |
+          echo Artifact ID is ${{ steps.upload-artifact-step.outputs.artifact-id }}
+          echo Artifact URL is ${{ steps.upload-artifact-step.outputs.artifact-url }}
+          echo Artifact DIGEST is ${{ steps.upload-artifact-step.outputs.artifact-digest }}
+
+  deployment:
+    name: deploy static UI
+    runs-on: ubuntu-latest
+    needs:
+      - build_artifact
+      - validate_request
+    environment: static-site
+    permissions:
+      contents: write
+      id-token: write
+    outputs:
+      deployment-start-time: ${{ steps.dispatch-payload.outputs.deploymentStartTime }}
+      failed-reason: ${{ steps.create-api-issue.outputs.failedReason || steps.dispatch-payload.outputs.failedReason || steps.update_issue_deploying.outputs.failedReason }}
+    steps:
+      - id: create-api-issue
+        name: Provision API Environment
+        uses: actions/github-script@v7
+        if: ${{ contains(needs.validate_request.outputs.deployment-scope, 'API') }}
+        env:
+          REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
+          TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
+          API_VERSION: ${{ needs.validate_request.outputs.api-version }}
+        with:
+          script: |
+            try {
+              let issueBody = contenxt.payload.issue.body;
+              issueBody += "\n\n";
+              issueBody += "Created because of UI Provision Issue [Issue-" + context.payload.issue.number + "]("+ context.payload.issue.html_url + ")";
+              issueBody += "\n\n";
+              const apiMilestone = process.env.API_VERSION || null;
+              const createIssueResponse = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: process.env.REPO_NAME,
+                title: context.payload.issue.title,
+                body: issueBody,
+                labels: ["deployment", "test plan", process.env.TESTPLAN_TYPE],
+                milestone: apiMilestone
+              });
+              console.log("api createIssueResponse: ", createIssueResponse);
+              core.setOutput("details", createIssueResponse.data);
+              const lockIssueResponse = await github.rest.issues.lock({
+                owner: context.repo.owner,
+                repo: process.env.REPO_NAME,
+                issue_number: createIssueResponse.data.number
+              });
+              console.log("lockIssueResponse: ", lockIssueResponse);
+              // add parent testplan issue as parent relationship to api issue
+              // commenting below code as it is not working, when github rest and octokit will add support cross repo issue relationship
+              /* const addSubIssuesResponse = await github.rest.issues.addSubIssues({
+                owner: context.repo.owner,
+                repo: process.env.REPO_NAME,
+                issue_number: ${{ needs.validate_request.outputs.parent-issue.number }},
+                sub_issue_id: createIssueResponse.data.number
+              });
+              console.log("addSubIssuesResponse: ", addSubIssuesResponse); */
+            } catch(error) {
+              console.error("failed reason: ", error);
+              core.setOutput("failedReason", `Error during API issue creation, reason: ${error.message}`);
+              core.setFailed(error.message);
+            }
+      - id: dispatch-payload
+        name: Prepare Dispatch Payload
+        uses: actions/github-script@v7
+        env:
+          EVENT_TYPE: ${{ vars.UI_DEPLOY_EVENT_TYPE }}
+          ARTIFACT_URL: ${{ needs.build_artifact.outputs.artifact-url }}
+          UI_REPOSITORY: ${{ github.repository }}
+          TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
+        with:
+          script: |
+            try {
+              const payload = {
+                event_type: process.env.EVENT_TYPE
+              };
+              payload.client_payload = {
+                env_type: "testplan",
+                artifact_name: process.env.ARTIFACT_NAME,
+                ui_repository: process.env.UI_REPOSITORY,
+                workflow_run_id: context.payload.workflow.run_id,
+                type: "provision",
+                stackTags: []
+              };
+              payload.client_payload.stackTags.push(`workflow_run_id=${context.payload.workflow.run_id}`);
+              payload.client_payload.stackTags.push(`milestone=${context.payload.issue.milestone.title}`);
+              payload.client_payload.stackTags.push(`testplanType=${process.env.TESTPLAN_TYPE}`);
+              payload.client_payload.stackTags.push(`testplanIssueNumber=${{ needs.validate_request.outputs.parent-issue.number }}`);
+              payload.client_payload.stackTags.push(`requestIssueNumber=${context.payload.issue.number}`);
+              const apiVersion = "${{ needs.validate_request.outputs.api-version}}"
+              if(apiVersion) {
+                payload.client_payload.stackTags.push(`apiVersion=${apiVersion}`);
+              }
+              core.setOutput("payload", payload);
+              core.setOutput("deploymentStartTime", new Date().toISOString());
+            } catch(error) {
+              console.error("failed reason: ", error);
+              core.setOutput("failedReason", `Error during dispatch payload creation, reason: ${error.message}`);
+              core.setFailed(error.message);
+            }
+      - name: Trigger Deploy Static Site in AWS
+        run: |
+          curl -L --fail \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            $API_BASE_URL/repos/$REPO_OWNER/$REPO_NAME/dispatches \
+            -d ${{ toJson(steps.dispatch-payload.outputs.payload) }}
+        env:
+          REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          API_BASE_URL: ${{ github.api_url }}
+      - id: update_issue_deploying
+        name: Update Issue - Deploying
+        uses: actions/github-script@v7
+        env:
+          ARTIFACT_URL: ${{ needs.build_artifact.outputs.artifact-url }}
+          ARTIFACT_ID: ${{ needs.build_artifact.outputs.artifact-id }}
+          MILESTONE_BRANCH_NAME: ${{ needs.validate_request.outputs.milestone-branch.name }}
+          TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
+          DEPLOY_START_TIME: ${{ steps.dispatch-payload.outputs.deploymentStartTime }}
+        with:
+          script: |
+            try {
+              const artifactTitleWithLink = `[${process.env.ARTIFACT_NAME} (${process.env.ARTIFACT_ID})](${process.env.ARTIFACT_URL})`;
+              const commentBody = [
+                "## UI Deployment Started",
+                "<br/>", 
+                "", "### Start Time: ", "",
+                "  " + process.env.DEPLOY_START_TIME, 
+                "", "### Milestone Branch: ", "",
+                "  " + process.env.MILESTONE_BRANCH_NAME, 
+                "", "### UI Artifact: ", "",
+                "  The artifact is created and passed to deployment. You can verify artifact by downloading, " + artifactTitleWithLink
+              ];
+              
+              commentBody.push("", "### UI Stack: ", "");
+              const stackDetails = ${{ needs.validate_request.outputs.stack-details }}
+              if(stackDetails?.ui) {
+                // audit details available
+                commentBody.push("- **Created On:**  " + stackDetails.ui.created_time);
+                commentBody.push("- **Updated On:**  " + stackDetails.ui.updated_time);
+              } else {
+                commentBody.push("UI Stack is not found. It seems to be first deployment.");
+              }
+              commentBody.push("", "### API Stack: ", "");
+              const apiIssueDetails = ${{ steps.create-api-issue.outputs.details }};
+              if(apiIssueDetails) {
+                const apiIssueWithLink = "[API Issue-" + apiIssueDetails.number + "](" + apiIssueDetails.html_url + ");
+                commentBody.push("The issue, " + apiIssueWithLink + ", for API deployment is created.");
+              }
+              if(stackDetails?.api) {
+                // audit details available
+                commentBody.push("- **Created On:**  " + stackDetails.api.created_time);
+                commentBody.push("- **Updated On:**  " + stackDetails.api.updated_time);
+              } else {
+                commentBody.push("API Stack is not found. It seems to be first deployment.");
+              }
+
+              commentBody.push("<br/>", "");
+              commentBody.push("> [!NOTE]", "> Please wait for the deployment to complete. This issue will be updated with deployment status.");
+              commentBody.push("<br/>", "<br/>",  "");
+              
+              const workflowTitle = context.payload.workflow.name +" (" + context.payload.workflow.run_id + ")";
+              const workflowLink = context.payload.workflow.run_url;
+              commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
+
+              console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
+              const commentResponse = github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                body: commentBody.join("\n")
+              });
+              console.log("commentResponse: ", commentResponse);
+              const updateIssueResponse = await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                title: "[Approved] " + context.payload.issue.title
+              });
+              console.log("updateIssueResponse: ", updateIssueResponse);
+            } catch(error) {
+              console.error("failed reason: ", error);
+              core.setOutput("failedReason", `Error during issue update, reason: ${error.message}`);
+              core.setFailed(error.message);
+            }
+    
+  deployment_complete:
+    name: Handle Deployment Completion
+    runs-on: ubuntu-latest
+    needs: 
+      - validate_request
+      - deployment
+    environment: testplan
+    outputs:
+      failed-reason: ${{ steps.wait-for-ui-deployment.outputs.failedReason || steps.update_issue_deployment_complete.outputs.failedReason }}
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: cdkSession
+      - id: wait-for-ui-deployment
+        name: Wait for UI Deployment to Complete
+        env:
+          ENVID: ${{ vars.AWS_ENVID }}
+          MILESTONE_TITLE: ${{ github.event.issue.milestone.title }}
+          WORKFLOW_RUN_ID: ${{ github.workflow.run_id }}
+        run: |
+          # Wait duration to execute the command and check status 
+          SLEEP_DURATION=3m
+          TOTAL_WAIT_DURATION=60m
+          UI_STACK_NAME="prsfin-$ENVID-ui-deploy-stack"
+          FAILED_REASON=""
+          REMAINING_ATTEMPTS=$((TOTAL_WAIT_DURATION / SLEEP_DURATION))
+          while :; do
+            echo "Deployment is in progress. Waiting for $SLEEP_DURATION."
+            sleep $SLEEP_DURATION
+            DESCRIBE_UI_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$UI_STACK_NAME")
+            RET_CODE=$?
+            if [[ $RET_CODE -eq 0 ]]; then
+              TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
+              if [[ "$TAG_VALUE" != "$MILESTONE_TITLE" ]]; then
+                continue
+              fi
+              TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='workflow_run_id'].Value")
+              if [[ "$TAG_VALUE" != "$WORKFLOW_RUN_ID" ]]; then
+                continue
+              fi
+
+              STACK_STATUS=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].StackStatus")
+              # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/view-stack-events.html#cfn-console-view-stack-data-resources-status-codes
+              if [[ "$STACK_STATUS" =~ ^(CREATE_COMPLETE|UPDATE_COMPLETE)$ ]]; then
+                echo "UI Stack is deployed successfully."
+                break
+              elif [[ "$STACK_STATUS" =~ ^(CREATE_FAILED|UPDATE_FAILED|ROLLBACK.*|UPDATE_ROLLBACK.*|DELETE.*)$ ]]; then
+                FAILED_REASON="UI Stack deployment failed. Stack status is $STACK_STATUS. Please check stack events."
+                break
+              fi
+            fi
+            if [[ $REMAINING_ATTEMPTS -eq 0 ]]; then
+              FAILED_REASON="UI Stack deployment is taking longer time. Please check the status manually."
+              break
+            fi
+            REMAINING_ATTEMPTS=$((REMAINING_ATTEMPTS - 1))
+          done
+          UI_CREATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
+          UI_UPDATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
+          UI_STACK_AUDIT='{"created_time":'$UI_CREATED_TIME',"updated_time":'$UI_UPDATED_TIME'}'
+
+          API_STACK_NAME="prsfin-$ENVID-infra-stack"
+          DESCRIBE_API_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$API_STACK_NAME")
+          API_CREATED_TIME=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
+          API_UPDATED_TIME=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
+          API_STACK_AUDIT='{"created_time":'$API_CREATED_TIME',"updated_time":'$API_UPDATED_TIME'}'
+          STACK_OUTPUTS=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].Outputs")
+          
+          STACK_AUDIT='{"ui":'$UI_STACK_AUDIT',"api":'$API_STACK_AUDIT',"outputs":'$STACK_OUTPUTS'}'
+
+          echo "stack_details=$STACK_AUDIT" >> $GITHUB_OUTPUT
+
+          if [[ -n "$FAILED_REASON" ]]; then
+            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            echo "Failed Reason: $FAILED_REASON"
+            exit 1
+          fi
+      - id: update_issue_deployment_complete
+        name: Update Issue - Deployment Complete
+        uses: actions/github-script@v7
+        env:
+          MILESTONE_BRANCH_NAME: ${{ needs.validate_request.outputs.milestone-branch.name }}
+          TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
+          DEPLOYMENT_START_TIME: ${{ needs.deployment.outputs.deployment-start-time }}
+        with:
+          script: |
+            try {
+              const artifactTitleWithLink = `[${process.env.ARTIFACT_NAME} (${process.env.ARTIFACT_ID})](${process.env.ARTIFACT_URL})`;
+              const deploymentEndTime = new Date();
+              const diffParts = new Date(new Date() - new Date(process.env.DEPLOYMENT_START_TIME)).toISOString().substr(11, 8).split(":");
+              let duration = "";
+              if(parseInt(diffParts[0]) > 0) {
+                duration += diffParts[0] + " hour" + (diffParts[0] > 1 ? "s " : " ");
+              }
+              if(parseInt(diffParts[1]) > 0) {
+                duration += diffParts[1] + " minute" + (diffParts[1] > 1 ? "s " : " ");
+              }
+              if(parseInt(diffParts[2]) > 0) {
+                duration += diffParts[2] + " second" + (diffParts[2] > 1 ? "s " : " ");
+              }
+              const commentBody = [
+                "## UI Deployment Completed",
+                "<br/>", 
+                "", "### Deployment Time: ", "",
+                "| | time |", 
+                "|---|---|",
+                `| **Start Time** | ${process.env.DEPLOYMENT_START_TIME} |`,
+                `| **End Time** | ${deploymentEndTime.toISOString()} |`,
+                `| **Duration** | ${duration} |`,
+                "<br/>"
+              ];
+              const stackDetails = ${{ steps.wait-for-ui-deployment.outputs.stack_details }}
+              const domainUrlOutput = stackDetails.outputs.find(output => output.OutputKey.startsWith("DistributionDomain"))?.OutputValue;
+              if(domainUrlOutput) {
+                commentBody.push("", "### Domain UI URL: ", "");
+                commentBody.push("  " + domainUrlOutput);
+              }
+              commentBody.push("", "### UI Stack: ", "");
+              if(stackDetails?.ui) {
+                // audit details available
+                commentBody.push("- **Created On:**  " + stackDetails.ui.created_time);
+                commentBody.push("- **Updated On:**  " + stackDetails.ui.updated_time);
+              }
+              commentBody.push("", "### API Stack: ", "");
+              if(stackDetails?.api) {
+                // audit details available
+                commentBody.push("- **Created On:**  " + stackDetails.api.created_time);
+                commentBody.push("- **Updated On:**  " + stackDetails.api.updated_time);
+              }
+
+              commentBody.push("<br/>", "");
+              commentBody.push("> [!NOTE]", "> The Deployment is completed. This request issue will be closing.");
+              commentBody.push("<br/>", "<br/>",  "");
+              
+              const workflowTitle = context.payload.workflow.name +" (" + context.payload.workflow.run_id + ")";
+              const workflowLink = context.payload.workflow.run_url;
+              commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
+
+              console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
+              const commentResponse = github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                body: commentBody.join("\n")
+              });
+              console.log("for request form, commentResponse: ", commentResponse);
+              const updateIssueResponse = await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                state: 'closed'
+              });
+              console.log("updateIssueResponse: ", updateIssueResponse);
+              const commentResponse = github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: ${{ needs.validate_request.outputs.parent-issue.number }},
+                body: commentBody.join("\n")
+              });
+              console.log("for testplan, commentResponse: ", commentResponse);
+            } catch(error) {
+              console.error("failed reason: ", error);
+              core.setOutput("failedReason", `Error during issue update for deployment completion, reason: ${error.message}`);
+              core.setFailed(error.message);
+            }
+
+  destroy:
+    name: Destroy UI Stack
+    runs-on: ubuntu-latest
+    needs:
+      - validate_request
+    if: needs.validate_request.outputs.request-type == 'deprovision'
+    outputs:
+      failed-reason: ${{ steps.validate-destroy.outputs.failedReason }}
+    steps:
+      - id: validate-destroy
+        run: |
+          FAILED_REASON="The Request of Destroy UI Stack is not supported yet."
+          echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+          echo "Failed Reason: $FAILED_REASON"
+          exit 1
+
+  handle_failure:
+    name: Handle Request form Failure
+    runs-on: ubuntu-latest
+    needs:
+      - update_request
+      - validate_request
+      - build_artifact
+      - deployment
+      - deployment_complete
+      - destroy
+    if: failure()
+    steps:
+      - id: prepare-error
+        uses: actions/github-script@v7
+        env:
+          VALIDATION_FAIL_REASON: ${{ needs.update_request.outputs.failed-reason || needs.validate_request.outputs.failed-reason }}
+          REQUEST_TYPE: ${{ needs.validate_request.outputs.request-type }}
+          DEPLOY_FAILED_REASON: ${{ needs.deployment.outputs.failed-reason || needs.deployment_complete.outputs.failed-reason }}
+          DESTROY_FAILED_REASON: ${{ needs.destroy.outputs.failed-reason }}
+        with:
+          script: |
+            const validationError = process.env.VALIDATION_FAIL_REASON
+            if(validationError) {
+              core.setOutput("reason", "Validation of Request form is failed.");
+              core.setOutput("details", validationError);
+              core.setOutput("status", "Denied");
+            } else {
+              const requestType = process.env.REQUEST_TYPE;
+              let errorDetails= "Found unknown error. Please check the logs.";
+              let reasonPrefix = "";
+              if(requestType === "provision") {
+                if(process.env.DEPLOY_FAILED_REASON) {
+                  errorDetails = process.env.DEPLOY_FAILED_REASON;
+                }
+                reasonPrefix= "Deployment of";
+              } else {
+                if(process.env.DESTROY_FAILED_REASON) {
+                  errorDetails = process.env.DESTROY_FAILED_REASON;
+                }
+                reasonPrefix= "Destroy of";
+              }
+              core.setOutput("reason", reasonPrefix +" UI artifact is failed.");
+              core.setOutput("details", errorDetails);
+              core.setOutput("status", "Failed");
+            }
+      - name: Add Failed Reason as Comment
+        uses: actions/github-script@v7
+        env:
+          FAIL_REASON: ${{ steps.prepare-error.outputs.reason }}
+          ERROR_DETAILS: ${{ steps.prepare-error.outputs.details }}
+          FAIL_STATUS: ${{ steps.prepare-error.outputs.status }}
+        with:
+          script: |
+            const commentBody = [
+                    "## Request " + process.env.FAIL_STATUS, 
+                    "<br/>", "",
+                    "### Reason:",
+                    "  " + process.env.FAIL_REASON,
+                    "", "",
+                    "**Error:**  " + process.env.ERROR_DETAILS, 
+                    "<br/>",  "",
+                    "> [!NOTE]",
+                    "> **Needs Action:**   Please raise a `new request form` with correct details. This request issue will be `closed`.",
+                    "<br/>", "<br/>",  "",
+                    ];
+            const workflowTitle = context.payload.workflow.name +" (" + context.payload.workflow.run_id + ")";
+            const workflowLink = context.payload.workflow.run_url;
+            commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
+
+            console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
+            const commentResponse = github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: commentBody.join("\n")
+            });
+            console.log("commentResponse: ", commentResponse);
+      - name: Close Issue
+        uses: actions/github-script@v7
+        env:
+          FAIL_STATUS: ${{ steps.prepare-error.outputs.status }}
+        with:
+          script: |
+            const closeUpdateResponse = await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              state: 'closed',
+              title: "[" + process.env.FAIL_STATUS + "]" + context.payload.issue.title,
+            });
+            console.log("closeUpdateResponse: ", closeUpdateResponse);
+
