@@ -1,18 +1,17 @@
 # Prepare UI artifact to deploy as statis site
 
-name: UI Artifact Build & Deploy
+name: UI Artifact Build & Deploy - Only Run on Release Request
 
 # list of trigger events https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows
 on:
   workflow_run:
-    workflows: ["UI Build"]
+    workflows: ["UI Build", "Release Request"]
     types: [completed]
     branches:
       - master
-  issues:
-    types:
-      - opened
-      - reopened
+  # issues:
+  #   types:
+  #     - opened
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{github.event_name}}
@@ -23,7 +22,7 @@ env:
 
 jobs:
   issue_type:
-    name: Validate Test execution issue
+    name: Validate Test issue
     runs-on: ubuntu-latest
     environment: static-site
     outputs:
@@ -31,14 +30,11 @@ jobs:
       milestoneBranch: ${{ steps.test-execution.outputs.milestoneBranch }}
     steps:
       - run: echo event name = ${{ github.event_name }}
-      - run: echo github details=$CONTEXT_JSON
-        env:
-          CONTEXT_JSON: ${{ toJson(github) }}
       - id: test-execution-label-not-exists
         run: |
-          echo issue is not supported for test artifact
+          echo The issue is not a deployment request form
           exit 1
-        if: ${{ !contains(github.event.issue.labels.*.name, 'test execution') && github.event_name == 'issues' }}
+        if: ${{ github.event_name == 'issues' && !contains(github.event.issue.labels.*.name, 'deployment') && !contains(github.event.issue.labels.*.name, 'regression') && !contains(github.event.issue.labels.*.name, 'deployment') }}
       - id: test-execution-label-exists
         run: echo hasLabel=true >> $GITHUB_OUTPUT
         env:
