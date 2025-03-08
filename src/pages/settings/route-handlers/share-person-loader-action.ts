@@ -15,16 +15,18 @@ const rhLogger = getLogger("route.handler.settings.sharePerson.loader", null, nu
 
 export interface SharePersonLoaderResource {
   sharePersons: SharePersonResource[];
+  tags: string[];
 }
 
 export const sharePersonListLoaderHandler = async () => {
   const logger = getLogger("sharePersonListLoaderHandler", rhLogger);
   try {
     const sharePersonList = await sharePersonService.getSharePersonList();
+    const allTags = await sharePersonService.getTagList();
 
     const response: RouteHandlerResponse<SharePersonLoaderResource, null> = {
       type: "success",
-      data: { sharePersons: sharePersonList }
+      data: { sharePersons: sharePersonList, tags: allTags }
     };
 
     return response;

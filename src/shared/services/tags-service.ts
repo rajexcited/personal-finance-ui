@@ -12,6 +12,7 @@ export enum TagBelongsTo {
   RefundReasonConfig = "refund-reason-config",
   Income = "income",
   IncomeTypeConfig = "income-type-config",
+  SharePersonConfig = "share-person-config"
 }
 
 interface TagResource {
@@ -32,7 +33,7 @@ export const TagsService = (belongsTo: TagBelongsTo) => {
       const promises = [...tagSet].map(async (tag) => {
         const resource: TagResource = {
           value: tag,
-          belongsTo: belongsTo,
+          belongsTo: belongsTo
         };
         await tagsDb.addUpdateItem(resource);
       });
@@ -49,6 +50,6 @@ export const TagsService = (belongsTo: TagBelongsTo) => {
 
     getCount: async () => {
       return await tagsDb.countFromIndex(LocalDBStoreIndex.BelongsTo, belongsTo);
-    },
+    }
   };
 };
