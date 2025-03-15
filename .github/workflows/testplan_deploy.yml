@@ -7,7 +7,6 @@ on:
   issues:
     types:
       - opened
-      - locked
       - deleted
 
 concurrency:
@@ -95,8 +94,7 @@ jobs:
       startsWith(github.event.issue.title, '[Request] Provision Test Plan Environment') ||
       startsWith(github.event.issue.title, '[Request] Deprovision Test Plan Environment') 
       ) &&
-      github.event.issue.milestone != null &&
-      github.event.issue.locked == true
+      github.event.issue.milestone != null
     outputs:
       failed-reason: ${{ steps.update_issue_start.outputs.failedReason }}
       original-issue-title: ${{ steps.update_issue_start.outputs.issue-title }}
@@ -120,6 +118,14 @@ jobs:
               title: "[Processing] " + context.payload.issue.title
             });
             console.log("updateResponse: ", updateResponse);
+            if(!context.payload.issue.locked) {
+              const lockIssueResponse = await github.rest.issues.lock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number
+              });
+              console.log("Lock issue response:", lockIssueResponse);
+            }
 
   validate_request:
     name: Validate Request Form
@@ -192,15 +198,15 @@ jobs:
               // if parent issue is not found, then set failed reason
               const allowedTypes = ["regression"];
               const foundTypeLabel = context.payload.issue.labels.find(label=>allowedTypes.includes(label.name));
-              core.setOutput("testplanType", foundLabel?.name || "unknown");
-              if(!foundLabel) {
+              core.setOutput("testplanType", foundTypeLabel?.name || "unknown");
+              if(!foundTypeLabel) {
                 throw new Error("Test plan type label not found in issue labels");
               }
               // find test plan issue with same milestone and type label
               const listIssuesResponse = await github.rest.issues.listForRepo({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                labels: [foundLabel.name, "test plan"],
+                labels: [foundTypeLabel.name, "test plan"],
                 state: 'open',
                 milestone: context.payload.issue.milestone.number
               });
