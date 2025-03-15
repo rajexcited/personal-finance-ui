@@ -78,7 +78,8 @@ jobs:
           echo "event changes: ${{ github.event.changes }}"
           echo "event action: ${{ github.event.action }}"
       - run: |
-          echo "github json: ${{ toJson(github) }}"
+          echo 'github json: ${{ toJson(github) }}'
+        continue-on-error: true
       - uses: actions/github-script@v7
         with:
           script: |
@@ -477,7 +478,7 @@ jobs:
         with:
           script: |
             try {
-              let issueBody = contenxt.payload.issue.body;
+              let issueBody = context.payload.issue.body;
               issueBody += "\n\n";
               issueBody += "Created because of UI Provision Issue [Issue-" + context.payload.issue.number + "]("+ context.payload.issue.html_url + ")";
               issueBody += "\n\n";
@@ -621,7 +622,7 @@ jobs:
               commentBody.push("<br/>", "<br/>",  "");
               
               const workflowTitle = process.env.WORKFLOW_NAME +" (" + process.env.WORKFLOW_RUN_ID + ")";
-              const workflowLink = contenxt.payload.repository.html_url+"/actions/runs/"+process.env.WORKFLOW_RUN_ID;
+              const workflowLink = context.payload.repository.html_url+"/actions/runs/"+process.env.WORKFLOW_RUN_ID;
               commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
               console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
@@ -785,7 +786,7 @@ jobs:
               commentBody.push("<br/>", "<br/>",  "");
               
               const workflowTitle = process.env.WORKFLOW_NAME +" (" + process.env.WORKFLOW_RUN_ID + ")";
-              const workflowLink = contenxt.payload.repository.html_url+"/actions/runs/"+process.env.WORKFLOW_RUN_ID;
+              const workflowLink = context.payload.repository.html_url+"/actions/runs/"+process.env.WORKFLOW_RUN_ID;
               commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
               console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
@@ -900,7 +901,7 @@ jobs:
                     "<br/>", "<br/>",  "",
                     ];
             const workflowTitle = process.env.WORKFLOW_NAME +" (" + process.env.WORKFLOW_RUN_ID + ")";
-            const workflowLink = contenxt.payload.repository.html_url+"/actions/runs/"+process.env.WORKFLOW_RUN_ID;
+            const workflowLink = context.payload.repository.html_url+"/actions/runs/"+process.env.WORKFLOW_RUN_ID;
             commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
             console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
