@@ -78,6 +78,15 @@ jobs:
           echo "action: ${{ github.action }}"
           echo "event name: ${{ github.event_name }}"
           echo "event changes: ${{ github.event.changes }}"
+          echo "event action: ${{ github.event.action }}"
+      - run: |
+          echo "github json: ${{ toJson(github) }}"
+            - id: get-milestone
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            console.log("Context Payload obj: ", context.payload);
+            console.log("Context str: ", JSON.stringify(context));
 
   update_request:
     name: Start Request
