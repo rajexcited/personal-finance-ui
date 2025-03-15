@@ -79,12 +79,10 @@ jobs:
           echo "event action: ${{ github.event.action }}"
       - run: |
           echo 'github json: ${{ toJson(github) }}'
-        continue-on-error: true
       - uses: actions/github-script@v7
         with:
           script: |
-            console.log("Context Payload obj: ", context.payload);
-            console.log("Context str: ", JSON.stringify(context));
+            console.log("Context obj: ", context);
 
   update_request:
     name: Start Request
@@ -523,7 +521,6 @@ jobs:
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           TESTPLAN_ISSUE_NUMBER: ${{ needs.validate_request.outputs.parent-issue.number }}
           API_VERSION: ${{ needs.validate_request.outputs.api-version }}
-          WORKFLOW_RUN_ID: ${{ github.workflow_run_id }}
         with:
           script: |
             try {
@@ -534,11 +531,11 @@ jobs:
                 env_type: "testplan",
                 artifact_name: process.env.ARTIFACT_NAME,
                 ui_repository: process.env.UI_REPOSITORY,
-                workflow_run_id: process.env.WORKFLOW_RUN_ID,
+                workflow_run_id: context.runId,
                 type: "provision",
                 stackTags: []
               };
-              payload.client_payload.stackTags.push(`workflow_run_id=${process.env.WORKFLOW_RUN_ID}`);
+              payload.client_payload.stackTags.push(`workflow_run_id=${context.runId}`);
               payload.client_payload.stackTags.push(`milestone=${context.payload.issue.milestone.title}`);
               payload.client_payload.stackTags.push(`testplanType=${process.env.TESTPLAN_TYPE}`);
               payload.client_payload.stackTags.push(`testplanIssueNumber=process.env.TESTPLAN_ISSUE_NUMBER`);
@@ -576,8 +573,6 @@ jobs:
           MILESTONE_BRANCH_NAME: ${{ needs.validate_request.outputs.milestone-branch.name }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           DEPLOY_START_TIME: ${{ steps.dispatch-payload.outputs.deploymentStartTime }}
-          WORKFLOW_NAME: ${{ github.workflow }}
-          WORKFLOW_RUN_ID: ${{ github.workflow_run_id }}
           ORIGINAL_ISSUE_TITLE: ${{ needs.update_request.outputs.original-issue-title }}
         with:
           script: |
@@ -621,11 +616,17 @@ jobs:
               commentBody.push("> [!NOTE]", "> Please wait for the deployment to complete. This issue will be updated with deployment status.");
               commentBody.push("<br/>", "<br/>",  "");
               
-              const workflowTitle = process.env.WORKFLOW_NAME +" (" + process.env.WORKFLOW_RUN_ID + ")";
-              const workflowLink = context.payload.repository.html_url+"/actions/runs/"+process.env.WORKFLOW_RUN_ID;
+              const workflowTitle = context.workflow +" (" + context.runId + ")";
+              const workflowLink = context.payload.repository.html_url+"/actions/runs/"+context.runId;
               commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
               console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
+              const unlockIssueResponse = await github.rest.issues.unlock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number
+              });
+              console.log("issue is unlock temporarily, unlock issue response:", unlockIssueResponse);
               const commentResponse = github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -640,6 +641,12 @@ jobs:
                 title: "[Approved] " + process.env.ORIGINAL_ISSUE_TITLE
               });
               console.log("updateIssueResponse: ", updateIssueResponse);
+              const lockIssueResponse = await github.rest.issues.lock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number
+              });
+              console.log("issue is lock again, lock issue response:", lockIssueResponse);
             } catch(error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during issue update, reason: ${error.message}`);
@@ -733,8 +740,6 @@ jobs:
           MILESTONE_BRANCH_NAME: ${{ needs.validate_request.outputs.milestone-branch.name }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           DEPLOYMENT_START_TIME: ${{ needs.deployment.outputs.deployment-start-time }}
-          WORKFLOW_NAME: ${{ github.workflow }}
-          WORKFLOW_RUN_ID: ${{ github.workflow_run_id }}
         with:
           script: |
             try {
@@ -785,10 +790,16 @@ jobs:
               commentBody.push("> [!NOTE]", "> The Deployment is completed. This request issue will be closing.");
               commentBody.push("<br/>", "<br/>",  "");
               
-              const workflowTitle = process.env.WORKFLOW_NAME +" (" + process.env.WORKFLOW_RUN_ID + ")";
-              const workflowLink = context.payload.repository.html_url+"/actions/runs/"+process.env.WORKFLOW_RUN_ID;
+              const workflowTitle = context.workflow +" (" + context.runId + ")";
+              const workflowLink = context.payload.repository.html_url+"/actions/runs/"+context.runId;
               commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
+              const unlockIssueResponse = await github.rest.issues.unlock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number
+              });
+              console.log("issue is unlock temporarily, unlock issue response:", unlockIssueResponse);
               console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
               const commentResponse = github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -804,13 +815,32 @@ jobs:
                 state: 'closed'
               });
               console.log("updateIssueResponse: ", updateIssueResponse);
+              const lockIssueResponse = await github.rest.issues.lock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number
+              });
+              console.log("issue is lock again, lock issue response:", lockIssueResponse);
+              const testplanIssueNumber = ${{ needs.validate_request.outputs.parent-issue.number }};
+              const unlockIssueResponse2 = await github.rest.issues.unlock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: testplanIssueNumber
+              });
+              console.log("testplan issue is unlock temporarily, unlock issue response:", unlockIssueResponse2);
               const parentCommentResponse = github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: ${{ needs.validate_request.outputs.parent-issue.number }},
+                issue_number: testplanIssueNumber,
                 body: commentBody.join("\n")
               });
               console.log("for testplan, commentResponse: ", parentCommentResponse);
+              const lockIssueResponse2 = await github.rest.issues.lock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: testplanIssueNumber
+              });
+              console.log("issue is lock again, lock issue response:", lockIssueResponse2);
             } catch(error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during issue update for deployment completion, reason: ${error.message}`);
@@ -878,14 +908,22 @@ jobs:
               core.setOutput("details", errorDetails);
               core.setOutput("status", "Failed");
             }
+      - name: Unlock Issue temporarily
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const unlockIssueResponse = await github.rest.issues.unlock({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            console.log("issue is unlock temporarily, unlock issue response:", unlockIssueResponse);
       - name: Add Failed Reason as Comment
         uses: actions/github-script@v7
         env:
           FAIL_REASON: ${{ steps.prepare-error.outputs.reason }}
           ERROR_DETAILS: ${{ steps.prepare-error.outputs.details }}
           FAIL_STATUS: ${{ steps.prepare-error.outputs.status }}
-          WORKFLOW_NAME: ${{ github.workflow }}
-          WORKFLOW_RUN_ID: ${{ github.workflow_run_id }}
         with:
           script: |
             const commentBody = [
@@ -900,8 +938,8 @@ jobs:
                     "> **Needs Action:**   Please raise a `new request form` with correct details. This request issue will be `closed`.",
                     "<br/>", "<br/>",  "",
                     ];
-            const workflowTitle = process.env.WORKFLOW_NAME +" (" + process.env.WORKFLOW_RUN_ID + ")";
-            const workflowLink = context.payload.repository.html_url+"/actions/runs/"+process.env.WORKFLOW_RUN_ID;
+            const workflowTitle = context.workflow +" (" + context.runId + ")";
+            const workflowLink = context.payload.repository.html_url+"/actions/runs/"+context.runId;
             commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
             console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
@@ -927,3 +965,13 @@ jobs:
               title: "[" + process.env.FAIL_STATUS + "]" + process.env.ORIGINAL_ISSUE_TITLE,
             });
             console.log("closeUpdateResponse: ", closeUpdateResponse);
+      - name: Lock Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const lockIssueResponse = await github.rest.issues.lock({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            console.log("issue lock again, lock issue response:", lockIssueResponse);
