@@ -1,16 +1,14 @@
 # Prepare UI artifact to deploy as statis site
 name: Provision/Deprovision Testplan Environment
+run-name: Request - Provision/Deprovision Testplan Environment
 
 # list of trigger events https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows
 on:
   issues:
     types:
       - opened
-      - labeled
       - locked
-      - milestoned
       - deleted
-      - closed
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.issue.milestone.number }}-${{ github.event.issue.number }}
@@ -81,7 +79,6 @@ jobs:
           echo "event action: ${{ github.event.action }}"
       - run: |
           echo "github json: ${{ toJson(github) }}"
-            - id: get-milestone
       - uses: actions/github-script@v7
         with:
           script: |
@@ -103,6 +100,7 @@ jobs:
       github.event.issue.locked == true
     outputs:
       failed-reason: ${{ steps.update_issue_start.outputs.failedReason }}
+      original-issue-title: ${{ steps.update_issue_start.outputs.issue-title }}
     steps:
       - run: |
           echo "The issue has milestone assigned and locked."
@@ -115,6 +113,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            core.setOutput("issue-title", context.payload.issue.title);
             const updateResponse = await github.rest.issues.update({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -457,6 +456,7 @@ jobs:
     needs:
       - build_artifact
       - validate_request
+      - update_request
     environment: static-site
     permissions:
       contents: write
@@ -473,6 +473,7 @@ jobs:
           REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           API_VERSION: ${{ needs.validate_request.outputs.api-version }}
+          ORIGINAL_ISSUE_TITLE: ${{ needs.update_request.outputs.original-issue-title }}
         with:
           script: |
             try {
@@ -484,7 +485,7 @@ jobs:
               const createIssueResponse = await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: process.env.REPO_NAME,
-                title: context.payload.issue.title,
+                title: process.env.ORIGINAL_ISSUE_TITLE,
                 body: issueBody,
                 labels: ["deployment", "test plan", process.env.TESTPLAN_TYPE],
                 milestone: apiMilestone
@@ -521,6 +522,7 @@ jobs:
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           TESTPLAN_ISSUE_NUMBER: ${{ needs.validate_request.outputs.parent-issue.number }}
           API_VERSION: ${{ needs.validate_request.outputs.api-version }}
+          WORKFLOW_RUN_ID: ${{ github.workflow_run_id }}
         with:
           script: |
             try {
@@ -531,11 +533,11 @@ jobs:
                 env_type: "testplan",
                 artifact_name: process.env.ARTIFACT_NAME,
                 ui_repository: process.env.UI_REPOSITORY,
-                workflow_run_id: context.payload.workflow.run_id,
+                workflow_run_id: process.env.WORKFLOW_RUN_ID,
                 type: "provision",
                 stackTags: []
               };
-              payload.client_payload.stackTags.push(`workflow_run_id=${context.payload.workflow.run_id}`);
+              payload.client_payload.stackTags.push(`workflow_run_id=${process.env.WORKFLOW_RUN_ID}`);
               payload.client_payload.stackTags.push(`milestone=${context.payload.issue.milestone.title}`);
               payload.client_payload.stackTags.push(`testplanType=${process.env.TESTPLAN_TYPE}`);
               payload.client_payload.stackTags.push(`testplanIssueNumber=process.env.TESTPLAN_ISSUE_NUMBER`);
@@ -573,6 +575,9 @@ jobs:
           MILESTONE_BRANCH_NAME: ${{ needs.validate_request.outputs.milestone-branch.name }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           DEPLOY_START_TIME: ${{ steps.dispatch-payload.outputs.deploymentStartTime }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          WORKFLOW_RUN_ID: ${{ github.workflow_run_id }}
+          ORIGINAL_ISSUE_TITLE: ${{ needs.update_request.outputs.original-issue-title }}
         with:
           script: |
             try {
@@ -615,8 +620,8 @@ jobs:
               commentBody.push("> [!NOTE]", "> Please wait for the deployment to complete. This issue will be updated with deployment status.");
               commentBody.push("<br/>", "<br/>",  "");
               
-              const workflowTitle = context.payload.workflow.name +" (" + context.payload.workflow.run_id + ")";
-              const workflowLink = context.payload.workflow.run_url;
+              const workflowTitle = process.env.WORKFLOW_NAME +" (" + process.env.WORKFLOW_RUN_ID + ")";
+              const workflowLink = contenxt.payload.repository.html_url+"/actions/runs/"+process.env.WORKFLOW_RUN_ID;
               commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
               console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
@@ -631,7 +636,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.issue.number,
-                title: "[Approved] " + context.payload.issue.title
+                title: "[Approved] " + process.env.ORIGINAL_ISSUE_TITLE
               });
               console.log("updateIssueResponse: ", updateIssueResponse);
             } catch(error) {
@@ -727,6 +732,8 @@ jobs:
           MILESTONE_BRANCH_NAME: ${{ needs.validate_request.outputs.milestone-branch.name }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           DEPLOYMENT_START_TIME: ${{ needs.deployment.outputs.deployment-start-time }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          WORKFLOW_RUN_ID: ${{ github.workflow_run_id }}
         with:
           script: |
             try {
@@ -777,8 +784,8 @@ jobs:
               commentBody.push("> [!NOTE]", "> The Deployment is completed. This request issue will be closing.");
               commentBody.push("<br/>", "<br/>",  "");
               
-              const workflowTitle = context.payload.workflow.name +" (" + context.payload.workflow.run_id + ")";
-              const workflowLink = context.payload.workflow.run_url;
+              const workflowTitle = process.env.WORKFLOW_NAME +" (" + process.env.WORKFLOW_RUN_ID + ")";
+              const workflowLink = contenxt.payload.repository.html_url+"/actions/runs/"+process.env.WORKFLOW_RUN_ID;
               commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
               console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
@@ -876,9 +883,10 @@ jobs:
           FAIL_REASON: ${{ steps.prepare-error.outputs.reason }}
           ERROR_DETAILS: ${{ steps.prepare-error.outputs.details }}
           FAIL_STATUS: ${{ steps.prepare-error.outputs.status }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          WORKFLOW_RUN_ID: ${{ github.workflow_run_id }}
         with:
           script: |
-            console.log("Context Payload: ",JSON.stringify(context.payload));
             const commentBody = [
                     "## Request " + process.env.FAIL_STATUS, 
                     "<br/>", "",
@@ -891,8 +899,8 @@ jobs:
                     "> **Needs Action:**   Please raise a `new request form` with correct details. This request issue will be `closed`.",
                     "<br/>", "<br/>",  "",
                     ];
-            const workflowTitle = context.payload.workflow.name +" (" + context.payload.workflow.run_id + ")";
-            const workflowLink = context.payload.workflow.run_url;
+            const workflowTitle = process.env.WORKFLOW_NAME +" (" + process.env.WORKFLOW_RUN_ID + ")";
+            const workflowLink = contenxt.payload.repository.html_url+"/actions/runs/"+process.env.WORKFLOW_RUN_ID;
             commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
             console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
@@ -907,6 +915,7 @@ jobs:
         uses: actions/github-script@v7
         env:
           FAIL_STATUS: ${{ steps.prepare-error.outputs.status }}
+          ORIGINAL_ISSUE_TITLE: ${{ needs.update_request.outputs.original-issue-title || github.event.issue.title }}
         with:
           script: |
             const closeUpdateResponse = await github.rest.issues.update({
@@ -914,6 +923,6 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.payload.issue.number,
               state: 'closed',
-              title: "[" + process.env.FAIL_STATUS + "]" + context.payload.issue.title,
+              title: "[" + process.env.FAIL_STATUS + "]" + process.env.ORIGINAL_ISSUE_TITLE,
             });
             console.log("closeUpdateResponse: ", closeUpdateResponse);
