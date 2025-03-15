@@ -138,14 +138,13 @@ jobs:
     environment: testplan
     steps:
       - id: get-milestone
-        name: Get Milestone and validate
+        name: Validate Milestone and branch
         uses: actions/github-script@v7
         with:
           script: |
             try {
               // verify milestone branch exists
-              console.log("Context payload", JSON.stringify(context.payload));
-              console.log("issue have milestone title: ", context.payload.issue.milestone.title);
+              console.log("issue has milestone title: ", context.payload.issue.milestone.title);
               if(context.payload.issue.milestone.state != "open") {
                 throw new Error("Milestone is not in open state");
               }
@@ -184,6 +183,7 @@ jobs:
               core.setFailed(error.message);
             }
       - id: testplan-issue
+        name: Validate Testplan issue
         uses: actions/github-script@v7
         with:
           script: |
@@ -243,10 +243,10 @@ jobs:
           cache: "pip" # caching pip dependencies
           python-version: "3.13"
       - id: request-form
-        name: Validate Request form details
+        name: Validate Request Form Details
         env:
           PARENT_ISSUE_DETAIL: ${{ steps.testplan-issue.outputs.parentIssue }}
-          REQUEST_FORM_ISSUE_DETAIL: ${{ github.event.issue }}
+          REQUEST_FORM_ISSUE_DETAIL: ${{ toJson(github.event.issue) }}
           TESTPLAN_TYPE: ${{ steps.testplan-issue.outputs.testplanType }}
         run: |
           python --version
