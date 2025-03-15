@@ -101,9 +101,9 @@ def validate_deployment_schedule(deployment_schedule_list: Any, request_form_iss
                                             flatten_listitem, re.IGNORECASE)
             if not preferred_time_match:
                 raise ValueError(
-                    "Preferred DateTime format is not correct. Please follow `Preferred DateTime: dd-mm-yyyy HH:MM:SS`")
+                    "Preferred DateTime format is not correct. Please follow `Preferred DateTime: mm-dd-yyyy HH:MM:SS`")
             preferred_date_obj = datetime.strptime(
-                preferred_time_match.group(1), "%d-%m-%Y %H:%M:%S")
+                preferred_time_match.group(1), "%m-%d-%Y %H:%M:%S")
 
             allowed_date = datetime.now()+timedelta(hours=1)
             if preferred_date_obj < allowed_date:
@@ -129,7 +129,7 @@ def validate_deployment_schedule(deployment_schedule_list: Any, request_form_iss
 
     if not has_preferred_datetime:
         raise ValueError(
-            "Deployment Schedule does not contain preferred datetime. `Preferred DateTime: dd-mm-yyyy HH:MM:SS` is required")
+            "Deployment Schedule does not contain preferred datetime. `Preferred DateTime: mm-dd-yyyy HH:MM:SS` is required")
     return deployment_scope
 
 

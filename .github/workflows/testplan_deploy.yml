@@ -170,8 +170,8 @@ jobs:
               const compareResponse = await github.rest.repos.compareCommits({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                base: milestoneBranch,
-                head: "master"
+                base: "master",
+                head: milestoneBranch
               });
               console.log("milestone branch as base and master branch as head, compareResponse: ", compareResponse);
               if (compareResponse.data.behind_by > 0) {
