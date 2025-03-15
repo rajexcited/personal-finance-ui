@@ -13,7 +13,7 @@ on:
       - closed
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.issue.milestone.number }}
+  group: ${{ github.workflow }}-${{ github.event.issue.milestone.number }}-${{ github.event.issue.number }}
   cancel-in-progress: true
 
 env:
@@ -131,11 +131,13 @@ jobs:
     environment: testplan
     steps:
       - id: get-milestone
+        name: Get Milestone and validate
         uses: actions/github-script@v7
         with:
           script: |
             try {
               // verify milestone branch exists
+              console.log("Context payload", JSON.stringify(context.payload));
               console.log("issue have milestone title: ", context.payload.issue.milestone.title);
               if(context.payload.issue.milestone.state != "open") {
                 throw new Error("Milestone is not in open state");
@@ -170,7 +172,7 @@ jobs:
                 throw new Error(`Milestone branch [${milestoneBranch}] is behind master by ${compareResponse.data.behind_by} commits.`);
               }
             } catch (error) {
-              console.error("failed reason: "", error);
+              console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during milestone validation, reason: ${error.message}`);
               core.setFailed(error.message);
             }
@@ -508,6 +510,8 @@ jobs:
           ARTIFACT_URL: ${{ needs.build_artifact.outputs.artifact-url }}
           UI_REPOSITORY: ${{ github.repository }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
+          TESTPLAN_ISSUE_NUMBER: ${{ needs.validate_request.outputs.parent-issue.number }}
+          API_VERSION: ${{ needs.validate_request.outputs.api-version }}
         with:
           script: |
             try {
@@ -525,9 +529,9 @@ jobs:
               payload.client_payload.stackTags.push(`workflow_run_id=${context.payload.workflow.run_id}`);
               payload.client_payload.stackTags.push(`milestone=${context.payload.issue.milestone.title}`);
               payload.client_payload.stackTags.push(`testplanType=${process.env.TESTPLAN_TYPE}`);
-              payload.client_payload.stackTags.push(`testplanIssueNumber=${{ needs.validate_request.outputs.parent-issue.number }}`);
+              payload.client_payload.stackTags.push(`testplanIssueNumber=process.env.TESTPLAN_ISSUE_NUMBER`);
               payload.client_payload.stackTags.push(`requestIssueNumber=${context.payload.issue.number}`);
-              const apiVersion = "${{ needs.validate_request.outputs.api-version}}"
+              const apiVersion = process.env.API_VERSION
               if(apiVersion) {
                 payload.client_payload.stackTags.push(`apiVersion=${apiVersion}`);
               }
@@ -587,7 +591,7 @@ jobs:
               commentBody.push("", "### API Stack: ", "");
               const apiIssueDetails = ${{ steps.create-api-issue.outputs.details }};
               if(apiIssueDetails) {
-                const apiIssueWithLink = "[API Issue-" + apiIssueDetails.number + "](" + apiIssueDetails.html_url + ");
+                const apiIssueWithLink = "[API Issue-" + apiIssueDetails.number + "](" + apiIssueDetails.html_url + ")";
                 commentBody.push("The issue, " + apiIssueWithLink + ", for API deployment is created.");
               }
               if(stackDetails?.api) {
@@ -783,13 +787,13 @@ jobs:
                 state: 'closed'
               });
               console.log("updateIssueResponse: ", updateIssueResponse);
-              const commentResponse = github.rest.issues.createComment({
+              const parentCommentResponse = github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: ${{ needs.validate_request.outputs.parent-issue.number }},
                 body: commentBody.join("\n")
               });
-              console.log("for testplan, commentResponse: ", commentResponse);
+              console.log("for testplan, commentResponse: ", parentCommentResponse);
             } catch(error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during issue update for deployment completion, reason: ${error.message}`);
@@ -865,6 +869,7 @@ jobs:
           FAIL_STATUS: ${{ steps.prepare-error.outputs.status }}
         with:
           script: |
+            console.log("Context Payload: ",JSON.stringify(context.payload));
             const commentBody = [
                     "## Request " + process.env.FAIL_STATUS, 
                     "<br/>", "",
