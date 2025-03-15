@@ -96,8 +96,8 @@ jobs:
       failed-reason: ${{ steps.update_issue_start.outputs.failedReason }}
     steps:
       - run: |
-          echo "The issue has milestone assigned and locked.""
-          echo "The issue has required labels (deployment, test plan).""
+          echo "The issue has milestone assigned and locked."
+          echo "The issue has required labels (deployment, test plan)."
           echo "This request form is raised by owner."
           echo "This request form title indicates that It is related to provision or deprovision test plan environment."
           echo "We will validate request form issue details."
