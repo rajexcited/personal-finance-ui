@@ -1,5 +1,4 @@
 # Prepare UI artifact to deploy as statis site
-
 name: Provision/Deprovision Testplan Environment
 
 # list of trigger events https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows
@@ -20,7 +19,7 @@ concurrency:
 env:
   ARTIFACT_NAME: personal-finance-ui-${{ github.event.issue.milestone.title }}
 
-permissions: 
+permissions:
   issues: write
 
 jobs:
@@ -47,7 +46,7 @@ jobs:
           echo "Issue locked: ${{ github.event.issue.locked }}"
           echo "Issue active lock reason: ${{ github.event.issue.active_lock_reason }}"
       - run: |
-          echo "Issue labels name: ${{ github.event.issue.labels.*.name }}"
+          echo "Issue labels name: ${{ toJson(github.event.issue.labels.*.name) }}"
       - run: |
           echo "Issue total comments: ${{ github.event.issue.comments }}"
       - run: |
@@ -87,8 +86,10 @@ jobs:
       contains(github.event.issue.labels.*.name, 'deployment') &&
       contains(github.event.issue.labels.*.name, 'test plan') &&
       startsWith(github.event.issue.author_association, 'OWNER') &&
-      startsWith(github.event.issue.title, '[Request] Provision Test Plan Environment') &&
-      startsWith(github.event.issue.title, '[Request] Deprovision Test Plan Environment') &&
+      (
+      startsWith(github.event.issue.title, '[Request] Provision Test Plan Environment') ||
+      startsWith(github.event.issue.title, '[Request] Deprovision Test Plan Environment') 
+      ) &&
       github.event.issue.milestone != null &&
       github.event.issue.locked == true
     outputs:
@@ -116,7 +117,7 @@ jobs:
   validate_request:
     name: Validate Request Form
     runs-on: ubuntu-latest
-    needs: 
+    needs:
       - update_request
     outputs:
       milestone-branch: ${{ steps.get-milestone.outputs.milestoneBranch }}
@@ -272,7 +273,7 @@ jobs:
             echo "UI Stack does not exist. milestone branch can be deployed."
             exit 0
           fi
-          
+
           ENV_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='environment'].Value")
           if [[ "$ENV_TAG_VALUE" != "$ENVID" ]]; then
             FAILED_REASON="Stack is deployed for other environment '$ENV_TAG_VALUE' stack."
@@ -280,7 +281,7 @@ jobs:
             echo "Failed Reason: $FAILED_REASON"
             exit 1
           fi
-          
+
           MILESTONE_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
           if [[ "$MILESTONE_TAG_VALUE" != "$MILESTONE_TITLE" ]]; then
             FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of '$MILESTONE_TAG_VALUE' tests."
@@ -291,7 +292,7 @@ jobs:
           UI_CREATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
           UI_UPDATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
           UI_STACK_AUDIT='{"created_time":'$UI_CREATED_TIME',"updated_time":'$UI_UPDATED_TIME'}'
-          
+
           if [[ -z "$API_VERSION" ]]; then
             echo "Api version is not provided."
             API_STACK_AUDIT='{}'
@@ -339,7 +340,7 @@ jobs:
             echo "Failed Reason: $FAILED_REASON"
             exit 1
           fi
-          
+
           ENV_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='environment'].Value")
           if [[ "$ENV_TAG_VALUE" != "$ENVID" ]]; then
             FAILED_REASON="Stack is deployed for other environment '$ENV_TAG_VALUE' stack."
@@ -347,7 +348,7 @@ jobs:
             echo "Failed Reason: $FAILED_REASON"
             exit 1
           fi
-          
+
           MILESTONE_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
           if [[ "$MILESTONE_TAG_VALUE" != "$MILESTONE_TITLE" ]]; then
             FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of '$MILESTONE_TAG_VALUE' tests."
@@ -358,7 +359,7 @@ jobs:
           UI_CREATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
           UI_UPDATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
           UI_STACK_AUDIT='{"created_time":'$UI_CREATED_TIME',"updated_time":'$UI_UPDATED_TIME'}'
-          
+
           if [[ -z "$API_VERSION" ]]; then
             echo "Api version is not provided."
             API_STACK_AUDIT='{}'
@@ -625,11 +626,11 @@ jobs:
               core.setOutput("failedReason", `Error during issue update, reason: ${error.message}`);
               core.setFailed(error.message);
             }
-    
+
   deployment_complete:
     name: Handle Deployment Completion
     runs-on: ubuntu-latest
-    needs: 
+    needs:
       - validate_request
       - deployment
     environment: testplan
@@ -696,7 +697,7 @@ jobs:
           API_UPDATED_TIME=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
           API_STACK_AUDIT='{"created_time":'$API_CREATED_TIME',"updated_time":'$API_UPDATED_TIME'}'
           STACK_OUTPUTS=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].Outputs")
-          
+
           STACK_AUDIT='{"ui":'$UI_STACK_AUDIT',"api":'$API_STACK_AUDIT',"outputs":'$STACK_OUTPUTS'}'
 
           echo "stack_details=$STACK_AUDIT" >> $GITHUB_OUTPUT
@@ -902,4 +903,3 @@ jobs:
               title: "[" + process.env.FAIL_STATUS + "]" + context.payload.issue.title,
             });
             console.log("closeUpdateResponse: ", closeUpdateResponse);
-
