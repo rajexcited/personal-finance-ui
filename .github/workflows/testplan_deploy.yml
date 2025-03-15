@@ -1,26 +1,23 @@
 # Prepare UI artifact to deploy as statis site
-
 name: Provision/Deprovision Testplan Environment
+run-name: Request - Provision/Deprovision Testplan Environment
 
 # list of trigger events https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows
 on:
   issues:
     types:
       - opened
-      - labeled
       - locked
-      - milestoned
       - deleted
-      - closed
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.issue.milestone.number }}
+  group: ${{ github.workflow }}-${{ github.event.issue.milestone.number }}-${{ github.event.issue.number }}
   cancel-in-progress: true
 
 env:
   ARTIFACT_NAME: personal-finance-ui-${{ github.event.issue.milestone.title }}
 
-permissions: 
+permissions:
   issues: write
 
 jobs:
@@ -47,7 +44,7 @@ jobs:
           echo "Issue locked: ${{ github.event.issue.locked }}"
           echo "Issue active lock reason: ${{ github.event.issue.active_lock_reason }}"
       - run: |
-          echo "Issue labels name: ${{ github.event.issue.labels.*.name }}"
+          echo "Issue labels name: ${{ toJson(github.event.issue.labels.*.name) }}"
       - run: |
           echo "Issue total comments: ${{ github.event.issue.comments }}"
       - run: |
@@ -79,6 +76,13 @@ jobs:
           echo "action: ${{ github.action }}"
           echo "event name: ${{ github.event_name }}"
           echo "event changes: ${{ github.event.changes }}"
+          echo "event action: ${{ github.event.action }}"
+      - run: |
+          echo 'github json: ${{ toJson(github) }}'
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            console.log("Context obj: ", context);
 
   update_request:
     name: Start Request
@@ -87,16 +91,19 @@ jobs:
       contains(github.event.issue.labels.*.name, 'deployment') &&
       contains(github.event.issue.labels.*.name, 'test plan') &&
       startsWith(github.event.issue.author_association, 'OWNER') &&
-      startsWith(github.event.issue.title, '[Request] Provision Test Plan Environment') &&
-      startsWith(github.event.issue.title, '[Request] Deprovision Test Plan Environment') &&
+      (
+      startsWith(github.event.issue.title, '[Request] Provision Test Plan Environment') ||
+      startsWith(github.event.issue.title, '[Request] Deprovision Test Plan Environment') 
+      ) &&
       github.event.issue.milestone != null &&
       github.event.issue.locked == true
     outputs:
       failed-reason: ${{ steps.update_issue_start.outputs.failedReason }}
+      original-issue-title: ${{ steps.update_issue_start.outputs.issue-title }}
     steps:
       - run: |
-          echo "The issue has milestone assigned and locked.""
-          echo "The issue has required labels (deployment, test plan).""
+          echo "The issue has milestone assigned and locked."
+          echo "The issue has required labels (deployment, test plan)."
           echo "This request form is raised by owner."
           echo "This request form title indicates that It is related to provision or deprovision test plan environment."
           echo "We will validate request form issue details."
@@ -105,18 +112,19 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
+            core.setOutput("issue-title", context.payload.issue.title);
             const updateResponse = await github.rest.issues.update({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.issue.number,
-              title: "[Processing] " + context.payload.issue.title;
+              title: "[Processing] " + context.payload.issue.title
             });
             console.log("updateResponse: ", updateResponse);
 
   validate_request:
     name: Validate Request Form
     runs-on: ubuntu-latest
-    needs: 
+    needs:
       - update_request
     outputs:
       milestone-branch: ${{ steps.get-milestone.outputs.milestoneBranch }}
@@ -130,12 +138,13 @@ jobs:
     environment: testplan
     steps:
       - id: get-milestone
+        name: Validate Milestone and branch
         uses: actions/github-script@v7
         with:
           script: |
             try {
               // verify milestone branch exists
-              console.log("issue have milestone title: ", context.payload.issue.milestone.title);
+              console.log("issue has milestone title: ", context.payload.issue.milestone.title);
               if(context.payload.issue.milestone.state != "open") {
                 throw new Error("Milestone is not in open state");
               }
@@ -169,11 +178,12 @@ jobs:
                 throw new Error(`Milestone branch [${milestoneBranch}] is behind master by ${compareResponse.data.behind_by} commits.`);
               }
             } catch (error) {
-              console.error("failed reason: "", error);
+              console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during milestone validation, reason: ${error.message}`);
               core.setFailed(error.message);
             }
       - id: testplan-issue
+        name: Validate Testplan issue
         uses: actions/github-script@v7
         with:
           script: |
@@ -233,10 +243,10 @@ jobs:
           cache: "pip" # caching pip dependencies
           python-version: "3.13"
       - id: request-form
-        name: Validate Request form details
+        name: Validate Request Form Details
         env:
           PARENT_ISSUE_DETAIL: ${{ steps.testplan-issue.outputs.parentIssue }}
-          REQUEST_FORM_ISSUE_DETAIL: ${{ github.event.issue }}
+          REQUEST_FORM_ISSUE_DETAIL: ${{ toJson(github.event.issue) }}
           TESTPLAN_TYPE: ${{ steps.testplan-issue.outputs.testplanType }}
         run: |
           python --version
@@ -272,7 +282,7 @@ jobs:
             echo "UI Stack does not exist. milestone branch can be deployed."
             exit 0
           fi
-          
+
           ENV_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='environment'].Value")
           if [[ "$ENV_TAG_VALUE" != "$ENVID" ]]; then
             FAILED_REASON="Stack is deployed for other environment '$ENV_TAG_VALUE' stack."
@@ -280,7 +290,7 @@ jobs:
             echo "Failed Reason: $FAILED_REASON"
             exit 1
           fi
-          
+
           MILESTONE_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
           if [[ "$MILESTONE_TAG_VALUE" != "$MILESTONE_TITLE" ]]; then
             FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of '$MILESTONE_TAG_VALUE' tests."
@@ -291,7 +301,7 @@ jobs:
           UI_CREATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
           UI_UPDATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
           UI_STACK_AUDIT='{"created_time":'$UI_CREATED_TIME',"updated_time":'$UI_UPDATED_TIME'}'
-          
+
           if [[ -z "$API_VERSION" ]]; then
             echo "Api version is not provided."
             API_STACK_AUDIT='{}'
@@ -339,7 +349,7 @@ jobs:
             echo "Failed Reason: $FAILED_REASON"
             exit 1
           fi
-          
+
           ENV_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='environment'].Value")
           if [[ "$ENV_TAG_VALUE" != "$ENVID" ]]; then
             FAILED_REASON="Stack is deployed for other environment '$ENV_TAG_VALUE' stack."
@@ -347,7 +357,7 @@ jobs:
             echo "Failed Reason: $FAILED_REASON"
             exit 1
           fi
-          
+
           MILESTONE_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
           if [[ "$MILESTONE_TAG_VALUE" != "$MILESTONE_TITLE" ]]; then
             FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of '$MILESTONE_TAG_VALUE' tests."
@@ -358,7 +368,7 @@ jobs:
           UI_CREATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
           UI_UPDATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
           UI_STACK_AUDIT='{"created_time":'$UI_CREATED_TIME',"updated_time":'$UI_UPDATED_TIME'}'
-          
+
           if [[ -z "$API_VERSION" ]]; then
             echo "Api version is not provided."
             API_STACK_AUDIT='{}'
@@ -445,6 +455,7 @@ jobs:
     needs:
       - build_artifact
       - validate_request
+      - update_request
     environment: static-site
     permissions:
       contents: write
@@ -461,10 +472,11 @@ jobs:
           REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           API_VERSION: ${{ needs.validate_request.outputs.api-version }}
+          ORIGINAL_ISSUE_TITLE: ${{ needs.update_request.outputs.original-issue-title }}
         with:
           script: |
             try {
-              let issueBody = contenxt.payload.issue.body;
+              let issueBody = context.payload.issue.body;
               issueBody += "\n\n";
               issueBody += "Created because of UI Provision Issue [Issue-" + context.payload.issue.number + "]("+ context.payload.issue.html_url + ")";
               issueBody += "\n\n";
@@ -472,7 +484,7 @@ jobs:
               const createIssueResponse = await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: process.env.REPO_NAME,
-                title: context.payload.issue.title,
+                title: process.env.ORIGINAL_ISSUE_TITLE,
                 body: issueBody,
                 labels: ["deployment", "test plan", process.env.TESTPLAN_TYPE],
                 milestone: apiMilestone
@@ -507,6 +519,8 @@ jobs:
           ARTIFACT_URL: ${{ needs.build_artifact.outputs.artifact-url }}
           UI_REPOSITORY: ${{ github.repository }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
+          TESTPLAN_ISSUE_NUMBER: ${{ needs.validate_request.outputs.parent-issue.number }}
+          API_VERSION: ${{ needs.validate_request.outputs.api-version }}
         with:
           script: |
             try {
@@ -517,16 +531,16 @@ jobs:
                 env_type: "testplan",
                 artifact_name: process.env.ARTIFACT_NAME,
                 ui_repository: process.env.UI_REPOSITORY,
-                workflow_run_id: context.payload.workflow.run_id,
+                workflow_run_id: context.runId,
                 type: "provision",
                 stackTags: []
               };
-              payload.client_payload.stackTags.push(`workflow_run_id=${context.payload.workflow.run_id}`);
+              payload.client_payload.stackTags.push(`workflow_run_id=${context.runId}`);
               payload.client_payload.stackTags.push(`milestone=${context.payload.issue.milestone.title}`);
               payload.client_payload.stackTags.push(`testplanType=${process.env.TESTPLAN_TYPE}`);
-              payload.client_payload.stackTags.push(`testplanIssueNumber=${{ needs.validate_request.outputs.parent-issue.number }}`);
+              payload.client_payload.stackTags.push(`testplanIssueNumber=process.env.TESTPLAN_ISSUE_NUMBER`);
               payload.client_payload.stackTags.push(`requestIssueNumber=${context.payload.issue.number}`);
-              const apiVersion = "${{ needs.validate_request.outputs.api-version}}"
+              const apiVersion = process.env.API_VERSION
               if(apiVersion) {
                 payload.client_payload.stackTags.push(`apiVersion=${apiVersion}`);
               }
@@ -559,6 +573,7 @@ jobs:
           MILESTONE_BRANCH_NAME: ${{ needs.validate_request.outputs.milestone-branch.name }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           DEPLOY_START_TIME: ${{ steps.dispatch-payload.outputs.deploymentStartTime }}
+          ORIGINAL_ISSUE_TITLE: ${{ needs.update_request.outputs.original-issue-title }}
         with:
           script: |
             try {
@@ -586,7 +601,7 @@ jobs:
               commentBody.push("", "### API Stack: ", "");
               const apiIssueDetails = ${{ steps.create-api-issue.outputs.details }};
               if(apiIssueDetails) {
-                const apiIssueWithLink = "[API Issue-" + apiIssueDetails.number + "](" + apiIssueDetails.html_url + ");
+                const apiIssueWithLink = "[API Issue-" + apiIssueDetails.number + "](" + apiIssueDetails.html_url + ")";
                 commentBody.push("The issue, " + apiIssueWithLink + ", for API deployment is created.");
               }
               if(stackDetails?.api) {
@@ -601,11 +616,17 @@ jobs:
               commentBody.push("> [!NOTE]", "> Please wait for the deployment to complete. This issue will be updated with deployment status.");
               commentBody.push("<br/>", "<br/>",  "");
               
-              const workflowTitle = context.payload.workflow.name +" (" + context.payload.workflow.run_id + ")";
-              const workflowLink = context.payload.workflow.run_url;
+              const workflowTitle = context.workflow +" (" + context.runId + ")";
+              const workflowLink = context.payload.repository.html_url+"/actions/runs/"+context.runId;
               commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
               console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
+              const unlockIssueResponse = await github.rest.issues.unlock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number
+              });
+              console.log("issue is unlock temporarily, unlock issue response:", unlockIssueResponse);
               const commentResponse = github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
@@ -617,19 +638,25 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.issue.number,
-                title: "[Approved] " + context.payload.issue.title
+                title: "[Approved] " + process.env.ORIGINAL_ISSUE_TITLE
               });
               console.log("updateIssueResponse: ", updateIssueResponse);
+              const lockIssueResponse = await github.rest.issues.lock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number
+              });
+              console.log("issue is lock again, lock issue response:", lockIssueResponse);
             } catch(error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during issue update, reason: ${error.message}`);
               core.setFailed(error.message);
             }
-    
+
   deployment_complete:
     name: Handle Deployment Completion
     runs-on: ubuntu-latest
-    needs: 
+    needs:
       - validate_request
       - deployment
     environment: testplan
@@ -696,7 +723,7 @@ jobs:
           API_UPDATED_TIME=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
           API_STACK_AUDIT='{"created_time":'$API_CREATED_TIME',"updated_time":'$API_UPDATED_TIME'}'
           STACK_OUTPUTS=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].Outputs")
-          
+
           STACK_AUDIT='{"ui":'$UI_STACK_AUDIT',"api":'$API_STACK_AUDIT',"outputs":'$STACK_OUTPUTS'}'
 
           echo "stack_details=$STACK_AUDIT" >> $GITHUB_OUTPUT
@@ -763,10 +790,16 @@ jobs:
               commentBody.push("> [!NOTE]", "> The Deployment is completed. This request issue will be closing.");
               commentBody.push("<br/>", "<br/>",  "");
               
-              const workflowTitle = context.payload.workflow.name +" (" + context.payload.workflow.run_id + ")";
-              const workflowLink = context.payload.workflow.run_url;
+              const workflowTitle = context.workflow +" (" + context.runId + ")";
+              const workflowLink = context.payload.repository.html_url+"/actions/runs/"+context.runId;
               commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
+              const unlockIssueResponse = await github.rest.issues.unlock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number
+              });
+              console.log("issue is unlock temporarily, unlock issue response:", unlockIssueResponse);
               console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
               const commentResponse = github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -782,13 +815,32 @@ jobs:
                 state: 'closed'
               });
               console.log("updateIssueResponse: ", updateIssueResponse);
-              const commentResponse = github.rest.issues.createComment({
+              const lockIssueResponse = await github.rest.issues.lock({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: ${{ needs.validate_request.outputs.parent-issue.number }},
+                issue_number: context.issue.number
+              });
+              console.log("issue is lock again, lock issue response:", lockIssueResponse);
+              const testplanIssueNumber = ${{ needs.validate_request.outputs.parent-issue.number }};
+              const unlockIssueResponse2 = await github.rest.issues.unlock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: testplanIssueNumber
+              });
+              console.log("testplan issue is unlock temporarily, unlock issue response:", unlockIssueResponse2);
+              const parentCommentResponse = github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: testplanIssueNumber,
                 body: commentBody.join("\n")
               });
-              console.log("for testplan, commentResponse: ", commentResponse);
+              console.log("for testplan, commentResponse: ", parentCommentResponse);
+              const lockIssueResponse2 = await github.rest.issues.lock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: testplanIssueNumber
+              });
+              console.log("issue is lock again, lock issue response:", lockIssueResponse2);
             } catch(error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during issue update for deployment completion, reason: ${error.message}`);
@@ -856,6 +908,16 @@ jobs:
               core.setOutput("details", errorDetails);
               core.setOutput("status", "Failed");
             }
+      - name: Unlock Issue temporarily
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const unlockIssueResponse = await github.rest.issues.unlock({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            console.log("issue is unlock temporarily, unlock issue response:", unlockIssueResponse);
       - name: Add Failed Reason as Comment
         uses: actions/github-script@v7
         env:
@@ -876,8 +938,8 @@ jobs:
                     "> **Needs Action:**   Please raise a `new request form` with correct details. This request issue will be `closed`.",
                     "<br/>", "<br/>",  "",
                     ];
-            const workflowTitle = context.payload.workflow.name +" (" + context.payload.workflow.run_id + ")";
-            const workflowLink = context.payload.workflow.run_url;
+            const workflowTitle = context.workflow +" (" + context.runId + ")";
+            const workflowLink = context.payload.repository.html_url+"/actions/runs/"+context.runId;
             commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
             console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
@@ -892,6 +954,7 @@ jobs:
         uses: actions/github-script@v7
         env:
           FAIL_STATUS: ${{ steps.prepare-error.outputs.status }}
+          ORIGINAL_ISSUE_TITLE: ${{ needs.update_request.outputs.original-issue-title || github.event.issue.title }}
         with:
           script: |
             const closeUpdateResponse = await github.rest.issues.update({
@@ -899,7 +962,16 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.payload.issue.number,
               state: 'closed',
-              title: "[" + process.env.FAIL_STATUS + "]" + context.payload.issue.title,
+              title: "[" + process.env.FAIL_STATUS + "]" + process.env.ORIGINAL_ISSUE_TITLE,
             });
             console.log("closeUpdateResponse: ", closeUpdateResponse);
-
+      - name: Lock Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const lockIssueResponse = await github.rest.issues.lock({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            console.log("issue lock again, lock issue response:", lockIssueResponse);

@@ -1,6 +1,6 @@
 ---
 name: Request  Regression - Provision/Deprovision Test Plan Environment
-description: Request form to provision or deprovision a test plan environment
+about: Request form to provision or deprovision a test plan environment
 title: "[Request] Provision/Deprovision Test Plan Environment for Regression"
 labels: [deployment, regression, test plan]
 ---
