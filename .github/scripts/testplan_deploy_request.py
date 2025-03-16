@@ -217,5 +217,8 @@ if __name__ == "__main__":
     if not no_error:
         exit(1)
 
+    print("parent issue details", args.parent_issue_details)
+    print("request form issue details", args.request_form_issue_details)
+    print("test plan type", args.testplan_type)
     validate_request_form(args.parent_issue_details,
                           args.request_form_issue_details, args.testplan_type)
