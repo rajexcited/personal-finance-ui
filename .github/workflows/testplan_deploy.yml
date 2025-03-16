@@ -275,8 +275,8 @@ jobs:
       - id: request-form
         name: Validate Request Form Details
         env:
-          PARENT_ISSUE_DETAIL: ${{ steps.testplan-issue.outputs.parentIssue }}
-          REQUEST_FORM_ISSUE_DETAIL: ${{ steps.testplan-issue.outputs.issueDetails }}
+          PARENT_ISSUE_DETAIL: "${{ toJson(steps.testplan-issue.outputs.parentIssue) }}"
+          REQUEST_FORM_ISSUE_DETAIL: "${{ toJson(steps.testplan-issue.outputs.issueDetails) }}"
           TESTPLAN_TYPE: ${{ steps.testplan-issue.outputs.testplanType }}
         run: |
           python --version
