@@ -217,8 +217,8 @@ jobs:
                 issue_number: testplanIssueNumber
               });
               console.log("getIssueResponse: ", getIssueResponse);
-              const allowedLabels = [foundTypeLabel.name, "test plan"],
-              const testplanLabels = getIssueResponse.data.labels.filter(label=>allowedLabels.includes(label.name))
+              const allowedLabels = [foundTypeLabel.name, "test plan"];
+              const testplanLabels = getIssueResponse.data.labels.filter(label=>allowedLabels.includes(label.name));
               if(testplanLabels.length!==allowedLabels.length ||
                  getIssueResponse.data.state!=="open" || 
                  getIssueResponse.data.milestone.number!==context.payload.issue.milestone.number ) {
