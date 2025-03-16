@@ -192,7 +192,7 @@ def get_valid_dict(arg: Any) -> Dict:
         ret_dict = json.loads(arg)
 
     if isinstance(ret_dict, Dict):
-        return arg
+        return ret_dict
     return None
 
 
