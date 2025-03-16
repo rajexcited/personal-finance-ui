@@ -277,28 +277,24 @@ jobs:
         env:
           TESTPLAN_TYPE: ${{ steps.testplan-issue.outputs.testplanType }}
         run: |
-          echo '${{ steps.testplan-issue.outputs.parentIssue }}' > /tmp/parent_issue_details.json
-          echo '${{ steps.testplan-issue.outputs.issueDetails }}' > /tmp/request_form_issue_details.json
+          echo '${{ steps.testplan-issue.outputs.parentIssue }}' > parent_issue_details.json
+          echo '${{ steps.testplan-issue.outputs.issueDetails }}' > request_form_issue_details.json
           python --version
           pip install -r .github/scripts/requirements.txt
-          # ls -lrt /tmp
-          # cat /tmp/parent_issue_details.json
-          # cat /tmp/request_form_issue_details.json
-          # echo python .github/scripts/testplan_deploy_request.py --validate \
-          #     --parent-issue-details "/tmp/parent_issue_details.json" \
-          #     --request-form-issue-details "/tmp/request_form_issue_details.json" \
-          #     --testplan-type "$TESTPLAN_TYPE" 
+          set +e
           python .github/scripts/testplan_deploy_request.py --validate \
-              --parent-issue-details "/tmp/parent_issue_details.json" \
-              --request-form-issue-details "/tmp/request_form_issue_details.json" \
+              --parent-issue-details "parent_issue_details.json" \
+              --request-form-issue-details "request_form_issue_details.json" \
               --testplan-type "$TESTPLAN_TYPE" > deploy_request_output.log 2>&1
           RETURN_CODE=$?
-          # echo "return code=$RETURN_CODE"
-          cat deploy_request_output.log
+          set -e
           if [ $RETURN_CODE -ne 0 ]; then
-            echo "failedReason=$(cat deploy_request_output.log)" >> $GITHUB_OUTPUT
-            exit $RETURN_CODE
+            echo "failedReason<<EOF" >> $GITHUB_OUTPUT
+            cat deploy_request_output.log >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           fi
+          cat deploy_request_output.log
+          exit $RETURN_CODE
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -314,8 +310,10 @@ jobs:
           API_VERSION: ${{ steps.request-form.outputs.api_version }}
         run: |
           UI_STACK_NAME="prsfin-$ENVID-ui-deploy-stack"  
+          set +e
           DESCRIBE_UI_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$UI_STACK_NAME")
           RET_CODE=$?
+          set -e
           if [[ $RET_CODE -ne 0 ]]; then
             echo "UI Stack does not exist. milestone branch can be deployed."
             exit 0
@@ -323,7 +321,7 @@ jobs:
 
           ENV_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='environment'].Value")
           if [[ "$ENV_TAG_VALUE" != "$ENVID" ]]; then
-            FAILED_REASON="Stack is deployed for other environment '$ENV_TAG_VALUE' stack."
+            FAILED_REASON="Stack is deployed for other environment $ENV_TAG_VALUE stack."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
             echo "Failed Reason: $FAILED_REASON"
             exit 1
@@ -331,7 +329,7 @@ jobs:
 
           MILESTONE_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
           if [[ "$MILESTONE_TAG_VALUE" != "$MILESTONE_TITLE" ]]; then
-            FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of '$MILESTONE_TAG_VALUE' tests."
+            FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of $MILESTONE_TAG_VALUE tests."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
             echo "Failed Reason: $FAILED_REASON"
             exit 1
@@ -350,7 +348,7 @@ jobs:
 
             ENV_TAG_VALUE=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='environment'].Value")
             if [[ "$ENV_TAG_VALUE" != "$ENVID" ]]; then
-              FAILED_REASON="API Stack is deployed for other environment '$ENV_TAG_VALUE' stack."
+              FAILED_REASON="API Stack is deployed for other environment $ENV_TAG_VALUE stack."
               echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
               echo "Failed Reason: $FAILED_REASON"
               exit 1
@@ -358,7 +356,7 @@ jobs:
             
             MILESTONE_TAG_VALUE=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
             if [[ "$MILESTONE_TAG_VALUE" != "$API_VERSION" ]]; then
-              FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of '$MILESTONE_TAG_VALUE' tests."
+              FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of $MILESTONE_TAG_VALUE tests."
               echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
               echo "Failed Reason: $FAILED_REASON"
               exit 1
@@ -369,7 +367,9 @@ jobs:
           fi
 
           STACK_AUDIT='{"ui":'$UI_STACK_AUDIT',"api":'$API_STACK_AUDIT'}'
-          echo "stack_details=$STACK_AUDIT" >> $GITHUB_OUTPUT
+          echo "stack_details<<EOF" >> $GITHUB_OUTPUT
+          echo "$STACK_AUDIT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
       - id: deprovision-stack
         if: ${{ steps.request-form.outputs.request_type == 'deprovision' }}
         name: Verify milestone branch is destroyable
@@ -379,8 +379,10 @@ jobs:
           API_VERSION: ${{ steps.request-form.outputs.api_version }}
         run: |
           UI_STACK_NAME="prsfin-$ENVID-ui-deploy-stack"  
+          set +e
           DESCRIBE_UI_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$UI_STACK_NAME")
           RET_CODE=$?
+          set -e
           if [[ $RET_CODE -ne 0 ]]; then
             FAILED_REASON="UI Stack does not exist. milestone branch has already been destroyed."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
@@ -390,7 +392,7 @@ jobs:
 
           ENV_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='environment'].Value")
           if [[ "$ENV_TAG_VALUE" != "$ENVID" ]]; then
-            FAILED_REASON="Stack is deployed for other environment '$ENV_TAG_VALUE' stack."
+            FAILED_REASON="Stack is deployed for other environment $ENV_TAG_VALUE stack."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
             echo "Failed Reason: $FAILED_REASON"
             exit 1
@@ -398,7 +400,7 @@ jobs:
 
           MILESTONE_TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
           if [[ "$MILESTONE_TAG_VALUE" != "$MILESTONE_TITLE" ]]; then
-            FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of '$MILESTONE_TAG_VALUE' tests."
+            FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of $MILESTONE_TAG_VALUE tests."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
             echo "Failed Reason: $FAILED_REASON"
             exit 1
@@ -417,7 +419,7 @@ jobs:
 
             ENV_TAG_VALUE=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='environment'].Value")
             if [[ "$ENV_TAG_VALUE" != "$ENVID" ]]; then
-              FAILED_REASON="API Stack is deployed for other environment '$ENV_TAG_VALUE' stack."
+              FAILED_REASON="API Stack is deployed for other environment $ENV_TAG_VALUE stack."
               echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
               echo "Failed Reason: $FAILED_REASON"
               exit 1
@@ -425,7 +427,7 @@ jobs:
             
             MILESTONE_TAG_VALUE=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
             if [[ "$MILESTONE_TAG_VALUE" != "$API_VERSION" ]]; then
-              FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of '$MILESTONE_TAG_VALUE' tests."
+              FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of $MILESTONE_TAG_VALUE tests."
               echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
               echo "Failed Reason: $FAILED_REASON"
               exit 1
@@ -434,9 +436,10 @@ jobs:
             API_UPDATED_TIME=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
             API_STACK_AUDIT='{"created_time":'$API_CREATED_TIME',"updated_time":'$API_UPDATED_TIME'}'
           fi
-
           STACK_AUDIT='{"ui":'$UI_STACK_AUDIT',"api":'$API_STACK_AUDIT'}'
-          echo "stack_details=$STACK_AUDIT" >> $GITHUB_OUTPUT
+          echo "stack_details<<EOF" >> $GITHUB_OUTPUT
+          echo "$STACK_AUDIT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
   build_artifact:
     name: create artifact
@@ -723,8 +726,10 @@ jobs:
           while :; do
             echo "Deployment is in progress. Waiting for $SLEEP_DURATION."
             sleep $SLEEP_DURATION
+            set +e
             DESCRIBE_UI_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$UI_STACK_NAME")
             RET_CODE=$?
+            set -e
             if [[ $RET_CODE -eq 0 ]]; then
               TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
               if [[ "$TAG_VALUE" != "$MILESTONE_TITLE" ]]; then
@@ -763,8 +768,9 @@ jobs:
           STACK_OUTPUTS=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].Outputs")
 
           STACK_AUDIT='{"ui":'$UI_STACK_AUDIT',"api":'$API_STACK_AUDIT',"outputs":'$STACK_OUTPUTS'}'
-
-          echo "stack_details=$STACK_AUDIT" >> $GITHUB_OUTPUT
+          echo "stack_details<<EOF" >> $GITHUB_OUTPUT
+          echo "$STACK_AUDIT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
           if [[ -n "$FAILED_REASON" ]]; then
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT

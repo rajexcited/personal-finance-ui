@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-import enum
+from enum import Enum
 import json
 import os
 from pathlib import Path
@@ -9,7 +9,7 @@ from markdown_to_json import dictify
 from datetime import datetime, timedelta
 
 
-class RequestType(enum):
+class RequestType(Enum):
     Provision = "provision"
     Deprovision = "deprovision"
 
@@ -198,7 +198,7 @@ def get_valid_dict(arg: Any) -> Dict:
 
 if __name__ == "__main__":
     parser = ArgumentParser(
-        description="validates Deployment Request form for TPE environment")
+        description="validates Deployment Request form for Testplan environment")
     parser.add_argument("--validate", action="store_true",
                         help="[Required] Validation Request")
     parser.add_argument("--parent-issue-details",
