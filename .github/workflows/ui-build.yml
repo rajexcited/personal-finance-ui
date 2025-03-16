@@ -42,7 +42,7 @@ jobs:
           python .github/scripts/testplan_deploy_request.py --validate --parent-issue-details "{}" --request-form-issue-details "{}" --testplan-type "$TESTPLAN_TYPE"
         continue-on-error: true
       - run: |
-          python .github/scripts/testplan_deploy_request.py --validate --parent-issue-details "{}" --request-form-issue-details "{}" --testplan-type "$TESTPLAN_TYPE" > deploy_request_output.log 2>&1
+          python .github/scripts/testplan_deploy_request.py --validate --parent-issue-details "{}" --request-form-issue-details "{}" --testplan-type "TESTPLAN_TYPE" > deploy_request_output.log 2>&1
           RETURN_CODE=$?
           echo "return code=$RETURN_CODE. output logs"
           cat deploy_request_output.log
@@ -51,8 +51,10 @@ jobs:
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
             exit $RETURN_CODE
           fi
+        shell: bash
         continue-on-error: true
       - run: |
+          set +e
           python .github/scripts/testplan_deploy_request.py --validate \
            --parent-issue-details "{}" \
            --request-form-issue-details "{}" \
@@ -60,6 +62,7 @@ jobs:
           RETURN_CODE=$?
           echo "return code=$RETURN_CODE. output logs"
           cat deploy_request_output.log
+          set -e
           if [ $RETURN_CODE -ne 0 ]; then
             FAILED_REASON=$(cat deploy_request_output.log)
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
