@@ -275,9 +275,9 @@ jobs:
         name: Validate Request Form Details
         env:
           PARENT_ISSUE_DETAIL: ${{ steps.testplan-issue.outputs.parentIssue }}
-          REQUEST_FORM_ISSUE_DETAIL: ${{ github.event.issue }}
           TESTPLAN_TYPE: ${{ steps.testplan-issue.outputs.testplanType }}
         run: |
+          REQUEST_FORM_ISSUE_DETAIL='${{ github.event.issue }}'
           python --version
           pip install -r .github/scripts/requirements.txt
           python .github/scripts/testplan_deploy_request.py --validate \
