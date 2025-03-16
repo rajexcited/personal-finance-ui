@@ -82,6 +82,9 @@ jobs:
         with:
           script: |
             console.log("Context obj: ", context);
+            console.log(github)
+            console.log(github.rest)
+            console.log(github.rest.issues)
 
   update_request:
     name: Start Request
@@ -203,7 +206,26 @@ jobs:
                 throw new Error("Test plan type label not found in issue labels");
               }
               // find test plan issue with same milestone and type label
-              const listIssuesResponse = await github.rest.issues.listForRepo({
+              const testplanIssueRegex = new RegExp(".+Test Plan:.+https://github.com/"+context.repo.owner+"/"+context.repo.repo+"/issues/(\\d+).+", "i");
+              if(!testplanIssueRegex.test(context.payload.issue.body)) {
+                throw new Error("Test plan issue number not found")
+              }
+              const testplanIssueNumber = testplanIssueRegex.exec(context.payload.issue.body)[1];
+              const getIssueResponse = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: testplanIssueNumber
+              });
+              console.log("getIssueResponse: ", getIssueResponse);
+              const allowedLabels = [foundTypeLabel.name, "test plan"],
+              const testplanLabels = getIssueResponse.data.labels.filter(label=>allowedLabels.includes(label.name))
+              if(testplanLabels.length!==allowedLabels.length ||
+                 getIssueResponse.data.state!=="open" || 
+                 getIssueResponse.data.milestone.number!==context.payload.issue.milestone.number ) {
+                 throw new Error("matching testplan issue not found")
+              }
+              core.setOutput("parentIssue", getIssueResponse.data);
+              /*const listIssuesResponse = await github.rest.issues.listForRepo({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 labels: [foundTypeLabel.name, "test plan"],
@@ -236,6 +258,7 @@ jobs:
                 throw new Error("Milestone for parent Testplan issue, does not match with milestone of the request form issue");
               }
               core.setOutput("parentIssue", parentChildIssue.parentIssue);
+              */
             } catch(error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during test plan validation, reason: ${error.message}`);
