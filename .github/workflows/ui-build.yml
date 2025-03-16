@@ -14,64 +14,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  testplan_script_validate:
-    name: Testplan script validate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          cache: "pip" # caching pip dependencies
-          python-version: "3.13"
-      - run: |
-          python --version
-          pip install -r .github/scripts/requirements.txt
-          set +e
-          python .github/scripts/testplan_deploy_request.py --validate --parent-issue-details "{}" --request-form-issue-details "{}" --testplan-type "TESTPLAN_TYPE" > deploy_request_output.log 2>&1
-          RETURN_CODE=$?
-          echo "return code=$RETURN_CODE, output logs"
-          cat deploy_request_output.log
-          if [ $RETURN_CODE -ne 0 ]; then
-            FAILED_REASON=$(cat deploy_request_output.log)
-            echo "failedReason is shown. It will be output"
-            # echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
-            # exit $RETURN_CODE
-          fi
-          set -e
-        continue-on-error: true
-      - id: set-e-testplan
-        run: |
-          # set +e
-          python .github/scripts/testplan_deploy_request.py --validate \
-           --parent-issue-details "{}" \
-           --request-form-issue-details "{}" \
-           --testplan-type "TESTPLAN_TYPE" > deploy_request_output.log 2>&1
-          RETURN_CODE=$?
-          # set -e
-          echo "return code=$RETURN_CODE, output logs"
-          if [ $RETURN_CODE -ne 0 ]; then
-            # FAILED_REASON="$(cat deploy_request_output.log)"
-            echo "failedReason<<EOF" >> $GITHUB_OUTPUT
-            cat deploy_request_output.log >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-            # echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
-            # exit $RETURN_CODE
-            echo "failedReason is shown. It will be output"
-            echo "$FAILED_REASON"
-          else
-            echo "There is no error found. output is shown."
-            cat deploy_request_output.log
-          fi
-          echo "This step is done."
-      - run: |
-          echo "next steps"
-          echo "request type: ${{ steps.set-e-testplan.outputs.request_type }}"
-          echo "is previous step failed?"
-          echo "failed reason: ${{ steps.set-e-testplan.outputs.failedReason }}"
-          echo "This step is done."
-
   build:
     name: Build
     runs-on: ubuntu-latest

@@ -198,7 +198,7 @@ def get_valid_dict(arg: Any) -> Dict:
 
 if __name__ == "__main__":
     parser = ArgumentParser(
-        description="validates Deployment Request form for TPE environment")
+        description="validates Deployment Request form for Testplan environment")
     parser.add_argument("--validate", action="store_true",
                         help="[Required] Validation Request")
     parser.add_argument("--parent-issue-details",
