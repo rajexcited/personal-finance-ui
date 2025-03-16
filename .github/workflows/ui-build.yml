@@ -43,13 +43,13 @@ jobs:
         continue-on-error: true
       - id: set-e-testplan
         run: |
-          set +e
+          # set +e
           python .github/scripts/testplan_deploy_request.py --validate \
            --parent-issue-details "{}" \
            --request-form-issue-details "{}" \
            --testplan-type "TESTPLAN_TYPE" > deploy_request_output.log 2>&1
           RETURN_CODE=$?
-          set -e
+          # set -e
           echo "return code=$RETURN_CODE, output logs"
           if [ $RETURN_CODE -ne 0 ]; then
             # FAILED_REASON="$(cat deploy_request_output.log)"
