@@ -85,11 +85,6 @@ jobs:
             console.log(github)
             console.log(github.rest)
             console.log(github.rest.issues)
-      - env:
-          ISSUE_DETAILS: '${{ toJson(github.event.issue) }}'
-        run: |
-          echo "Issue Details: $ISSUE_DETAILS"
-          echo is there any error?
 
   update_request:
     name: Start Request
@@ -264,6 +259,7 @@ jobs:
               }
               core.setOutput("parentIssue", parentChildIssue.parentIssue);
               */
+              core.setOutput("issueDetails", context.payload.issue);
             } catch(error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during test plan validation, reason: ${error.message}`);
@@ -279,8 +275,8 @@ jobs:
       - id: request-form
         name: Validate Request Form Details
         env:
-          PARENT_ISSUE_DETAIL: '${{ toJson(steps.testplan-issue.outputs.parentIssue) }}'
-          REQUEST_FORM_ISSUE_DETAIL: '${{ toJson(github.event.issue) }}'
+          PARENT_ISSUE_DETAIL: ${{ steps.testplan-issue.outputs.parentIssue }}
+          REQUEST_FORM_ISSUE_DETAIL: ${{ steps.testplan-issue.outputs.issueDetails }}
           TESTPLAN_TYPE: ${{ steps.testplan-issue.outputs.testplanType }}
         run: |
           python --version
