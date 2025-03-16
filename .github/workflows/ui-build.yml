@@ -28,46 +28,35 @@ jobs:
       - run: |
           python --version
           pip install -r .github/scripts/requirements.txt
-      - run: |
-          echo ls -lrt .github
-          ls -lrt .github
-          echo ls -lrt .github/scripts
-          ls -lrt .github/scripts
-          python .github/scripts/testplan_deploy_request.py
-        continue-on-error: true
-      - run: |
-          python .github/scripts/testplan_deploy_request.py --validate
-        continue-on-error: true
-      - run: |
-          python .github/scripts/testplan_deploy_request.py --validate --parent-issue-details "{}" --request-form-issue-details "{}" --testplan-type "$TESTPLAN_TYPE"
-        continue-on-error: true
-      - run: |
+          set +e
           python .github/scripts/testplan_deploy_request.py --validate --parent-issue-details "{}" --request-form-issue-details "{}" --testplan-type "TESTPLAN_TYPE" > deploy_request_output.log 2>&1
           RETURN_CODE=$?
-          echo "return code=$RETURN_CODE. output logs"
+          echo "return code=$RETURN_CODE, output logs"
           cat deploy_request_output.log
           if [ $RETURN_CODE -ne 0 ]; then
             FAILED_REASON=$(cat deploy_request_output.log)
+            echo "failedReason is shown. It will be output"
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
-            exit $RETURN_CODE
+            # exit $RETURN_CODE
           fi
-        shell: bash
+          set -e
         continue-on-error: true
       - run: |
           set +e
           python .github/scripts/testplan_deploy_request.py --validate \
            --parent-issue-details "{}" \
            --request-form-issue-details "{}" \
-           --testplan-type "$TESTPLAN_TYPE" > deploy_request_output.log 2>&1
+           --testplan-type "TESTPLAN_TYPE" > deploy_request_output.log 2>&1
           RETURN_CODE=$?
-          echo "return code=$RETURN_CODE. output logs"
+          echo "return code=$RETURN_CODE, output logs"
           cat deploy_request_output.log
-          set -e
           if [ $RETURN_CODE -ne 0 ]; then
             FAILED_REASON=$(cat deploy_request_output.log)
+            echo "failedReason is shown. It will be output"
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
-            exit $RETURN_CODE
+            # exit $RETURN_CODE
           fi
+          set -e
 
   build:
     name: Build
