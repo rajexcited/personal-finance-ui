@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-import enum
+from enum import Enum
 import json
 import os
 from pathlib import Path
@@ -9,7 +9,7 @@ from markdown_to_json import dictify
 from datetime import datetime, timedelta
 
 
-class RequestType(enum):
+class RequestType(Enum):
     Provision = "provision"
     Deprovision = "deprovision"
 
