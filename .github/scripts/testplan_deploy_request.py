@@ -147,7 +147,7 @@ def validate_request_form(parent_issue_details: dict, request_form_issue_details
             "Request form title is not in correct format. Please follow template guideline `[Request] Provision/Deprovision Test Plan Environment`")
     export_to_env({"request_type": request_type.value})
 
-    parsed_req_form = dictify(request_form_issue_details.body)
+    parsed_req_form = dictify(request_form_issue_details["body"])
     if not isinstance(parsed_req_form, dict) or len(parsed_req_form.keys()) != 1:
         raise TypeError(
             "request form is not in correct format. Please follow template `Request TPE Deployment for Regression`")
@@ -210,19 +210,20 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        if not args.validate:
+        if not getattr(args, "validate"):
             raise ValueError("validate arg is not provided")
 
-        parent_issue_details = get_valid_dict(args.parent_issue_details)
+        parent_issue_details = get_valid_dict(
+            getattr(args, "parent_issue_details"))
         if not parent_issue_details:
             raise ValueError("parent issue details are not provided")
 
         request_form_issue_details = get_valid_dict(
-            args.request_form_issue_details)
+            getattr(args, "request_form_issue_details"))
         if not request_form_issue_details:
             raise ValueError("request form issue details are not provided")
 
-        if not args.testplan_type:
+        if not getattr(args, "testplan_type"):
             raise ValueError("testplan type is not provided")
 
         no_error = True
@@ -232,8 +233,8 @@ if __name__ == "__main__":
         parser.print_help()
         exit(1)
 
-    print("parent issue details", parent_issue_details)
-    print("request form issue details", request_form_issue_details)
-    print("test plan type", args.testplan_type)
+    # print("parent issue details", parent_issue_details)
+    # print("request form issue details", request_form_issue_details)
+    # print("test plan type", args.testplan_type)
     validate_request_form(parent_issue_details,
-                          request_form_issue_details, args.testplan_type)
+                          request_form_issue_details, getattr(args, "testplan_type"))
