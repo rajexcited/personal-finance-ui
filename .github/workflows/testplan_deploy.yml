@@ -85,6 +85,11 @@ jobs:
             console.log(github)
             console.log(github.rest)
             console.log(github.rest.issues)
+      - env:
+          ISSUE_DETAILS: '${{ toJson(github.event.issue) }}'
+        run: |
+          echo "Issue Details: $ISSUE_DETAILS"
+          echo is there any error?
 
   update_request:
     name: Start Request
@@ -274,8 +279,8 @@ jobs:
       - id: request-form
         name: Validate Request Form Details
         env:
-          PARENT_ISSUE_DETAIL: "${{ toJson(steps.testplan-issue.outputs.parentIssue) }}"
-          REQUEST_FORM_ISSUE_DETAIL: "${{ toJson(github.event.issue) }}"
+          PARENT_ISSUE_DETAIL: '${{ toJson(steps.testplan-issue.outputs.parentIssue) }}'
+          REQUEST_FORM_ISSUE_DETAIL: '${{ toJson(github.event.issue) }}'
           TESTPLAN_TYPE: ${{ steps.testplan-issue.outputs.testplanType }}
         run: |
           python --version
