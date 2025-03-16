@@ -5,7 +5,7 @@ name: UI Build
 
 # list of trigger events https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows
 on:
-# regardless of branch, run this default workflow to verify code
+  # regardless of branch, run this default workflow to verify code
   push:
   create:
 
@@ -14,6 +14,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  testplan_script_validate:
+    name: Testplan script validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          cache: "pip" # caching pip dependencies
+          python-version: "3.13"
+      - run: |
+          python --version
+          pip install -r .github/scripts/requirements.txt
+      - run: |
+          python .github/scripts/testplan_deploy_request.py --validate --parent-issue-details "{}" --request-form-issue-details "{}" --testplan-type "$TESTPLAN_TYPE" > deploy_request_output.log 2>&1
+          RETURN_CODE=$?
+          echo "return code=$RETURN_CODE. output logs"
+          cat deploy_request_output.log
+          if [ $RETURN_CODE -ne 0 ]; then
+            FAILED_REASON=$(cat deploy_request_output.log)
+            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            exit $RETURN_CODE
+          fi
+        continue-on-error: true
+      - run: |
+          python .github/scripts/testplan_deploy_request.py --validate \
+           --parent-issue-details "{}" \
+           --request-form-issue-details "{}" \
+           --testplan-type "$TESTPLAN_TYPE" > deploy_request_output.log 2>&1
+          RETURN_CODE=$?
+          echo "return code=$RETURN_CODE. output logs"
+          cat deploy_request_output.log
+          if [ $RETURN_CODE -ne 0 ]; then
+            FAILED_REASON=$(cat deploy_request_output.log)
+            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            exit $RETURN_CODE
+          fi
+
   build:
     name: Build
     runs-on: ubuntu-latest

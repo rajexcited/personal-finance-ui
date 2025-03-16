@@ -272,15 +272,16 @@ jobs:
         with:
           cache: "pip" # caching pip dependencies
           python-version: "3.13"
+      - run: |
+          python --version
+          pip install -r .github/scripts/requirements.txt
       - id: request-form
         name: Validate Request Form Details
         env:
           TESTPLAN_TYPE: ${{ steps.testplan-issue.outputs.testplanType }}
         run: |
-          echo '${{ steps.testplan-issue.outputs.parentIssue }}' > /tmp/parent_issue_details.json
-          echo '${{ steps.testplan-issue.outputs.issueDetails }}' > /tmp/request_form_issue_details.json
-          python --version
-          pip install -r .github/scripts/requirements.txt
+          echo '${{ steps.testplan-issue.outputs.parentIssue }}' > parent_issue_details.json
+          echo '${{ steps.testplan-issue.outputs.issueDetails }}' > request_form_issue_details.json
           # ls -lrt /tmp
           # cat /tmp/parent_issue_details.json
           # cat /tmp/request_form_issue_details.json
@@ -288,10 +289,11 @@ jobs:
           #     --parent-issue-details "/tmp/parent_issue_details.json" \
           #     --request-form-issue-details "/tmp/request_form_issue_details.json" \
           #     --testplan-type "$TESTPLAN_TYPE" 
-          python .github/scripts/testplan_deploy_request.py --validate \
-              --parent-issue-details "/tmp/parent_issue_details.json" \
-              --request-form-issue-details "/tmp/request_form_issue_details.json" \
-              --testplan-type "$TESTPLAN_TYPE" > deploy_request_output.log 2>&1
+          echo ls -lrt .github
+          ls -lrt .github
+          echo ls -lrt .github/scripts
+          ls -lrt .github/scripts
+          python .github/scripts/testplan_deploy_request.py --validate --parent-issue-details parent_issue_details.json --request-form-issue-details request_form_issue_details.json --testplan-type "$TESTPLAN_TYPE" > deploy_request_output.log 2>&1
           RETURN_CODE=$?
           # echo "return code=$RETURN_CODE"
           cat deploy_request_output.log
