@@ -41,7 +41,8 @@ jobs:
           fi
           set -e
         continue-on-error: true
-      - run: |
+      - id: set-e-testplan
+        run: |
           set +e
           python .github/scripts/testplan_deploy_request.py --validate \
            --parent-issue-details "{}" \
@@ -50,13 +51,26 @@ jobs:
           RETURN_CODE=$?
           set -e
           echo "return code=$RETURN_CODE, output logs"
-          cat deploy_request_output.log
           if [ $RETURN_CODE -ne 0 ]; then
-            FAILED_REASON="$(cat deploy_request_output.log)"
-            echo "failedReason is shown. It will be output"
-            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            # FAILED_REASON="$(cat deploy_request_output.log)"
+            echo "failedReason<<EOF" >> $GITHUB_OUTPUT
+            cat deploy_request_output.log >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            # echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
             # exit $RETURN_CODE
+            echo "failedReason is shown. It will be output"
+            echo "$FAILED_REASON"
+          else
+            echo "There is no error found. output is shown."
+            cat deploy_request_output.log
           fi
+          echo "This step is done."
+      - run: |
+          echo "next steps"
+          echo "request type: ${{ steps.set-e-testplan.outputs.request_type }}"
+          echo "is previous step failed?"
+          echo "failed reason: ${{ steps.set-e-testplan.outputs.failedReason }}"
+          echo "This step is done."
 
   build:
     name: Build
