@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 import enum
 import json
 import os
+from pathlib import Path
 import re
 from typing import Any, Dict, List
 from markdown_to_json import dictify
@@ -182,6 +183,19 @@ def validate_request_form(parent_issue_details: dict, request_form_issue_details
     export_to_env(out_dict)
 
 
+def get_valid_dict(arg: Any) -> Dict:
+    ret_dict = arg
+    if Path(arg).exists():
+        with open(arg, "r") as f:
+            ret_dict = json.load(f)
+    elif isinstance(arg, str):
+        ret_dict = json.loads(arg)
+
+    if isinstance(ret_dict, Dict):
+        return arg
+    return None
+
+
 if __name__ == "__main__":
     parser = ArgumentParser(
         description="validates Deployment Request form for TPE environment")
@@ -199,10 +213,12 @@ if __name__ == "__main__":
         if not args.validate:
             raise ValueError("validate arg is not provided")
 
-        if not args.parent_issue_details:
+        parent_issue_details = get_valid_dict(args.parent_issue_details)
+        if not parent_issue_details:
             raise ValueError("parent issue details are not provided")
 
-        if not args.request_form_issue_details:
+        request_form_issue_details = args.request_form_issue_details
+        if not request_form_issue_details:
             raise ValueError("request form issue details are not provided")
 
         if not args.testplan_type:
@@ -217,8 +233,8 @@ if __name__ == "__main__":
     if not no_error:
         exit(1)
 
-    print("parent issue details", args.parent_issue_details)
-    print("request form issue details", args.request_form_issue_details)
+    print("parent issue details", parent_issue_details)
+    print("request form issue details", request_form_issue_details)
     print("test plan type", args.testplan_type)
-    validate_request_form(args.parent_issue_details,
-                          args.request_form_issue_details, args.testplan_type)
+    validate_request_form(parent_issue_details,
+                          request_form_issue_details, args.testplan_type)
