@@ -229,8 +229,6 @@ if __name__ == "__main__":
         no_error = False
         print("error: ", e)
         parser.print_help()
-
-    if not no_error:
         exit(1)
 
     print("parent issue details", parent_issue_details)
