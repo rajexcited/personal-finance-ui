@@ -904,39 +904,43 @@ jobs:
       - destroy
     if: failure()
     steps:
+      - run: |
+          echo 'Update Request: ${{ toJson(needs.update_request) }}'
+          echo 'Validate Request: ${{ toJson(needs.validate_request) }}'
+          echo 'Build Artifact: ${{ toJson(needs.build_artifact) }}'
+          echo 'Deployment: ${{ toJson(needs.deployment) }}'
+          echo 'Deployment Complete: ${{ toJson(needs.deployment_complete) }}'
+          echo 'Destroy: ${{ toJson(needs.destroy) }}'
+        continue-on-error: true
       - id: prepare-error
         uses: actions/github-script@v7
         env:
           VALIDATION_FAIL_REASON: ${{ needs.update_request.outputs.failed-reason || needs.validate_request.outputs.failed-reason }}
+          IS_VALIDATION_FAILED: ${{ needs.update_request.result == 'failure' || needs.validate_request.result == 'failure' }}
           REQUEST_TYPE: ${{ needs.validate_request.outputs.request-type }}
           DEPLOY_FAILED_REASON: ${{ needs.deployment.outputs.failed-reason || needs.deployment_complete.outputs.failed-reason }}
+          IS_DEPLOY_FAILED: ${{ needs.deployment.result == 'failure' || needs.deployment_complete.result == 'failure' }}
           DESTROY_FAILED_REASON: ${{ needs.destroy.outputs.failed-reason }}
+          IS_DESTROY_FAILED: ${{ needs.destroy.result == 'failure' }}
         with:
           script: |
-            const validationError = process.env.VALIDATION_FAIL_REASON
-            if(validationError) {
+            let errorDetails= "Found unknown error. Please check the logs.";
+            if(String(process.env.IS_VALIDATION_FAILED) === "true") {
+              errorDetails = process.env.VALIDATION_FAIL_REASON || errorDetails;
               core.setOutput("reason", "Validation of Request form is failed.");
-              core.setOutput("details", validationError);
               core.setOutput("status", "Denied");
-            } else {
-              const requestType = process.env.REQUEST_TYPE;
-              let errorDetails= "Found unknown error. Please check the logs.";
-              let reasonPrefix = "";
-              if(requestType === "provision") {
-                if(process.env.DEPLOY_FAILED_REASON) {
-                  errorDetails = process.env.DEPLOY_FAILED_REASON;
-                }
-                reasonPrefix= "Deployment of";
-              } else {
-                if(process.env.DESTROY_FAILED_REASON) {
-                  errorDetails = process.env.DESTROY_FAILED_REASON;
-                }
-                reasonPrefix= "Destroy of";
-              }
-              core.setOutput("reason", reasonPrefix +" UI artifact is failed.");
-              core.setOutput("details", errorDetails);
+            } else if(String(process.env.IS_DEPLOY_FAILED) === "true") {
+              errorDetails = process.env.DEPLOY_FAILED_REASON || errorDetails;
+              core.setOutput("reason", "Deployment of UI app is failed.");
               core.setOutput("status", "Failed");
+            } else if(String(process.env.IS_DESTROY_FAILED) === "true") {
+              errorDetails = process.env.DESTROY_FAILED_REASON || errorDetails;
+              core.setOutput("reason", "Destroy of UI app is failed.");
+              core.setOutput("status", "Failed");
+            } else {
+              throw new Error("could not find any fail job");
             }
+            core.setOutput("details", errorDetails);
       - name: Unlock Issue temporarily
         uses: actions/github-script@v7
         with:
