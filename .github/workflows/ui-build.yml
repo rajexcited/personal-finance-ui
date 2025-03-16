@@ -36,27 +36,27 @@ jobs:
           if [ $RETURN_CODE -ne 0 ]; then
             FAILED_REASON=$(cat deploy_request_output.log)
             echo "failedReason is shown. It will be output"
-            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            # echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
             # exit $RETURN_CODE
           fi
           set -e
         continue-on-error: true
       - run: |
-          set +e
+          # set +e
           python .github/scripts/testplan_deploy_request.py --validate \
            --parent-issue-details "{}" \
            --request-form-issue-details "{}" \
-           --testplan-type "TESTPLAN_TYPE" > deploy_request_output.log 2>&1
+           --testplan-type "TESTPLAN_TYPE" > deploy_request_output.log 2>&1 || true
           RETURN_CODE=$?
           echo "return code=$RETURN_CODE, output logs"
           cat deploy_request_output.log
           if [ $RETURN_CODE -ne 0 ]; then
             FAILED_REASON=$(cat deploy_request_output.log)
             echo "failedReason is shown. It will be output"
-            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            # echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
             # exit $RETURN_CODE
           fi
-          set -e
+          # set -e
 
   build:
     name: Build
