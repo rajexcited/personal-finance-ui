@@ -274,13 +274,13 @@ jobs:
       - id: request-form
         name: Validate Request Form Details
         env:
-          PARENT_ISSUE_DETAIL: ${{ steps.testplan-issue.outputs.parentIssue }}
+          PARENT_ISSUE_DETAIL: "${{ toJson(steps.testplan-issue.outputs.parentIssue) }}"
+          REQUEST_FORM_ISSUE_DETAIL: "${{ toJson(github.event.issue) }}"
           TESTPLAN_TYPE: ${{ steps.testplan-issue.outputs.testplanType }}
         run: |
-          REQUEST_FORM_ISSUE_DETAIL='${{ github.event.issue }}'
           python --version
           pip install -r .github/scripts/requirements.txt
-          python .github/scripts/testplan_deploy_request.py --validate \
+          python .github/scripts/tpe_deploy_request.py --validate \
               --parent-issue-details "$PARENT_ISSUE_DETAIL" \
               --request-form-issue-details "$REQUEST_FORM_ISSUE_DETAIL" \
               --testplan-type "$TESTPLAN_TYPE" > deploy_request_output.log 2>&1
