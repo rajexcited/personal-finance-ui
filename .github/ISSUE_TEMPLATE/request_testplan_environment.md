@@ -1,15 +1,13 @@
 ---
-name: Request  Regression - Provision/Deprovision Test Plan Environment
+name: Request Regression - Provision / Deprovision Test Plan Environment
 about: Request form to provision or deprovision a test plan environment
 title: "[Request] Provision/Deprovision Test Plan Environment for Regression"
 labels: [deployment, regression, test plan]
 ---
 
-# Request Form to Provision Test Plan Environment for Regression Testing
+# Request Form to Provision <!-- OR --> Deprovision
 
-<!-- OR -->
-
-# Request Form to Deprovision Test Plan Environment for Regression Testing
+## Test Plan Environment for Regression Testing
 
 ### Test Plan:
 
@@ -29,6 +27,6 @@ Regression Test Plan: <link>
 - **Deployment Scope:** UI only / UI and API
 - **Preferred DateTime:** 03-15-2025 13:40:35 <!-- mm-dd-yyyy HH:MM:SS - 24hr time format -->
 
-**Additional Notes/Special Instructions:**
+### Additional Notes/Special Instructions:
 
 <!-- Enter any additional notes or special instructions -->

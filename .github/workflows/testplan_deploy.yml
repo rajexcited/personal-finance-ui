@@ -508,7 +508,7 @@ jobs:
       - id: create-api-issue
         name: Provision API Environment
         uses: actions/github-script@v7
-        if: ${{ contains(needs.validate_request.outputs.deployment-scope, 'API') }}
+        if: ${{ contains(needs.validate_request.outputs.deployment-scope, 'api') }}
         env:
           REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
