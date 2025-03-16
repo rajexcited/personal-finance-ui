@@ -29,6 +29,16 @@ jobs:
           python --version
           pip install -r .github/scripts/requirements.txt
       - run: |
+          echo ls -lrt .github
+          ls -lrt .github
+          echo ls -lrt .github/scripts
+          ls -lrt .github/scripts
+          python .github/scripts/testplan_deploy_request.py
+      - run: |
+          python .github/scripts/testplan_deploy_request.py --validate
+      - run: |
+          python .github/scripts/testplan_deploy_request.py --validate --parent-issue-details "{}" --request-form-issue-details "{}" --testplan-type "$TESTPLAN_TYPE"
+      - run: |
           python .github/scripts/testplan_deploy_request.py --validate --parent-issue-details "{}" --request-form-issue-details "{}" --testplan-type "$TESTPLAN_TYPE" > deploy_request_output.log 2>&1
           RETURN_CODE=$?
           echo "return code=$RETURN_CODE. output logs"
