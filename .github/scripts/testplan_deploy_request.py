@@ -217,7 +217,8 @@ if __name__ == "__main__":
         if not parent_issue_details:
             raise ValueError("parent issue details are not provided")
 
-        request_form_issue_details = args.request_form_issue_details
+        request_form_issue_details = get_valid_dict(
+            args.request_form_issue_details)
         if not request_form_issue_details:
             raise ValueError("request form issue details are not provided")
 
