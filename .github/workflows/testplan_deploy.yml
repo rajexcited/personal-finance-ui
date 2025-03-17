@@ -135,6 +135,9 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - update_request
+    environment: testplan
+    permissions:
+      id-token: write
     outputs:
       milestone-branch: ${{ steps.get-milestone.outputs.milestoneBranch }}
       failed-reason: ${{ steps.get-milestone.outputs.failedReason || steps.testplan-issue.outputs.failedReason || steps.request-form.outputs.failedReason || steps.provision-stack.outputs.failedReason || steps.deprovision-stack.outputs.failedReason }}
@@ -144,7 +147,6 @@ jobs:
       deployment-scope: ${{ steps.request-form.outputs.deployment_scope }}
       api-version: ${{ steps.request-form.outputs.api_version }}
       stack-details: ${{ steps.provision-stack.outputs.stack_details || steps.deprovision-stack.outputs.stack_details }}
-    environment: testplan
     steps:
       - id: get-milestone
         name: Validate Milestone and Branch
@@ -667,6 +669,8 @@ jobs:
       - validate_request
       - deployment
     environment: testplan
+    permissions:
+      id-token: write
     outputs:
       failed-reason: ${{ steps.wait-for-ui-deployment.outputs.failedReason || steps.update_issue_deployment_complete.outputs.failedReason }}
     steps:
