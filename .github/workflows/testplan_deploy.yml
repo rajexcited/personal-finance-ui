@@ -496,16 +496,22 @@ jobs:
                 title: process.env.ORIGINAL_ISSUE_TITLE,
                 body: issueBody,
                 labels: ["deployment", "test plan", process.env.TESTPLAN_TYPE],
-                milestone: apiMilestone
+                milestone: apiMilestone,
+                headers: {
+                  authorization: "Bearer ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}"
+                }
               });
               console.log("api createIssueResponse: ", createIssueResponse);
               core.setOutput("details", createIssueResponse.data);
-              const lockIssueResponse = await github.rest.issues.lock({
+              /*const lockIssueResponse = await github.rest.issues.lock({
                 owner: context.repo.owner,
                 repo: process.env.REPO_NAME,
-                issue_number: createIssueResponse.data.number
+                issue_number: createIssueResponse.data.number,
+                headers: {
+                  authorization: "Bearer ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}"
+                }
               });
-              console.log("lockIssueResponse: ", lockIssueResponse);
+              console.log("lockIssueResponse: ", lockIssueResponse);*/
               // add parent testplan issue as parent relationship to api issue
               // commenting below code as it is not working, when github rest and octokit will add support cross repo issue relationship
               /* const addSubIssuesResponse = await github.rest.issues.addSubIssues({
