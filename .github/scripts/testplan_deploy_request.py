@@ -109,8 +109,10 @@ def validate_deployment_schedule(deployment_schedule_list: Any, request_form_iss
                 raise ValueError(
                     "Preferred DateTime format is not correct. Please follow `Preferred DateTime: mm-dd-yyyy HH:MM:SS`")
             central = pytz.timezone('US/Central')
-            preferred_date_obj = datetime.strptime(
-                preferred_time_match.group(1), "%m-%d-%Y %H:%M:%S").astimezone(central)
+            preferred_date_time = datetime.strptime(
+                preferred_time_match.group(1), "%m-%d-%Y %H:%M:%S")
+            preferred_date_localized = central.localize(preferred_date_time)
+            preferred_date_obj = preferred_date_localized.astimezone()
             now = datetime.now(pytz.utc) \
                 .astimezone(central)
             delta = timedelta(hours=1)
