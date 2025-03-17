@@ -192,9 +192,9 @@ def validate_request_form(parent_issue_details: dict, request_form_issue_details
             "Request form title is not in correct format. Please follow template guideline `[Request] Provision/Deprovision Test Plan Environment`")
     export_to_env({"request_type": request_type.value})
 
-    request_form_list = parsed_body(request_form_issue_details["body"])
+    request_form_dict = parsed_body(request_form_issue_details["body"])
 
-    for k1, v1 in request_form_list.items():
+    for k1, v1 in request_form_dict.items():
         heading_key = flatten_to_string(k1).lower()
         if "test plan" in heading_key:
             validate_test_plan_issue_link(

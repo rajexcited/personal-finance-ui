@@ -82,9 +82,9 @@ jobs:
         with:
           script: |
             console.log("Context obj: ", context);
-            console.log(github)
-            console.log(github.rest)
-            console.log(github.rest.issues)
+            console.log("Github config: ", github)
+            console.log("Github Rest API config: ", github.rest)
+            console.log("Github Rest Issues API:", github.rest.issues)
 
   update_request:
     name: Start Request
@@ -125,7 +125,7 @@ jobs:
               const lockIssueResponse = await github.rest.issues.lock({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number
+                issue_number: context.payload.issue.number
               });
               console.log("Lock issue response:", lockIssueResponse);
             }
@@ -147,7 +147,7 @@ jobs:
     environment: testplan
     steps:
       - id: get-milestone
-        name: Validate Milestone and branch
+        name: Validate Milestone and Branch
         uses: actions/github-script@v7
         with:
           script: |
@@ -208,7 +208,7 @@ jobs:
               // find test plan issue with same milestone and type label
               const testplanIssueRegex = new RegExp(".+Test Plan:.+https://github.com/"+context.repo.owner+"/"+context.repo.repo+"/issues/(\\d+).+", "i");
               if(!testplanIssueRegex.test(context.payload.issue.body)) {
-                throw new Error("Test plan issue number not found")
+                throw new Error("Test plan issue link not found")
               }
               const testplanIssueNumber = testplanIssueRegex.exec(context.payload.issue.body)[1];
               const getIssueResponse = await github.rest.issues.get({
@@ -225,40 +225,6 @@ jobs:
                  throw new Error("matching testplan issue not found")
               }
               core.setOutput("parentIssue", getIssueResponse.data);
-              /*const listIssuesResponse = await github.rest.issues.listForRepo({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                labels: [foundTypeLabel.name, "test plan"],
-                state: 'open',
-                milestone: context.payload.issue.milestone.number
-              });
-              console.log("listIssuesResponse: ", listIssuesResponse);
-              const testplanIssues = listIssuesResponse.data;
-              const parentChildIssuePromises = testplanIssues.map(async issue => {
-                  const subIssueResponse = await github.rest.issues.listSubIssues({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: issue.number
-                  });
-                  console.log("subIssueResponse: ", subIssueResponse);
-                  return {
-                    parentIssue: issue,
-                    subIssues: subIssueResponse.data
-                  };
-              });
-              const parentChildIssues = await Promise.all(parentChildIssuePromises);
-              const parentChildIssue = parentChildIssues.find(issue=> {
-                return !!issue.subIssues.find(subIssue=> subIssue.number === context.payload.issue.number);
-              });
-              console.log("parentChildIssue: ", parentChildIssue);
-              if(!parentchildIssue) {
-                throw new Error("Matching Parent Testplan issue not found for the request form issue");
-              }
-              if(parentChildIssue.parentIssue.milestone.number != context.payload.issue.milestone.number) {
-                throw new Error("Milestone for parent Testplan issue, does not match with milestone of the request form issue");
-              }
-              core.setOutput("parentIssue", parentChildIssue.parentIssue);
-              */
               core.setOutput("issueDetails", context.payload.issue);
             } catch(error) {
               console.error("failed reason: ", error);
@@ -665,7 +631,7 @@ jobs:
               const unlockIssueResponse = await github.rest.issues.unlock({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number
+                issue_number: context.payload.issue.number
               });
               console.log("issue is unlock temporarily, unlock issue response:", unlockIssueResponse);
               const commentResponse = github.rest.issues.createComment({
@@ -685,7 +651,7 @@ jobs:
               const lockIssueResponse = await github.rest.issues.lock({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number
+                issue_number: context.payload.issue.number
               });
               console.log("issue is lock again, lock issue response:", lockIssueResponse);
             } catch(error) {
@@ -841,7 +807,7 @@ jobs:
               const unlockIssueResponse = await github.rest.issues.unlock({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number
+                issue_number: context.payload.issue.number
               });
               console.log("issue is unlock temporarily, unlock issue response:", unlockIssueResponse);
               console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
@@ -862,7 +828,7 @@ jobs:
               const lockIssueResponse = await github.rest.issues.lock({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number
+                issue_number: context.payload.issue.number
               });
               console.log("issue is lock again, lock issue response:", lockIssueResponse);
               const testplanIssueNumber = ${{ needs.validate_request.outputs.parent-issue.number }};
@@ -963,7 +929,7 @@ jobs:
             const unlockIssueResponse = await github.rest.issues.unlock({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number
+              issue_number: context.payload.issue.number
             });
             console.log("issue is unlock temporarily, unlock issue response:", unlockIssueResponse);
       - name: Add Failed Reason as Comment
@@ -1020,6 +986,6 @@ jobs:
             const lockIssueResponse = await github.rest.issues.lock({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number
+              issue_number: context.payload.issue.number
             });
             console.log("issue lock again, lock issue response:", lockIssueResponse);
