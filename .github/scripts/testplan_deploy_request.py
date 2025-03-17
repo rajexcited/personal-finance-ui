@@ -127,8 +127,8 @@ def validate_deployment_schedule(deployment_schedule_list: Any, request_form_iss
                 raise ValueError("Preferred DateTime is in future")
             milestone_due_date_obj = datetime.strptime(
                 request_form_issue_details["milestone"]["due_on"], "%Y-%m-%dT%H:%M:%SZ")
-            end_day_milestone_due_date_obj = milestone_due_date_obj.astimezone(central).replace(
-                hour=23, minute=59, second=59)
+            end_day_milestone_due_date_obj = milestone_due_date_obj.astimezone(central) \
+                .replace(hour=23, minute=59, second=59)
             if preferred_date_obj > end_day_milestone_due_date_obj:
                 raise ValueError(
                     "Preferred DateTime is after milestone due date")
