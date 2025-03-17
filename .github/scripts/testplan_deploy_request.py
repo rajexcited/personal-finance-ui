@@ -6,7 +6,8 @@ from pathlib import Path
 import re
 from typing import Any, Dict, List
 from markdown_to_json import dictify
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
+import pytz
 
 
 class RequestType(Enum):
@@ -49,11 +50,15 @@ def export_to_env(env_to_export: Dict[str, str]):
     #     print(f"{k}={v}")
     github_output_filepath = os.getenv('GITHUB_OUTPUT')
     # print("github_output_filepath=", github_output_filepath)
-    if github_output_filepath:
-        with open(github_output_filepath, 'a') as env_file:
-            for k, v in env_to_export.items():
-                print(f"exporting output {k}={v}")
-                env_file.write(f"{k}={v}\n")
+    if not github_output_filepath:
+        github_output_filepath = Path("dist/GITHUB_OUTPUT")
+        github_output_filepath.parent.mkdir(parents=True, exist_ok=True)
+        print("since GITHUB_OUTPUT variable is not defined, exporting env to file: ",
+              github_output_filepath.resolve())
+    with open(github_output_filepath, 'a') as env_file:
+        for k, v in env_to_export.items():
+            print(f"exporting output {k}={v}")
+            env_file.write(f"{k}={v}\n")
 
 
 def validate_release_details(release_details: Any, parent_issue_details: dict, request_form_issue_details: dict):
@@ -70,7 +75,7 @@ def validate_release_details(release_details: Any, parent_issue_details: dict, r
                     "UI Version does not match with milestone title")
             has_ui_milestone = True
         if "api version:" in flatten_listitem.lower():
-            api_version_match = re.match(r".*api version:\s+(v\d+).*",
+            api_version_match = re.match(r".*api version:\s+(v\d+\.\d+\.\d+).*",
                                          flatten_listitem, re.IGNORECASE)
             if not api_version_match:
                 raise ValueError("API Version is not in correct format")
@@ -97,21 +102,25 @@ def validate_deployment_schedule(deployment_schedule_list: Any, request_form_iss
 
     for listitem in deployment_schedule_list:
         flatten_listitem = flatten_to_string(listitem).lower()
-        if "preferred dateTime:" in flatten_listitem:
-            preferred_time_match = re.match(r".+preferred dateTime: (\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}).+",
+        if "preferred datetime:" in flatten_listitem:
+            preferred_time_match = re.match(r".+preferred dateTime:\s+(\d{2}-\d{2}-\d{4} \d{2}:\d{2}:\d{2}).+",
                                             flatten_listitem, re.IGNORECASE)
             if not preferred_time_match:
                 raise ValueError(
                     "Preferred DateTime format is not correct. Please follow `Preferred DateTime: mm-dd-yyyy HH:MM:SS`")
+            central = pytz.timezone('US/Central')
             preferred_date_obj = datetime.strptime(
-                preferred_time_match.group(1), "%m-%d-%Y %H:%M:%S")
-
-            allowed_date = datetime.now()+timedelta(hours=1)
-            if preferred_date_obj < allowed_date:
+                preferred_time_match.group(1), "%m-%d-%Y %H:%M:%S").astimezone(central)
+            now = datetime.now(pytz.utc).astimezone(
+                central)
+            delta = timedelta(hours=1)
+            if preferred_date_obj < (now-delta):
                 raise ValueError("Preferred DateTime is in past")
+            if (preferred_date_obj-delta) > now:
+                raise ValueError("Preferred DateTime is in future")
             milestone_due_date_obj = datetime.strptime(
                 request_form_issue_details["milestone"]["due_on"], "%Y-%m-%dT%H:%M:%SZ")
-            end_day_milestone_due_date_obj = milestone_due_date_obj.replace(
+            end_day_milestone_due_date_obj = milestone_due_date_obj.astimezone(central).replace(
                 hour=23, minute=59, second=59)
             if preferred_date_obj > end_day_milestone_due_date_obj:
                 raise ValueError(
@@ -124,7 +133,7 @@ def validate_deployment_schedule(deployment_schedule_list: Any, request_form_iss
                 raise ValueError(
                     "Deployment Scope is not in correct format.")
             deployment_scope = scope_match.group(1).strip()
-            if deployment_scope not in ["UI only", "UI and API"]:
+            if deployment_scope not in ["ui only", "ui and api"]:
                 raise ValueError(
                     "Deployment Scope is not in correct. Allowed 'UI only' or 'UI and API'")
 
@@ -132,6 +141,42 @@ def validate_deployment_schedule(deployment_schedule_list: Any, request_form_iss
         raise ValueError(
             "Deployment Schedule does not contain preferred datetime. `Preferred DateTime: mm-dd-yyyy HH:MM:SS` is required")
     return deployment_scope
+
+
+def parsed_body(requestform_body: str, header1_dummy: bool = False, header2_dummy: bool = False) -> Dict:
+    """
+    Args:
+        requestform_body (str):  request form issue body
+        header1_dummy and header2_dummy are used for internal to correct the body to parse in dictionary
+    Returns:
+        Dictionary of header3 as key and content as value, parsed header3 content value could be of any of these types; list, dict or str.
+    """
+    parsed_req_form = dictify(requestform_body)
+    if not isinstance(parsed_req_form, Dict) and not header1_dummy:
+        # add header1 and retry
+        return parsed_body("# Dummy\n"+requestform_body, header1_dummy=True)
+
+    incorrect_format_error_message = "request form is not in correct format. Please follow template `Request  Regression - Provision/Deprovision Test Plan Environment`"
+
+    if not isinstance(parsed_req_form, Dict) or len(parsed_req_form) != 1:
+        raise TypeError(incorrect_format_error_message)
+
+    ignorek, header1_value = parsed_req_form.popitem()
+    if not isinstance(header1_value, Dict) and not header2_dummy:
+        # add header2 and retry
+        header1_index = requestform_body.find(ignorek)
+        header1_end_index = requestform_body.find(
+            "\n", header1_index+len(ignorek))
+        return parsed_body(requestform_body[:header1_end_index] + "\n## Dummy" + requestform_body[header1_end_index:], header2_dummy=True)
+
+    if not isinstance(header1_value, Dict) or len(header1_value) != 1:
+        raise TypeError(incorrect_format_error_message)
+
+    ignorek, header2_value = header1_value.popitem()
+    if not isinstance(header2_value, Dict):
+        raise TypeError(incorrect_format_error_message)
+
+    return header2_value
 
 
 def validate_request_form(parent_issue_details: dict, request_form_issue_details: dict, testplan_type: str):
@@ -147,17 +192,9 @@ def validate_request_form(parent_issue_details: dict, request_form_issue_details
             "Request form title is not in correct format. Please follow template guideline `[Request] Provision/Deprovision Test Plan Environment`")
     export_to_env({"request_type": request_type.value})
 
-    parsed_req_form = dictify(request_form_issue_details["body"])
-    if not isinstance(parsed_req_form, dict) or len(parsed_req_form.keys()) != 1:
-        raise TypeError(
-            "request form is not in correct format. Please follow template `Request TPE Deployment for Regression`")
+    request_form_dict = parsed_body(request_form_issue_details["body"])
 
-    k, req_form_dict = parsed_req_form.popitem()
-    if not isinstance(req_form_dict, dict):
-        raise TypeError(
-            "request form is not in correct format. Please follow template `Request TPE Deployment for Regression`")
-
-    for k1, v1 in req_form_dict.items():
+    for k1, v1 in request_form_dict.items():
         heading_key = flatten_to_string(k1).lower()
         if "test plan" in heading_key:
             validate_test_plan_issue_link(
@@ -171,10 +208,10 @@ def validate_request_form(parent_issue_details: dict, request_form_issue_details
             deployment_scope = validate_deployment_schedule(
                 v1, request_form_issue_details, request_type)
 
-    if api_version and "API" not in deployment_scope:
+    if api_version and "api" not in deployment_scope:
         raise ValueError(
             "API version is provided but deployment scope is not API")
-    if not api_version and "API" in deployment_scope:
+    if not api_version and "api" in deployment_scope:
         print("API version is missing; defaulting to production-like API as deployment scope includes API.")
 
     out_dict = {"deployment_scope": deployment_scope}
