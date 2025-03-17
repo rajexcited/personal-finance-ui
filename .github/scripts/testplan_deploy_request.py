@@ -111,12 +111,17 @@ def validate_deployment_schedule(deployment_schedule_list: Any, request_form_iss
             central = pytz.timezone('US/Central')
             preferred_date_obj = datetime.strptime(
                 preferred_time_match.group(1), "%m-%d-%Y %H:%M:%S").astimezone(central)
-            now = datetime.now(pytz.utc).astimezone(
-                central)
+            now = datetime.now(pytz.utc) \
+                .astimezone(central)
             delta = timedelta(hours=1)
             if preferred_date_obj < (now-delta):
+                print("preferred_date_obj: ", preferred_date_obj)
+                print("now - delta: ", (now-delta))
                 raise ValueError("Preferred DateTime is in past")
             if (preferred_date_obj-delta) > now:
+                print("preferred_date_obj - delta: ",
+                      (preferred_date_obj-delta))
+                print("now: ", now)
                 raise ValueError("Preferred DateTime is in future")
             milestone_due_date_obj = datetime.strptime(
                 request_form_issue_details["milestone"]["due_on"], "%Y-%m-%dT%H:%M:%SZ")
