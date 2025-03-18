@@ -409,6 +409,45 @@ jobs:
           echo "$STACK_AUDIT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+  validate_request_api:
+    name: Validate Request form phase2 (API)
+    runs-on: ubuntu-latest
+    needs:
+      - validate_request
+    environment: static-site
+    outputs:
+      api-milestone: ${{ steps.api-milestone.outputs.milestone }}
+      failed-reason: ${{ steps.api-milestone.outputs.failedReason }}
+    steps:
+      - id: api-milestone
+        name: Validate API Milestone
+        if: contains(needs.validate_request.outputs.deployment-scope, 'api')
+        uses: actions/github-script@v7
+        env:
+          BACKEND_REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
+          MILESTONE_BRANCH_NAME: ${{ needs.validate_request.outputs.milestone-branch.name }}
+          API_VERSION: ${{ needs.validate_request.outputs.api-version }}
+        with:
+          github-token: ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}
+          script: |
+            try {
+              const listMilestonesResponse = await github.rest.issues.listMilestones({
+                owner: context.repo.owner,
+                repo: process.env.BACKEND_REPO_NAME,
+                state: process.env.MILESTONE_BRANCH_NAME === "master"? "closed": "open"
+              });
+              console.log("listMilestonesResponse: ", listMilestonesResponse);
+              const apiMilestone = listMilestonesResponse.data.find(mlstn=>mlstn.title===process.env.API_VERSION);
+              if(!apiMilestone) {
+                throw new Error(`Milestone issue is not found. provided version[${process.env.API_VERSION}] incorrect.`);
+              }
+              core.setOutput("milestone", apiMilestone);
+            } catch (error) {
+              console.error("failed reason: ", error);
+              core.setOutput("failedReason", `Error during milestone validation, reason: ${error.message}`);
+              core.setFailed(error.message);
+            }
+
   build_artifact:
     name: create artifact
     runs-on: ubuntu-latest
@@ -464,6 +503,7 @@ jobs:
     needs:
       - build_artifact
       - validate_request
+      - validate_request_api
       - update_request
     environment: static-site
     permissions:
@@ -480,7 +520,6 @@ jobs:
         env:
           BACKEND_REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
-          API_VERSION: ${{ needs.validate_request.outputs.api-version }}
           ORIGINAL_ISSUE_TITLE: ${{ needs.update_request.outputs.original-issue-title }}
         with:
           github-token: ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}
@@ -490,14 +529,13 @@ jobs:
               issueBody += "\n\n";
               issueBody += "Created because of UI Provision Issue [Issue-" + context.payload.issue.number + "]("+ context.payload.issue.html_url + ")";
               issueBody += "\n\n";
-              const apiMilestone = process.env.API_VERSION || null;
               const createIssueResponse = await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: process.env.BACKEND_REPO_NAME,
                 title: process.env.ORIGINAL_ISSUE_TITLE,
                 body: issueBody,
                 labels: ["deployment", "test plan", process.env.TESTPLAN_TYPE],
-                milestone: apiMilestone
+                milestone: ${{ needs.validate_request_api.outputs.api-milestone.number }}
               });
               console.log("api createIssueResponse: ", createIssueResponse);
               core.setOutput("details", createIssueResponse.data);
@@ -861,6 +899,7 @@ jobs:
     needs:
       - update_request
       - validate_request
+      - validate_request_api
       - build_artifact
       - deployment
       - deployment_complete
@@ -870,6 +909,7 @@ jobs:
       - run: |
           echo 'Update Request: ${{ toJson(needs.update_request) }}'
           echo 'Validate Request: ${{ toJson(needs.validate_request) }}'
+          echo 'Validate Request Api: ${{ toJson(needs.validate_request_api) }}'
           echo 'Build Artifact: ${{ toJson(needs.build_artifact) }}'
           echo 'Deployment: ${{ toJson(needs.deployment) }}'
           echo 'Deployment Complete: ${{ toJson(needs.deployment_complete) }}'
@@ -878,8 +918,8 @@ jobs:
       - id: prepare-error
         uses: actions/github-script@v7
         env:
-          VALIDATION_FAIL_REASON: ${{ needs.update_request.outputs.failed-reason || needs.validate_request.outputs.failed-reason }}
-          IS_VALIDATION_FAILED: ${{ needs.update_request.result == 'failure' || needs.validate_request.result == 'failure' }}
+          VALIDATION_FAIL_REASON: ${{ needs.update_request.outputs.failed-reason || needs.validate_request.outputs.failed-reason || needs.validate_request_api.outputs.failed-reason }}
+          IS_VALIDATION_FAILED: ${{ needs.update_request.result == 'failure' || needs.validate_request.result == 'failure' || needs.validate_request_api.result == 'failure' }}
           REQUEST_TYPE: ${{ needs.validate_request.outputs.request-type }}
           DEPLOY_FAILED_REASON: ${{ needs.deployment.outputs.failed-reason || needs.deployment_complete.outputs.failed-reason }}
           IS_DEPLOY_FAILED: ${{ needs.deployment.result == 'failure' || needs.deployment_complete.result == 'failure' }}
