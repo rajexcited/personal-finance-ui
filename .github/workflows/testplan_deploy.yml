@@ -416,7 +416,7 @@ jobs:
       - validate_request
     environment: static-site
     outputs:
-      api-milestone: ${{ steps.api-milestone.outputs.apiMilestone }}
+      api-milestone-number: ${{ steps.api-milestone.outputs.apiMilestone }}
       failed-reason: ${{ steps.api-milestone.outputs.failedReason }}
     steps:
       - id: api-milestone
@@ -441,7 +441,7 @@ jobs:
                 throw new Error(`Milestone issue is not found. provided version[${process.env.API_VERSION}] incorrect.`);
               }
               console.log("found matching version milestone", apiMilestone)
-              core.setOutput("apiMilestone", apiMilestone);
+              core.setOutput("apiMilestone", apiMilestone.number);
             } catch (error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during milestone validation, reason: ${error.message}`);
@@ -517,9 +517,8 @@ jobs:
       failed-reason: ${{ steps.create-api-issue.outputs.failedReason || steps.dispatch-payload.outputs.failedReason || steps.update_issue_deploying.outputs.failedReason }}
     steps:
       - run: |
-          echo "API Milestone number: ${{ needs.validate_request_api.outputs.api-milestone.number }}""
-          echo "API Milestone Object: ${{ needs.validate_request_api.outputs.api-milestone }}""
-          echo "Deployment Scope: ${{ needs.validate_request.outputs.deployment-scope }}""
+          echo "API Milestone number: ${{ needs.validate_request_api.outputs.api-milestone-number }}"
+          echo "Deployment Scope: ${{ needs.validate_request.outputs.deployment-scope }}"
       - id: create-api-issue
         name: Provision API Environment
         uses: actions/github-script@v7
@@ -528,14 +527,12 @@ jobs:
           BACKEND_REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           ORIGINAL_ISSUE_TITLE: ${{ needs.update_request.outputs.original-issue-title }}
-          API_MILESTONE_NUMBER: ${{ needs.validate_request_api.outputs.api-milestone.number }}
+          API_MILESTONE_NUMBER: ${{ needs.validate_request_api.outputs.api-milestone-number }}
         with:
           github-token: ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}
           script: |
             try {
               console.log("API_MILESTONE_NUMBER: ",process.env.API_MILESTONE_NUMBER);
-              const apiMilestone = ${{ needs.validate_request_api.outputs.api-milestone.number }};
-              console.log("apiMilestone :", apiMilestone);
               let issueBody = context.payload.issue.body;
               issueBody += "\n\n";
               issueBody += "Created because of UI Provision Issue "
@@ -547,7 +544,7 @@ jobs:
                 title: process.env.ORIGINAL_ISSUE_TITLE,
                 body: issueBody,
                 labels: ["deployment", "test plan", process.env.TESTPLAN_TYPE],
-                milestone: apiMilestone.number
+                milestone: process.env.API_MILESTONE_NUMBER
               });
               console.log("api createIssueResponse: ", createIssueResponse);
               core.setOutput("details", createIssueResponse.data);
