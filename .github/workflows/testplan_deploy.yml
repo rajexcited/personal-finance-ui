@@ -520,13 +520,15 @@ jobs:
           BACKEND_REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           ORIGINAL_ISSUE_TITLE: ${{ needs.update_request.outputs.original-issue-title }}
+          API_MILESTONE_NUMBER: ${{ needs.validate_request_api.outputs.api-milestone.number }}
         with:
           github-token: ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}
           script: |
             try {
               let issueBody = context.payload.issue.body;
               issueBody += "\n\n";
-              issueBody += "Created because of UI Provision Issue [Issue-" + context.payload.issue.number + "]("+ context.payload.issue.html_url + ")";
+              issueBody += "Created because of UI Provision Issue "
+              issueBody += `[Issue-${context.payload.issue.number}](${context.payload.issue.html_url})`;
               issueBody += "\n\n";
               const createIssueResponse = await github.rest.issues.create({
                 owner: context.repo.owner,
@@ -534,12 +536,12 @@ jobs:
                 title: process.env.ORIGINAL_ISSUE_TITLE,
                 body: issueBody,
                 labels: ["deployment", "test plan", process.env.TESTPLAN_TYPE],
-                milestone: ${{ needs.validate_request_api.outputs.api-milestone.number }}
+                milestone: process.env.API_MILESTONE_NUMBER
               });
               console.log("api createIssueResponse: ", createIssueResponse);
               core.setOutput("details", createIssueResponse.data);
-              // add parent testplan issue as parent relationship to api issue
-              // when github rest and octokit will add support cross repo issue relationship
+              /* add parent testplan issue as parent relationship to api issue
+               when github rest and octokit will add support cross repo issue relationship */
             } catch(error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during API issue creation, reason: ${error.message}`);
