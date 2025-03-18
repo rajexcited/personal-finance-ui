@@ -416,7 +416,7 @@ jobs:
       - validate_request
     environment: static-site
     outputs:
-      api-milestone: ${{ steps.api-milestone.outputs.milestone }}
+      api-milestone: ${{ steps.api-milestone.outputs.apiMilestone }}
       failed-reason: ${{ steps.api-milestone.outputs.failedReason }}
     steps:
       - id: api-milestone
@@ -441,12 +441,15 @@ jobs:
                 throw new Error(`Milestone issue is not found. provided version[${process.env.API_VERSION}] incorrect.`);
               }
               console.log("found matching version milestone", apiMilestone)
-              core.setOutput("milestone", apiMilestone);
+              core.setOutput("apiMilestone", apiMilestone);
             } catch (error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during milestone validation, reason: ${error.message}`);
               core.setFailed(error.message);
             }
+      - run: |
+          echo "api-milestone: ${{ steps.api-milestone.outputs.apiMilestone }}"
+          echo "failed-reason: ${{ steps.api-milestone.outputs.failedReason }}""
 
   build_artifact:
     name: create artifact
@@ -513,6 +516,10 @@ jobs:
       deployment-start-time: ${{ steps.dispatch-payload.outputs.deploymentStartTime }}
       failed-reason: ${{ steps.create-api-issue.outputs.failedReason || steps.dispatch-payload.outputs.failedReason || steps.update_issue_deploying.outputs.failedReason }}
     steps:
+      - run: |
+          echo "API Milestone number: ${{ needs.validate_request_api.outputs.api-milestone.number }}""
+          echo "API Milestone Object: ${{ needs.validate_request_api.outputs.api-milestone }}""
+          echo "Deployment Scope: ${{ needs.validate_request.outputs.deployment-scope }}""
       - id: create-api-issue
         name: Provision API Environment
         uses: actions/github-script@v7
@@ -527,7 +534,7 @@ jobs:
           script: |
             try {
               console.log("API_MILESTONE_NUMBER: ",process.env.API_MILESTONE_NUMBER);
-              const apiMilestone = ${{ needs.validate_request_api.outputs.api-milestone.number }}
+              const apiMilestone = ${{ needs.validate_request_api.outputs.api-milestone.number }};
               console.log("apiMilestone :", apiMilestone);
               let issueBody = context.payload.issue.body;
               issueBody += "\n\n";
