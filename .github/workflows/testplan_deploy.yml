@@ -449,7 +449,7 @@ jobs:
             }
       - run: |
           echo "api-milestone: ${{ steps.api-milestone.outputs.apiMilestone }}"
-          echo "failed-reason: ${{ steps.api-milestone.outputs.failedReason }}""
+          echo "failed-reason: ${{ steps.api-milestone.outputs.failedReason }}"
 
   build_artifact:
     name: create artifact
