@@ -425,7 +425,6 @@ jobs:
         uses: actions/github-script@v7
         env:
           BACKEND_REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
-          MILESTONE_BRANCH_NAME: ${{ needs.validate_request.outputs.milestone-branch.name }}
           API_VERSION: ${{ needs.validate_request.outputs.api-version }}
         with:
           github-token: ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}
@@ -434,7 +433,7 @@ jobs:
               const listMilestonesResponse = await github.rest.issues.listMilestones({
                 owner: context.repo.owner,
                 repo: process.env.BACKEND_REPO_NAME,
-                state: process.env.MILESTONE_BRANCH_NAME === "master"? "closed": "open"
+                state: "all"
               });
               console.log("listMilestonesResponse: ", listMilestonesResponse);
               const apiMilestone = listMilestonesResponse.data.find(mlstn=>mlstn.title===process.env.API_VERSION);
