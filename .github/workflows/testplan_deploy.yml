@@ -478,11 +478,12 @@ jobs:
         uses: actions/github-script@v7
         if: ${{ contains(needs.validate_request.outputs.deployment-scope, 'api') }}
         env:
-          REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
+          BACKEND_REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           API_VERSION: ${{ needs.validate_request.outputs.api-version }}
           ORIGINAL_ISSUE_TITLE: ${{ needs.update_request.outputs.original-issue-title }}
         with:
+          github-token: ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}
           script: |
             try {
               let issueBody = context.payload.issue.body;
@@ -492,35 +493,16 @@ jobs:
               const apiMilestone = process.env.API_VERSION || null;
               const createIssueResponse = await github.rest.issues.create({
                 owner: context.repo.owner,
-                repo: process.env.REPO_NAME,
+                repo: process.env.BACKEND_REPO_NAME,
                 title: process.env.ORIGINAL_ISSUE_TITLE,
                 body: issueBody,
                 labels: ["deployment", "test plan", process.env.TESTPLAN_TYPE],
-                milestone: apiMilestone,
-                headers: {
-                  authorization: "Bearer ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}"
-                }
+                milestone: apiMilestone
               });
               console.log("api createIssueResponse: ", createIssueResponse);
               core.setOutput("details", createIssueResponse.data);
-              /*const lockIssueResponse = await github.rest.issues.lock({
-                owner: context.repo.owner,
-                repo: process.env.REPO_NAME,
-                issue_number: createIssueResponse.data.number,
-                headers: {
-                  authorization: "Bearer ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}"
-                }
-              });
-              console.log("lockIssueResponse: ", lockIssueResponse);*/
               // add parent testplan issue as parent relationship to api issue
-              // commenting below code as it is not working, when github rest and octokit will add support cross repo issue relationship
-              /* const addSubIssuesResponse = await github.rest.issues.addSubIssues({
-                owner: context.repo.owner,
-                repo: process.env.REPO_NAME,
-                issue_number: ${{ needs.validate_request.outputs.parent-issue.number }},
-                sub_issue_id: createIssueResponse.data.number
-              });
-              console.log("addSubIssuesResponse: ", addSubIssuesResponse); */
+              // when github rest and octokit will add support cross repo issue relationship
             } catch(error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during API issue creation, reason: ${error.message}`);
@@ -531,54 +513,44 @@ jobs:
         uses: actions/github-script@v7
         env:
           EVENT_TYPE: ${{ vars.UI_DEPLOY_EVENT_TYPE }}
-          ARTIFACT_URL: ${{ needs.build_artifact.outputs.artifact-url }}
-          UI_REPOSITORY: ${{ github.repository }}
           TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           TESTPLAN_ISSUE_NUMBER: ${{ needs.validate_request.outputs.parent-issue.number }}
           API_VERSION: ${{ needs.validate_request.outputs.api-version }}
+          STACK_REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
         with:
+          github-token: ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}
           script: |
             try {
-              const payload = {
-                event_type: process.env.EVENT_TYPE
-              };
-              payload.client_payload = {
+              const clientPayload = {
                 env_type: "testplan",
                 artifact_name: process.env.ARTIFACT_NAME,
-                ui_repository: process.env.UI_REPOSITORY,
+                ui_repository: context.repo.repo,
                 workflow_run_id: context.runId,
                 type: "provision",
                 stackTags: []
               };
-              payload.client_payload.stackTags.push(`workflow_run_id=${context.runId}`);
-              payload.client_payload.stackTags.push(`milestone=${context.payload.issue.milestone.title}`);
-              payload.client_payload.stackTags.push(`testplanType=${process.env.TESTPLAN_TYPE}`);
-              payload.client_payload.stackTags.push(`testplanIssueNumber=process.env.TESTPLAN_ISSUE_NUMBER`);
-              payload.client_payload.stackTags.push(`requestIssueNumber=${context.payload.issue.number}`);
+              clientPayload.stackTags.push(`workflow_run_id=${context.runId}`);
+              clientPayload.stackTags.push(`milestone=${context.payload.issue.milestone.title}`);
+              clientPayload.stackTags.push(`testplanType=${process.env.TESTPLAN_TYPE}`);
+              clientPayload.stackTags.push(`testplanIssue=${context.repo.repo}/issue-${process.env.TESTPLAN_ISSUE_NUMBER}`);
+              clientPayload.stackTags.push(`requestIssueNumber=${context.payload.issue.number}`);
               const apiVersion = process.env.API_VERSION
               if(apiVersion) {
-                payload.client_payload.stackTags.push(`apiVersion=${apiVersion}`);
+                clientPayload.stackTags.push(`apiVersion=${apiVersion}`);
               }
-              core.setOutput("payload", payload);
+              const createDispatchEventResponse = await github.rest.repos.createDispatchEvent({
+                owner:context.repo.owner,
+                repo: process.env.STACK_REPO_NAME,
+                event_type: process.env.EVENT_TYPE,
+                client_payload: clientPayload
+              });
+              console.log("createDispatchEventResponse: ", createDispatchEventResponse);
               core.setOutput("deploymentStartTime", new Date().toISOString());
             } catch(error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during dispatch payload creation, reason: ${error.message}`);
               core.setFailed(error.message);
             }
-      - name: Trigger Deploy Static Site in AWS
-        run: |
-          curl -L --fail \
-            -X POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            $API_BASE_URL/repos/$REPO_OWNER/$REPO_NAME/dispatches \
-            -d ${{ toJson(steps.dispatch-payload.outputs.payload) }}
-        env:
-          REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
-          REPO_OWNER: ${{ github.repository_owner }}
-          API_BASE_URL: ${{ github.api_url }}
       - id: update_issue_deploying
         name: Update Issue - Deploying
         uses: actions/github-script@v7
