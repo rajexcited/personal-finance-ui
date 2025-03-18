@@ -440,6 +440,7 @@ jobs:
               if(!apiMilestone) {
                 throw new Error(`Milestone issue is not found. provided version[${process.env.API_VERSION}] incorrect.`);
               }
+              console.log("found matching version milestone", apiMilestone)
               core.setOutput("milestone", apiMilestone);
             } catch (error) {
               console.error("failed reason: ", error);
@@ -525,6 +526,9 @@ jobs:
           github-token: ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}
           script: |
             try {
+              console.log("API_MILESTONE_NUMBER: ",process.env.API_MILESTONE_NUMBER);
+              const apiMilestone = ${{ needs.validate_request_api.outputs.api-milestone.number }}
+              console.log("apiMilestone :", apiMilestone);
               let issueBody = context.payload.issue.body;
               issueBody += "\n\n";
               issueBody += "Created because of UI Provision Issue "
@@ -536,7 +540,7 @@ jobs:
                 title: process.env.ORIGINAL_ISSUE_TITLE,
                 body: issueBody,
                 labels: ["deployment", "test plan", process.env.TESTPLAN_TYPE],
-                milestone: process.env.API_MILESTONE_NUMBER
+                milestone: apiMilestone.number
               });
               console.log("api createIssueResponse: ", createIssueResponse);
               core.setOutput("details", createIssueResponse.data);
