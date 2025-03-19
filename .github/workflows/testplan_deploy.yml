@@ -146,7 +146,7 @@ jobs:
       request-type: ${{ steps.request-form.outputs.request_type }}
       deployment-scope: ${{ steps.request-form.outputs.deployment_scope }}
       api-version: ${{ steps.request-form.outputs.api_version }}
-      stack-details: ${{ steps.provision-stack.outputs.stack_details || steps.deprovision-stack.outputs.stack_details }}
+      stack-details: ${{ steps.provision-stack.outputs.stack_details || steps.deprovision-stack.outputs.stack_details || '{}' }}
     steps:
       - id: get-milestone
         name: Validate Milestone and Branch
@@ -625,7 +625,7 @@ jobs:
               ];
               
               commentBody.push("", "### UI Stack: ", "");
-              const stackDetails = ${{ needs.validate_request.outputs.stack-details || null }};
+              const stackDetails = ${{ needs.validate_request.outputs.stack-details }};
               if(stackDetails?.ui) {
                 // audit details available
                 commentBody.push("- **Created On:**  " + stackDetails.ui.created_time);
