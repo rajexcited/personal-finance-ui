@@ -519,6 +519,7 @@ jobs:
       - run: |
           echo "API Milestone number: ${{ needs.validate_request_api.outputs.api-milestone-number }}"
           echo "Deployment Scope: ${{ needs.validate_request.outputs.deployment-scope }}"
+          echo "Stack details: ${{ needs.validate_request.outputs.stack-details }}"
       - id: create-api-issue
         name: Provision API Environment
         uses: actions/github-script@v7
@@ -624,7 +625,7 @@ jobs:
               ];
               
               commentBody.push("", "### UI Stack: ", "");
-              const stackDetails = ${{ needs.validate_request.outputs.stack-details }}
+              const stackDetails = ${{ needs.validate_request.outputs.stack-details || null }};
               if(stackDetails?.ui) {
                 // audit details available
                 commentBody.push("- **Created On:**  " + stackDetails.ui.created_time);
