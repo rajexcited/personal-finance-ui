@@ -655,7 +655,7 @@ jobs:
               const workflowLink = context.payload.repository.html_url+"/actions/runs/"+context.runId;
               commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
-              # console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
+              // console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
               const unlockIssueResponse = await github.rest.issues.unlock({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
