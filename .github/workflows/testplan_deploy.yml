@@ -637,7 +637,7 @@ jobs:
               const apiIssueDetails = ${{ steps.create-api-issue.outputs.details }};
               if(apiIssueDetails) {
                 const apiIssueWithLink = "[API Issue-" + apiIssueDetails.number + "](" + apiIssueDetails.html_url + ")";
-                commentBody.push("The issue, " + apiIssueWithLink + ", for API deployment is created.");
+                commentBody.push("The " + apiIssueWithLink + ", for API deployment is created.");
               }
               if(stackDetails?.api) {
                 // audit details available
@@ -655,14 +655,14 @@ jobs:
               const workflowLink = context.payload.repository.html_url+"/actions/runs/"+context.runId;
               commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
-              console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
+              # console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
               const unlockIssueResponse = await github.rest.issues.unlock({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.issue.number
               });
               console.log("issue is unlock temporarily, unlock issue response:", unlockIssueResponse);
-              const commentResponse = github.rest.issues.createComment({
+              const commentResponse = await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.issue.number,
