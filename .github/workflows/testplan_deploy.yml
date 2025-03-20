@@ -17,6 +17,8 @@ env:
   ARTIFACT_NAME: personal-finance-ui-${{ github.event.issue.milestone.title }}
 
 permissions:
+  contents: write
+  id-token: write
   issues: write
 
 jobs:
@@ -136,8 +138,6 @@ jobs:
     needs:
       - update_request
     environment: testplan
-    permissions:
-      id-token: write
     outputs:
       milestone-branch: ${{ steps.get-milestone.outputs.milestoneBranch }}
       failed-reason: ${{ steps.get-milestone.outputs.failedReason || steps.testplan-issue.outputs.failedReason || steps.request-form.outputs.failedReason || steps.provision-stack.outputs.failedReason || steps.deprovision-stack.outputs.failedReason }}
@@ -509,9 +509,6 @@ jobs:
       - validate_request_api
       - update_request
     environment: static-site
-    permissions:
-      contents: write
-      id-token: write
     outputs:
       deployment-start-time: ${{ steps.dispatch-payload.outputs.deploymentStartTime }}
       failed-reason: ${{ steps.create-api-issue.outputs.failedReason || steps.dispatch-payload.outputs.failedReason || steps.update_issue_deploying.outputs.failedReason }}
@@ -695,8 +692,6 @@ jobs:
       - validate_request
       - deployment
     environment: testplan
-    permissions:
-      id-token: write
     outputs:
       failed-reason: ${{ steps.wait-for-ui-deployment.outputs.failedReason || steps.update_issue_deployment_complete.outputs.failedReason }}
     steps:
