@@ -92,17 +92,7 @@ export const SecurityPage: FunctionComponent = () => {
                     </div>
                 </div>
             </Animated>
-            {
-                details &&
-                <div className="columns">
-                    <div className="column">
-                        <div className="email-primary">
-                            <label className="label">Account Email Id (Primary): </label>
-                            <h4 className="content is-medium">{ details.emailId }</h4>
-                        </div>
-                    </div>
-                </div>
-            }
+
             <ChangePasswordSection
                 reset={ userAction.state === ActionState.NoAction }
                 onCancel={ onCancelHandler }

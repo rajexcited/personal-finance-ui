@@ -8,7 +8,7 @@ import {
   DeleteConfigDetailsResource,
   TagsService,
   TagBelongsTo,
-  getCacheOption,
+  getCacheOption
 } from "../../../../shared";
 
 const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.RefundReason);
@@ -32,7 +32,7 @@ const initializeTags = pMemoize(async () => {
  */
 export const getReasonList = async (status?: ConfigTypeStatus) => {
   const paramStatuses = status ? [status] : [ConfigTypeStatus.Enable, ConfigTypeStatus.Disable];
-  const promise = configTypeService.getConfigTypeList(paramStatuses);
+  const promise = configTypeService.getConfigTypeList(paramStatuses, 1);
   await Promise.all([promise, initializeTags()]);
   const typeList = await promise;
   return typeList;

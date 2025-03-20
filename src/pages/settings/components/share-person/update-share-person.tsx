@@ -1,11 +1,12 @@
 import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { FunctionComponent, useState } from "react";
-import { Input, InputValidators, Switch, TextArea } from "../../../../components";
+import { Input, InputValidators, Switch, TagsInput, TextArea } from "../../../../components";
 import { ConfigTypeStatus, SharePersonResource, UpdateSharePersonResource } from "../../services";
 import { ConfigAction } from "../../../../shared";
 
 interface UpdateSharePersonProps {
     details: SharePersonResource;
+    sourceTags: string[];
     onUpdate (details: UpdateSharePersonResource): void;
     onCancel (): void;
 }
@@ -18,6 +19,7 @@ export const UpdateSharePerson: FunctionComponent<UpdateSharePersonProps> = (pro
     const [phone, setPhone] = useState(props.details.phone || "");
     const [description, setDescription] = useState(props.details.description);
     const [status, setStatus] = useState(props.details.status === ConfigTypeStatus.Enable);
+    const [tags, setTags] = useState(props.details.tags);
 
     const validateName = InputValidators.nameValidator();
     const validatePhoneNo = InputValidators.phoneNoValidator();
@@ -33,7 +35,8 @@ export const UpdateSharePerson: FunctionComponent<UpdateSharePersonProps> = (pro
             lastName: lastName,
             nickName: nickName,
             phone: phone,
-            action: ConfigAction.AddUpdateDetails
+            action: ConfigAction.AddUpdateDetails,
+            tags: tags
         };
         props.onUpdate(configData);
     };
@@ -123,7 +126,7 @@ export const UpdateSharePerson: FunctionComponent<UpdateSharePersonProps> = (pro
                             id="sp-phone"
                             initialValue={ phone }
                             type="tel"
-                            label="Phone Num: "
+                            label="Phone Number: "
                             minlength={ 10 }
                             maxlength={ 15 }
                             placeholder="Enter Phone number"
@@ -136,13 +139,27 @@ export const UpdateSharePerson: FunctionComponent<UpdateSharePersonProps> = (pro
                     <div className="column">
                         <TextArea
                             id="sp-description"
-                            label="Description"
+                            label="Description: "
                             value={ description }
                             placeholder="Enter Description"
                             maxlength={ 400 }
                             rows={ 2 }
                             cols={ 30 }
                             onChange={ setDescription }
+                        />
+                    </div>
+                </div>
+                <div className="columns">
+                    <div className="column">
+                        <TagsInput
+                            id="cfg-tags"
+                            label="Tags: "
+                            defaultValue={ tags }
+                            placeholder="Add Tags"
+                            onChange={ setTags }
+                            key={ "cfg-tags" }
+                            sourceValues={ props.sourceTags }
+                            maxTags={ 10 }
                         />
                     </div>
                 </div>

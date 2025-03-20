@@ -14,6 +14,8 @@ interface ConfirmDialogProps {
     title?: string;
     /** instead of "No", if wantto customize */
     noButtonContent?: string;
+    /** custom class to be added to yes button. for example, make it larger or smaller; change color; etc. */
+    noButtonClassname?: string;
     /** instead of "Yes", if wantto customize */
     yesButtonContent?: string;
     /** custom class to be added to yes button. for example, make it larger or smaller; change color; etc. */
@@ -81,12 +83,12 @@ const ConfirmDialog: FunctionComponent<ConfirmDialogProps> = (props) => {
                 <section className="modal-card-body">
                     { content }
                     { validationFail &&
-                        <p className="is-danger">validation failed. please try again.</p>
+                        <p className="help is-danger">validation failed. please try again.</p>
                     }
                 </section>
                 <footer className="modal-card-foot is-small">
                     <div className="buttons">
-                        <button className="button" onClick={ onClickCloseOrCancelHandler }>{ props.noButtonContent || "No" }</button>
+                        <button className={ `button ${props.noButtonClassname || ""}` } onClick={ onClickCloseOrCancelHandler }>{ props.noButtonContent || "No" }</button>
                         <button className={ `button ${props.yesButtonClassname || ""}` } onClick={ onClickConfirmHandler }> { props.yesButtonContent || "Yes" } </button>
                     </div>
                 </footer>

@@ -1,0 +1,8 @@
+.profile-settings .email-primary {
+    display: inline-flex;
+}
+
+.profile-settings .email-primary .label {
+    padding-right: 1rem;
+    padding-top: 0.25rem;
+}

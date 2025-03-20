@@ -7,7 +7,7 @@ import {
   DeleteConfigDetailsResource,
   TagsService,
   TagBelongsTo,
-  getCacheOption,
+  getCacheOption
 } from "../../../../shared";
 import pMemoize from "p-memoize";
 
@@ -34,7 +34,7 @@ export const PurchaseTypeService = () => {
      */
     getTypes: async (status?: ConfigTypeStatus) => {
       const paramStatuses = status ? [status] : [ConfigTypeStatus.Enable, ConfigTypeStatus.Disable];
-      const promise = configTypeService.getConfigTypeList(paramStatuses);
+      const promise = configTypeService.getConfigTypeList(paramStatuses, 1);
       await Promise.all([promise, initializeTags()]);
       const typeList = await promise;
       return typeList;
@@ -77,6 +77,6 @@ export const PurchaseTypeService = () => {
     getTags: async () => {
       const tagList = await tagService.getTags();
       return tagList;
-    },
+    }
   };
 };

@@ -51,6 +51,26 @@ export const ViewSharePerson: FunctionComponent<ViewSharePersonProps> = (props) 
             </div>
             <div className="columns">
                 <div className="column">
+                    <label className="label">Tags: </label>
+                    <div className="tags">
+                        {
+                            props.details.tags.map(tagVal =>
+                                <span
+                                    className="tag is-link"
+                                    key={ tagVal + "-tag-key" }
+                                >
+                                    { tagVal }
+                                </span>
+                            )
+                        }
+                        { props.details.tags.length === 0 &&
+                            <span>-</span>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div className="columns">
+                <div className="column">
                     <label className="label">Created Date: </label>
                     <span>{ props.details.auditDetails.createdOn instanceof Date ? dateutil.format(props.details.auditDetails.createdOn, "MM-DD-YYYY hh:mm:ss A") : "-" }</span>
                 </div>

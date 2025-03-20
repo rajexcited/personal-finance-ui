@@ -139,6 +139,15 @@ export const DeleteAccountSection: FunctionComponent<DeleteAccountSectionProps> 
                 validate={ validatePassword }
                 autocomplete="new-password"
             />
+            <article className="message is-warning">
+                <div className="message-body">
+                    <p><strong>Warning:</strong>
+                        Deactivating your account will restrict access to your data.
+                        You will have read-only access and the ability to download your data.
+                        Your account will be permanently deleted after 6 months, and recovery will not be possible.
+                        To proceed, please click the "De-activate" button below.</p>
+                </div>
+            </article>
         </form>;
     }, [actionState, password, primaryEmailId, validatePassword]);
 
@@ -155,7 +164,9 @@ export const DeleteAccountSection: FunctionComponent<DeleteAccountSectionProps> 
                         open={ actionState === ActionState.UserRequest }
                         onConfirm={ onSubmitHandler }
                         onCancel={ onCancelHandler }
-                        yesButtonContent="Submit"
+                        yesButtonContent="De-activate"
+                        yesButtonClassname="is-danger"
+                        noButtonContent="Cancel"
                         validateBeforeConfirm={ isValidForm }
                     />
 
