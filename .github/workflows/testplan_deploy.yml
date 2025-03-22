@@ -704,6 +704,14 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           role-session-name: cdkSession
+      - name: Setup Node Latest
+        # https://github.com/actions/setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "latest"
+          cache: "npm"
+      - run: |
+          npm install @aws-sdk/client-cloudformation
       - id: wait-for-ui-deployment
         name: Wait for UI Deployment to Complete
         uses: actions/github-script@v7
