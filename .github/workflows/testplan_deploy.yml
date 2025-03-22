@@ -184,7 +184,7 @@ jobs:
                 base: "master",
                 head: milestoneBranch
               });
-              console.log("milestone branch as base and master branch as head, compareResponse: ", compareResponse);
+              console.log("milestone branch as head and master branch as base, compareResponse: ", compareResponse);
               if (compareResponse.data.behind_by > 0) {
                 throw new Error(`Milestone branch [${milestoneBranch}] is behind master by ${compareResponse.data.behind_by} commits.`);
               }
@@ -511,6 +511,7 @@ jobs:
     environment: static-site
     outputs:
       deployment-start-time: ${{ steps.dispatch-payload.outputs.deploymentStartTime }}
+      ui-stack-tags: ${{ steps.dispatch-payload.outputs.uiStackTags }}
       failed-reason: ${{ steps.create-api-issue.outputs.failedReason || steps.dispatch-payload.outputs.failedReason || steps.update_issue_deploying.outputs.failedReason }}
     steps:
       - run: |
@@ -582,6 +583,7 @@ jobs:
               const apiVersion = process.env.API_VERSION
               if(apiVersion) {
                 clientPayload.stackTags.push(`apiVersion=${apiVersion}`);
+                clientPayload.apiVersion = apiVersion;
               }
               const createDispatchEventResponse = await github.rest.repos.createDispatchEvent({
                 owner:context.repo.owner,
@@ -591,6 +593,7 @@ jobs:
               });
               console.log("createDispatchEventResponse: ", createDispatchEventResponse);
               core.setOutput("deploymentStartTime", new Date().toISOString());
+              core.setOutput("uiStackTags", clientPayload.stackTags);
             } catch(error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during dispatch payload creation, reason: ${error.message}`);
@@ -693,7 +696,7 @@ jobs:
       - deployment
     environment: testplan
     outputs:
-      failed-reason: ${{ steps.wait-for-ui-deployment.outputs.failedReason || steps.update_issue_deployment_complete.outputs.failedReason }}
+      failed-reason: ${{ steps.wait-for-ui-deployment.outputs.failedReason || steps.update-issue-deployment-complete.outputs.failedReason }}
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -703,72 +706,88 @@ jobs:
           role-session-name: cdkSession
       - id: wait-for-ui-deployment
         name: Wait for UI Deployment to Complete
+        uses: actions/github-script@v7
         env:
           ENVID: ${{ vars.AWS_ENVID }}
-          MILESTONE_TITLE: ${{ github.event.issue.milestone.title }}
-          WORKFLOW_RUN_ID: ${{ github.workflow.run_id }}
-        run: |
-          # Wait duration to execute the command and check status 
-          SLEEP_DURATION=3m
-          TOTAL_WAIT_DURATION=60m
-          UI_STACK_NAME="prsfin-$ENVID-ui-deploy-stack"
-          FAILED_REASON=""
-          REMAINING_ATTEMPTS=$((TOTAL_WAIT_DURATION / SLEEP_DURATION))
-          while :; do
-            echo "Deployment is in progress. Waiting for $SLEEP_DURATION."
-            sleep $SLEEP_DURATION
-            set +e
-            DESCRIBE_UI_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$UI_STACK_NAME")
-            RET_CODE=$?
-            set -e
-            if [[ $RET_CODE -eq 0 ]]; then
-              TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='milestone'].Value")
-              if [[ "$TAG_VALUE" != "$MILESTONE_TITLE" ]]; then
-                continue
-              fi
-              TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].Tags[?Key=='workflow_run_id'].Value")
-              if [[ "$TAG_VALUE" != "$WORKFLOW_RUN_ID" ]]; then
-                continue
-              fi
+        with:
+          script: |
+            try {
+              const { CloudFormationClient, DescribeStacksCommand } = require("@aws-sdk/client-cloudformation");
+              const ONE_SECOND = 1000;
+              const ONE_MINUTE = ONE_SECOND * 60;
+              const sleep = (sec) => new Promise((resolve) => setTimeout(resolve, sec*ONE_SECOND));
+              // Initialize CloudFormation client
+              // https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/cloudformation/command/DescribeStacksCommand/
+              const cloudFormationClient = new CloudFormationClient();
+              const describeStack = async (stackName) => {
+                try {
+                  const command = new DescribeStacksCommand({ StackName: stackName });
+                  const response = await cloudFormationClient.send(command);
+                  console.log("method describeStack, response:", response);
+                  return response.Stacks[0];
+                } catch(e) {
+                  console.error("method describeStack, got an error: ", e);
+                }
+                return null;
+              };
+              const stackSuccessRegex = new RegExp("CREATE_COMPLETE|UPDATE_COMPLETE");
+              const stackFailRegex = new RegExp("CREATE_FAILED|UPDATE_FAILED|ROLLBACK*|UPDATE_ROLLBACK*|DELETE*");
 
-              STACK_STATUS=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].StackStatus")
-              # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/view-stack-events.html#cfn-console-view-stack-data-resources-status-codes
-              if [[ "$STACK_STATUS" =~ ^(CREATE_COMPLETE|UPDATE_COMPLETE)$ ]]; then
-                echo "UI Stack is deployed successfully."
-                break
-              elif [[ "$STACK_STATUS" =~ ^(CREATE_FAILED|UPDATE_FAILED|ROLLBACK.*|UPDATE_ROLLBACK.*|DELETE.*)$ ]]; then
-                FAILED_REASON="UI Stack deployment failed. Stack status is $STACK_STATUS. Please check stack events."
-                break
-              fi
-            fi
-            if [[ $REMAINING_ATTEMPTS -eq 0 ]]; then
-              FAILED_REASON="UI Stack deployment is taking longer time. Please check the status manually."
-              break
-            fi
-            REMAINING_ATTEMPTS=$((REMAINING_ATTEMPTS - 1))
-          done
-          UI_CREATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
-          UI_UPDATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
-          UI_STACK_AUDIT='{"created_time":'$UI_CREATED_TIME',"updated_time":'$UI_UPDATED_TIME'}'
+              const sleepDuration = ONE_MINUTE;
+              const totalWaitDuration = 60 * ONE_MINUTE;
+              var waitedDuration = 0;
+              var describeStackResponse = null;
+              while(waitedDuration < totalWaitDuration) {
+                console.log("Deployment is in progress.", `Waiting for ${sleepDuration} seconds ~ ${sleepDuration/ONE_MINUTE} minutes.`);
+                console.log(`waited ${waitedDuration/ONE_MINUTE} minutes for deployment complete out of allowed ${totalWaitDuration/ONE_MINUTE} minutes`);
+                await sleep(sleepDuration);
+                waitedDuration += sleepDuration;
 
-          API_STACK_NAME="prsfin-$ENVID-infra-stack"
-          DESCRIBE_API_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$API_STACK_NAME")
-          API_CREATED_TIME=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
-          API_UPDATED_TIME=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
-          API_STACK_AUDIT='{"created_time":'$API_CREATED_TIME',"updated_time":'$API_UPDATED_TIME'}'
-          STACK_OUTPUTS=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].Outputs")
+                describeStackResponse = await describeStack(`prsfin-${process.env.ENVID}-ui-deploy-stack`);
+                if(!describeStackResponse) {
+                  // since no response, probably still in creation phase
+                  continue;
+                }
+                // check status
+                if(stackSuccessRegex.test(describeStackResponse.StackStatus)) {
+                  console.log("UI Stack is deployed successfully.")
+                  break;
+                }
+                if(stackFailRegex.test(describeStackResponse.StackStatus)) {
+                  throw new Error(`UI Stack deployment failed. found undesired Status [${describeStackResponse.StackStatus}] with reason, ${describeStackResponse.StackStatusReason}. Please check stack events for more details.`);
+                }
+              }
 
-          STACK_AUDIT='{"ui":'$UI_STACK_AUDIT',"api":'$API_STACK_AUDIT',"outputs":'$STACK_OUTPUTS'}'
-          echo "stack_details<<EOF" >> $GITHUB_OUTPUT
-          echo "$STACK_AUDIT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          if [[ -n "$FAILED_REASON" ]]; then
-            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
-            echo "Failed Reason: $FAILED_REASON"
-            exit 1
-          fi
-      - id: update_issue_deployment_complete
+              if(!describeStackResponse) {
+                throw new Error(`UI Stack deployment is taking longer time than expected(${totalWaitDuration/ONE_MINUTE} minutes). Please check the status manually.`)
+              }
+              const convertedTagList = describeStackResponse.Tags.map(st=>`${st.Key}=${st.Value}`);
+              const stackTags = ${{ needs.deployment.outputs.ui-stack-tags }};
+              const unMatchTagList = stackTags.filter(st=> !convertedTagList.includes(st));
+              if(unMatchTagList.length > 0) {
+                throw new Error(`Found some tags not matching as expected. un-match Tags: ${unMatchTagList}`);
+              }
+              const stackAudit = {ui:{}, api:{}, outputs:{}};
+              stackAudit.ui.created_time=describeStackResponse.CreationTime.toISOString();
+              stackAudit.ui.updated_time=describeStackResponse.LastUpdatedTime.toISOString();
+              
+              describeStackResponse = await describeStack(`prsfin-${process.env.ENVID}-infra-stack`);
+              if(!describeStackResponse) {
+                throw new Error("Api Stack deployment is not found.");
+              }
+              if(stackSuccessRegex.test(describeStackResponse.StackStatus)) {
+                throw new Error("Api Stack deployment is failed.");
+              }
+              stackAudit.api.created_time=describeStackResponse.CreationTime.toISOString();
+              stackAudit.api.updated_time=describeStackResponse.LastUpdatedTime.toISOString();
+              stackAudit.outputs = describeStackResponse.Outputs;
+              core.setOutput("stack_details", stackAudit);
+            } catch (error) {
+              console.error("failed reason: ", error);
+              core.setOutput("failedReason", `Error deployment wait step, reason: ${error.message}`);
+              core.setFailed(error.message);
+            }
+      - id: update-issue-deployment-complete
         name: Update Issue - Deployment Complete
         uses: actions/github-script@v7
         env:
@@ -781,16 +800,17 @@ jobs:
               const artifactTitleWithLink = `[${process.env.ARTIFACT_NAME} (${process.env.ARTIFACT_ID})](${process.env.ARTIFACT_URL})`;
               const deploymentEndTime = new Date();
               const diffParts = new Date(new Date() - new Date(process.env.DEPLOYMENT_START_TIME)).toISOString().substr(11, 8).split(":");
+              const getNonZero = (value, suffix) => {
+                const pluralS = value>1? "s" : "";
+                if(value>0) { 
+                  return `${value} ${suffix}${pluralS}`; 
+                }
+                return "";
+              }
               let duration = "";
-              if(parseInt(diffParts[0]) > 0) {
-                duration += diffParts[0] + " hour" + (diffParts[0] > 1 ? "s " : " ");
-              }
-              if(parseInt(diffParts[1]) > 0) {
-                duration += diffParts[1] + " minute" + (diffParts[1] > 1 ? "s " : " ");
-              }
-              if(parseInt(diffParts[2]) > 0) {
-                duration += diffParts[2] + " second" + (diffParts[2] > 1 ? "s " : " ");
-              }
+              duration += getNonZero(parseInt(diffParts[0]), "hour") + " ";
+              duration += getNonZero(parseInt(diffParts[1]), "minute") + " ";
+              duration += getNonZero(parseInt(diffParts[2]), "second") + " ";
               const commentBody = [
                 "## UI Deployment Completed",
                 "<br/>", 
@@ -802,7 +822,7 @@ jobs:
                 `| **Duration** | ${duration} |`,
                 "<br/>"
               ];
-              const stackDetails = ${{ steps.wait-for-ui-deployment.outputs.stack_details }}
+              const stackDetails = ${{ steps.wait-for-ui-deployment.outputs.stack_details }};
               const domainUrlOutput = stackDetails.outputs.find(output => output.OutputKey.startsWith("DistributionDomain"))?.OutputValue;
               if(domainUrlOutput) {
                 commentBody.push("", "### Domain UI URL: ", "");
@@ -835,8 +855,8 @@ jobs:
                 issue_number: context.payload.issue.number
               });
               console.log("issue is unlock temporarily, unlock issue response:", unlockIssueResponse);
-              console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
-              const commentResponse = github.rest.issues.createComment({
+              // console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
+              const commentResponse = await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.issue.number,
@@ -863,7 +883,7 @@ jobs:
                 issue_number: testplanIssueNumber
               });
               console.log("testplan issue is unlock temporarily, unlock issue response:", unlockIssueResponse2);
-              const parentCommentResponse = github.rest.issues.createComment({
+              const parentCommentResponse = await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: testplanIssueNumber,
@@ -984,7 +1004,7 @@ jobs:
             commentBody.push("### Request Processed By: ", `  [Workflow - ${workflowTitle}](${workflowLink})`, "");
 
             console.log("commentRequest: ", {issue_number: context.payload.issue.number, body: commentBody});
-            const commentResponse = github.rest.issues.createComment({
+            const commentResponse = await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.issue.number,
