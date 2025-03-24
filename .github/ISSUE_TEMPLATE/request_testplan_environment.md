@@ -24,7 +24,7 @@ Regression Test Plan: <link>
 
 ### Deployment Schedule:
 
-- **Deployment Scope:** UI only / UI and API <!-- specify UI only if you don't want to re-deploy API. if there is an API milestone through which UI should be deployed, make sure to provide API version in release details section  -->
+- **Deployment Scope:** UI only / UI and API <!-- specify UI only if you dont want to re-deploy API. if there is an API milestone through which UI should be deployed, make sure to provide API version in release details section  -->
 - **Preferred DateTime:** 03-15-2025 13:40:35 <!-- mm-dd-yyyy HH:MM:SS - 24hr time format -->
 
 ### Additional Notes/Special Instructions:
