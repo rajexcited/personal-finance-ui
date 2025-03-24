@@ -730,8 +730,8 @@ jobs:
                 commentBody.push("UI Stack is not found. It seems to be first deployment.");
               }
               commentBody.push("", "### API Stack: ", "");
-              const apiIssueDetails = ${{ steps.create-api-issue.outputs.details }};
-              if(apiIssueDetails) {
+              const apiIssueDetails = ${{ steps.create-api-issue.outputs.details || '{}' }};
+              if(apiIssueDetails?.number) {
                 const apiIssueWithLink = "[API Issue-" + apiIssueDetails.number + "](" + apiIssueDetails.html_url + ")";
                 commentBody.push("The " + apiIssueWithLink + ", for API deployment is created.");
               }
