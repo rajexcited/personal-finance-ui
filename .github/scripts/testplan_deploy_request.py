@@ -215,9 +215,6 @@ def validate_request_form(parent_issue_details: dict, request_form_issue_details
             deployment_scope = validate_deployment_schedule(
                 v1, request_form_issue_details, request_type)
 
-    if api_version and "api" not in deployment_scope:
-        raise ValueError(
-            "API version is provided but deployment scope is not API")
     if not api_version and "api" in deployment_scope:
         print("API version is missing; defaulting to production-like API as deployment scope includes API.")
 
