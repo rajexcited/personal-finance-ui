@@ -821,7 +821,7 @@ jobs:
               const { CloudFormationClient, DescribeStacksCommand } = require("@aws-sdk/client-cloudformation");
               const ONE_SECOND = 1000;
               const ONE_MINUTE = ONE_SECOND * 60;
-              const sleep = (sec) => new Promise((resolve) => setTimeout(resolve, sec*ONE_SECOND));
+              const sleep = (millis) => new Promise((resolve) => setTimeout(resolve, millis));
               // Initialize CloudFormation client
               // https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/cloudformation/command/DescribeStacksCommand/
               const cloudFormationClient = new CloudFormationClient();
@@ -844,7 +844,7 @@ jobs:
               var waitedDuration = 0;
               var describeStackResponse = null;
               while(waitedDuration < totalWaitDuration) {
-                console.log("Deployment is in progress.", `Waiting for ${sleepDuration} seconds ~ ${sleepDuration/ONE_MINUTE} minutes.`);
+                console.log("Deployment is in progress.", `Waiting for ${sleepDuration/ONE_SECOND} seconds ~ ${sleepDuration/ONE_MINUTE} minutes.`);
                 console.log(`waited ${waitedDuration/ONE_MINUTE} minutes for deployment complete out of allowed ${totalWaitDuration/ONE_MINUTE} minutes`);
                 await sleep(sleepDuration);
                 waitedDuration += sleepDuration;
