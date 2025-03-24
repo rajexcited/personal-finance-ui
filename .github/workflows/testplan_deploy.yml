@@ -647,7 +647,7 @@ jobs:
               const clientPayload = {
                 env_type: "testplan",
                 artifact_name: process.env.ARTIFACT_NAME,
-                ui_repository: context.repo.repo,
+                ui_repository: context.repo.owner + "/" + context.repo.repo,
                 workflow_run_id: context.runId,
                 type: "provision",
                 milestone: context.payload.issue.milestone.title,
