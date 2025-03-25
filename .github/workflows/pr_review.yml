@@ -125,7 +125,7 @@ jobs:
               repo: context.repo.repo,
               state: 'all',
               milestone: context.payload.pull_request.milestone.number,
-              labels: ["regression", "testplan"],
+              labels: ["regression", "test plan"],
             });
             console.log("listIssuesResponse: ", listIssuesResponse);
             if(listIssuesResponse.data.length === 0 ) {
