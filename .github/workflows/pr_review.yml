@@ -219,7 +219,11 @@ jobs:
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Ensure no check has failed
-          gh pr checks ${{ github.event.pull_request.number }} --repo ${{ github.repository }} | grep -i "fail" && exit 1
+          RESULT=$(gh pr checks ${{ github.event.pull_request.number }} --repo ${{ github.repository }} | grep -i "fail" || echo "nofailed")
+          if [[ "$RESULT" != "nofailed" ]]; then
+            echo "Found some failures: $RESULT"
+            exit 1
+          fi
 
       - name: Approve PR
         env:
