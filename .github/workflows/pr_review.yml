@@ -112,8 +112,9 @@ jobs:
               milestone: context.payload.pull_request.milestone.number
             });
             console.log("listIssuesResponse: ", listIssuesResponse);
-            if(listIssuesResponse.data.length > 0) {
-                core.setFailed(`Found ${listIssuesResponse.data.length} open issues for milestone ${context.payload.pull_request.milestone.title}. Resolved all issues before merging.`);
+            const listIssuesWithoutPr = listIssuesResponse.data.filter(iss=>iss.url!==context.payload.pull_request._links.issue.href);
+            if(listIssuesWithoutPr.length > 0) {
+                core.setFailed(`Found ${listIssuesWithoutPr.length} open issues for milestone ${context.payload.pull_request.milestone.title}. Resolved all issues before merging.`);
             }
       - name: Regression testplan
         uses: actions/github-script@v7
