@@ -120,35 +120,59 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const listIssuesResponse = await github.rest.issues.listForRepo({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'all',
-              milestone: context.payload.pull_request.milestone.number,
-              labels: ["regression", "test plan"],
-            });
-            console.log("listIssuesResponse: ", listIssuesResponse);
-            if(listIssuesResponse.data.length === 0 ) {
-                core.setFailed(`Regression tesplan is not found for milestone ${context.payload.pull_request.milestone.title}. Make sure to execute regression testplan before merging.`);
-            }
-            const commentPromises = listIssuesResponse.data.map(async regressionTestplanIssue => {
-                if(regressionTestplanIssue.state === "open") {
-                    // if this runs after all issues closed step, we never get error. but in case of step execute order changes
-                    core.setFailed(`regression testplan issue [#${regressionTestplanIssue.number}] is not completed yet`);
-                    throw new Error(`regression testplan issue [#${regressionTestplanIssue.number}] is not completed yet`);
+            const getRegressionTestplanIssue = async (pageNo) => {
+                pageNo = pageNo || 1;
+                if(pageNo > 5) {
+                    return [];
                 }
+                console.log("pageNo: ", pageNo);
+                const listIssuesResponse = await github.rest.issues.listForRepo({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    state: "all",
+                    milestone: context.payload.pull_request.milestone.number,
+                    labels: ["regression", "test plan"],
+                    sort: "updated"
+                });
+                console.log("listIssuesResponse: ", listIssuesResponse);
+                const filteredIssues = listIssuesResponse.data.filter(iss=>iss.title.startsWith("[Testplan]: Regression Test Plan"));
+                if(filteredIssues.length > 0) {
+                    return filteredIssues;
+                }
+                return await getRegressionTestplanIssue(pageNo+1)
+            };
+            const listRegressionIssues = await getRegressionTestplanIssue();
+            if(listRegressionIssues.length === 0 ) {
+                core.setFailed(`Regression tesplan is not found for milestone ${context.payload.pull_request.milestone.title}. Make sure to execute regression testplan before merging.`);
+                throw new Error(`Regression tesplan is not found for milestone ${context.payload.pull_request.milestone.title}. Make sure to execute regression testplan before merging.`);
+            }
+            const openRegressionIssue = listRegressionIssues.find(iss=>iss.state==="open");
+            if(openRegressionIssue) {
+                // if this runs after all issues closed step, we never get error. but in case of step execute order changes
+                core.setFailed(`regression testplan issue [#${openRegressionIssue.number}] is not completed yet`);
+                throw new Error(`regression testplan issue [#${openRegressionIssue.number}] is not completed yet`);
+            }
+            const hasCompleteComment = async ind => {
+                ind = ind || 0;
+                if(ind===listRegressionIssues.length) {
+                    return false;
+                }
+                const regressionIssue = listRegressionIssues[ind];
                 const listCommentsResponse = await github.rest.issues.listComments({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
-                    issue_number: regressionTestplanIssue.number
+                    issue_number: regressionIssue.number
                 });
                 console.log("listCommentsResponse: ", listCommentsResponse);
-                return listCommentsResponse.data.find(comment=> comment.body.includes("There are no critical issues") && comment.body.includes("Status-All%20Good"));
-            });
-            const completedComments = await Promise.all(commentPromises);
-            const foundCompletedComment = completedComments.find(comment=>!!comment);
-            if(!foundCompletedComment) {
+                const foundCompleteComment=!!listCommentsResponse.data.find(comment=> comment.body.includes("There are no critical issues") && comment.body.includes("Status-All%20Good"));
+                if (foundCompleteComment) {
+                    return true;
+                }
+                return await hasCompleteComment(ind+1);
+            };
+            const isRegressionCompleted = await hasCompleteComment();
+            if(!isRegressionCompleted) {
                 core.setFailed("Regression issue is closed but all critical issues are not resolved.");
+                throw new Error("Regression issue is closed but all critical issues are not resolved.");
             }
-            console.log("foundCompletedComment: ", foundCompletedComment);
 
