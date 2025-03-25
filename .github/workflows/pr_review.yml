@@ -1,0 +1,91 @@
+# For Pull request - verifies whether there are any issues for milestone opened?
+name: PR Milestone issues
+
+# https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+    branches:
+      - "milestone/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  validate:
+    name: validate PR Issues
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo 'github json: ${{ toJson(github) }}'
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            console.log("Context obj: ", context);
+            console.log("Github config: ", github)
+            console.log("Github Rest API config: ", github.rest)
+            console.log("Github Rest Issues API:", github.rest.issues)
+      - name: Validate Milestone
+        env:
+          MILESTONE_TITLE: ${{ github.event.pull_request.milestone.title }}
+          SOURCE_BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+        run: |
+          echo "Milestone title to PR is $MILESTONE_TITLE"
+          if [[ -z "$MILESTONE_TITLE" ]]; then
+            echo "Milestone is not assigned to PR. please assign"
+            exit 1
+          fi
+          if [[ ! "$SOURCE_BRANCH_NAME" =~ ${MILESTONE_TITLE}$ ]]; then
+            echo "Source milestone branch is not matching assigned milestone. please correct the assignment"
+            exit 1
+          fi
+      - name: Validate all issues closed
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const listIssuesResponse = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              milestone: context.payload.pull_request.milestone.number
+            });
+            console.log("listIssuesResponse: ", listIssuesResponse);
+            if(listIssuesResponse.data.length > 0) {
+                core.setFailed(`Found ${listIssuesResponse.data.length} open issues for milestone ${context.payload.pull_request.milestone.title}. Resolved all issues before merging.`);
+            }
+      - name: Validate regression testplan
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const listIssuesResponse = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              milestone: context.payload.pull_request.milestone.number,
+              labels: ["regression", "testplan"],
+            });
+            console.log("listIssuesResponse: ", listIssuesResponse);
+            if(listIssuesResponse.data.length !== 1) {
+                core.setFailed(`Regression tesplan is not found for milestone ${context.payload.pull_request.milestone.title}. Make sure to execute regression testplan before merging.`);
+            }
+            const regressionTestplanIssue = listIssuesResponse.data[0];
+            regressionTestplanIssue.
+            const listCommentsResponse = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: regressionTestplanIssue.number
+            });
+            console.log("listCommentsResponse: ", listCommentsResponse);
+            const foundCompletedComment = listCommentsResponse.data.find(comment=> comment.body.includes("There are no critical issues") && comment.body.includes("Status-All%20Good"));
+            if(!foundCompletedComment) {
+                core.setFailed("Regression issue is not completed with resolving all issues")
+            }
+            console.log("foundCompletedComment: ", foundCompletedComment);
