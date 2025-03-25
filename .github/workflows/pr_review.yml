@@ -200,8 +200,9 @@ jobs:
           echo "Waiting for all checks to complete..."
           while true; do
             # Fetch the status of checks excluding this workflow
-            gh pr checks ${{ github.event.pull_request.number }} --repo "${{ github.repository }}" | grep -v "$JOB_NAME"
-            STATUS=$(gh pr checks ${{ github.event.pull_request.number }} --repo "${{ github.repository }}" | grep -v "$JOB_NAME" | grep -oE "pending|in_progress")
+            PR_CHECKS_OUTPUT=$(gh pr checks ${{ github.event.pull_request.number }} --repo "${{ github.repository }}" | grep -v "$JOB_NAME")
+            echo "$PR_CHECKS_OUTPUT"
+            STATUS=$(echo "$PR_CHECKS_OUTPUT" | grep -oE "pending|in_progress" || echo "")
             
             # Exit loop if no checks are pending or in progress
             if [ -z "$STATUS" ]; then
