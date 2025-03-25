@@ -195,11 +195,13 @@ jobs:
       - name: Wait for All Checks to Finish
         env:
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            JOB_NAME: "Wait for PR Checks and approve"
         run: |
           echo "Waiting for all checks to complete..."
           while true; do
             # Fetch the status of checks excluding this workflow
-            STATUS=$(gh pr checks ${{ github.event.pull_request.number }} --repo ${{ github.repository }} | grep -v "^${{ github.workflow }}" | grep -oE "pending|in_progress")
+            gh pr checks ${{ github.event.pull_request.number }} --repo "${{ github.repository }}" | grep -v "$JOB_NAME"
+            STATUS=$(gh pr checks ${{ github.event.pull_request.number }} --repo "${{ github.repository }}" | grep -v "$JOB_NAME" | grep -oE "pending|in_progress")
             
             # Exit loop if no checks are pending or in progress
             if [ -z "$STATUS" ]; then
@@ -216,7 +218,7 @@ jobs:
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Ensure no check has failed
-          gh pr checks ${{ github.event.pull_request.number }} --repo ${{ github.repository }} | grep -v "${{ github.workflow }}" | grep -i "failure" && exit 1
+          gh pr checks ${{ github.event.pull_request.number }} --repo ${{ github.repository }} | grep -i "fail" && exit 1
 
       - name: Approve PR
         env:
