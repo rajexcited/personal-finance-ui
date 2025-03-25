@@ -21,6 +21,7 @@ const fcLogger = getLogger("FC.settings.security.ChangePasswordSection", null, n
 export const ChangePasswordSection: FunctionComponent<ChangePasswordSectionProps> = (props) => {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
+    const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
     const [invalidFormElements, setInvalidFormElements] = useState<string[]>([]);
     const [actionState, setActionState] = useState(ActionState.NoAction);
 
@@ -36,7 +37,11 @@ export const ChangePasswordSection: FunctionComponent<ChangePasswordSectionProps
                 logger.debug("prev value, newPassword =", prev);
                 return "";
             });
-            setInvalidFormElements(prev => ["password-current", "password-new"]);
+            setNewPasswordRepeat(prev => {
+                logger.debug("prev value, newPasswordRepeat =", prev);
+                return "";
+            });
+            setInvalidFormElements(prev => ["password-current", "password-new", "password-new-repeat"]);
             logger.debug("password has been reset and invalidFormElement list has been re-initialized");
         }
     }, [actionState]);
@@ -102,9 +107,20 @@ export const ChangePasswordSection: FunctionComponent<ChangePasswordSectionProps
 
     const getNewPassword = () => newPassword;
     const getCurrentPassword = () => currentPassword;
-
     const validateCurrentPassword = validatePassword.bind(null, getNewPassword);
     const validateNewPassword = validatePassword.bind(null, getCurrentPassword);
+    const validateNewPasswordRepeat = (value: string): InputValidateResponse => {
+        const logger = getLogger("validateNewPasswordRepeat", fcLogger);
+        const validateResult = validatePasswordPattern(value);
+        logger.debug("validateResult.isValid? ", validateResult.isValid);
+        if (!validateResult.isValid) {
+            return validateResult;
+        }
+        return {
+            isValid: getNewPassword() === value,
+            errorMessage: "re-entered new password is not matching",
+        };
+    };
 
     const onFormInvalidHandler: FormEventHandler<HTMLFormElement> = (event) => {
         const logger = getLogger("onFormInvalidHandler", fcLogger);
@@ -164,6 +180,21 @@ export const ChangePasswordSection: FunctionComponent<ChangePasswordSectionProps
             autocomplete="new-password"
             disabled={ actionState === ActionState.NoAction }
         />
+        <Input
+            id="password-new-repeat"
+            type="password"
+            label="Confirm new password: "
+            placeholder="new password"
+            leftIcon={ faLock }
+            initialValue={ newPasswordRepeat }
+            onChange={ setNewPasswordRepeat }
+            maxlength={ 25 }
+            minlength={ 8 }
+            required={ true }
+            validate={ validateNewPasswordRepeat }
+            disabled={ actionState === ActionState.NoAction }
+            autocomplete="new-password"
+        />
     </form>;
 
     fcLogger.debug("currentPassword =", currentPassword, "newPassword =", newPassword, "invalidFormElements =", invalidFormElements);
@@ -180,6 +211,8 @@ export const ChangePasswordSection: FunctionComponent<ChangePasswordSectionProps
                         onConfirm={ onSubmitHandler }
                         onCancel={ onCancelHandler }
                         yesButtonContent="Save"
+                        yesButtonClassname="is-dark"
+                        noButtonContent="Cancel"
                         validateBeforeConfirm={ isValidForm }
                     />
 

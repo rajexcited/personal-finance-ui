@@ -1,3 +1,4 @@
+import "./profile-settings.css";
 import { FormEventHandler, FunctionComponent, MouseEventHandler, useEffect, useState } from "react";
 import { Animated, Input } from "../../../components";
 import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
@@ -76,6 +77,17 @@ export const ProfileSettingsPage: FunctionComponent = () => {
                     <h2 className="title">Personal Details</h2>
                 </div>
             </div>
+            {
+                loaderData.type === "success" &&
+                <div className="columns">
+                    <div className="column">
+                        <div className="email-primary">
+                            <label className="label">Email Id: </label>
+                            <h4 className="content is-medium">{ loaderData.data.emailId }</h4>
+                        </div>
+                    </div>
+                </div>
+            }
             <div className="columns">
                 <div className="column">
 

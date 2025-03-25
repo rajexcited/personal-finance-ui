@@ -21,6 +21,8 @@ const App = () => {
 
 const rootNode = document.getElementById("root");
 if (rootNode) {
-    const root = createRoot(rootNode);
+    // assign class to html element to enable light theme
+    document.documentElement.classList.add("theme-light");
+    const root = createRoot(rootNode, { identifierPrefix: "neelapp" });
     root.render(<App />);
 }

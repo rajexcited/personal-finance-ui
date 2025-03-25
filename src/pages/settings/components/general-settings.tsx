@@ -5,7 +5,7 @@ const THEME_ITEMS = ["System Default", "Dark", "Light"];
 
 export const GeneralSettings: FunctionComponent = () => {
 
-    const [selectedThemeItem, setSelectedThemeItem] = useState(THEME_ITEMS[0]);
+    const [selectedThemeItem, setSelectedThemeItem] = useState(THEME_ITEMS[2]);
 
     const onThemeChangeHandler = (newTheme: string) => {
         setSelectedThemeItem(newTheme);

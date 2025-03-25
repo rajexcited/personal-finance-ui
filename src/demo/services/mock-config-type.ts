@@ -129,19 +129,15 @@ export const MockConfigType = (demoMock: MockAdapter) => {
   demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.PurchaseType).reply((config) => {
     return addUpdate(ConfigTypeBelongsTo.PurchaseType, config);
   });
-
   demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.RefundReason).reply((config) => {
     return addUpdate(ConfigTypeBelongsTo.RefundReason, config);
   });
-
   demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.IncomeType).reply((config) => {
     return addUpdate(ConfigTypeBelongsTo.IncomeType, config);
   });
-
   demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType).reply((config) => {
     return addUpdate(ConfigTypeBelongsTo.PaymentAccountType, config);
   });
-
   demoMock.onPost("/config/types/belongs-to/" + ConfigTypeBelongsTo.SharePerson).reply((config) => {
     return addUpdate(ConfigTypeBelongsTo.SharePerson, config);
   });
@@ -162,9 +158,7 @@ export const MockConfigType = (demoMock: MockAdapter) => {
       if (!Array.isArray(config.params.status)) {
         invalidStatuses = config.params.status;
       } else {
-        invalidStatuses = config.params.status.filter(
-          (st: string) => ![ConfigTypeStatus.Enable, ConfigTypeStatus.Disable].includes(st as ConfigTypeStatus)
-        );
+        invalidStatuses = config.params.status.filter((st: string) => ![ConfigTypeStatus.Enable, ConfigTypeStatus.Disable].includes(st as ConfigTypeStatus));
       }
       if (invalidStatuses.length !== 0) {
         return responseCreator.toValidationError([{ path: "status", message: "status in param provided is not valid" }]);
@@ -176,80 +170,49 @@ export const MockConfigType = (demoMock: MockAdapter) => {
     return responseCreator.toSuccessResponse(responselist);
   };
 
+  const getConfigTypeTags = async (belongsTo: ConfigTypeBelongsTo, config: AxiosRequestConfig) => {
+    const logger = getLogger("mock.config-types." + belongsTo + ".getTags");
+    const responseCreator = AxiosResponseCreator(config);
+    const isAuthorized = validateAuthorization(config.headers);
+    if (!isAuthorized) {
+      return responseCreator.toForbiddenError("not authorized");
+    }
+
+    const result = await getConfigTypes(belongsTo);
+    const responselist = result.list.flatMap((ec) => ec.tags);
+
+    logger.debug("categories size=", result.list.length, ", tags size =", responselist.length);
+    return responseCreator.toSuccessResponse(responselist);
+  };
+
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PurchaseType + "/tags").reply(async (config) => {
-    const logger = getLogger("mock.config-types." + ConfigTypeBelongsTo.PurchaseType + ".getTags");
-    const responseCreator = AxiosResponseCreator(config);
-    const isAuthorized = validateAuthorization(config.headers);
-    if (!isAuthorized) {
-      return responseCreator.toForbiddenError("not authorized");
-    }
-
-    const result = await getConfigTypes(ConfigTypeBelongsTo.PurchaseType);
-    const responselist = result.list.flatMap((ec) => ec.tags);
-
-    logger.debug("categories size=", result.list.length, ", tags size =", responselist.length);
-    return responseCreator.toSuccessResponse(responselist);
+    return getConfigTypeTags(ConfigTypeBelongsTo.PurchaseType, config);
   });
-
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.RefundReason + "/tags").reply(async (config) => {
-    const logger = getLogger("mock.config-types." + ConfigTypeBelongsTo.RefundReason + ".getTags");
-    const responseCreator = AxiosResponseCreator(config);
-    const isAuthorized = validateAuthorization(config.headers);
-    if (!isAuthorized) {
-      return responseCreator.toForbiddenError("not authorized");
-    }
-
-    const result = await getConfigTypes(ConfigTypeBelongsTo.RefundReason);
-    const responselist = result.list.flatMap((ec) => ec.tags);
-
-    logger.debug("categories size=", result.list.length, ", tags size =", responselist.length);
-    return responseCreator.toSuccessResponse(responselist);
+    return getConfigTypeTags(ConfigTypeBelongsTo.RefundReason, config);
   });
-
-  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType + "/tags").reply(async (config) => {
-    const logger = getLogger("mock.config-types." + ConfigTypeBelongsTo.PaymentAccountType + ".getTags");
-    const responseCreator = AxiosResponseCreator(config);
-    const isAuthorized = validateAuthorization(config.headers);
-    if (!isAuthorized) {
-      return responseCreator.toForbiddenError("not authorized");
-    }
-
-    const result = await getConfigTypes(ConfigTypeBelongsTo.PaymentAccountType);
-    const responselist = result.list.flatMap((ec) => ec.tags);
-    logger.debug("categories size=", result.list.length, ", tags size =", responselist.length);
-    return responseCreator.toSuccessResponse(responselist);
-  });
-
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.IncomeType + "/tags").reply(async (config) => {
-    const logger = getLogger("mock.config-types." + ConfigTypeBelongsTo.PaymentAccountType + ".getTags");
-    const responseCreator = AxiosResponseCreator(config);
-    const isAuthorized = validateAuthorization(config.headers);
-    if (!isAuthorized) {
-      return responseCreator.toForbiddenError("not authorized");
-    }
-
-    const result = await getConfigTypes(ConfigTypeBelongsTo.PaymentAccountType);
-    const responselist = result.list.flatMap((ec) => ec.tags);
-    logger.debug("categories size=", result.list.length, ", tags size =", responselist.length);
-    return responseCreator.toSuccessResponse(responselist);
+    return getConfigTypeTags(ConfigTypeBelongsTo.IncomeType, config);
+  });
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType + "/tags").reply(async (config) => {
+    return getConfigTypeTags(ConfigTypeBelongsTo.PaymentAccountType, config);
+  });
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.SharePerson + "/tags").reply(async (config) => {
+    return getConfigTypeTags(ConfigTypeBelongsTo.SharePerson, config);
   });
 
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PurchaseType).reply(async (config) => {
     return await getConfigTypeList(ConfigTypeBelongsTo.PurchaseType, config);
   });
-
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.RefundReason).reply(async (config) => {
     return await getConfigTypeList(ConfigTypeBelongsTo.RefundReason, config);
   });
-
-  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType).reply(async (config) => {
-    return await getConfigTypeList(ConfigTypeBelongsTo.PaymentAccountType, config);
-  });
-
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.IncomeType).reply(async (config) => {
     return await getConfigTypeList(ConfigTypeBelongsTo.IncomeType, config);
   });
-
+  demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.PaymentAccountType).reply(async (config) => {
+    return await getConfigTypeList(ConfigTypeBelongsTo.PaymentAccountType, config);
+  });
   demoMock.onGet("/config/types/belongs-to/" + ConfigTypeBelongsTo.SharePerson).reply(async (config) => {
     return await getConfigTypeList(ConfigTypeBelongsTo.SharePerson, config);
   });
@@ -266,9 +229,7 @@ export const MockConfigType = (demoMock: MockAdapter) => {
 
     const paramConfigStatus = Array.isArray(config.params.status) ? config.params.status : [config.params.status || ConfigTypeStatus.Enable];
 
-    const invalidStatuses = paramConfigStatus.filter(
-      (st: string) => ![ConfigTypeStatus.Enable, ConfigTypeStatus.Disable].includes(st as ConfigTypeStatus)
-    );
+    const invalidStatuses = paramConfigStatus.filter((st: string) => ![ConfigTypeStatus.Enable, ConfigTypeStatus.Disable].includes(st as ConfigTypeStatus));
 
     if (invalidStatuses.length !== 0) {
       return responseCreator.toValidationError([{ path: "status", message: "status in param provided is not valid" }]);
@@ -281,13 +242,13 @@ export const MockConfigType = (demoMock: MockAdapter) => {
         ...conf,
         country: {
           name: "United States of America",
-          code: conf.name,
+          code: conf.name
         },
         currency: {
           name: "Dollar",
           code: conf.value,
-          symbol: "$",
-        },
+          symbol: "$"
+        }
       }));
 
     return responseCreator.toSuccessResponse(responselist);

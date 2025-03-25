@@ -86,7 +86,8 @@ export const SharePersonPage: FunctionComponent = () => {
             firstName: "",
             lastName: "",
             nickName: "",
-            phone: ""
+            phone: "",
+            tags: []
         };
         updateAction({ item: defaultAddConfig, type: ActionId.Add });
     };
@@ -158,7 +159,7 @@ export const SharePersonPage: FunctionComponent = () => {
         controlsInEllipsis.push({ id: ActionId.ToggleDisable, content: "Change to Disable", icon: faToggleOff, isActive: item => (item as unknown as SharePersonResource).status === ConfigTypeStatus.Enable });
     }
     const hideListInMobile = deviceMode === DeviceMode.Mobile && (action?.type === ActionId.Add || action?.type === ActionId.Update);
-
+    const tags = loaderData.type === "success" ? loaderData.data.tags : [];
 
     return (
         <>
@@ -248,6 +249,7 @@ export const SharePersonPage: FunctionComponent = () => {
                             !auth.readOnly && action?.type === ActionId.Update && toggleUpdate &&
                             <UpdateSharePerson
                                 details={ action.item }
+                                sourceTags={ tags }
                                 onCancel={ () => updateAction(undefined) }
                                 onUpdate={ onAddUpdateSharePersonHandler }
                             />
@@ -257,6 +259,7 @@ export const SharePersonPage: FunctionComponent = () => {
                             !auth.readOnly && action?.type === ActionId.Update && !toggleUpdate &&
                             <UpdateSharePerson
                                 details={ action.item }
+                                sourceTags={ tags }
                                 onCancel={ () => updateAction(undefined) }
                                 onUpdate={ onAddUpdateSharePersonHandler }
                             />
@@ -266,6 +269,7 @@ export const SharePersonPage: FunctionComponent = () => {
                             !auth.readOnly && action?.type === ActionId.Add &&
                             <UpdateSharePerson
                                 details={ action.item }
+                                sourceTags={ tags }
                                 onCancel={ () => updateAction(undefined) }
                                 onUpdate={ onAddUpdateSharePersonHandler }
                             />

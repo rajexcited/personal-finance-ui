@@ -10,6 +10,7 @@ export interface SharePersonResource {
   description: string;
   auditDetails: AuditFields;
   status: ConfigTypeStatus;
+  tags: string[];
 }
 
 export type UpdateSharePersonStatusResource = Pick<SharePersonResource, "status" | "id"> & { action: ConfigAction.UpdateStatus };

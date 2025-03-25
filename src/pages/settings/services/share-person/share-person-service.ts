@@ -1,8 +1,20 @@
-import { ConfigResource, ConfigTypeService, ConfigTypeStatus, ConfigTypeBelongsTo, LoggerBase, getLogger } from "../../../../shared";
+import pMemoize from "p-memoize";
+import {
+  ConfigResource,
+  ConfigTypeService,
+  ConfigTypeStatus,
+  ConfigTypeBelongsTo,
+  LoggerBase,
+  getLogger,
+  TagsService,
+  TagBelongsTo,
+  getCacheOption
+} from "../../../../shared";
 import { SharePersonResource, UpdateSharePersonStatusResource } from "./field-type";
 
 const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.SharePerson);
 const rootLogger = getLogger("settings.service.sharePerson", null, null, "DISABLED");
+const tagService = TagsService(TagBelongsTo.SharePersonConfig);
 
 const convertConfigResourceToSharePerson = (cfg: ConfigResource, _logger: LoggerBase) => {
   const logger = getLogger("convertConfigResourceToSharePerson", _logger);
@@ -20,7 +32,8 @@ const convertConfigResourceToSharePerson = (cfg: ConfigResource, _logger: Logger
     firstName: list[0],
     lastName: list[1],
     nickName: list[2] || undefined,
-    phone: list[3] || undefined
+    phone: list[3] || undefined,
+    tags: cfg.tags
   };
 
   return sharePerson;
@@ -39,12 +52,21 @@ const convertSharePersonToConfigResource = (sharePerson: SharePersonResource, _l
     belongsTo: ConfigTypeBelongsTo.SharePerson,
     name: sharePerson.emailId,
     status: sharePerson.status,
-    tags: [],
+    tags: sharePerson.tags,
     value: JSON.stringify(list)
   };
 
   return cfg;
 };
+
+const initializeTags = pMemoize(async () => {
+  const tagCount = await tagService.getCount();
+  if (tagCount > 0) {
+    return;
+  }
+  const response = await configTypeService.getConfigTags();
+  await tagService.updateTags(response);
+}, getCacheOption("2 sec"));
 
 /**
  * retrives undeleted account types
@@ -53,7 +75,9 @@ const convertSharePersonToConfigResource = (sharePerson: SharePersonResource, _l
 export const getSharePersonList = async (status?: ConfigTypeStatus) => {
   const logger = getLogger("getSharePersonList", rootLogger);
   const paramStatuses = status ? [status] : [ConfigTypeStatus.Enable, ConfigTypeStatus.Disable];
-  const sharePersonCfgList = await configTypeService.getConfigTypeList(paramStatuses);
+  const promise = configTypeService.getConfigTypeList(paramStatuses);
+  await Promise.all([promise, initializeTags()]);
+  const sharePersonCfgList = await promise;
   return sharePersonCfgList.map((cfg) => convertConfigResourceToSharePerson(cfg, logger));
 };
 
@@ -73,6 +97,16 @@ export const updateSharePersonStatus = async (sharePersonStatusData: UpdateShare
 
 export const getSharePerson = async (sharePersonId: string) => {
   const logger = getLogger("getSharePerson", rootLogger);
-  const sharePersonCfg = await configTypeService.getConfigType(sharePersonId);
+  const promise = configTypeService.getConfigType(sharePersonId);
+  await Promise.all([promise, initializeTags()]);
+  const sharePersonCfg = await promise;
   return convertConfigResourceToSharePerson(sharePersonCfg, logger);
+};
+
+/**
+ * Retrieves all tags associated to refund types
+ */
+export const getTagList = async () => {
+  const tagList = await tagService.getTags();
+  return tagList;
 };

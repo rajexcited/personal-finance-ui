@@ -24,24 +24,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
-    name: validate inputs
+  message:
+    name: Display Warning
     runs-on: ubuntu-latest
-    outputs:
-      milestone-branch: ${{ steps.check_branch.outputs.milestone-branch }}
     steps:
-      - run: echo milestone version = ${{ github.event.inputs.milestone-version }}
-      - name: Check if the branch exists
-        id: check_branch
-        run: |
-          BRANCH_NAME=milestone/v${{ github.event.inputs.milestone-version }}
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/branches/$BRANCH_NAME)
-
-          if [ "$RESPONSE" -eq 200 ]; then
-            echo "Branch $BRANCH_NAME exists."
-            echo milestone-branch=$BRANCH_NAME >> $GITHUB_OUTPUT
-          else
-            echo "Branch $BRANCH_NAME does not exist."
-            exit 1  # exit with an error code if branch doesn't exist
-          fi
+      - run: echo "This is a default workflow. Please run on valid milestone branch"
