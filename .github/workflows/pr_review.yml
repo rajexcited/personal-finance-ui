@@ -89,3 +89,18 @@ jobs:
                 core.setFailed("Regression issue is not completed with resolving all issues")
             }
             console.log("foundCompletedComment: ", foundCompletedComment);
+      - name: Validate Branch behind master
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // verify milestone branch commit has merged all of the master branch
+            const compareResponse = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: "master",
+              head: context.payload.pull_request.head.ref
+            });
+            console.log("milestone branch as head and master branch as base, compareResponse: ", compareResponse);
+            if (compareResponse.data.behind_by > 0) {
+              throw new Error(`Milestone branch is behind master by ${compareResponse.data.behind_by} commits.`);
+            }
