@@ -20,13 +20,15 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
-  issues: write
+  contents: read
+  issues: read
 
 jobs:
   workflow_eligible:
     name: Workflow Run eligibility
     runs-on: ubuntu-latest
+    outputs:
+      is-runnable: ${{ steps.pr-open.outputs.is-open != 'true' && steps.source-branch.outputs.non-mileston-pattern != 'true' }}
     steps:
       - name: Display Github object
         run: |
@@ -39,23 +41,26 @@ jobs:
             console.log("Github config: ", github)
             console.log("Github Rest API config: ", github.rest)
             console.log("Github Rest Issues API:", github.rest.issues)
-      - name: PR Should be open
+      - id: pr-open
+        name: PR Should be open
         if: github.event.pull_request.state != 'open'
         run: |
           echo "state should be open, skipping"
-          exit 0
-      - name: PR source branch milestone
+          echo "is-open=true" >> $GITHUB_OUTPUT
+      - id: source-branch
+        name: PR source branch milestone
         if: ${{ !startsWith(github.event.pull_request.head.ref, 'ref/head/milestone/') }}
         run: |
           echo "source branch for PR should be milestone, skipping"
           echo "found other source branch, ${{ github.event.pull_request.head.ref }}"
-          exit 0
+          echo "non-milestone-pattern=true" >> $GITHUB_OUTPUT
 
   required_props:
     name: validate PR Issues
     runs-on: ubuntu-latest
     needs: 
         - workflow_eligible
+    if: needs.workflow_eligible.outputs.is-runnable == 'true'
     steps:
         - name: Dont have milestone
           if: github.event.pull_request.milestone == null
@@ -175,4 +180,42 @@ jobs:
                 core.setFailed("Regression issue is closed but all critical issues are not resolved.");
                 throw new Error("Regression issue is closed but all critical issues are not resolved.");
             }
+
+  wait-and-approve:
+    name: Wait for PR Checks and approve
+    runs-on: ubuntu-latest
+    needs: 
+        - validate
+    permissions: 
+        checks: read
+        pull-requests: write
+        statuses: read
+        contents: read
+    steps:
+      - name: Wait for All Checks to Finish
+        run: |
+          echo "Waiting for all checks to complete..."
+          while true; do
+            # Fetch the status of checks excluding this workflow
+            STATUS=$(gh pr checks ${{ github.event.pull_request.number }} --repo ${{ github.repository }} | grep -v "${{ github.workflow }}" | grep -oE "pending|in_progress")
+            
+            # Exit loop if no checks are pending or in progress
+            if [ -z "$STATUS" ]; then
+              echo "All checks have finished."
+              break
+            else
+              echo "Checks are still running. Retrying in 30 seconds..."
+              sleep 30
+            fi
+          done
+
+      - name: Verify Success of Other Checks
+        run: |
+          # Ensure no check has failed
+          gh pr checks ${{ github.event.pull_request.number }} --repo ${{ github.repository }} | grep -v "${{ github.workflow }}" | grep -i "failure" && exit 1
+
+      - name: Approve PR
+        run: |
+          echo "Approving pull request..."
+          gh pr review ${{ github.event.pull_request.number }} --approve --repo ${{ github.repository }}
 
