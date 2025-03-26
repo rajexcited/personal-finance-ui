@@ -32,6 +32,7 @@ jobs:
     permissions: 
       contents: write
     runs-on: ubuntu-latest
+    if: github.event_name == 'neel'
     steps:
       - name: Experiment release draft with cli
         env:
@@ -53,7 +54,6 @@ jobs:
       # otherwise, read permission is required at least
       pull-requests: write
     runs-on: ubuntu-latest
-    if: github.event_name == 'neel'
     steps:
       # (Optional) GitHub Enterprise requires GHE_HOST variable set
       #- name: Set GHE_HOST
