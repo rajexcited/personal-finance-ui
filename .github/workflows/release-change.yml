@@ -27,10 +27,22 @@ on:
         required: false
         type: choice
 
-permissions:
-  contents: read
-
 jobs:
+  generate_release_draft:
+    permissions: 
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Experiment release draft with cli
+        run: |
+          gh release create "${{ github.ref_name }}" \
+              --draft --latest \
+              --repo="${{ github.repository }}" \
+              --title="v0.2.0" \
+              --generate-notes
+
+
+
   update_release_draft:
     permissions:
       # write permission is required to create a github release
@@ -39,6 +51,7 @@ jobs:
       # otherwise, read permission is required at least
       pull-requests: write
     runs-on: ubuntu-latest
+    if: github.event_name == 'neel'
     steps:
       # (Optional) GitHub Enterprise requires GHE_HOST variable set
       #- name: Set GHE_HOST
@@ -55,3 +68,4 @@ jobs:
         #   disable-autolabeler: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MILESTONE_TITLE: ${{ github.event.inputs.milestone_version || github.event.pull_request.milestone.title }}
