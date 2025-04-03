@@ -130,10 +130,10 @@ jobs:
           IS_PROD_ROLLBACK_PROVISION: ${{ startsWith(github.event.issue.title, '[Request] [Rollback] Provision Production Environment') }}
         run: |
           if [[ "$IS_TESTPLAN" == "true" ]]; then
-            echo "env-ref-name=testplan"
+            echo "env-ref-name=testplan" >> $GITHUB_OUTPUT
           fi
           if [[ "$IS_PRODUCTION" == "true" ]]; then
-            echo "env-ref-name=production"
+            echo "env-ref-name=production" >> $GITHUB_OUTPUT
           fi
           echo "for-testplan=$IS_TESTPLAN" >> $GITHUB_OUTPUT
           echo "for-production=$IS_PRODUCTION" >> $GITHUB_OUTPUT
@@ -188,7 +188,7 @@ jobs:
     outputs:
       milestone-branch-name: ${{ steps.get-milestone-testplan.outputs.milestoneBranchName || steps.get-milestone-prod.outputs.tagRefName }}
       milestone-branch-url: ${{ steps.get-milestone-testplan.outputs.milestoneBranchUrl || steps.get-milestone-prod.outputs.tagRefUrl }}
-      failed-reason: ${{ steps.testplan-request-eligible.outputs.failedReason || steps.prod-request-eligible.outputs.failedReason || steps.get-milestone-testplan.outputs.failedReason || steps.get-milestone-prod.outputs.failedReason || steps.testplan-issue.outputs.failedReason || steps.request-form-testplan.outputs.failedReason }}
+      failed-reason: ${{ steps.testplan-request-eligible.outputs.failedReason || steps.prod-request-eligible.outputs.failedReason || steps.get-milestone-testplan.outputs.failedReason || steps.get-milestone-prod.outputs.failedReason || steps.testplan-issue.outputs.failedReason || steps.request-form-testplan.outputs.failedReason || steps.request-form-prod.outputs.failedReason }}
       testplan-type: ${{ steps.testplan-issue.outputs.testplanType }}
       testplan-issue-number: ${{ steps.testplan-issue.outputs.testplanIssueNumber }}
       request-type: ${{ steps.get-request-type.outputs.request-type }}
@@ -466,6 +466,21 @@ jobs:
         with:
           script: |
             try {
+              // Convert UTC to Central Time
+              const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
+                timeZone: "America/Chicago", 
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                timeZoneName: "short"
+              });
+              const toTime = (datetime) => {
+                const date = new Date(datetime);
+                return centralTimeFormat.format(date);
+              };
               // find related issue of release form
               // verify rollback version is immediate valid previous version, milestone and tag
               const listMilestonesResponse = await github.rest.issues.listMilestones({
@@ -494,7 +509,7 @@ jobs:
               // filter by open status and due date is today
               const releaseMilestone = listMilestonesResponse.data.find(mlstn=> {
                 if(versionRegex.test(mlstn.title) && mlstn.state === "open") {
-                  if(new Date(mlstn.due_on).toLocaleDateString() === new Date().toLocaleDateString()) {
+                  if(toTime(mlstn.due_on).substring(0,10) === toTime(new Date()).substring(0,10)) {
                     return true;
                   }
                 }
@@ -697,7 +712,6 @@ jobs:
         name: Verify milestone branch is deployable
         env:
           ENVID: ${{ vars.AWS_ENVID }}
-          MILESTONE_TITLE: ${{ github.event.issue.milestone.title }}
           REQUEST_ISS_REPO: ${{ github.event.repository.name }}
           REQUEST_ISS_NUMBER: ${{ github.event.issue.number }}
         run: |
@@ -728,14 +742,6 @@ jobs:
             echo "Failed Reason: $FAILED_REASON"
             exit 1
           fi
-          # check milestone 
-          TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="milestone").Value')
-          if [[ "$TAG_VALUE" != "$MILESTONE_TITLE" ]]; then
-            FAILED_REASON="Other milestone branch is deployed to Test plan environment. Wait for completion of $TAG_VALUE tests."
-            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
-            echo "Failed Reason: $FAILED_REASON"
-            exit 1
-          fi
           # check request Issue number, make sure request is not duplicate
           TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="requestIssueNumber").Value')
           EXPECTED_REQUEST_ISS="$REQUEST_ISS_REPO/issue-$REQUEST_ISS_NUMBER"
@@ -751,6 +757,7 @@ jobs:
           UI_STACK_AUDIT='{"created_time":"'$UI_CREATED_TIME'","updated_time":"'$UI_UPDATED_TIME'"}'
 
           STACK_AUDIT='{"ui":'$UI_STACK_AUDIT',"api":{}}'
+          echo "$STACK_AUDIT"
           echo "stack_details<<EOF" >> $GITHUB_OUTPUT
           echo "$STACK_AUDIT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -870,14 +877,78 @@ jobs:
           echo "api-milestone: ${{ steps.api-milestone-testplan.outputs.apiMilestoneNumber }}"
           echo "failed-reason: ${{ steps.api-milestone-testplan.outputs.failedReason }}"
 
-  build_artifact:
-    name: create artifact
+  create_tag:
+    name: Create Tag
     runs-on: ubuntu-latest
     needs:
       - run_eligible
       - validate_request
       - validate_stack
       - validate_request_api
+    outputs:
+      failed-reason: ${{ steps.no-branch.outputs.failedReason || steps.create-prod-tag.outputs.failedReason }}
+      branch-tag-name: ${{ needs.validate_request.outputs.milestone-branch-name || github.event.issue.milestone.title }}
+    steps:
+      - id: no-branch
+        env:
+          BRANCH_NAME: ${{ needs.validate_request.outputs.milestone-branch-name }}
+          IS_PROD_ROLLBACK: ${{ needs.run_eligible.outputs.is-prod-rollback }}
+          IS_PROD_PROVISION: ${{ needs.run_eligible.outputs.is-prod-provision }}
+          IS_TESTPLAN: ${{ needs.run_eligible.outputs.is-testplan }}
+        run: |
+          if [[ -z "$BRANCH_NAME" ]]; then
+            if [[ "$IS_PROD_ROLLBACK" == "true" ]]; then
+              FAILED_REASON="Tag for prod rollback is not defined."
+              echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+              echo "$FAILED_REASON"
+              exit 1
+            fi
+            if [[ "$IS_TESTPLAN" == "true" ]]; then
+              FAILED_REASON="Milestone Branch is not defined."
+              echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+              echo "$FAILED_REASON"
+              exit 1
+            fi
+          elif [[ "$IS_PROD_PROVISION" == "true" ]]; then
+            FAILED_REASON="Tag cannot be available for prod."
+            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            echo "$FAILED_REASON"
+            exit 1
+          fi
+      - name: Checkout
+        uses: actions/checkout@v4
+      - id: create-prod-tag
+        name: Create Tag
+        if: needs.run_eligible.outputs.is-prod-provision == 'true'
+        env:
+          TAG_VER: ${{ github.event.issue.milestone.title }}
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          LOG_FILE="create_tag.failed.log"
+          if ! git tag -a "$TAG_VER" -m "Release $TAG_VER" 2>>"$LOG_FILE"; then
+            echo "failedReason<<EOF" >> $GITHUB_OUTPUT
+            echo "Failed to create tag $TAG_VER." >> $GITHUB_OUTPUT
+            echo "$(cat $LOG_FILE)" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          if ! git push origin "$TAG_VER" 2>>"$LOG_FILE"; then
+            echo "failedReason<<EOF" >> $GITHUB_OUTPUT
+            echo "Failed to push tag $TAG_VER." >> $GITHUB_OUTPUT
+            echo "$(cat $LOG_FILE)" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+
+  build_artifact:
+    name: create artifact
+    runs-on: ubuntu-latest
+    needs:
+      - run_eligible
+      - validate_request
+      - create_tag
     environment: static-site
     if: needs.validate_request.outputs.request-type == 'provision'
     outputs:
@@ -886,26 +957,10 @@ jobs:
       artifact-url: ${{ steps.upload-artifact.outputs.artifact-url }}
       artifact-digest: ${{ steps.upload-artifact.outputs.artifact-digest }}
     steps:
-      - if: > 
-          needs.validate_request.outputs.milestone-branch-name == null &&
-          (
-            needs.run_eligible.outputs.is-prod-rollback == 'true' ||
-            needs.run_eligible.outputs.is-testplan == 'true' 
-          )
-        run: |
-          echo "Branch or Tag is not defined."
-          exit 1
-      - name: Create Tag
-        if: needs.run_eligible.outputs.is-prod-provision == 'true'
-        env:
-          TAG_VER: ${{ github.event.issue.milestone.title }}
-        run: |
-          git tag -a $TAG_VER -m "Release $TAG_VER"
-          git push origin $TAG_VER
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.validate_request.outputs.milestone-branch-name || github.event.issue.milestone.title }}
+          ref: ${{ needs.create_tag.outputs.branch-tag-name }}
       - name: Setup Node Latest
         # https://github.com/actions/setup-node
         uses: actions/setup-node@v4
@@ -1439,6 +1494,7 @@ jobs:
       - validate_request
       - validate_request_api
       - validate_stack
+      - create_tag
       - build_artifact
       - deployment
       - deployment_complete
@@ -1446,15 +1502,16 @@ jobs:
     if: failure()
     steps:
       - run: |
-          echo 'Update Request: ${{ toJson(needs.run_eligible) }}'
-          echo 'Update Request: ${{ toJson(needs.update_request) }}'
-          echo 'Validate Request: ${{ toJson(needs.validate_request) }}'
-          echo 'Validate Request Api: ${{ toJson(needs.validate_request_api) }}'
-          echo 'Validate Request Api: ${{ toJson(needs.validate_stack) }}'
-          echo 'Build Artifact: ${{ toJson(needs.build_artifact) }}'
-          echo 'Deployment: ${{ toJson(needs.deployment) }}'
-          echo 'Deployment Complete: ${{ toJson(needs.deployment_complete) }}'
-          echo 'Destroy: ${{ toJson(needs.destroy) }}'
+          echo 'Update Request: ${{ needs.run_eligible }}'
+          echo 'Update Request: ${{ needs.update_request }}'
+          echo 'Validate Request: ${{ needs.validate_request }}'
+          echo 'Validate Request Api: ${{ needs.validate_request_api }}'
+          echo 'Validate Request Api: ${{ needs.validate_stack }}'
+          echo 'Create Tag: ${{ needs.create_tag }}'
+          echo 'Build Artifact: ${{ needs.build_artifact }}'
+          echo 'Deployment: ${{ needs.deployment }}'
+          echo 'Deployment Complete: ${{ needs.deployment_complete }}'
+          echo 'Destroy: ${{ needs.destroy }}'
       - if: needs.run_eligible.result == 'failure'
         run: |
           echo "Since run eligible job failed, skipping fail handler job"
@@ -1465,8 +1522,8 @@ jobs:
           VALIDATION_FAIL_REASON: ${{ needs.validate_request.outputs.failed-reason || needs.validate_request_api.outputs.failed-reason || needs.validate_stack.outputs.failed-reason }}
           IS_VALIDATION_FAILED: ${{ needs.update_request.result == 'failure' || needs.validate_request.result == 'failure' || needs.validate_request_api.result == 'failure' || needs.validate_stack.result == 'failure' }}
           REQUEST_TYPE: ${{ needs.validate_request.outputs.request-type }}
-          DEPLOY_FAILED_REASON: ${{ needs.deployment.outputs.failed-reason || needs.deployment_complete.outputs.failed-reason }}
-          IS_DEPLOY_FAILED: ${{ needs.deployment.result == 'failure' || needs.deployment_complete.result == 'failure' || needs.build_artifact.result == 'failure' }}
+          DEPLOY_FAILED_REASON: ${{ needs.create_tag.outputs.failed-reason || needs.deployment.outputs.failed-reason || needs.deployment_complete.outputs.failed-reason }}
+          IS_DEPLOY_FAILED: ${{ needs.create_tag.result == 'failure' || needs.deployment.result == 'failure' || needs.deployment_complete.result == 'failure' || needs.build_artifact.result == 'failure' }}
           DESTROY_FAILED_REASON: ${{ needs.destroy.outputs.failed-reason }}
           IS_DESTROY_FAILED: ${{ needs.destroy.result == 'failure' }}
         with:
