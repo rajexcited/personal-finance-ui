@@ -1158,7 +1158,7 @@ jobs:
               
               commentBody.push("", "### UI Stack: ", "");
               const stackDetails = ${{ needs.validate_stack.outputs.stack-details }};
-              if(stackDetails?.ui) {
+              if(stackDetails?.ui?.created_time && stackDetails?.ui?.updated_time) {
                 // audit details available
                 commentBody.push("- **Created On:**  " + toTime(stackDetails.ui.created_time));
                 commentBody.push("- **Updated On:**  " + toTime(stackDetails.ui.updated_time));
@@ -1172,7 +1172,7 @@ jobs:
                 const apiIssueWithLink = "[API Issue-" + apiIssueDetails.number + "](" + apiIssueDetails.html_url + ")";
                 commentBody.push("The " + apiIssueWithLink + ", for API deployment is created.", "");
               }
-              if(stackDetails?.api) {
+              if(stackDetails?.api?.created_time && stackDetails?.api?.updated_time) {
                 // audit details available
                 commentBody.push("- **Created On:**  " + toTime(stackDetails.api.created_time));
                 commentBody.push("- **Updated On:**  " + toTime(stackDetails.api.updated_time));
