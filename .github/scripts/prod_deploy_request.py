@@ -446,8 +446,9 @@ def parsed_body(requestform_body: str) -> List:
     parsed_form_header=MdHeader()
     build_header(requestform_body.splitlines(), parent_header=parsed_form_header)
 
-    with open("dist/parsed_request_form.json", "w") as rf:
-        rf.write(json.dumps([item.model_dump() if isinstance(item, BaseModel) else item for item in parsed_form_header.contents], default=enum_serializer))
+    # export parsed form json to debug
+    # with open("dist/parsed_request_form.json", "w") as rf:
+    #     rf.write(json.dumps([item.model_dump() if isinstance(item, BaseModel) else item for item in parsed_form_header.contents], default=enum_serializer))
 
     def get_l3_list(header:MdHeader):
         content_list=[]
