@@ -10,11 +10,6 @@ from datetime import datetime, timedelta, tzinfo
 import pytz
 
 
-class RequestType(Enum):
-    Provision = "provision"
-    Deprovision = "deprovision"
-
-
 def flatten_to_string(input: Any):
     if isinstance(input, dict):
         return json.dumps({flatten_to_string(k): flatten_to_string(v) for k, v in input.items()})
@@ -94,7 +89,7 @@ def validate_environment_details(environment_details: Any):
             "Environment details does not contain necessary information. Required [Test Plan Environment]")
 
 
-def validate_deployment_schedule(deployment_schedule_list: Any, request_form_issue_details: dict, request_type: RequestType):
+def validate_deployment_schedule(deployment_schedule_list: Any, request_form_issue_details: dict):
     has_preferred_datetime = False
     deployment_scope = None
     if not isinstance(deployment_schedule_list, List):
@@ -187,18 +182,6 @@ def parsed_body(requestform_body: str, header1_dummy: bool = False, header2_dumm
 
 
 def validate_request_form(parent_issue_details: dict, request_form_issue_details: dict, testplan_type: str):
-    # request type is useful to handle any success/failure scenarios
-    request_type = None
-    request_form_title = flatten_to_string(request_form_issue_details["title"])
-    if "[Request] Provision Test Plan Environment" in request_form_title:
-        request_type = RequestType.Provision
-    elif "[Request] Deprovision Test Plan Environment" in request_form_title:
-        request_type = RequestType.Deprovision
-    else:
-        raise ValueError(
-            "Request form title is not in correct format. Please follow template guideline `[Request] Provision/Deprovision Test Plan Environment`")
-    export_to_env({"request_type": request_type.value})
-
     request_form_dict = parsed_body(request_form_issue_details["body"])
 
     for k1, v1 in request_form_dict.items():
@@ -213,7 +196,7 @@ def validate_request_form(parent_issue_details: dict, request_form_issue_details
             validate_environment_details(v1)
         if "deployment schedule" in heading_key:
             deployment_scope = validate_deployment_schedule(
-                v1, request_form_issue_details, request_type)
+                v1, request_form_issue_details)
 
     if not api_version and "api" in deployment_scope:
         print("API version is missing; defaulting to production-like API as deployment scope includes API.")
@@ -264,12 +247,10 @@ if __name__ == "__main__":
         if not request_form_issue_details:
             raise ValueError("request form issue details are not provided")
 
-        if not getattr(args, "testplan_type"):
+        if not hasattr(args, "testplan_type"):
             raise ValueError("testplan type is not provided")
 
-        no_error = True
     except Exception as e:
-        no_error = False
         print("error: ", e)
         parser.print_help()
         exit(1)
