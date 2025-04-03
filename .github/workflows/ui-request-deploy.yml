@@ -974,7 +974,7 @@ jobs:
           npm ci
           cp src/demo/dummy.ts src/demo/index.ts
           npm run build
-          echo "artifact-name=$ARTIFACT_NAME_PREFIX-$ENV_REF_NAME"
+          echo "artifact-name=$ARTIFACT_NAME_PREFIX-$ENV_REF_NAME" >> $GITHUB_OUTPUT
         env:
           REACT_APP_BASE_PATH: ${{ vars.REACT_APP_BASE_PATH }}
           REACT_APP_REST_API_BASE_PATH: ${{ vars.REACT_APP_REST_API_BASE_PATH }}
