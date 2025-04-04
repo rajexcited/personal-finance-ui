@@ -349,6 +349,21 @@ jobs:
         with:
           script: |
             try {
+              // Convert UTC to Central Time
+              const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
+                timeZone: "America/Chicago", 
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                timeZoneName: "short"
+              });
+              const toTime = (datetime) => {
+                const date = new Date(datetime);
+                return centralTimeFormat.format(date);
+              };
               const getBranch = async (branchName, tagName) => {
                 try {
                   if(branchName) {
@@ -381,8 +396,8 @@ jobs:
               }
               if(process.env.IS_ROLLBACK != "true") {
                 // for prod deployment, date has to be today
-                const milestoneDueOn = new Date(context.payload.issue.milestone.due_on);
-                if(milestoneDueOn.toLocaleDateString() !== new Date().toLocaleDateString()) {
+                const milestoneDueOnDate = toTime(context.payload.issue.milestone.due_on).substring(0,10);
+                if(milestoneDueOnDate !== toTime(new Date()).substring(0,10)) {
                   throw new Error("Milestone due date is not today");
                 }
                 // verify milestone branch not exists
