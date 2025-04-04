@@ -117,15 +117,44 @@ total=1 min
 
 #### network calls:
 
-- index.html=450 ms
+- /api/expenses/count?pageNo=1&status=enable&pageMonths=2&belongsTo=purchase/get=3.54 sec
+- /api/expenses?pageNo=1&status=enable&pageMonths=2&belongsTo=purchase/get=1.88 sec
+- /api/expenses/refund/id/<refund-id>/receipts/id/<receipt-id>/post=925 ms
+- /api/expenses/refund/post=2.74 sec
+- /api/expenses/count?pageNo=1&status=enable&pageMonths=6/get=808 ms
 
 ### Lambda:
 
+#### get purchase list (pageNo=1, status=enable)
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=104 MB
+- bill duration=959 ms
+- init duration=654 ms
+
 #### add refund
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=104 MB
+- bill duration=1739 ms
+- init duration=657 ms
+
+#### get purchase count (pageNo=1, status=enable, pageMonths=2, belongsTo=purchase) same lambda invoked below
+
+- invocation in 15 min=2
+- memory size=128 MB
+- memory used=104 MB
+- bill duration=829 ms
+- init duration=629 ms
+
+#### get expense count (pageNo=1, status=enable, pageMonths=6) same lambda invoked
+
+- memory size=128 MB
+- memory used=104 MB
+- bill duration=657 ms
+- init duration=0 ms
 
 ## Notes/Comments:
 

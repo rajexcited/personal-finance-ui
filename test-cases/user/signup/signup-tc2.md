@@ -10,7 +10,7 @@ updated: 02/14/2025
 
 ## Title:
 
-Failed sign up attempt sue to duplicate account
+Failed sign up attempt due to duplicate account
 
 ## Description:
 
@@ -90,16 +90,18 @@ total=1 min
 
 #### network calls:
 
-- index.html=450 ms
-- api/user/signup/post=1.8 sec
+- index.html(reload)=1.2 sec
+- api/user/signup/post=1.82 sec
 
 ### Lambda:
 
 #### user signup
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=256 MB
+- memory used=103 MB
+- bill duration=697 ms
+- init duration=645 ms
 
 ## Notes/Comments:
 

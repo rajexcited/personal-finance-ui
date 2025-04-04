@@ -122,15 +122,54 @@ total=1 min
 
 #### network calls:
 
-- index.html=450 ms
+- /api/config/types/belongs-to/purchase-type?status=enable/get=3.78 sec
+- /api/config/types/belongs-to/purchase-type/tags/get=3.39 sec
+- /api/expenses/purchase/tags?year=2025&year=2024/get=3.66 sec
+- /api/config/types/belongs-to/share-person?status=enable/get=3.30 sec
+- /api/expenses/purchase/id/<purchase-id>/receipts/id/<receipt-id>/post=3.48 sec
+- /api/expenses/purchase/post=1.75 sec
 
 ### Lambda:
 
+#### get purchase type list (status=enable)
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=107 MB
+- bill duration=1049 ms
+- init duration=672 ms
+
+#### get purchase type tag list
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=102 MB
+- bill duration=711 ms
+- init duration=651 ms
+
+#### get purchase tag list (year= 2024 & 2025)
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=103 MB
+- bill duration=891 ms
+- init duration=668 ms
+
+#### get share person list (status=enable)
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=102 MB
+- bill duration=711 ms
+- init duration=687 ms
+
 #### add purchase
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=103 MB
+- bill duration=778 ms
+- init duration=649 ms
 
 ## Notes/Comments:
 

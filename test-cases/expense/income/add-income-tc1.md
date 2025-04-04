@@ -117,15 +117,55 @@ total=1 min
 
 #### network calls:
 
-- index.html=450 ms
+- /api/config/types/belongs-to/income-type?status=enable/get=2.01 sec
+- /api/config/types/belongs-to/income-type/tags/get=1.84 sec
+- /api/expenses/income/tags?year=2025&year=2024/get=1.9 sec
+- /api/config/types/belongs-to/share-person?status=enable/get=? sec
+- /api/expenses/income/id/<income-id>/receipts/id/<receipt-id>/post=966 ms
+- /api/expenses/income/post=2.75 sec
+- /api/expenses/count?pageNo=1&status=enable&pageMonths=6/get=1.9 sec
 
 ### Lambda:
 
+#### get income type list (status=enable)
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=106 MB
+- bill duration=1010 ms
+- init duration=652 ms
+
+#### get income type tag list
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=103 MB
+- bill duration=763 ms
+- init duration=709 ms
+
+#### get income tag list (year= 2024 & 2025)
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=103 MB
+- bill duration=878 ms
+- init duration=657 ms
+
 #### add income
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=104 MB
+- bill duration=1756 ms
+- init duration=666 ms
+
+#### get expense count (pageNo=1, status=enable, pageMonths=6)
+
+- invocation in 15 min=2
+- memory size=128 MB
+- memory used=103 MB
+- bill duration=877 ms
+- init duration=654 ms
 
 ## Notes/Comments:
 

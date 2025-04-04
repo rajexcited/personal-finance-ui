@@ -81,16 +81,17 @@ total=1 min
 
 #### Network calls:
 
-- /api/payment-accounts/delete/post=1.44 sec
-- /api/payment-accounts/get=1.44 sec
+- /api/payment/accounts/id/<payment-acc-id>/delete=3.63 sec
 
 ### Lambda:
 
 #### delete payment account
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=104 MB
+- bill duration=996 ms
+- init duration=720 ms
 
 ## Notes/Comments:
 

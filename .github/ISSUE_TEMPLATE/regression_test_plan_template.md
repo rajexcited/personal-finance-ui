@@ -5,9 +5,7 @@ title: [Testplan]: Regression Test Plan for $milestone.title
 
 # Regression Test Plan
 
-## Regression Scope:
-
-### Milestone:
+## Milestone:
 
 [milestone $milestone.title]($milestone.issueUrl)
 
@@ -18,13 +16,13 @@ title: [Testplan]: Regression Test Plan for $milestone.title
 - [$milestone.openIssues Open Issues]($milestone.issueBaseUrl?q=is%3Aissue%20state%3Aopen%20milestone%3A$milestone.title)
 - [$milestone.closedIssues Closed Issues]($milestone.issueBaseUrl?q=is%3Aissue%20state%3Aclosed%20milestone%3A$milestone.title)
 
-##### Release Date: $milestone.dueOn
+#### Release Date: $milestone.dueOn
 
-### Impact Areas:
+## Impact Areas:
 
 - $details.impact_area
 
-### Features:
+## Features:
 
 - $details.tags.feature
 
@@ -47,9 +45,10 @@ When regression is completed or needs a longer break, close the request form iss
 
 ## Pass/Fail Criteria
 
-- All tests must pass. 100% success rate.
-- Whenever a test case is executed, document the execution status (PASS or FAIL) as a new comment. Make sure to copy the table row with updated status with other details.
-- If a test case fails, create a subtask issue using the template `bug report` to document the failure and track its resolution. Once PASSED, update the comment.
+- All tests must pass. 100% success rate with few exceptions, if failure doesnot not need priority attention, and can be postponed to future release
+- Record the testcase execution status (**PASS** or **FAIL**) as a comment. The template for comment is provided at the end of issue. Reference table row for details
+- If a test case fails, create a task or bug issue using the template to document the failure or required changes. If issue created needs to be tracked within regression period, wait for the issue to be resolved and update the comment with status and details. Make sure resolved issue within regression period are labelled properly.
+- The issue created suring regression, attach Parent relationship to testplan or mention testplan as reference to indicate why and when issue is created. Helps to remind in future by tracking.
 
 ## Risk/Cost Mitigation:
 
@@ -63,3 +62,38 @@ When regression is completed or needs a longer break, close the request form iss
 ## Notes/Comments:
 
 Provide any additional context or considerations.
+
+### Copy and Use Below Comment Template
+
+```
+<details>
+<summary> Testcase <index number>: <test case title>  </summary>
+
+### doc
+[testcase-id](link to testcase instruction)
+ex.
+[signup-tc1](https://github.com/rajexcited/personal-finance-ui/blob/testing/test-cases/user/signup/signup-tc1.md)
+
+### Priority
+High/Medium/Low
+
+### Execution
+Manual
+
+### Status
+<!-- Fail, but workable minor issue  -->
+<!-- Fail  -->
+<!-- Pass  -->
+
+### Status Reason
+<!-- brief details on fail. use 'NA' if there is nothing to write -->
+ex.
+Login button is not displayed.
+
+### Notes:
+<!-- list the details if any -->
+
+<!-- note down the related bugs if any whether open or closed -->
+
+</details>
+```

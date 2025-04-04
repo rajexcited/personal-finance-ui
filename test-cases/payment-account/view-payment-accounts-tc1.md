@@ -82,22 +82,44 @@ total=1 min
 
 #### network calls:
 
-- /api/payment-accounts/get=1.44 sec
-- /api/config/types/belongs-to/pymt-account-type/get=1.44 sec
+- /api/payment/accounts?status=enable/get=1.89 sec
+- /api/payment/accounts/tags=1.79 sec
+- /api/config/types/belongs-to/pymt-account-type?status=enable&disable/get=2.04 sec
+- /api/config/types/belongs-to/pymt-account-type/tags/get=1.69 sec
 
 ### Lambda:
 
-#### get payment accounts
+#### get enabled payment accounts
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=104 MB
+- bill duration=880 ms
+- init duration=679 ms
 
-#### get payment account type
+#### get payment account tags
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=102 MB
+- bill duration=788 ms
+- init duration=680 ms
+
+#### get enable & disabled payment account types
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=106 MB
+- bill duration=1137 ms
+- init duration=672 ms
+
+#### get payment account type tags
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=102 MB
+- bill duration=718 ms
+- init duration=693 ms
 
 ## Notes/Comments:
 

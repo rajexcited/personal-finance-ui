@@ -85,15 +85,9 @@ total=1 min
 
 #### network calls:
 
-- api/stats/income/get=768 ms
+- NA. may be receipt download urls if not cached
 
 ### Lambda:
-
-#### get expense receipt
-
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
 
 ## Notes/Comments:
 

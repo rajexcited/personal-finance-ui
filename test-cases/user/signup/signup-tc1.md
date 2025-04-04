@@ -75,7 +75,7 @@ User is not logged in and is on the public home page. User does not have an exis
 
 - feature=`auth,signup`
 - execution=`manual`
-- impact=`high`
+- impact=`medium`
 - type=`positive`
 - devices=`desktop,mobile`
 
@@ -97,32 +97,17 @@ total=1 min
 
 #### network calls:
 
-- index.html=450 ms
-- api/user/signup/post=1.8 sec
-- api/user/details/get=2.3 sec
-- api/stats/purchase/get=1.44 sec
-- api/stats/refund/get=1.24 sec
-- api/stats/income/get=768 ms
+- api/user/signup/post=2.93 sec
 
 ### Lambda:
 
 #### user signup
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
-
-#### user details
-
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
-
-#### stats
-
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=256 MB
+- memory used=107 MB
+- bill duration=1895 ms
+- init duration=679 ms
 
 ## Notes/Comments:
 

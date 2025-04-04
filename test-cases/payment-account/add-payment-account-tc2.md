@@ -39,7 +39,7 @@ User is logged in and active. User is on the `view payment accounts` page.
    - **Institution/Bank name:** USA Federal
    - **Account Number/Id:** 1234
    - **Account Type:** choose `checking`
-   - **Tags:** enter and select `primary`, `single`, `job salary`
+   - **Tags:** enter and select `primary`, `single`, `job-salary`
    - **Description:** fill out `Primary account for salary deposits`
 7. User clicks on the `add` button.
 8. After a few seconds of waiting, the user is redirected to the `view payment account` page.
@@ -100,27 +100,33 @@ total=1 min
 
 #### Network calls:
 
-- /api/payment-accounts/add/post=1.44 sec
+- /api/payment/accounts/post=3.65 sec
 
 ### Lambda:
 
 #### add payment account
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
-
-#### get payment account types
-
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=104 MB
+- bill duration=1098 ms
+- init duration=655 ms
 
 #### get currency profile
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=2
+- memory size=128 MB
+- memory used=107 MB
+- bill duration=1005 ms
+- init duration=0 ms
+
+#### validate auth token
+
+- invocation in 15 min=1
+- memory size=256 MB
+- memory used=104 MB
+- bill duration=549 ms
+- init duration=641 ms
 
 ## Notes/Comments:
 

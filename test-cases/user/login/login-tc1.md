@@ -89,32 +89,70 @@ total=1 min
 
 #### network calls:
 
-- index.html=450 ms
-- api/user/login/post=1.8 sec
-- api/user/details/get=2.3 sec
-- api/stats/purchase/get=1.44 sec
-- api/stats/refund/get=1.24 sec
-- api/stats/income/get=768 ms
+- index.html=1.8 sec
+- api/user/login/post=2.10 sec
+- api/user/details/get=3.31 sec
+- api/stats/purchase/get=1.59 sec
+- api/stats/refund/get=1.70 sec
+- api/stats/income/get=1.60 ms
 
 ### Lambda:
 
 #### user login
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=512 MB
+- memory used=104 MB
+- bill duration=790 ms
+- init duration=690 ms
+
+#### token auth
+
+- invocation in 15 min=1
+- memory size=256 MB
+- memory used=105 MB
+- bill duration=620 ms
+- init duration=655 ms
 
 #### user details
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=102 MB
+- bill duration=725 ms
+- init duration=685 ms
 
-#### stats
+#### purchase stats
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=256 MB
+- memory used=112 MB
+- bill duration=699 ms
+- init duration=661 ms
+
+#### income stats
+
+- invocation in 15 min=1
+- memory size=256 MB
+- memory used=112 MB
+- bill duration=645 ms
+- init duration=685 ms
+
+#### refund stats
+
+- invocation in 15 min=1
+- memory size=256 MB
+- memory used=112 MB
+- bill duration=628 ms
+- init duration=677 ms
+
+#### stats (avg)
+
+- invocation in 15 min(purchase,income,refund)=3
+- memory size=256 MB
+- memory used=112 MB
+- bill duration=658 ms
+- init duration=675 ms
 
 ## Notes/Comments:
 

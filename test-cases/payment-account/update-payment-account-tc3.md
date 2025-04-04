@@ -100,27 +100,17 @@ total=1 min
 
 #### Network calls:
 
-- /api/payment-accounts/update/post=1.44 sec
+- /api/payment/accounts/update/post=2.42 sec
 
 ### Lambda:
 
 #### update payment account
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
-
-#### get payment account types
-
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
-
-#### get currency profile
-
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=104 MB
+- bill duration=1047 ms
+- init duration=668 ms
 
 ## Notes/Comments:
 

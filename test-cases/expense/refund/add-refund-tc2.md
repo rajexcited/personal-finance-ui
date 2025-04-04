@@ -112,15 +112,55 @@ total=1 min
 
 #### network calls:
 
-- index.html=450 ms
+- /api/config/types/belongs-to/refund-reason?status=enable/get=3.97 sec
+- /api/config/types/belongs-to/refund-reason/tags/get=3.42 sec
+- /api/expenses/refund/tags?year=2025&year=2024/get=2.55 sec
+- /api/config/types/belongs-to/share-person?status=enable/get=? sec
+- /api/expenses/refund/id/<refund-id>/receipts/id/<receipt-id>/post=875 ms
+- /api/expenses/refund/post=2.59 sec
+- /api/expenses/count?pageNo=1&status=enable&pageMonths=6/get=1.88 sec
 
 ### Lambda:
 
+#### get refund reason list (status=enable)
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=106 MB
+- bill duration=1017 ms
+- init duration=699 ms
+
+#### get refund reason tag list
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=103 MB
+- bill duration=696 ms
+- init duration=644 ms
+
+#### get refund tag list (year= 2024 & 2025)
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=103 MB
+- bill duration=850 ms
+- init duration=677 ms
+
 #### add refund
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=104 MB
+- bill duration=1645 ms
+- init duration=638 ms
+
+#### get expense count (pageNo=1, status=enable, pageMonths=6)
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=103 MB
+- bill duration=870 ms
+- init duration=664 ms
 
 ## Notes/Comments:
 

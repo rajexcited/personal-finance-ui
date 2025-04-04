@@ -77,16 +77,17 @@ total=1 min
 
 #### network calls:
 
-- index.html=450 ms
-- api/user/logout/post=1.8 sec
+- api/user/logout/post=3.3 sec
 
 ### Lambda:
 
 #### user logout
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=256 MB
+- memory used=101 MB
+- bill duration=460 ms
+- init duration=627 ms
 
 ## Notes/Comments:
 

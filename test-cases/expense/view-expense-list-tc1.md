@@ -111,22 +111,44 @@ total=1 min
 
 #### network calls:
 
-- /api/expenses/get=1.44 sec
-- /api/expenses/count/get=1.44 sec
+- /api/expenses/count?pageNo=1&status=enable&pageMonths=6/get=3.59 sec
+- /api/expenses/get=? sec
+- /api/config/types/belongs-to/share-person?status=enable&status=disable=3.59 sec
+- /api/config/types/belongs-to/share-person/tags=3.29 sec
 
 ### Lambda:
 
-#### get expense list
+#### get expense list (if count nonzero)
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=?
+- memory size=128 MB
+- memory used=104 MB
+- bill duration=996 ms
+- init duration=720 ms
 
-#### get expense count
+#### get expense count (pageno=1, status=enable, pageMonths=6)
 
-- memory provisioned=256 MB
-- bill duration=1122 ms
-- init duration=687 ms
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=103 MB
+- bill duration=813 ms
+- init duration=652 ms
+
+#### get share person tags
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=103 MB
+- bill duration=719 ms
+- init duration=668 ms
+
+#### get share person list (status=enable & disable)
+
+- invocation in 15 min=1
+- memory size=128 MB
+- memory used=103 MB
+- bill duration=832 ms
+- init duration=688 ms
 
 ## Notes/Comments:
 

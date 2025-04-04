@@ -227,10 +227,10 @@ def generate_regression_testplan(base_tc: Path, template_path: Path, generated_f
                                 "Unknown"], v, get_variable_name(v))
         template_metadata[k] = val
 
-    file_contents.insert(0, "---\n\n")
-    for k, v in template_metadata.items():
-        file_contents.insert(0, f"{k}: {v}\n")
-    file_contents.insert(0, "---\n")
+    # file_contents.insert(0, "---\n\n")
+    # for k, v in template_metadata.items():
+    #     file_contents.insert(0, f"{k}: {v}\n")
+    # file_contents.insert(0, "---\n")
 
     # json.dump(file_contents, Path("dist/temp-regression.json").open("w"))
     file_path = save_regression_testplan(generated_filename, file_contents)
