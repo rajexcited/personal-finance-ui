@@ -361,7 +361,7 @@ jobs:
                     return getBranchResponse.data;
                   }
                   if(tagName) {
-                    const getRefResponse = await github.rest.repos.getRef({
+                    const getRefResponse = await github.rest.git.getRef({
                       owner: context.repo.owner,
                       repo: context.repo.repo,
                       ref: `tags/${tagName}`
@@ -1311,6 +1311,9 @@ jobs:
               const stackTags = ${{ needs.deployment.outputs.ui-stack-tags }};
               const unMatchTagList = stackTags.filter(st=> !convertedTagList.includes(st));
               if(unMatchTagList.length > 0) {
+                if(unMatchTagList.length === stackTags.length) {
+                  throw new Error("UI Deployment is not started");
+                }
                 throw new Error(`Found some tags not matching. mismatch Tags: ${unMatchTagList}`);
               }
               const stackAudit = {ui:{}, api:{}, outputs:{}};
