@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       is-runnable: ${{ steps.pr-open.outputs.is-open != 'true' && steps.source-branch.outputs.non-mileston-pattern != 'true' }}
+    if: github.event.pull_request.user.login == github.repository_owner
     steps:
       - name: Display Github object
         run: |
@@ -105,6 +106,7 @@ jobs:
             console.log("milestone branch as head and master branch as base, compareResponse: ", compareResponse);
             if (compareResponse.data.behind_by > 0) {
               core.setFailed(`Milestone branch is behind master by ${compareResponse.data.behind_by} commits.`);
+              throw new Error(`Milestone branch is behind master by ${compareResponse.data.behind_by} commits.`);
             }
       - name: All issues closed
         uses: actions/github-script@v7
@@ -120,6 +122,7 @@ jobs:
             const listIssuesWithoutPr = listIssuesResponse.data.filter(iss=>iss.url!==context.payload.pull_request._links.issue.href);
             if(listIssuesWithoutPr.length > 0) {
                 core.setFailed(`Found ${listIssuesWithoutPr.length} open issues for milestone ${context.payload.pull_request.milestone.title}. Resolved all issues before merging.`);
+                throw new Error(`Found ${listIssuesWithoutPr.length} open issues for milestone ${context.payload.pull_request.milestone.title}. Resolved all issues before merging.`);
             }
       - name: Regression testplan
         uses: actions/github-script@v7
