@@ -5,16 +5,15 @@ title: [Testplan]: Regression Test Plan for $milestone.title
 
 # Regression Test Plan
 
-## Milestone:
+## Milestone
 
-[milestone $milestone.title]($milestone.issueUrl)
+- **Milestone:** [$milestone.title]($milestone.issueUrl)
+- **Branch:** [$milestone.branchName]($milestone.branchUrl)
 
-**Branch:** [$milestone.branchName]($milestone.branchUrl)
+#### Status as of $today
 
-#### As Of $today
-
-- [$milestone.openIssues Open Issues]($milestone.issueBaseUrl?q=is%3Aissue%20state%3Aopen%20milestone%3A$milestone.title)
-- [$milestone.closedIssues Closed Issues]($milestone.issueBaseUrl?q=is%3Aissue%20state%3Aclosed%20milestone%3A$milestone.title)
+- **Open Issues:** $milestone.openIssues, [view Open issues for milestone]($milestone.issueBaseUrl?q=is%3Aissue%20state%3Aopen%20milestone%3A$milestone.title)
+- **Closed Issues:** $milestone.closedIssues [view Closed issues for milestone]($milestone.issueBaseUrl?q=is%3Aissue%20state%3Aclosed%20milestone%3A$milestone.title)
 
 #### Release Date: $milestone.dueOn
 
@@ -28,72 +27,36 @@ title: [Testplan]: Regression Test Plan for $milestone.title
 
 ## Test Scenarios for Regression:
 
-| Index | Title          | Priority             | Execution           | Status  | Test case Id                                                                                                           |
+| Index | Title          | Priority             | Execution           | Status  | Test Case ID                                                                                                           |
 | ----- | -------------- | -------------------- | ------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------- |
 | $ind  | $details.title | $details.tags.impact | $metadata.execution | Pending | [$metadata.id](https://github.com/rajexcited/personal-finance-ui/blob/testing/test-cases/$metadata.relative_file_path) |
 
 ## Start/Stop Regression Environment
 
-To **start regression** is to `deploy` milestone code to `tpe environment`.  
-To **stop regression** is to `destroy tpe environment`.
+1. To **start regression**, deploy or provision the milestone code to the `testplan environment`.
+2. To **stop regression**, destroy or deprovision the `testplan environment`.
 
-Open a subtask issue using the template `Request Form for test environment` and fill out details. The request form gets processed immediately and deploys the code.
+- Use the `Request Regression - Provision/Deprovision Test Plan Environment` template to open a subtask issue. Complete the required details for provisioning. The environment will be deployed automatically upon submission.
 
-When regression is completed or needs a longer break, close the request form issue to destroy the environment. If re-opened or created new, we can resume the test.
+- After completing regression or if an extended pause is needed, open a subtask issue using the same template. Fill in the required details for deprovisioning. The environment will be destroyed automatically upon submission.
 
-<small>**FYI:** `tpe environment` is the test plan execution environment. Typically it is used for any test plan executions.</small>
+- If provisioning or deprovisioning fails, submit a new subtask issue using the same template, ensuring the corrected details are included to address errors from the previous attempt
 
 ## Pass/Fail Criteria
 
-- All tests must pass. 100% success rate with few exceptions, if failure doesnot not need priority attention, and can be postponed to future release
-- Record the testcase execution status (**PASS** or **FAIL**) as a comment. The template for comment is provided at the end of issue. Reference table row for details
-- If a test case fails, create a task or bug issue using the template to document the failure or required changes. If issue created needs to be tracked within regression period, wait for the issue to be resolved and update the comment with status and details. Make sure resolved issue within regression period are labelled properly.
-- The issue created suring regression, attach Parent relationship to testplan or mention testplan as reference to indicate why and when issue is created. Helps to remind in future by tracking.
+- All test cases must achieve a 100% pass rate, with exceptions allowed only for non-critical failures that can be deferred to a future release.
+- Record the execution status (**PASS** or **FAIL**) for each test case as a comment in the issue. Use the `testcase-result` template from **saved replies** and complete the required test case details.
+- For any failed test cases, log a bug issue using the `Bug Report` template.
+- Ensure that all critical issues are resolved within the regression testing period.
+- Associate any issues created during regression testing with this test plan as a **Parent Issue**. This enhances traceability and serves as a reference for future test cycles.
 
-## Risk/Cost Mitigation:
+## Risk/Cost Mitigation
 
-- If regression cannot be progressed due to some circumstances and needs a longer break, the tester can close the `tpe environment Request Form` to destroy the test environment. This can help save costs or restart from fresh.
-- Typically, active regression longer than a week is considered to be cost-ineffective. The regression test plan execution should not take a long time.
-- Run tests in parallel to reduce the overall execution time and minimize the risk of prolonged testing periods.
-- Continuously monitor the test environment for any anomalies or performance issues. Address them promptly to avoid disruptions in the regression testing process.
-- Any issues or blockers should be communicated immediately to ensure quick resolution.
-- Document any issues encountered during regression testing and the steps taken to resolve them. This can help in future test cycles and improve the overall process.
+- If regression testing cannot continue due to unforeseen circumstances, submit a sub-issue using `Request Regression - Provision/Deprovision Test Plan Environment` template with deprovisioning details. This saves costs and allows for a fresh restart when needed.
+- Active regression testing extended beyond a week is generally considered cost-inefficient. Strive to complete the testplan within a shorter timeframe.
+- Monitor the testplan environment for anomalies or performance issues and address them promptly to ensure seamless testing.
+- Document any challanges or fixes encountered during regression testing for future reference and process improvement.
 
-## Notes/Comments:
+## Notes/Comments
 
-Provide any additional context or considerations.
-
-### Copy and Use Below Comment Template
-
-```
-<details>
-<summary> Testcase <index number>: <test case title>  </summary>
-
-### doc
-[testcase-id](link to testcase instruction)
-ex.
-[signup-tc1](https://github.com/rajexcited/personal-finance-ui/blob/testing/test-cases/user/signup/signup-tc1.md)
-
-### Priority
-High/Medium/Low
-
-### Execution
-Manual
-
-### Status
-<!-- Fail, but workable minor issue  -->
-<!-- Fail  -->
-<!-- Pass  -->
-
-### Status Reason
-<!-- brief details on fail. use 'NA' if there is nothing to write -->
-ex.
-Login button is not displayed.
-
-### Notes:
-<!-- list the details if any -->
-
-<!-- note down the related bugs if any whether open or closed -->
-
-</details>
-```
+Provide any additional context, considerations, or instructions here.
