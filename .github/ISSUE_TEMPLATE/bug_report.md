@@ -1,16 +1,15 @@
 ---
 name: Bug Report
 about: Report a bug to help us improve
-title: "[Bug]: "
+title: "[Bug] "
 labels: bug
-assignees:
 ---
 
-### **Describe the Bug**
+### Describe the Bug
 
 A clear and concise description of what the bug is.
 
-### **Steps to Reproduce**
+### Steps to Reproduce
 
 Steps to reproduce the behavior:
 
@@ -19,20 +18,20 @@ Steps to reproduce the behavior:
 3. Scroll down to '...'
 4. See error
 
-### **Expected Behavior**
+### Expected Behavior
 
 Describe what you expected to happen.
 
-### **Screenshots/Logs**
+### Screenshots/Logs
 
 If applicable, add screenshots or logs to help explain your problem.
 
-### **Environment**
+### Environment
 
-- OS: [e.g., Windows 10, macOS Ventura]
-- Browser [e.g., Chrome, Safari]
-- Version [e.g., v1.0.0]
+- Device/OS: Windows 11 desktop / Android 15 Google Pixel 
+- Browser: Chrome v134.x
+- Screen Mode: Full screen / Portrait / Landscape
 
-### **Additional Context**
+### Additional Context
 
 Add any other context about the problem here.

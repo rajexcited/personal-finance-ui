@@ -1,24 +1,31 @@
 ---
 name: Task
-about: Create a new task or sub-task
-title: "[Task]: "
-labels: task
-assignees:
+about: Create a task related to maintenance, research, assessment, or exploration.
+title: "[Task] "
+labels: [task]
 ---
 
-### **Task Description**
+### Task Description
 
-Provide a short description of the task.
+_(Provide a concise summary of the task.)_
 
-### **Acceptance Criteria**
+### Reason Needed
 
-- [ ] Clearly defined success criteria.
-- [ ] Measurable and testable outcomes.
+_(Explain why this task is necessary. State the problem, issue, or difficulty driving its need.)_
 
-### **Dependencies**
+### Area of Scope :
+_(Detail the scope of this task. List what will be covered.)_
 
-List any dependent tasks or blockers.
+### Impact & Advantages
+_(Detail the advantages, its potential impact upon completed)_
 
-### **Additional Notes**
+### Dependencies:
 
-Add any other information or context here.
+_(List any prerequisite tasks, blockers, or tools that might be required.)_
+
+### Acceptance Criteria
+_(Outline clear and measurable conditions for completion. Mention specific deliverables and outcomes expected from this task.)_
+
+### Additional Notes
+
+_(Include any supplementary details, context, or references.)_
