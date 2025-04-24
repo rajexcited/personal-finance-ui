@@ -1,34 +1,24 @@
 name: Release Drafter
 
 on:
-  # push:
-  #   # branches to consider in the event; optional, defaults to all
-  #   branches:
-  #     - master
-  # # pull_request event is required only for autolabeler
-  # pull_request:
-  #   # Only following types are handled by the action, but one can default to all as well
-  #   types: [opened, reopened, synchronize]
-  #   branches:
-  #     master
-  workflow_dispatch: 
+  workflow_dispatch:
     inputs:
       milestone_version:
         description: Enter milestone title
         required: true
         type: string
       publish:
-        description: Publish the release 
-        default: 'No'
+        description: Publish the release
+        default: "No"
         options:
-          - 'Yes'
-          - 'No'
+          - "Yes"
+          - "No"
         required: false
         type: choice
 
 jobs:
   generate_release_draft:
-    permissions: 
+    permissions:
       contents: write
     runs-on: ubuntu-latest
     if: github.event_name == 'neel'
@@ -42,8 +32,6 @@ jobs:
               --repo="${{ github.repository }}" \
               --title="v0.2.0" \
               --generate-notes
-
-
 
   update_release_draft:
     permissions:
