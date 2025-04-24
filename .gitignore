@@ -30,3 +30,4 @@ envlocal
 null
 /tests-scenarios
 
+__pycache__
