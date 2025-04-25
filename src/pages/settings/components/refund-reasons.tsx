@@ -47,10 +47,10 @@ export const RefundReasonPage: FunctionComponent = () => {
                 id: cfg.id,
                 title: cfg.name + " - " + cfg.status,
                 description: cfg.description,
-                status: cfg.status === ConfigTypeStatus.Enable
+                status: cfg.status
             }));
             if (enableFilter) {
-                return list.filter(item => item.status);
+                return list.filter(item => item.status === ConfigTypeStatus.Enable);
             }
             return list;
         }
@@ -138,6 +138,7 @@ export const RefundReasonPage: FunctionComponent = () => {
 
     const controlsBeforeEllipsis: Control[] = [{ id: ActionId.View, content: "View", icon: faEye, isActive: () => true }];
     const controlsInEllipsis: Control[] = [];
+
     if (!auth.readOnly) {
         controlsInEllipsis.push({ id: ActionId.Update, content: "Edit", icon: faEdit, isActive: () => true });
         controlsInEllipsis.push({ id: ActionId.Delete, content: "Delete", icon: faRemove, isActive: () => true });
