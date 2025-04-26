@@ -5,10 +5,13 @@ export enum KeyboardCode {
   ArrowLeft = "ArrowLeft",
   ArrowRight = "ArrowRight",
   Enter = "Enter",
+  NumpadEnter = "NumpadEnter",
   Backspace = "Backspace",
   Delete = "Delete",
   Escape = "Escape"
 }
+
+const rootLogger = getLogger("tags-input.events", null, null, "DISABLED");
 
 export const initializeEventHandler = (tagsInput: BulmaTagsInput) => {
   /**
@@ -18,23 +21,39 @@ export const initializeEventHandler = (tagsInput: BulmaTagsInput) => {
    *    https://developer.mozilla.org/en-US/docs/Web/API/Element/keypress_event
    *
    **/
+  const logger = getLogger("initializeEventHandler", rootLogger);
+  logger.debug("unbinding keypress");
   tagsInput.input.removeEventListener("keypress", tagsInput._onInputKeyPress);
   /** combining key event handlers */
+  logger.debug("unbinding keydown of tagInput lib");
   tagsInput.input.removeEventListener("keydown", tagsInput._onInputKeyDown);
+  logger.debug("binding custom handler on keydown event to prevent propogation to form and other elements");
+  const keyDownHandler = (event: KeyboardEvent) => {
+    if (event.code === KeyboardCode.Enter || event.code === KeyboardCode.NumpadEnter) {
+      logger.debug("keydown event, preventDefault calling. event=", event);
+      event.preventDefault();
+    }
+  };
+  tagsInput.input.addEventListener("keydown", keyDownHandler);
   // keyup event works in both desktop and mobile. workaround to use existing old tagsinput component
+  logger.debug("binding keyup");
   const onKeyupHandler = getKeyUpHandler(tagsInput);
   tagsInput.input.addEventListener("keyup", onKeyupHandler);
+
   return () => {
+    logger.debug("fn executor to unbind events, keyup, click, and input");
     tagsInput.input.removeEventListener("keyup", onKeyupHandler);
     tagsInput.input.removeEventListener("click", tagsInput._onInputClick);
     tagsInput.input.removeEventListener("input", tagsInput._onInputChange);
+    tagsInput.input.removeEventListener("keydown", keyDownHandler);
   };
 };
 
 const getKeyUpHandler = (tagsInput: BulmaTagsInput) => {
   function handler(this: BulmaTagsInput, event: KeyboardEvent) {
+    const logger = getLogger("onKeyupHandler", rootLogger);
     const keyCode = event.code as KeyboardCode;
-    let codenum;
+    let codenum = 0;
     switch (keyCode) {
       case KeyboardCode.ArrowLeft:
         codenum = 37;
@@ -48,6 +67,7 @@ const getKeyUpHandler = (tagsInput: BulmaTagsInput) => {
       case KeyboardCode.Delete:
         codenum = 46;
         break;
+      case KeyboardCode.NumpadEnter:
       case KeyboardCode.Enter:
         codenum = 13;
         break;
@@ -57,15 +77,18 @@ const getKeyUpHandler = (tagsInput: BulmaTagsInput) => {
       default:
         codenum = 32;
     }
+    logger.debug("keycode=", keyCode, "; and charCode / codenum=", codenum);
     const ev = new KeyboardEvent("keydown", {
       charCode: codenum
     });
     ev.preventDefault = () => {
       event.preventDefault();
     };
-    if ([KeyboardCode.ArrowLeft, KeyboardCode.ArrowRight, KeyboardCode.Backspace, KeyboardCode.Delete, KeyboardCode.Escape].includes(keyCode)) {
+    if ([KeyboardCode.ArrowLeft, KeyboardCode.ArrowRight, KeyboardCode.Escape].includes(keyCode)) {
+      logger.debug("calling keydown lib handler");
       tagsInput._onInputKeyDown(ev);
     } else {
+      logger.debug("calling keyup lib handler");
       const e = { charCode: codenum, preventDefault: () => event.preventDefault() };
       const returnValue = updateFilterDropdown.bind(tagsInput)(event);
       tagsInput._onInputKeyDown(ev);
@@ -88,8 +111,15 @@ function updateFilterDropdown(this: any, e: KeyboardEvent) {
     return false;
   }
 
-  // ENTER
-  if (!value.length && e.code !== KeyboardCode.Enter) {
+  // ENTER key is permitted
+  // backspace or delete keys are permitted
+  if (
+    !value.length &&
+    e.code !== KeyboardCode.Enter &&
+    e.code !== KeyboardCode.NumpadEnter &&
+    e.code !== KeyboardCode.Backspace &&
+    e.code !== KeyboardCode.Delete
+  ) {
     return false;
   }
 
@@ -97,7 +127,13 @@ function updateFilterDropdown(this: any, e: KeyboardEvent) {
     this._filterDropdownItems(value);
   }
 
-  if (this._filterInputAllowed && this.source && value.length >= this.options.searchMinChars && e.code !== KeyboardCode.Enter) {
+  if (
+    this._filterInputAllowed &&
+    this.source &&
+    value.length >= this.options.searchMinChars &&
+    e.code !== KeyboardCode.Enter &&
+    e.code !== KeyboardCode.NumpadEnter
+  ) {
     this._openDropdown();
     this.dropdown.classList.add("is-loading");
     this._emptyDropdown();
@@ -140,7 +176,7 @@ function updateFilterDropdown(this: any, e: KeyboardEvent) {
       });
   }
 
-  if (this._manualInputAllowed && (value.includes(this.options.delimiter) || e.code === KeyboardCode.Enter)) {
+  if (this._manualInputAllowed && (value.includes(this.options.delimiter) || e.code === KeyboardCode.Enter || e.code === KeyboardCode.NumpadEnter)) {
     // Prevent default behavior (ie: add char into input value)
     e.preventDefault();
 
@@ -172,7 +208,7 @@ export interface TagObject {
 }
 
 export const buildDropdown = (tagsInput: BulmaTagsInput, sourceValues: string[] | TagObject[], _logger?: LoggerBase) => {
-  const logger = getLogger("buildDropdown", _logger);
+  const logger = getLogger("buildDropdown", _logger, rootLogger);
 
   const dropdownItemCount = Array.from(tagsInput.dropdown.children).filter((child) => !child.classList.contains("empty-title")).length;
   if (dropdownItemCount === sourceValues.length) {

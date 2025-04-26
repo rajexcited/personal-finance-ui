@@ -1,3 +1,7 @@
+/**
+ * TBD:  Can use proxy and reflect to create console transport so that call tracing can be preserved. no tech impact. it is for learning
+ */
+
 /*
  * if required to use log4j like syntax, can use one of the following modules
  * https://www.npmjs.com/package/log4js
@@ -14,7 +18,7 @@ enum LogLevel {
   DEBUG = 1,
   INFO = 2,
   ERROR = 3,
-  DISABLED = 4,
+  DISABLED = 4
 }
 
 type LogLevelType = keyof typeof LogLevel;
