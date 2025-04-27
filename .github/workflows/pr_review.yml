@@ -57,7 +57,7 @@ jobs:
       - id: source-branch
         name: PR source branch
         env:
-          IS_MILESTONE_SOURCE: ${{ startsWith(github.event.pull_request.head.ref, 'ref/head/milestone/') }}
+          IS_MILESTONE_SOURCE: ${{ startsWith(github.event.pull_request.head.ref, 'milestone/') }}
         run: |
           echo "PR source branch is ${{ github.event.pull_request.head.ref }}"
           echo "is-milestone=$IS_MILESTONE_SOURCE" >> $GITHUB_OUTPUT
@@ -97,17 +97,17 @@ jobs:
           fi
           echo "is-milestone-merged-and-closed=$JUST_MERGED" >> $GITHUB_OUTPUT
 
-  troubleshoot_eligible_outputs:
-    name: Troubleshoot Outputs
-    runs-on: ubuntu-latest
-    needs:
-      - workflow_eligible
-    steps:
-      - name: Display Needs
-        env:
-          NEEDS_WRKFLW_ELGBL: ${{ toJson(needs.workflow_eligible) }}
-        run: |
-          echo "Workflow Eligible Needs: $NEEDS_WRKFLW_ELGBL"
+  # troubleshoot_eligible_outputs:
+  #   name: Troubleshoot Outputs
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - workflow_eligible
+  #   steps:
+  #     - name: Display Needs
+  #       env:
+  #         NEEDS_WRKFLW_ELGBL: ${{ toJson(needs.workflow_eligible) }}
+  #       run: |
+  #         echo "Workflow Eligible Needs: $NEEDS_WRKFLW_ELGBL"
 
   delete_after_merge:
     name: Delete After Merge
@@ -175,7 +175,7 @@ jobs:
           echo "Milestone title to PR is $MILESTONE_TITLE"
           MILESTONE_BRANCH="milestone/$MILESTONE_TITLE"
           # error if head branch is not ending with milestone branch
-          if [[ ! "$SOURCE_BRANCH_NAME" =~ ${MILESTONE_BRANCH}$ ]]; then
+          if [[ "$SOURCE_BRANCH_NAME" != "$MILESTONE_BRANCH" ]]; then
             echo "Source milestone branch is not matching assigned milestone. please correct the assignment"
             exit 1
           fi
