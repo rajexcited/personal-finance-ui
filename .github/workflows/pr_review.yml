@@ -1,5 +1,5 @@
 # For Pull request - verifies whether there are any issues for milestone opened?
-name: PR Milestone issues
+name: Milestone PR Review
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request
 on:
@@ -74,7 +74,7 @@ jobs:
           echo "PR is in draft state, not ready to review."
           exit 1
       - id: pr-vars
-        name: PR Should be open
+        name: Exporting PR Variables
         env:
           IS_NOT_CLOSED: ${{ github.event.pull_request.state != 'closed' }}
           IS_OPENED: ${{ endsWith(github.event.pull_request.state, 'opened') }}
@@ -96,6 +96,18 @@ jobs:
             JUST_MERGED="true"
           fi
           echo "is-milestone-merged-and-closed=$JUST_MERGED" >> $GITHUB_OUTPUT
+
+  troubleshoot_eligible_outputs:
+    name: Troubleshoot Outputs
+    runs-on: ubuntu-latest
+    needs:
+      - workflow_eligible
+    steps:
+      - name: Display Needs
+        env:
+          NEEDS_WRKFLW_ELGBL: ${{ toJson(needs.workflow_eligible) }}
+        run: |
+          echo "Workflow Eligible Needs: $NEEDS_WRKFLW_ELGBL"
 
   delete_after_merge:
     name: Delete After Merge
