@@ -31,9 +31,11 @@ jobs:
           echo "Issue title: ${{ github.event.issue.title }}"
       - run: |
           echo "Issue body: ${{ github.event.issue.body }}"
-      - run: |
+      - env:
+          MILESTONE_DTL: ${{ toJson(github.event.issue.milestone) }}
+        run: |
           echo "Issue milestone title: ${{ github.event.issue.milestone.title }}"
-          echo "Issue milestone: ${{ toJson(github.event.issue.milestone) }}"
+          echo "Issue milestone: $MILESTONE_DTL"
       - run: |
           echo "Issue state: ${{ github.event.issue.state }}"
           echo "Issue state reason: ${{ github.event.issue.state_reason }}"
@@ -445,12 +447,16 @@ jobs:
         env:
           TESTPLAN_TYPE: ${{ steps.testplan-issue.outputs.testplanType }}
           TESTPLAN_REQUEST_TYPE: ${{ steps.get-request-type.outputs.request-type }}
-          ISSUE_DETAILS: ${{ toJson(github.event.issue) }}
           TESTPLAN_ISSUE_DETAILS: ${{ steps.testplan-issue.outputs.testplanIssue }}
+          ISSUE_DETAILS: ${{ github.event.issue }}
         run: |
           cd .github
+          echo "storing details to json files"
           echo $TESTPLAN_ISSUE_DETAILS > parent_issue_details.json
           echo $ISSUE_DETAILS > request_form_issue_details.json
+          ls -lrt
+          echo request_form_issue_details.json
+          echo $(date)
           python --version
           pip install -r scripts/requirements.txt
           # capture error code +-e
