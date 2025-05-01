@@ -66,6 +66,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--summary-filepath", help="[Required] provide filepath where summary analysis has been stored. ex. 'dist/testtype-summary.json'")
     args = parser.parse_args()
+
+    summary_filepath = Path()
     try:
         if not args.output:
             raise ValueError("output is not provided")
@@ -74,13 +76,9 @@ if __name__ == "__main__":
         if not summary_filepath.exists():
             raise ValueError("summary file path not exists")
 
-        no_error = True
     except Exception as e:
-        no_error = False
         print("error: ", e)
         parser.print_help()
-
-    if not no_error:
         exit(1)
 
     print_human_readable_summary(args.output, summary_filepath)

@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import re
 from collections import defaultdict, Counter
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 from parse_test_cases import parse_metadata, convert_all_tc
 from summary_tc import get_all_testcases_summary
 
@@ -48,7 +48,7 @@ def flatten_values(value: Any):
     return result
 
 
-def get_value(milestone: Dict, converted_tc: Dict, regression_testcases: List[str], variable: str, tc_id: str = None):
+def get_value(milestone: Dict, converted_tc: Dict, regression_testcases: List[str], variable: str, tc_id: Optional[str] = None):
     testcases = regression_testcases if tc_id is None else [tc_id]
     ia_list = set()
     for tc in testcases:
@@ -69,7 +69,7 @@ def get_value(milestone: Dict, converted_tc: Dict, regression_testcases: List[st
     return sorted(ia_list)
 
 
-def get_value_hard_coded(milestone: Dict, converted_tc: Dict, regression_testcases: List[str], variable: str, tc_id: str = None):
+def get_value_hard_coded(milestone: Dict, converted_tc: Dict, regression_testcases: List[str], variable: str, tc_id: Optional[str] = None):
     testcases = regression_testcases if tc_id is None else [tc_id]
     ia_list = set()
     for tc in testcases:
@@ -99,7 +99,7 @@ def get_value_hard_coded(milestone: Dict, converted_tc: Dict, regression_testcas
     return sorted(ia_list)
 
 
-def replace_variables(milestone: Dict, converted_tc: Dict, regression_testcases: List, content_line: str, variables: List[str], tc_id: str = None):
+def replace_variables(milestone: Dict, converted_tc: Dict, regression_testcases: List, content_line: str, variables: List[str], tc_id: Optional[str] = None):
     content = ""
     if is_list(content_line) and len(variables) == 1:
         var = variables[0]
@@ -277,6 +277,7 @@ if __name__ == "__main__":
         "--milestone-details", help="[Required] provide milestone json details")
     args = parser.parse_args()
 
+    base_tc = Path()
     try:
         if not args.generate:
             raise ValueError("generate flag is not provided")
@@ -301,13 +302,9 @@ if __name__ == "__main__":
             raise ValueError("milestone details json is not provided")
         milestone_details = json.loads(args.milestone_details)
 
-        no_error = True
     except Exception as e:
-        no_error = False
         print("error: ", e)
         parser.print_help()
-
-    if not no_error:
         exit(1)
 
     generate_regression_testplan(

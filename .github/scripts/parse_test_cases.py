@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 import traceback
-from typing import List
+from typing import Dict, List, Optional
 from markdown_to_json import dictify
 from argparse import ArgumentParser
 import re
@@ -15,21 +15,27 @@ def get_formatted_key(k: str):
 
 
 def parse_metadata(lines: List[str]):
-    metadata = None
+    metadata: Optional[Dict[str, str]] = None
     ln = 0
 
     for line_num, line in enumerate(lines):
+        # print(line)
         if line.strip() == "---":
-            if metadata == None:
-                metadata = dict()
+            # print("start or end of metadata")
+            if metadata is None:
+                metadata = {}
+                # print("metadata is intialized")
             else:
                 ln = line_num
                 break
         else:
             metadata_match = re.match(r"([^:]+):(.+)", line)
             if metadata_match:
-                key = metadata_match.group(1).strip()
-                text = metadata_match.group(2).strip()
+                key: str = metadata_match.group(1).strip()
+                text: str = metadata_match.group(2).strip()
+                # print(metadata, key, text)
+                if metadata is None:
+                    raise ValueError("metadata is not initialized")
                 if key in metadata:
                     raise ValueError("duplicate metadata key")
                 metadata[key] = text
@@ -62,8 +68,7 @@ def convert_list_to_dict(key: str, list_values: List | str | dict):
 
         lv_array = lv.split("=")
         if len(lv_array) != 2:
-            raise AssertionError(
-                f"{key} key and value are in incorrect format. it should be tagkey=value1,value2")
+            raise AssertionError(f"{key} key and value are in incorrect format. it should be tagkey=value1,value2")
 
         dict_k = get_formatted_key(lv_array[0])
         if dict_k in list_dict:
@@ -73,14 +78,21 @@ def convert_list_to_dict(key: str, list_values: List | str | dict):
     return list_dict
 
 
+def convert_average_perf_time(key: str, val: dict):
+    if not isinstance(val, dict):
+        raise TypeError(f"{key} is not dictionary")
+    return val
+
+
 def convert_tc(file: Path, base_file: Path):
     with file.open(mode="r", encoding="utf-8") as f:
         lines = f.readlines()
 
     metadata, ln = parse_metadata(lines)
+    if not metadata:
+        raise ValueError("metadata is not provided")
     if "id" not in metadata:
-        raise AssertionError(
-            f"id is missing in metadata of file, {file.relative_to(base_file)}")
+        raise AssertionError(f"id is missing in metadata of file, {file.relative_to(base_file)}")
 
     mid = metadata["id"].lower().replace(" ", "-")
     metadata["relative_file_path"] = f"{get_relative_path(base_file, file)}"
@@ -94,8 +106,7 @@ def convert_tc(file: Path, base_file: Path):
 
     if len(tc_dict.keys()) != 1:
         keys = ','.join(tc_dict.keys())
-        raise AssertionError(
-            f"test case file format is incorrect. only 1 level headings supported. but found [{keys}]")
+        raise AssertionError(f"test case file format is incorrect. only 1 level headings supported. but found [{keys}]")
 
     k, v = tc_dict.popitem()
     # print(f"key={k} and value={v}")
@@ -110,9 +121,7 @@ def convert_tc(file: Path, base_file: Path):
         if details_k == "Tags":
             details_v = convert_list_to_dict(details_k, v1)
         elif details_k == "Average Performance Time":
-            if not isinstance(v1, dict):
-                raise TypeError(f"{details_k} is not dictionary")
-            details_v = convert_list_to_dict(details_k, v1)
+            details_v = convert_average_perf_time(details_k, v1)
 
         details_dict[details_k] = details_v
 
@@ -135,16 +144,22 @@ def convert_all_tc(base_tc_dir: Path):
             # print("k=", k)
             kid = k
             if k in all_dict:
-                errored_files.append(
-                    {"tc_file": f"{get_relative_path(base_tc_dir, tc_file)}", "id": k, "error": "duplicate_key"})
+                errored_files.append({
+                    "tc_file": f"{get_relative_path(base_tc_dir, tc_file)}",
+                    "id": k,
+                    "error": "duplicate_key"
+                })
             else:
                 all_dict[k] = v
         except Exception as e:
             relative_path = get_relative_path(base_tc_dir, tc_file)
             print(f"cannot convert the test case file, {relative_path} ", e)
             traceback.print_exception(e)
-            errored_files.append(
-                {"tc_file": f"{get_relative_path(base_tc_dir, tc_file)}", "id": kid, "error": f"{e}"})
+            errored_files.append({
+                "tc_file": f"{get_relative_path(base_tc_dir, tc_file)}",
+                "id": kid,
+                "error": f"{e}"
+            })
 
     # print("all dict", all_dict, "error files", errored_files)
     if len(errored_files) > 0:
@@ -169,12 +184,13 @@ if __name__ == "__main__":
     parser = ArgumentParser(description="validates and converts test cases")
     parser.add_argument("--convert", action="store_true",
                         help="[Required] convert test case")
-    parser.add_argument(
-        "--tc-dir", help="[Required] provide test case base directory. ex. '../test-cases/'")
+    parser.add_argument("--tc-dir",
+                        help="[Required] provide test case base directory. ex. '../test-cases/'")
     parser.add_argument("--converted-filename", default="converted-tcs",
                         help="[Optional] Provide filename which converted test case details should be saved to. ex. 'converted'")
     args = parser.parse_args()
 
+    base_tc = Path()
     try:
         if not args.convert:
             raise ValueError("convert arg is not provided")
@@ -187,13 +203,9 @@ if __name__ == "__main__":
         if len(list(base_tc.rglob("*.md"))) == 0:
             raise ValueError("there are no files")
 
-        no_error = True
     except Exception as e:
-        no_error = False
         print("error: ", e)
         parser.print_help()
-
-    if not no_error:
         exit(1)
 
     converted_dict = convert_all_tc(base_tc)

@@ -59,9 +59,11 @@ def add_testcase_summary(search_key: List[str], sd: Dict, tc_key: str, tc_detail
     # print("traversed the dictionary to analyze the key", v, sd)
     if isinstance(v, str):
         append_list_summary("", [v], sd, tc_key)
-    append_list_summary("", v, sd, tc_key)
+    if isinstance(v, List):
+        append_list_summary("", v, sd, tc_key)
     # print("after analyzing list, sd=", sd)
-    append_dict_summary(v, sd, tc_key)
+    if isinstance(v, Dict):
+        append_dict_summary(v, sd, tc_key)
     # print("after analyzing dict, sd=", sd)
 
 
@@ -131,13 +133,9 @@ if __name__ == "__main__":
         if not args.summary_filename:
             raise ValueError("summary file name is not provided")
 
-        no_error = True
     except Exception as e:
-        no_error = False
         print("error: ", e)
         parser.print_help()
-
-    if not no_error:
         exit(1)
 
     tc_details_dict = dict()
