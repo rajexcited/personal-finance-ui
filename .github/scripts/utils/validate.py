@@ -88,7 +88,7 @@ def get_parsed_arg_value(args: Namespace, key: str, arg_type_converter: Callable
     val: Optional[CRT] = None
     if hasattr(args, key):
         val = arg_type_converter(getattr(args, key))
-    if not val or (isinstance(val, (list, dict, str, tuple)) and len(val)) == 0:
+    if not val or (isinstance(val, (list, dict, str, tuple)) and len(val) == 0):
         converted_key = key.replace("_", " ")
         raise ValueError(f"arg value,{converted_key}, is not provided")
     return val
