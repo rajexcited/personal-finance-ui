@@ -28,8 +28,11 @@ def get_valid_dict(arg: Any) -> Optional[Dict]:
     """
     ret_dict = arg
     if Path(arg).exists():
-        with open(arg, "r") as f:
-            ret_dict = json.load(f)
+        try:
+            with open(arg, "r") as f:
+                ret_dict = json.load(f)
+        except:
+            print("the file in arg is not json convertible")
     elif isinstance(arg, str):
         try:
             ret_dict = json.loads(arg)
@@ -38,6 +41,7 @@ def get_valid_dict(arg: Any) -> Optional[Dict]:
 
     if isinstance(ret_dict, Dict):
         return ret_dict
+
     return None
 
 
