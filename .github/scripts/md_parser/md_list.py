@@ -53,8 +53,9 @@ def get_list_item(content: str):
         list_item.parsed_content = title_item
         return list_item
     text_item = get_simpletext_list_item(content)
-    list_item.item_type = ListItemType.SimpleText
-    list_item.parsed_content = text_item
+    if text_item:
+        list_item.item_type = ListItemType.SimpleText
+        list_item.parsed_content = text_item
     return list_item
 
 
@@ -80,5 +81,5 @@ def get_list_items(header_contents: List) -> List[MdListItem]:
     for hdr_cnt in header_contents:
         if isinstance(hdr_cnt, MdList):
             for listitem in hdr_cnt.items:
-                items.append(listitem)
+                items.append(listitem.parsed_content)
     return items

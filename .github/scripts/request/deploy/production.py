@@ -18,8 +18,8 @@ def validate_env_details(env_details_contents: List):
     has_prod_env = False
     env_listitems = get_list_items(env_details_contents)
     for listitem in env_listitems:
-        if isinstance(listitem.parsed_content, MdListItemTitleContent):
-            if "Environment Name" in listitem.parsed_content.title and "Production Environment" in listitem.parsed_content.content:
+        if isinstance(listitem, MdListItemTitleContent):
+            if "Environment Name" in listitem.title and "Production Environment" in listitem.content:
                 has_prod_env = True
 
     if not has_prod_env:
@@ -33,13 +33,13 @@ def validate_release_details(release_detail_contents: List, request_form_issue_d
 
     version_listitems = get_list_items(release_detail_contents)
     for item in version_listitems:
-        if isinstance(item.parsed_content, MdListItemTitleContent):
+        if isinstance(item, MdListItemTitleContent):
             version_match = re.match(
-                r"\s*(v\d+\.\d+\.\d+).*", item.parsed_content.content)
+                r"\s*(v\d+\.\d+\.\d+).*", item.content)
             if version_match:
-                if "Version to Deploy (Release/Rollback)" in item.parsed_content.title:
+                if "Version to Deploy (Release/Rollback)" in item.title:
                     release_rollback_version = version_match.group(1)
-                elif "Existing Deployed Version" in item.parsed_content.title:
+                elif "Existing Deployed Version" in item.title:
                     existing_version = version_match.group(1)
     for rdc in release_detail_contents:
         if isinstance(rdc, MdHeader) and "Release Notes" in rdc.title:
@@ -88,7 +88,7 @@ def validate_pre_deployment_tasks(pre_deploy_task_list: List):
 
     vrfy_task_list = get_list_items(pre_deploy_task_list)
     for vrfy_task in vrfy_task_list:
-        if isinstance(vrfy_task.parsed_content, MdListItemTodo):
+        if isinstance(vrfy_task, MdListItemTodo):
             verification_task_count += 1
 
     if verification_task_count == 0:
@@ -108,7 +108,7 @@ def validate_post_deployment_tasks(post_deploy_task_list: List):
                 task_key = smoke_test_title if smoke_test_title in verification_header.title else healthcheck_title
                 mdlist = get_list_items(verification_header.contents)
                 for mditem in mdlist:
-                    if isinstance(mditem.parsed_content, MdListItemTodo):
+                    if isinstance(mditem, MdListItemTodo):
                         task_count_map[task_key] += 1
 
     section_names = []
@@ -128,17 +128,17 @@ def validate_deployment_reason(deployment_reason_list: List, deployment_type: De
 
     depl_rsn_items = get_list_items(deployment_reason_list)
     for listitem in depl_rsn_items:
-        if isinstance(listitem.parsed_content, MdListItemTitleContent) and trigger_cond_content in listitem.parsed_content.title:
+        if isinstance(listitem, MdListItemTitleContent) and trigger_cond_content in listitem.title:
             has_trggr_cndn = True
 
     for depl_rsn in deployment_reason_list:
         if isinstance(depl_rsn, MdHeader) and "Risk Assessment" in depl_rsn.title:
             mdlist = get_list_items(depl_rsn.contents)
             for mditem in mdlist:
-                if isinstance(mditem.parsed_content, MdListItemTitleContent):
-                    if "Risk Level" in mditem.parsed_content.title:
-                        risk_level = mditem.parsed_content.content.strip()
-                    if "Justification for Risk level" in mditem.parsed_content.title:
+                if isinstance(mditem, MdListItemTitleContent):
+                    if "Risk Level" in mditem.title:
+                        risk_level = mditem.content.strip()
+                    if "Justification for Risk level" in mditem.title:
                         has_justification = True
 
     if not risk_level:
@@ -161,8 +161,8 @@ def validate_deployment_schedule(deployment_schedule_list: List):
     preferred_date_obj = None
     mdlist = get_list_items(deployment_schedule_list)
     for listitem in mdlist:
-        if isinstance(listitem.parsed_content, MdListItemTitleContent) and "Preferred Date and Time" in listitem.parsed_content.title:
-            preferred_date_obj = get_preferred_datetime(listitem.parsed_content.content)
+        if isinstance(listitem, MdListItemTitleContent) and "Preferred Date and Time" in listitem.title:
+            preferred_date_obj = get_preferred_datetime(listitem.content)
 
     if not preferred_date_obj:
         raise ValueError("Preferred Date and Time format is not correct.")
@@ -185,10 +185,10 @@ def get_deployment_type(form_contents: List):
         if isinstance(form_header, MdHeader) and "Deployment Type" in form_header.title:
             deploytype_list = get_list_items(form_header.contents)
             for item in deploytype_list:
-                if isinstance(item.parsed_content, MdListItemTodo) and item.parsed_content.is_checked:
-                    if DeploymentType.Release.name in item.parsed_content.label:
+                if isinstance(item, MdListItemTodo) and item.is_checked:
+                    if DeploymentType.Release.name in item.label:
                         return DeploymentType.Release
-                    if DeploymentType.Rollback.name in item.parsed_content.label:
+                    if DeploymentType.Rollback.name in item.label:
                         return DeploymentType.Rollback
             break
     return None

@@ -21,14 +21,18 @@ def validate_test_plan_issue_link(section_contents: List, request_form_issue_det
     section_list_items = get_list_items(section_contents)
     for listitem in section_list_items:
         if isinstance(listitem, MdListItemTitleContent):
-            if testplan_type.lower() in listitem.title.lower() and "Test Plan" in listitem.title.lower():
-                testplan_link_match = re.match(r".+https.+/issues/(\d+).*", listitem.content)
+            if testplan_type.lower() in listitem.title.lower() and "Test Plan" in listitem.title:
+                testplan_link_match = re.match(r".*https://github.com.+/issues/(\d+)", listitem.content)
                 if testplan_link_match:
                     testplan_issue_number = testplan_link_match.group(1)
+                else:
+                    testplan_link_match = re.match(r".*#(\d+)", listitem.content)
+                    if testplan_link_match:
+                        testplan_issue_number = testplan_link_match.group(1)
 
     if not testplan_issue_number:
         raise ValueError("Test Plan issue link is not in correct format")
-    if testplan_issue_number != parent_issue_details["number"]:
+    if str(testplan_issue_number) != str(parent_issue_details["number"]):
         raise ValueError("Request form does not contain Test plan issue link")
 
 
@@ -37,11 +41,11 @@ def validate_deployment_schedule(section_contents: List, request_form_issue_deta
     deploy_scope = None
     mdlist = get_list_items(section_contents)
     for listitem in mdlist:
-        if isinstance(listitem.parsed_content, MdListItemTitleContent):
-            if "Preferred Date and Time" in listitem.parsed_content.title:
-                preferred_date_obj = get_preferred_datetime(listitem.parsed_content.content)
-            if "Deployment Scope" in listitem.parsed_content.title:
-                deploy_scope = listitem.parsed_content.content
+        if isinstance(listitem, MdListItemTitleContent):
+            if "Preferred Date and Time" in listitem.title:
+                preferred_date_obj = get_preferred_datetime(listitem.content)
+            if "Deployment Scope" in listitem.title:
+                deploy_scope = listitem.content
 
     if not preferred_date_obj:
         raise ValueError("Preferred Date and Time format is not correct.")
@@ -73,8 +77,8 @@ def validate_env_details(env_details_contents: List):
     has_testplan_env = False
     mdlist = get_list_items(env_details_contents)
     for listitem in mdlist:
-        if isinstance(listitem.parsed_content, MdListItemTitleContent):
-            if "Environment Name" in listitem.parsed_content.title and "Test Plan Environment" in listitem.parsed_content.content:
+        if isinstance(listitem, MdListItemTitleContent):
+            if "Environment Name" in listitem.title and "Test Plan Environment" in listitem.content:
                 has_testplan_env = True
 
     if not has_testplan_env:
@@ -86,12 +90,12 @@ def validate_release_details(section_contents: List, request_form_issue_details:
     ui_version: Optional[str] = None
     rdc_list = get_list_items(section_contents)
     for listitem in rdc_list:
-        if isinstance(listitem.parsed_content, MdListItemTitleContent):
-            version_match = re.match(r"\s*(v\d+\.\d+\.\d+).*", listitem.parsed_content.content)
+        if isinstance(listitem, MdListItemTitleContent):
+            version_match = re.match(r"\s*(v\d+\.\d+\.\d+).*", listitem.content)
             if version_match:
-                if "UI Version" in listitem.parsed_content.title:
+                if "UI Version" in listitem.title:
                     ui_version = version_match.group(1)
-                elif "API Version" in listitem.parsed_content.title:
+                elif "API Version" in listitem.title:
                     api_version = version_match.group(1)
 
     if not ui_version:
