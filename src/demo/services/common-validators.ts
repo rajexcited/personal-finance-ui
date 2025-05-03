@@ -9,10 +9,10 @@ export interface ValidationErrorResource<R> {
 }
 
 const isDefined = (val: any) => {
-  if (typeof val === "number") {
-    return true;
+  if (val === null || val === undefined) {
+    return false;
   }
-  return !!val;
+  return true;
 };
 
 export const missingValidation = <T extends Object>(data: T | null | undefined, keys: (keyof T)[]): ValidationErrorResource<T>[] => {
@@ -23,7 +23,11 @@ export const missingValidation = <T extends Object>(data: T | null | undefined, 
   return errors;
 };
 
-export const validateDataType = <T>(data: T, keys: (keyof T)[], datatype: "string" | "number" | "uuid" | "array" | "arraynumber"): ValidationErrorResource<T>[] => {
+export const validateDataType = <T>(
+  data: T,
+  keys: (keyof T)[],
+  datatype: "string" | "number" | "uuid" | "array" | "arraynumber"
+): ValidationErrorResource<T>[] => {
   const notmissingkeys = keys.filter((k) => isDefined(data[k]));
   if (datatype === "uuid") {
     const errors = stringTypeValidation(data, notmissingkeys);

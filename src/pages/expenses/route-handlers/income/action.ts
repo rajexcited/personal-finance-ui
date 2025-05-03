@@ -8,10 +8,11 @@ import {
   ExpenseBelongsTo,
   IncomeFields,
   incomeService,
-  ExpenseStatus,
+  ExpenseStatus
 } from "../../services";
 import { ReceiptProps } from "../../../../components/receipt";
 import { uploadReceipts } from "../receipt/upload";
+import { getFormData } from "../common";
 
 const rhLogger = getLogger("route.handler.income.action", null, null, "DISABLED");
 
@@ -26,38 +27,20 @@ export const incomeActionHandler = async ({ request }: ActionFunctionArgs) => {
     errorMessage: "action not supported",
     data: {
       request: {
-        method: request.method,
-      },
-    },
+        method: request.method
+      }
+    }
   };
   return json(error, { status: HttpStatusCode.InternalServerError });
-};
-
-type IncomeResourceKey = keyof IncomeFields;
-const getFormData = (formData: FormData, formKey: IncomeResourceKey) => {
-  const formValue = formData.get(formKey);
-
-  if (formValue) {
-    try {
-      const jsonstr = formValue.toString();
-      const jsonObj = JSON.parse(jsonstr);
-      if (typeof jsonObj === "object") {
-        return jsonObj;
-      }
-      return formValue.toString();
-    } catch (ignore) {
-      return formValue.toString();
-    }
-  }
-  return null;
 };
 
 const incomeAddUpdateActionHandler = async (request: Request) => {
   const logger = getLogger("incomeAddUpdateActionHandler", rhLogger);
   try {
+    const getIncomeFormData = getFormData<IncomeFields>;
     const formdata = await request.formData();
 
-    const receipts: ReceiptProps[] = getFormData(formdata, "receipts");
+    const receipts: ReceiptProps[] = getIncomeFormData(formdata, "receipts");
     const uploadReceiptResult = await uploadReceipts(receipts, formdata, logger);
 
     if (uploadReceiptResult instanceof Response) {
@@ -65,22 +48,22 @@ const incomeAddUpdateActionHandler = async (request: Request) => {
     }
 
     await incomeService.addUpdateDetails({
-      id: getFormData(formdata, "id"),
-      billName: getFormData(formdata, "billName"),
-      paymentAccountId: getFormData(formdata, "paymentAccountId"),
-      paymentAccountName: getFormData(formdata, "paymentAccountName"),
-      amount: getFormData(formdata, "amount"),
-      description: getFormData(formdata, "description"),
-      incomeDate: getFormData(formdata, "incomeDate"),
-      tags: getFormData(formdata, "tags"),
-      incomeTypeId: getFormData(formdata, "incomeTypeId"),
-      incomeTypeName: getFormData(formdata, "incomeTypeName"),
-      personIds: getFormData(formdata, "personIds"),
+      id: getIncomeFormData(formdata, "id"),
+      billName: getIncomeFormData(formdata, "billName"),
+      paymentAccountId: getIncomeFormData(formdata, "paymentAccountId"),
+      paymentAccountName: getIncomeFormData(formdata, "paymentAccountName"),
+      amount: getIncomeFormData(formdata, "amount"),
+      description: getIncomeFormData(formdata, "description"),
+      incomeDate: getIncomeFormData(formdata, "incomeDate"),
+      tags: getIncomeFormData(formdata, "tags"),
+      incomeTypeId: getIncomeFormData(formdata, "incomeTypeId"),
+      incomeTypeName: getIncomeFormData(formdata, "incomeTypeName"),
+      personIds: getIncomeFormData(formdata, "personIds"),
       receipts: uploadReceiptResult,
       auditDetails: { createdOn: new Date(), updatedOn: new Date() },
       belongsTo: ExpenseBelongsTo.Income,
       status: ExpenseStatus.Enable,
-      currencyProfileId: getFormData(formdata, "currencyProfileId"),
+      currencyProfileId: getIncomeFormData(formdata, "currencyProfileId")
     });
 
     return redirect(getFullPath("expenseJournalRoot"));
@@ -98,7 +81,7 @@ const incomeDeleteActionHandler = async (request: Request) => {
     await incomeService.removeDetails(incomeId);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: "income is deleted",
+      data: "income is deleted"
     };
     return response;
   } catch (e) {

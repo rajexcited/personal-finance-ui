@@ -1,12 +1,13 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import { useLoaderData, useNavigate } from "react-router-dom";
-import { faEnvelope, faLock, faUserPlus } from "@fortawesome/free-solid-svg-icons";
+import { faEnvelope, faLock, faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ReactMarkdown from "react-markdown";
 import { Animated, DropDown, DropDownItemType, Input, InputValidateResponse, InputValidators, LoadSpinner } from "../../../components";
 import useAuth from "../hooks/use-auth";
 import { RouteHandlerResponse } from "../../../shared";
 import { SignupDetailsLoaderResource } from "../route-handlers/signup-loader";
+import { getFullPath } from "../../root";
 
 
 const SignupPage: FunctionComponent = () => {
@@ -78,6 +79,10 @@ const SignupPage: FunctionComponent = () => {
         };
     };
 
+    const onClickLoginHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
+        event.preventDefault();
+        navigate(getFullPath("signupPage"));
+    };
 
     return (
         <section className="section is-px-0-mobile">
@@ -197,7 +202,16 @@ const SignupPage: FunctionComponent = () => {
                 </div>
                 <div className="p-5"></div>
                 <div className="columns">
-                    <div className="column"></div>
+                    <div className="column">
+                        <div className="buttons has-addons is-centered">
+                            <button className="button is-link is-medium" type="button" onClick={ onClickLoginHandler }>
+                                <span className="icon">
+                                    <FontAwesomeIcon icon={ faSignIn } />
+                                </span>
+                                <span> Login </span>
+                            </button>
+                        </div>
+                    </div>
                     <div className="column">
                         <div className="buttons has-addons is-centered">
                             <button className="button is-dark is-medium" type="submit">

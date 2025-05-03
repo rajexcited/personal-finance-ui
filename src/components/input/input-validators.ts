@@ -11,19 +11,19 @@ export const InputValidators = {
     return (inputValue: string): InputValidateResponse => {
       return {
         isValid: regex.test(inputValue),
-        errorMessage: errorMessage || defaultErrorMessage,
+        errorMessage: errorMessage || defaultErrorMessage
       };
     };
   },
 
   passwordValidator: (errorMessage?: string) => {
-    const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#$%^&*])[\w!@#$%^&*\)\(\=]+$/;
+    const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#<$>%^&*])[\w!@#<$>%^&*\)\(\=]+$/;
     const defaultErrorMessage = "password must contain a special character, number, UPPERCASE.";
 
     return (value: string): InputValidateResponse => {
       return {
         isValid: passwordRegex.test(value),
-        errorMessage: errorMessage || defaultErrorMessage,
+        errorMessage: errorMessage || defaultErrorMessage
       };
     };
   },
@@ -35,8 +35,8 @@ export const InputValidators = {
     return (value: string): InputValidateResponse => {
       return {
         isValid: phoneNoRegex.test(value),
-        errorMessage: errorMessage || defaultErrorMessage,
+        errorMessage: errorMessage || defaultErrorMessage
       };
     };
-  },
+  }
 };

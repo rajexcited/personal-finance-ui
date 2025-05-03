@@ -260,6 +260,7 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
                                 onSelect={ (selected: DropDownItemType) => setSelectedDropdownPymtAccount(selected) }
                                 selectedItem={ selectedDropdownPymtAccount }
                                 defaultItem={ selectedDropdownPymtAccount }
+                                required={ true }
                             />
                         </div>
                         <div className="column">

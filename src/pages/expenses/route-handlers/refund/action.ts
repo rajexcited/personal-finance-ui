@@ -7,11 +7,12 @@ import {
   handleRouteActionError,
   PurchaseRefundFields,
   refundService,
-  ExpenseStatus,
+  ExpenseStatus
 } from "../../services";
 import { ExpenseBelongsTo } from "../../services";
 import { ReceiptProps } from "../../../../components/receipt";
 import { uploadReceipts } from "../receipt/upload";
+import { getFormData } from "../common";
 
 const rhLogger = getLogger("route.handler.purchase.action", null, null, "DISABLED");
 
@@ -27,38 +28,20 @@ export const refundActionHandler = async ({ request }: ActionFunctionArgs) => {
     errorMessage: "action not supported",
     data: {
       request: {
-        method: request.method,
-      },
-    },
+        method: request.method
+      }
+    }
   };
 
   return json(error, { status: HttpStatusCode.InternalServerError });
 };
 
-type RefundResourceKey = keyof PurchaseRefundFields;
-const getFormData = (formData: FormData, formKey: RefundResourceKey) => {
-  const formValue = formData.get(formKey);
-
-  if (formValue) {
-    try {
-      const jsonstr = formValue.toString();
-      const jsonObj = JSON.parse(jsonstr);
-      if (typeof jsonObj === "object") {
-        return jsonObj;
-      }
-      return formValue.toString();
-    } catch (ignore) {
-      return formValue.toString();
-    }
-  }
-  return null;
-};
-
 const refundAddUpdateActionHandler = async (request: Request) => {
   const logger = getLogger("refundAddUpdateActionHandler", rhLogger);
+  const getRefundFormData = getFormData<PurchaseRefundFields>;
   try {
     const formdata = await request.formData();
-    const receipts: ReceiptProps[] = getFormData(formdata, "receipts");
+    const receipts: ReceiptProps[] = getRefundFormData(formdata, "receipts");
     const uploadReceiptResult = await uploadReceipts(receipts, formdata, logger);
 
     if (uploadReceiptResult instanceof Response) {
@@ -66,23 +49,23 @@ const refundAddUpdateActionHandler = async (request: Request) => {
     }
 
     await refundService.addUpdateDetails({
-      id: getFormData(formdata, "id"),
-      billName: getFormData(formdata, "billName"),
-      paymentAccountId: getFormData(formdata, "paymentAccountId"),
-      paymentAccountName: getFormData(formdata, "paymentAccountName"),
-      amount: getFormData(formdata, "amount"),
-      description: getFormData(formdata, "description"),
-      refundDate: getFormData(formdata, "refundDate"),
-      tags: getFormData(formdata, "tags"),
+      id: getRefundFormData(formdata, "id"),
+      billName: getRefundFormData(formdata, "billName"),
+      paymentAccountId: getRefundFormData(formdata, "paymentAccountId"),
+      paymentAccountName: getRefundFormData(formdata, "paymentAccountName"),
+      amount: getRefundFormData(formdata, "amount"),
+      description: getRefundFormData(formdata, "description"),
+      refundDate: getRefundFormData(formdata, "refundDate"),
+      tags: getRefundFormData(formdata, "tags"),
       receipts: uploadReceiptResult,
       auditDetails: { createdOn: new Date(), updatedOn: new Date() },
       belongsTo: ExpenseBelongsTo.PurchaseRefund,
       status: ExpenseStatus.Enable,
-      purchaseId: getFormData(formdata, "purchaseId"),
-      reasonId: getFormData(formdata, "reasonId"),
-      reasonValue: getFormData(formdata, "reasonValue"),
-      personIds: getFormData(formdata, "personIds"),
-      currencyProfileId: getFormData(formdata, "currencyProfileId"),
+      purchaseId: getRefundFormData(formdata, "purchaseId"),
+      reasonId: getRefundFormData(formdata, "reasonId"),
+      reasonValue: getRefundFormData(formdata, "reasonValue"),
+      personIds: getRefundFormData(formdata, "personIds"),
+      currencyProfileId: getRefundFormData(formdata, "currencyProfileId")
     });
 
     return redirect(getFullPath("expenseJournalRoot"));
@@ -100,7 +83,7 @@ const refundDeleteActionHandler = async (request: Request) => {
     await refundService.removeDetails(refundId);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: "refund is deleted",
+      data: "refund is deleted"
     };
     return response;
   } catch (e) {
