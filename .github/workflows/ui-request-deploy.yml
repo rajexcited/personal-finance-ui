@@ -32,10 +32,10 @@ jobs:
       - run: |
           echo "Issue body: ${{ github.event.issue.body }}"
       - env:
-          MILESTONE_DTL: ${{ github.event.issue.milestone }}
+          MILESTONE_DTL: ${{ toJson(github.event.issue.milestone) }}
         run: |
           echo "Issue milestone title: ${{ github.event.issue.milestone.title }}"
-          echo "Issue milestone: $MILESTONE_DTL"
+          echo "Issue milestone: "$MILESTONE_DTL
       - run: |
           echo "Issue state: ${{ github.event.issue.state }}"
           echo "Issue state reason: ${{ github.event.issue.state_reason }}"
