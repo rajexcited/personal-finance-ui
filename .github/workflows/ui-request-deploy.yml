@@ -32,7 +32,7 @@ jobs:
       - run: |
           echo "Issue body: ${{ github.event.issue.body }}"
       - env:
-          MILESTONE_DTL: ${{ toJson(github.event.issue.milestone) }}
+          MILESTONE_DTL: ${{ github.event.issue.milestone }}
         run: |
           echo "Issue milestone title: ${{ github.event.issue.milestone.title }}"
           echo "Issue milestone: $MILESTONE_DTL"
@@ -590,6 +590,8 @@ jobs:
     outputs:
       failed-reason: ${{ steps.provision-stack-testplan.outputs.failedReason || steps.deprovision-stack-testplan.outputs.failedReason || steps.provision-stack-prod.outputs.failedReason || steps.provision-stack-prod-rollback.outputs.failedReason }}
       stack-details: ${{ steps.provision-stack-testplan.outputs.stack_details || steps.deprovision-stack-testplan.outputs.stack_details || steps.provision-stack-prod.outputs.stack_details || steps.provision-stack-prod-rollback.outputs.stack_details || '{}' }}
+      api-stack-status: ${{ steps.provision-stack-testplan.outputs.api_stack_status || steps.deprovision-stack-testplan.outputs.api_stack_status || steps.provision-stack-prod.outputs.api_stack_status || steps.provision-stack-prod-rollback.outputs.api_stack_status }}
+      ui-stack-status: ${{ steps.provision-stack-testplan.outputs.ui_stack_status || steps.deprovision-stack-testplan.outputs.ui_stack_status || steps.provision-stack-prod.outputs.ui_stack_status || steps.provision-stack-prod-rollback.outputs.ui_stack_status }}
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -622,6 +624,7 @@ jobs:
 
           # verify stack status
           STACK_STATUS=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].StackStatus')
+          echo "ui_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
           if [[ "$STACK_STATUS" =~ _IN_PROGRESS$ ]]; then
             STACK_STATUS_REASON=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].StackStatusReason')
             FAILED_REASON="The Stack status is in progress, found Status: $STACK_STATUS. The Stack Status Reason: $STACK_STATUS_REASON"
@@ -696,6 +699,7 @@ jobs:
 
             # verify stack status
             STACK_STATUS=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r '.Stacks[0].StackStatus')
+            echo "api_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
             if [[ "$STACK_STATUS" =~ _IN_PROGRESS$ ]]; then
               STACK_STATUS_REASON=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r '.Stacks[0].StackStatusReason')
               FAILED_REASON="The Stack status is not complete status, found Status: $STACK_STATUS. The Stack Status Reason: $STACK_STATUS_REASON"
@@ -766,6 +770,7 @@ jobs:
 
           # verify stack status
           STACK_STATUS=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].StackStatus')
+          echo "ui_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
           if [[ "$STACK_STATUS" =~ _IN_PROGRESS$ ]]; then
             STACK_STATUS_REASON=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].StackStatusReason')
             FAILED_REASON="The Stack status is in progress, found Status: $STACK_STATUS. The Stack Status Reason: $STACK_STATUS_REASON"
@@ -800,6 +805,12 @@ jobs:
           echo "stack_details<<EOF" >> $GITHUB_OUTPUT
           echo "$STACK_AUDIT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+          STACK_NAME="prsfin-$ENVID-infra-stack"
+          DESCRIBE_API_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME")
+
+          STACK_STATUS=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].StackStatus")
+          echo "api_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
       - id: provision-stack-prod-rollback
         if: needs.run_eligible.outputs.is-prod-rollback == 'true'
         name: Verify Stack for Prod Rollback
@@ -821,6 +832,7 @@ jobs:
 
           # verify stack status
           STACK_STATUS=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].StackStatus')
+          echo "ui_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
           if [[ "$STACK_STATUS" =~ _IN_PROGRESS$ ]]; then
             STACK_STATUS_REASON=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].StackStatusReason')
             FAILED_REASON="The Stack status is in progress, found Status: $STACK_STATUS. The Stack Status Reason: $STACK_STATUS_REASON"
@@ -863,6 +875,12 @@ jobs:
           echo "stack_details<<EOF" >> $GITHUB_OUTPUT
           echo "$STACK_AUDIT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+          STACK_NAME="prsfin-$ENVID-infra-stack"
+          DESCRIBE_API_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME")
+
+          STACK_STATUS=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].StackStatus")
+          echo "api_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
       - id: deprovision-stack-testplan
         if: needs.run_eligible.outputs.is-testplan-deprovision == 'true'
         name: Verify milestone branch is destroyable
@@ -884,6 +902,7 @@ jobs:
           fi
 
           STACK_STATUS=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].StackStatus")
+          echo "ui_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
           if [[ ! "$STACK_STATUS" =~ _COMPLETE$ ]]; then
             STACK_STATUS_REASON=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].StackStatusReason")
             FAILED_REASON="Stack Status is not in Complete but $STACK_STATUS. Reason is $STACK_STATUS_REASON"
@@ -915,6 +934,7 @@ jobs:
           DESCRIBE_API_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME")
 
           STACK_STATUS=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].StackStatus")
+          echo "api_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
           if [[ ! "$STACK_STATUS" =~ _COMPLETE$ ]]; then
             STACK_STATUS_REASON=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].StackStatusReason")
             FAILED_REASON="Stack Status is not in Complete but $STACK_STATUS. Reason is $STACK_STATUS_REASON"
@@ -1127,6 +1147,7 @@ jobs:
       deployment-start-time: ${{ steps.dispatch-payload.outputs.deploymentStartTime }}
       ui-stack-tags: ${{ steps.dispatch-payload.outputs.uiStackTags }}
       failed-reason: ${{ steps.create-api-issue.outputs.failedReason || steps.dispatch-payload.outputs.failedReason || steps.update-issue-deploying.outputs.failedReason }}
+      is-deploying-api-stack: ${{ steps.create-api-issue.outputs.isDeployingApiStack }}
     steps:
       - run: |
           echo "API Milestone number: ${{ needs.validate_request_api.outputs.api-milestone-number }}"
@@ -1163,6 +1184,7 @@ jobs:
               });
               console.log("api createIssueResponse: ", createIssueResponse);
               core.setOutput("details", createIssueResponse.data);
+              core.setOutput("isDeployingApiStack", "true");
               /* add parent testplan issue as parent relationship to api issue
                when github rest and octokit will add support cross repo issue relationship */
             } catch(error) {
@@ -1183,6 +1205,8 @@ jobs:
           ENV_TYPE: ${{ needs.run_eligible.outputs.env-ref-name }}
           IS_TESTPLAN: ${{ needs.run_eligible.outputs.is-testplan }}
           IS_PRODUCTION: ${{ needs.run_eligible.outputs.is-production }}
+          INITIAL_API_STACK_STATUS: ${{ needs.validate_stack.outputs.api-stack-status }}
+          IS_API_STACK_DEPLOYING: ${{ steps.create-api-issue.outputs.isDeployingApiStack }}
         with:
           github-token: ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}
           script: |
@@ -1196,7 +1220,11 @@ jobs:
                 milestone: context.payload.issue.milestone.title,
                 is_testplan: process.env.IS_TESTPLAN,
                 is_prod: process.env.IS_PRODUCTION,
-                stack_tags: []
+                stack_tags: [],
+                infraStack: {
+                  isDeploying: String(process.env.IS_API_STACK_DEPLOYING === "true"),
+                  initialStatus: process.env.INITIAL_API_STACK_STATUS
+                }
               };
               clientPayload.stack_tags.push(`workflow_run_id=${context.runId}`);
               clientPayload.stack_tags.push(`milestone=${context.payload.issue.milestone.title}`);
@@ -1356,6 +1384,7 @@ jobs:
     needs:
       - run_eligible
       - validate_request
+      - validate_stack
       - deployment
     environment:
       name: ${{ needs.run_eligible.outputs.env-ref-name }}
@@ -1384,6 +1413,9 @@ jobs:
         env:
           ENVID: ${{ vars.AWS_ENVID }}
           DEPLOYMENT_SCOPE: ${{ needs.validate_request.outputs.deployment-scope }}
+          INITIAL_UI_STACK_STATUS: ${{ needs.validate_stack.outputs.ui-stack-status }}
+          INITIAL_API_STACK_STATUS: ${{ needs.validate_stack.outputs.api-stack-status }}
+          IS_DEPLOYING_API_STACK: ${{ needs.deployment.outputs.is-deploying-api-stack }}
         with:
           script: |
             try {
@@ -1412,26 +1444,49 @@ jobs:
               const totalWaitDuration = 60 * ONE_MINUTE;
               let waitedDuration = 0;
               let describeStackResponse = null;
-              let stackName = `prsfin-${process.env.ENVID}-ui-deploy-stack`;
-              const maxWaitForStatusUnchange = sleepDuration * 10;
+              const uiStackName = `prsfin-${process.env.ENVID}-ui-deploy-stack`;
+              const apiStackName = `prsfin-${process.env.ENVID}-infra-stack`;
+              let isApiStackDeployed = process.env.IS_DEPLOYING_API_STACK !== "true";
+              let isStackStatusChanged = false;
+              let maxWaitForStatusUnchange = sleepDuration * 10;
+              
               while(waitedDuration < totalWaitDuration) {
                 console.log("Deployment is in progress.", `Waiting for ${sleepDuration/ONE_SECOND} seconds ~ ${sleepDuration/ONE_MINUTE} minutes.`);
                 console.log(`waited ${waitedDuration/ONE_MINUTE} minutes for deployment complete out of allowed ${totalWaitDuration/ONE_MINUTE} minutes`);
                 await sleep(sleepDuration);
                 waitedDuration += sleepDuration;
-
+                
+                const stackName = isApiStackDeployed? uiStackName: apiStackName;
                 describeStackResponse = await describeStack(stackName);
+                let continueWaiting=false;
                 if(!describeStackResponse) {
+                  continueWaiting=true;
+                }
+                if(!isApiStackDeployed && process.env.INITIAL_API_STACK_STATUS===describeStackResponse.StackStatus && !isStackStatusChanged) {
+                  continueWaiting=true;
+                }
+                if(isApiStackDeployed && process.env.INITIAL_UI_STACK_STATUS===describeStackResponse.StackStatus && !isStackStatusChanged) {
+                  continueWaiting=true;
+                }
+                if(continueWaiting) {
                   // since no response, probably still in creation not started
                   if(waitedDuration<maxWaitForStatusUnchange) {
                     continue;
                   }
                   throw new Error("Stack status hasnt been changed.");
                 }
-                // check status
+                isStackStatusChanged=true;
                 if(stackSuccessRegex.test(describeStackResponse.StackStatus)) {
-                  console.log("UI Stack is deployed successfully.")
-                  break;
+                  if(isApiStackDeployed) {
+                    console.log("UI Stack is deployed successfully.")
+                    break;
+                  }
+                  isApiStackDeployed=true;
+                  isStackStatusChanged=false;
+                  // to give same wait time for UI stack initialization
+                  maxWaitForStatusUnchange += waitedDuration;
+                  console.log("API Stack is deployed successfully.")
+                  continue;
                 }
                 if(stackFailRegex.test(describeStackResponse.StackStatus)) {
                   throw new Error(`UI Stack deployment failed. found undesired Status [${describeStackResponse.StackStatus}] with reason, ${describeStackResponse.StackStatusReason}. Please check stack events for more details.`);
