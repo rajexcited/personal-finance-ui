@@ -1212,14 +1212,18 @@ jobs:
           script: |
             try {
               const clientPayload = {
-                env_type: process.env.ENV_TYPE,
-                artifact_name: process.env.ARTIFACT_NAME,
-                ui_repository: context.repo.owner + "/" + context.repo.repo,
-                workflow_run_id: context.runId,
+                env: {
+                  env_type: process.env.ENV_TYPE,
+                  is_testplan: process.env.IS_TESTPLAN,
+                  is_prod: process.env.IS_PRODUCTION
+                },
+                artifact: {
+                  name: process.env.ARTIFACT_NAME,
+                  ui_repository: context.repo.owner + "/" + context.repo.repo,
+                  workflow_run_id: context.runId
+                },
                 type: "provision",
                 milestone: context.payload.issue.milestone.title,
-                is_testplan: process.env.IS_TESTPLAN,
-                is_prod: process.env.IS_PRODUCTION,
                 stack_tags: [],
                 infraStack: {
                   isDeploying: String(process.env.IS_API_STACK_DEPLOYING === "true"),
