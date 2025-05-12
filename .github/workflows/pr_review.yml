@@ -366,6 +366,9 @@ jobs:
             });
             const toTime = (datetime) => {
               const date = new Date(datetime);
+              if(date.toString() === "Invalid Date") {
+                return "NA";
+              }
               return centralTimeFormat.format(date);
             };
 
