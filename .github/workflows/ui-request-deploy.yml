@@ -1475,10 +1475,10 @@ jobs:
                 if(!describeStackResponse) {
                   continueWaiting=true;
                 }
-                if(!isApiStackDeployed && process.env.INITIAL_API_STACK_STATUS===describeStackResponse.StackStatus && !isStackStatusChanged) {
+                if(!continueWaiting && !isApiStackDeployed && process.env.INITIAL_API_STACK_STATUS===describeStackResponse?.StackStatus && !isStackStatusChanged) {
                   continueWaiting=true;
                 }
-                if(isApiStackDeployed && process.env.INITIAL_UI_STACK_STATUS===describeStackResponse.StackStatus && !isStackStatusChanged) {
+                if(!continueWaiting && isApiStackDeployed && process.env.INITIAL_UI_STACK_STATUS===describeStackResponse?.StackStatus && !isStackStatusChanged) {
                   continueWaiting=true;
                 }
                 if(continueWaiting) {
