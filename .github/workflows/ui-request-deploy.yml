@@ -373,6 +373,9 @@ jobs:
               });
               const toTime = (datetime) => {
                 const date = new Date(datetime);
+                if(date.toString() === "Invalid Date") {
+                  return "NA";
+                }
                 return centralTimeFormat.format(date);
               };
               const getBranch = async (branchName, tagName) => {
@@ -527,6 +530,9 @@ jobs:
               });
               const toTime = (datetime) => {
                 const date = new Date(datetime);
+                if(date.toString() === "Invalid Date") {
+                  return "NA";
+                }
                 return centralTimeFormat.format(date);
               };
               // find related issue of release form
@@ -1288,6 +1294,9 @@ jobs:
               });
               const toTime = (datetime) => {
                 const date = new Date(datetime);
+                if(date.toString() === "Invalid Date") {
+                  return "NA";
+                }
                 return centralTimeFormat.format(date);
               };
               let prodType="";
@@ -1807,6 +1816,9 @@ jobs:
               });
               const toTime = (datetime) => {
                 const date = new Date(datetime);
+                if(date.toString() === "Invalid Date") {
+                  return "NA";
+                }
                 return centralTimeFormat.format(date);
               };
               const commentBody = [
