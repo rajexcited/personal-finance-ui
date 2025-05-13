@@ -62,8 +62,10 @@ jobs:
           echo "event action: ${{ github.event.action }}"
           echo "event name: ${{ github.event_name }}"
           echo "event changes: ${{ github.event.changes }}"
-      - run: |
-          echo 'github json: ${{ toJson(github) }}'
+      - env:
+          GITHUB_JSON_DTL: ${{ toJson(github) }}
+        run: |
+          echo "github json: "$GITHUB_JSON_DTL
       - uses: actions/github-script@v7
         with:
           script: |
@@ -1605,7 +1607,7 @@ jobs:
               
               const uiDescribeStack = ${{ steps.wait-for-ui-deployment.outputs.uiDescribeStack }};
               const apiDescribeStack = ${{ steps.wait-for-ui-deployment.outputs.apiDescribeStack }};
-              const domainUrlOutput = apiDescribeStack.Outputs.find(output => output.OutputKey.startsWith("DistributionDomain"))?.OutputValue;
+              const domainUrlOutput = apiDescribeStack.Outputs?.find(output => output.OutputKey.startsWith("DistributionDomain"))?.OutputValue;
               if(domainUrlOutput) {
                 commentBody.push("", "### Domain UI URL: ", "");
                 commentBody.push("  https://" + domainUrlOutput);
@@ -1617,11 +1619,12 @@ jobs:
               commentBody.push("- **Updated On:**  " + toTime(uiDescribeStack.LastUpdatedTime));
               
               commentBody.push("", "#### Stack Outputs: ", "");
-              uiDescribeStack.Outputs.forEach(output => {
-                commentBody.push(` - **${output.OutputKey}:** ${output.OutputValue}  `);
-              });
-              if(uiDescribeStack.Outputs.length === 0) {
+              if(!uiDescribeStack.Outputs || uiDescribeStack.Outputs.length === 0) {
                 commentBody.push("  No outputs found.  ");
+              } else {
+                uiDescribeStack.Outputs.forEach(output => {
+                  commentBody.push(` - **${output.OutputKey}:** ${output.OutputValue}  `);
+                });
               }
               
               commentBody.push("", "#### Stack Tags: ", "");
