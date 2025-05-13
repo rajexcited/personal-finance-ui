@@ -58,7 +58,7 @@ export interface InputRef {
     getValue (): string | null;
 }
 
-const fcLogger = getLogger("FC.Input", null, null, "DEBUG");
+const fcLogger = getLogger("FC.Input", null, null, "DISABLED");
 
 const Input = forwardRef((props: InputProps, ref) => {
     const [inputValue, setInputValue] = useState(props.initialValue);

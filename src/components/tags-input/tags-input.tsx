@@ -83,7 +83,12 @@ export const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
     tagsInput.on("after.remove", (item) => {
       // removed item 
       if (props.onChange) {
-        props.onChange((tagsInput.value as string).split(","));
+        const tval = tagsInput.value as string;
+        const updatedTags = [];
+        if (tval) {
+          updatedTags.push(...tval.split(","));
+        }
+        props.onChange(updatedTags);
       }
       buildDropdown(tagsInput, sourceValues, logger);
       setTagCount(prev => prev - 1);
