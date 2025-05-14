@@ -19,6 +19,7 @@ permissions:
   contents: write
   id-token: write
   issues: write
+  pull-requests: write
 
 jobs:
   display_output:
@@ -190,9 +191,9 @@ jobs:
       - run_eligible
       - update_request
     outputs:
-      milestone-branch-name: ${{ steps.get-milestone-testplan.outputs.milestoneBranchName || steps.get-milestone-prod.outputs.tagRefName }}
-      milestone-branch-url: ${{ steps.get-milestone-testplan.outputs.milestoneBranchUrl || steps.get-milestone-prod.outputs.tagRefUrl }}
-      failed-reason: ${{ steps.testplan-request-eligible.outputs.failedReason || steps.prod-request-eligible.outputs.failedReason || steps.get-milestone-testplan.outputs.failedReason || steps.get-milestone-prod.outputs.failedReason || steps.testplan-issue.outputs.failedReason || steps.request-form-testplan.outputs.failedReason || steps.request-form-prod.outputs.failedReason }}
+      milestone-branch-name: ${{ steps.get-milestone-testplan-prov.outputs.milestoneBranchName || steps.get-milestone-prod.outputs.tagRefName }}
+      milestone-branch-url: ${{ steps.get-milestone-testplan-prov.outputs.milestoneBranchUrl || steps.get-milestone-prod.outputs.tagRefUrl }}
+      failed-reason: ${{ steps.testplan-request-eligible.outputs.failedReason || steps.prod-request-eligible.outputs.failedReason || steps.get-milestone-testplan-prov.outputs.failedReason || steps.get-milestone-testplan-deprov.outputs.failedReason || steps.get-milestone-prod.outputs.failedReason || steps.testplan-issue.outputs.failedReason || steps.request-form-testplan.outputs.failedReason || steps.request-form-prod.outputs.failedReason }}
       testplan-type: ${{ steps.testplan-issue.outputs.testplanType }}
       testplan-issue-number: ${{ steps.testplan-issue.outputs.testplanIssueNumber }}
       request-type: ${{ steps.get-request-type.outputs.request-type }}
@@ -221,6 +222,9 @@ jobs:
           ELIGIBLE="false"
           # validation relaxed for milestone if deprovision
           if [[ "$IS_TESTPLAN_PROVISION" == "true" && "$IS_MILESTONE_OPEN" == "true" ]]; then
+            ELIGIBLE="true"
+          fi
+          if [[ "$IS_TESTPLAN_DEPROVISION" == "true" ]]; then
             ELIGIBLE="true"
           fi
           if [[ "$ELIGIBLE" == "false" ]]; then
@@ -263,7 +267,7 @@ jobs:
           else
             echo "request-type=provision" >> $GITHUB_OUTPUT
           fi
-      - id: get-milestone-testplan
+      - id: get-milestone-testplan-prov
         if: needs.run_eligible.outputs.is-testplan-provision == 'true'
         name: Validate Milestone and Branch
         uses: actions/github-script@v7
@@ -303,6 +307,20 @@ jobs:
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during milestone validation, reason: ${error.message}`);
               core.setFailed(error.message);
+            }
+      - id: get-milestone-testplan-deprov
+        if: needs.run_eligible.outputs.is-testplan-deprovision == 'true'
+        name: Get Milestone Branch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // milestone due Date must be configured and is not past.
+            if(!context.payload.issue.milestone.due_on) {
+              const errorMessage = "Milestone due date is not set";
+              console.error("failed reason: ", errorMessage);
+              core.setOutput("failedReason", `Error during milestone validation, reason: ${errorMessage}`);
+              core.setFailed(errorMessage);
+              throw new Error(errorMessage);
             }
       - id: testplan-issue
         if: needs.run_eligible.outputs.is-testplan == 'true'
@@ -570,7 +588,7 @@ jobs:
       - id: branch-pr
         uses: actions/github-script@v7
         env:
-          BRANCH_NAME: ${{ steps.get-milestone-testplan.outputs.milestoneBranchName }}
+          BRANCH_NAME: ${{ steps.get-milestone-testplan-prov.outputs.milestoneBranchName }}
         with:
           script: |
             try {
@@ -911,15 +929,8 @@ jobs:
 
           STACK_STATUS=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].StackStatus")
           echo "ui_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
-          if [[ ! "$STACK_STATUS" =~ _COMPLETE$ ]]; then
-            STACK_STATUS_REASON=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].StackStatusReason")
-            FAILED_REASON="Stack Status is not in Complete but $STACK_STATUS. Reason is $STACK_STATUS_REASON"
-            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
-            echo "Failed Reason: $FAILED_REASON"
-            exit 1
-          fi
 
-          TAG_VALUE=$(echo "$DESCRIBE_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="environment").Value')
+          TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="environment").Value')
           if [[ "$TAG_VALUE" != "$ENVID" ]]; then
             FAILED_REASON="Stack is deployed for other environment $TAG_VALUE stack."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
@@ -927,7 +938,7 @@ jobs:
             exit 1
           fi
 
-          TAG_VALUE=$(echo "$DESCRIBE_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="milestone").Value')
+          TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="milestone").Value')
           if [[ "$TAG_VALUE" != "$UI_VERSION" ]]; then
             FAILED_REASON="Other milestone branch is deployed to UI Test plan environment. Wait for completion of $TAG_VALUE tests."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
@@ -943,15 +954,8 @@ jobs:
 
           STACK_STATUS=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].StackStatus")
           echo "api_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
-          if [[ ! "$STACK_STATUS" =~ _COMPLETE$ ]]; then
-            STACK_STATUS_REASON=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].StackStatusReason")
-            FAILED_REASON="Stack Status is not in Complete but $STACK_STATUS. Reason is $STACK_STATUS_REASON"
-            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
-            echo "Failed Reason: $FAILED_REASON"
-            exit 1
-          fi
 
-          TAG_VALUE=$(echo "$DESCRIBE_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="environment").Value')
+          TAG_VALUE=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="environment").Value')
           if [[ "$TAG_VALUE" != "$ENVID" ]]; then
             FAILED_REASON="API Stack is deployed for other environment $TAG_VALUE stack."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
@@ -959,7 +963,7 @@ jobs:
             exit 1
           fi
 
-          TAG_VALUE=$(echo "$DESCRIBE_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="milestone").Value')
+          TAG_VALUE=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="milestone").Value')
           if [[ "$TAG_VALUE" != "$API_VERSION" ]]; then
             FAILED_REASON="Other milestone branch is deployed to API Test plan environment. Wait for completion of $TAG_VALUE tests."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
@@ -1028,6 +1032,7 @@ jobs:
       - validate_request
       - validate_stack
       - validate_request_api
+    if: needs.validate_request.outputs.request-type == 'provision'
     outputs:
       failed-reason: ${{ steps.no-branch.outputs.failedReason || steps.create-prod-tag.outputs.failedReason }}
       branch-tag-name: ${{ needs.validate_request.outputs.milestone-branch-name || github.event.issue.milestone.title }}
@@ -1092,7 +1097,6 @@ jobs:
       - validate_request
       - create_tag
     environment: static-site
-    if: needs.validate_request.outputs.request-type == 'provision'
     outputs:
       artifact-name: ${{ steps.run-build.outputs.artifact-name }}
       artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}
@@ -1803,6 +1807,8 @@ jobs:
           MILESTONE_BRANCH_NAME: ${{ needs.validate_request.outputs.milestone-branch-name }}
           DESTROY_START_TIME: ${{ steps.create-api-issue.outputs.startTime }}
           ORIGINAL_ISSUE_TITLE: ${{ needs.run_eligible.outputs.original-issue-title }}
+          PR_NUMBER: ${{ needs.validate_request.outputs.pr-number }}
+          PR_LINK: ${{ needs.validate_request.outputs.pr-url }}
         with:
           script: |
             try {
@@ -1840,6 +1846,10 @@ jobs:
               if(apiIssueDetails?.number) {
                 const apiIssueWithLink = "[API Issue-" + apiIssueDetails.number + "](" + apiIssueDetails.html_url + ")";
                 commentBody.push("The " + apiIssueWithLink + ", for API destroy is created.", "");
+              }
+              if(process.env.PR_NUMBER && process.env.PR_LINK) {
+                commentBody.push("", "### Open PR" ,"");
+                commentBody.push(`- [PR - ${process.env.PR_NUMBER}](${process.env.PR_LINK})`);
               }
               
               commentBody.push("<br/>", "");
@@ -1888,6 +1898,7 @@ jobs:
     needs:
       - run_eligible
       - validate_request
+      - validate_stack
       - destroy
     environment:
       name: ${{ needs.run_eligible.outputs.env-ref-name }}
@@ -1915,6 +1926,7 @@ jobs:
         uses: actions/github-script@v7
         env:
           ENVID: ${{ vars.AWS_ENVID }}
+          INITIAL_UI_STACK_STATUS: ${{ needs.validate_stack.outputs.ui-stack-status }}
         with:
           script: |
             try {
@@ -1936,46 +1948,51 @@ jobs:
                 }
                 return null;
               };
-              let stackname = `prsfin-${process.env.ENVID}-infra-stack`;
-              let describeStackResponse = await describeStack(stackname);
-              const initialStackStatus = describeStackResponse?.StackStatus;
-              stackname=describeStackResponse.StackId;
+              let stackName = `prsfin-${process.env.ENVID}-ui-deploy-stack`;
+              let isStackStatusChanged = false;
               const stackSuccessRegex = new RegExp("DELETE_COMPLETE$");
-              const stackFailRegex = new RegExp("DELETE_FAILED$");
+              const stackFailRegex = new RegExp("DELETE_FAILED|ROLLBACK*");
 
               const sleepDuration = ONE_MINUTE;
-              const totalWaitDuration = 60 * ONE_MINUTE;
+              const totalWaitDuration = 30 * ONE_MINUTE;
               let waitedDuration = 0;
               const maxWaitForStatusUnchange = sleepDuration * 10;
+              let isDeleted = false;
               while(waitedDuration < totalWaitDuration) {
                 console.log("Destroy is in progress.", `Waiting for ${sleepDuration/ONE_SECOND} seconds ~ ${sleepDuration/ONE_MINUTE} minutes.`);
                 console.log(`waited ${waitedDuration/ONE_MINUTE} minutes for destroy complete out of allowed ${totalWaitDuration/ONE_MINUTE} minutes`);
                 await sleep(sleepDuration);
                 waitedDuration += sleepDuration;
-
-                describeStackResponse = await describeStack(stackname);
+                const describeStackResponse = await describeStack(stackName);
                 if(!describeStackResponse) {
                   // since no response, probably deleted already
+                  isDeleted=true;
                   break;
-                }
-                if(initialStackStatus===describeStackResponse.StackStatus) {
-                  if(waitedDuration<maxWaitForStatusUnchange) {
-                    continue;
-                  }
-                  throw new Error("Stack status hasnt been changed from initial.");
                 }
                 // check status
                 if(stackSuccessRegex.test(describeStackResponse.StackStatus)) {
-                  console.log("Both UI and API Stacks are destroyed successfully.")
+                  console.log("UI Stack is destroyed successfully.");
+                  isDeleted=true;
                   break;
                 }
+                stackName=describeStackResponse.StackId;
+                
+                if(!isStackStatusChanged && process.env.INITIAL_UI_STACK_STATUS===describeStackResponse.StackStatus) {
+                  // since no response, probably still in creation not started
+                  if(waitedDuration<maxWaitForStatusUnchange) {
+                    continue;
+                  }
+                  throw new Error("Stack status hasnt been changed from initial for a while.");
+                }
+                isStackStatusChanged=true;
+                
                 if(stackFailRegex.test(describeStackResponse.StackStatus)) {
                   throw new Error(`Stack destroy failed. found undesired Status [${describeStackResponse.StackStatus}] with reason, ${describeStackResponse.StackStatusReason}. Please check stack events for more details.`);
                 }
               }
 
-              if(!stackSuccessRegex.test(describeStackResponse?.StackStatus)) {
-                throw new Error(`Stack destroy is taking longer time than expected(${totalWaitDuration/ONE_MINUTE} minutes). Please check the status manually.`)
+              if(!isDeleted) {
+                throw new Error(`Stack destroy is taking longer time than expected(${totalWaitDuration/ONE_MINUTE} minutes). Please check the status manually.`);
               }
             } catch (error) {
               console.error("failed reason: ", error);
@@ -1988,6 +2005,7 @@ jobs:
         env:
           DESTROY_START_TIME: ${{ needs.destroy.outputs.start-time }}
           TESTPLAN_ISSUE_NUMBER: ${{ needs.validate_request.outputs.testplan-issue-number }}
+          PR_NUMBER: ${{ needs.validate_request.outputs.pr-number }}
         with:
           script: |
             try {
@@ -2087,6 +2105,15 @@ jobs:
                 issue_number: process.env.TESTPLAN_ISSUE_NUMBER
               });
               console.log("issue is lock again, lock issue response:", lockIssueResponse2);
+              if(process.env.PR_NUMBER) {
+                const prCommentResponse = await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: process.env.PR_NUMBER,
+                  body: commentBody.join("\n")
+                });
+                console.log("for PR, commentResponse: ", prCommentResponse);
+              }
             } catch(error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during issue update for deployment completion, reason: ${error.message}`);
