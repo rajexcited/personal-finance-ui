@@ -203,18 +203,17 @@ jobs:
         env:
           MILESTONE_TITLE: ${{ github.event.pull_request.milestone.title }}
         run: |
-            # read version of package.json file
-            PACKAGE_VERSION=$(jq -r '.version' package.json)
-            PACKAGE_LOCK_VERSION=$(jq -r '.version' package-lock.json)
-            if [[ "$PACKAGE_VERSION" != "$PACKAGE_LOCK_VERSION" ]]; then
-              echo "version in package.json and package-lock.json files are mismatched"
-              exit 1
-            fi
-            if [[ "v$PACKAGE_VERSION" != "$MILESTONE_TITLE" ]]; then
-              echo "version in package file is mismatched with milestone title"
-              exit 1
-            fi
-
+          # read version of package.json file
+          PACKAGE_VERSION=$(jq -r '.version' package.json)
+          PACKAGE_LOCK_VERSION=$(jq -r '.version' package-lock.json)
+          if [[ "$PACKAGE_VERSION" != "$PACKAGE_LOCK_VERSION" ]]; then
+            echo "version in package.json and package-lock.json files are mismatched"
+            exit 1
+          fi
+          if [[ "v$PACKAGE_VERSION" != "$MILESTONE_TITLE" ]]; then
+            echo "version in package file is mismatched with milestone title"
+            exit 1
+          fi
 
   validate_regression:
     name: validate Regression
@@ -244,56 +243,58 @@ jobs:
               if(matchedComments.length===0) {
                 throw new Error("regression testplan issue link is not found.");
               }
-              const supressErrorWithNull = async (fn) => {
+              const supressErrorWithNull = async (promise) => {
                 try {
-                  return await fn();
+                  return await promise;
                 } catch(e) {
                   console.log("error is supressed with null", e);
                   return null;
                 }
               };
               const allowedLabels = ["regression", "test plan"];
-              const testplanIssuePromises = matchedComments.map(async mc=> {
-                                if(!testplanIssueRegex.test(mc.body)) {
-                                  return null;
-                                }
-                                const matchedTestplanGroups = testplanIssueRegex.exec(mc.body);
-                                const getIssueResponse = supressErrorWithNull(()=> {
-                                  return github.rest.issues.get({
-                                    owner: context.repo.owner,
-                                    repo: context.repo.repo,
-                                    issue_number: matchedTestplanGroups[1]
-                                  });
-                                });
-                                console.log("getIssueResponse: ", getIssueResponse);
-                                if(getIssueResponse?.data.state !== "closed") {
-                                  return null;
-                                }
-                                const issueLables = getIssueResponse.data.labels.filter(lbl=>allowedLabels.includes(lbl.name));
-                                console.log("issueLables=", issueLables);
-                                if(issueLables.length !== allowedLabels.length) {
-                                  return null;
-                                }
-                                const listCommentsResponse = await github.rest.issues.listComments({
-                                  owner: context.repo.owner,
-                                  repo: context.repo.repo,
-                                  issue_number: matchedTestplanGroups[1]
-                                });
-                                console.log("listCommentsResponse: ", listCommentsResponse);
-                                if(listCommentsResponse.data.length===0) {
-                                  return null;
-                                }
-                                return {
-                                  issueDetails: getIssueResponse.data,
-                                  issueComments: listCommentsResponse.data
-                                };
-                              });
+              const findTestplanIssue = async mc => {
+                const matchedTestplanGroups = testplanIssueRegex.exec(mc.body);
+                try {
+                  const getIssueResponse = await github.rest.issues.get({
+                      owner: context.repo.owner, 
+                      repo: context.repo.repo, 
+                      issue_number: matchedTestplanGroups[1] 
+                    });
+                  console.log("getIssueResponse: ", getIssueResponse);
+                  if(getIssueResponse.data.state !== "closed") {
+                    return null;
+                  }
+                  const issueLables = getIssueResponse.data.labels.filter(lbl=>allowedLabels.includes(lbl.name));
+                  // console.log("issueLables=", issueLables);
+                  if(issueLables.length !== allowedLabels.length) {
+                    return null;
+                  }
+                  const listCommentsResponse = await github.rest.issues.listComments({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: matchedTestplanGroups[1]
+                  });
+                  console.log("listCommentsResponse: ", listCommentsResponse);
+                  if(listCommentsResponse.data.length===0) {
+                    return null;
+                  }
+                  return {
+                    issueDetails: getIssueResponse.data,
+                    issueComments: listCommentsResponse.data
+                  };
+                } catch(err) {
+                  console.warn("ignoring error", err);
+                }
+                return null;
+              };
+              const testplanIssuePromises = matchedComments.map(findTestplanIssue);
               // promise with null values, invalid
-              const testplanIssueDetailList = await Promise.all(testplanIssuePromises).filter(iss=>iss!=null);
+              const testplanIssueDetailList = (await Promise.all(testplanIssuePromises)).filter(iss=>iss!=null);
               if(testplanIssueDetailList.length === 0) {
                 throw new Error("regression testplan issue link is not found in PR comments");
               }
-              const foundCompletedTestplanDetail = testplanIssueDetailList.find(testplanIssue => !!testplanIssue.issueComments.find(comment=> comment.body.includes("There are no critical issues") && comment.body.includes("Status-All%20Good")));
+              const isCommentStatusAllGood = comment => comment.body.includes("There are no critical issues") && comment.body.includes("Status-All%20Good");
+              const foundCompletedTestplanDetail = testplanIssueDetailList.find(testplanIssue=>!!testplanIssue.issueComments.find(isCommentStatusAllGood));
               if(!foundCompletedTestplanDetail) {
                 throw new Error("Regression issue is closed but all critical issues are not resolved");
               }
