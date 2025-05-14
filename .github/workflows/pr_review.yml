@@ -130,10 +130,12 @@ jobs:
             exit 1
           fi
 
-          ALLOWED_MERGE_AFTER=$(date -d "now - 15 minutes" +%Y-%m-%dT%H:%M:%S%z)
-          NOW=$(date +"%Y-%m-%dT%H:%M:%S%z")
-          if [[ "$MERGED_ON" <= "$ALLOWED_MERGE_AFTER" || "$MERGED_ON" >= "$NOW" ]]; then
-            echo merged timestamp is not supported automatic deletion of head branch
+          MERGED_ON_SECONDS=$(date -d "$MERGED_ON" +%s)
+          ALLOWED_MERGE_AFTER_SECONDS=$(date -d "now - 15 minutes" +%s)
+          NOW_SECONDS=$(date +%s)
+
+          if [[ "$MERGED_ON_SECONDS" -le "$ALLOWED_MERGE_AFTER_SECONDS" || "$MERGED_ON_SECONDS" -ge "$NOW_SECONDS" ]]; then
+            echo "Merged timestamp does not fall within the allowed range. Automatic deletion is not supported."
             exit 1
           fi
       - name: Compare Milestone branch to master
