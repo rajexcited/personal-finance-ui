@@ -1948,7 +1948,7 @@ jobs:
                 }
                 return null;
               };
-              let stackName = `prsfin-${process.env.ENVID}-infra-stack`;
+              let stackName = `prsfin-${process.env.ENVID}-ui-deploy-stack`;
               let isStackStatusChanged = false;
               const stackSuccessRegex = new RegExp("DELETE_COMPLETE$");
               const stackFailRegex = new RegExp("DELETE_FAILED|ROLLBACK*");
