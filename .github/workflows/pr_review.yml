@@ -229,7 +229,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            try{
+            try {
               // Fetch all comments on the pull request
               const listCommentsResponse = await github.rest.issues.listComments({
                 owner: context.repo.owner,
@@ -243,14 +243,7 @@ jobs:
               if(matchedComments.length===0) {
                 throw new Error("regression testplan issue link is not found.");
               }
-              const supressErrorWithNull = async (promise) => {
-                try {
-                  return await promise;
-                } catch(e) {
-                  console.log("error is supressed with null", e);
-                  return null;
-                }
-              };
+              
               const allowedLabels = ["regression", "test plan"];
               const findTestplanIssue = async mc => {
                 const matchedTestplanGroups = testplanIssueRegex.exec(mc.body);
