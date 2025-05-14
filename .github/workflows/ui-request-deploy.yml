@@ -930,7 +930,7 @@ jobs:
           STACK_STATUS=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].StackStatus")
           echo "ui_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
 
-          TAG_VALUE=$(echo "$DESCRIBE_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="environment").Value')
+          TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="environment").Value')
           if [[ "$TAG_VALUE" != "$ENVID" ]]; then
             FAILED_REASON="Stack is deployed for other environment $TAG_VALUE stack."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
@@ -938,7 +938,7 @@ jobs:
             exit 1
           fi
 
-          TAG_VALUE=$(echo "$DESCRIBE_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="milestone").Value')
+          TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="milestone").Value')
           if [[ "$TAG_VALUE" != "$UI_VERSION" ]]; then
             FAILED_REASON="Other milestone branch is deployed to UI Test plan environment. Wait for completion of $TAG_VALUE tests."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
@@ -955,7 +955,7 @@ jobs:
           STACK_STATUS=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].StackStatus")
           echo "api_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
 
-          TAG_VALUE=$(echo "$DESCRIBE_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="environment").Value')
+          TAG_VALUE=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="environment").Value')
           if [[ "$TAG_VALUE" != "$ENVID" ]]; then
             FAILED_REASON="API Stack is deployed for other environment $TAG_VALUE stack."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
@@ -963,7 +963,7 @@ jobs:
             exit 1
           fi
 
-          TAG_VALUE=$(echo "$DESCRIBE_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="milestone").Value')
+          TAG_VALUE=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="milestone").Value')
           if [[ "$TAG_VALUE" != "$API_VERSION" ]]; then
             FAILED_REASON="Other milestone branch is deployed to API Test plan environment. Wait for completion of $TAG_VALUE tests."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
