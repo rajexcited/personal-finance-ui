@@ -5,11 +5,11 @@ title: "[Bug] "
 labels: [bug]
 ---
 
-## Describe the Bug
+### Describe the Bug
 
 _(A clear and concise description of what the bug is.)_
 
-## Steps to Reproduce
+### Steps to Reproduce
 
 _(Add steps with details, following are example steps)_
 
@@ -26,7 +26,7 @@ _(Describe what you expected to happen.)_
 
 ### Screenshots/Logs
 
-_(If applicable, add screenshots or logs to help explain your problem.)_
+_(If applicable, add screenshots or logs to help explain your problem. Provide testcase id and link if available)_
 
 ### Environment
 
@@ -37,3 +37,6 @@ _(If applicable, add screenshots or logs to help explain your problem.)_
 ### Additional Context
 
 _(Add any other context about the problem here.)_
+
+Ex. During regression test plan execution, <testplan issue link>, found this discrepancy.
+

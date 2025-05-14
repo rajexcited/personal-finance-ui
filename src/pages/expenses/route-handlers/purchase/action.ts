@@ -7,10 +7,11 @@ import {
   getLogger,
   handleRouteActionError,
   PurchaseFields,
-  ExpenseBelongsTo,
+  ExpenseBelongsTo
 } from "../../services";
 import { ReceiptProps } from "../../../../components/receipt";
 import { uploadReceipts } from "../receipt/upload";
+import { getFormData } from "../common";
 
 const rhLogger = getLogger("route.handler.purchase.action", null, null, "DISABLED");
 
@@ -25,38 +26,20 @@ export const purchaseActionHandler = async ({ request }: ActionFunctionArgs) => 
     errorMessage: "action not supported",
     data: {
       request: {
-        method: request.method,
-      },
-    },
+        method: request.method
+      }
+    }
   };
   return json(error, { status: HttpStatusCode.InternalServerError });
-};
-
-type PurchaseResourceKey = keyof PurchaseFields;
-const getFormData = (formData: FormData, formKey: PurchaseResourceKey) => {
-  const formValue = formData.get(formKey);
-
-  if (formValue) {
-    try {
-      const jsonstr = formValue.toString();
-      const jsonObj = JSON.parse(jsonstr);
-      if (typeof jsonObj === "object") {
-        return jsonObj;
-      }
-      return formValue.toString();
-    } catch (ignore) {
-      return formValue.toString();
-    }
-  }
-  return null;
 };
 
 const purchaseAddUpdateActionHandler = async (request: Request) => {
   const logger = getLogger("purchaseAddUpdateActionHandler", rhLogger);
   try {
+    const getPurchaseFormData = getFormData<PurchaseFields>;
     const formdata = await request.formData();
 
-    const receipts: ReceiptProps[] = getFormData(formdata, "receipts");
+    const receipts: ReceiptProps[] = getPurchaseFormData(formdata, "receipts");
     const uploadReceiptResult = await uploadReceipts(receipts, formdata, logger);
 
     if (uploadReceiptResult instanceof Response) {
@@ -64,23 +47,23 @@ const purchaseAddUpdateActionHandler = async (request: Request) => {
     }
 
     await purchaseService.addUpdatePurchase({
-      id: getFormData(formdata, "id"),
-      billName: getFormData(formdata, "billName"),
-      paymentAccountId: getFormData(formdata, "paymentAccountId"),
-      paymentAccountName: getFormData(formdata, "paymentAccountName"),
-      amount: getFormData(formdata, "amount"),
-      description: getFormData(formdata, "description"),
-      purchaseDate: getFormData(formdata, "purchaseDate"),
-      tags: getFormData(formdata, "tags"),
-      verifiedTimestamp: getFormData(formdata, "verifiedTimestamp"),
-      items: getFormData(formdata, "items"),
-      purchaseTypeId: getFormData(formdata, "purchaseTypeId"),
-      purchaseTypeName: getFormData(formdata, "purchaseTypeName"),
-      personIds: getFormData(formdata, "personIds"),
+      id: getPurchaseFormData(formdata, "id"),
+      billName: getPurchaseFormData(formdata, "billName"),
+      paymentAccountId: getPurchaseFormData(formdata, "paymentAccountId"),
+      paymentAccountName: getPurchaseFormData(formdata, "paymentAccountName"),
+      amount: getPurchaseFormData(formdata, "amount"),
+      description: getPurchaseFormData(formdata, "description"),
+      purchaseDate: getPurchaseFormData(formdata, "purchaseDate"),
+      tags: getPurchaseFormData(formdata, "tags"),
+      verifiedTimestamp: getPurchaseFormData(formdata, "verifiedTimestamp"),
+      items: getPurchaseFormData(formdata, "items"),
+      purchaseTypeId: getPurchaseFormData(formdata, "purchaseTypeId"),
+      purchaseTypeName: getPurchaseFormData(formdata, "purchaseTypeName"),
+      personIds: getPurchaseFormData(formdata, "personIds"),
       receipts: uploadReceiptResult,
       auditDetails: { createdOn: new Date(), updatedOn: new Date() },
       belongsTo: ExpenseBelongsTo.Purchase,
-      currencyProfileId: getFormData(formdata, "currencyProfileId"),
+      currencyProfileId: getPurchaseFormData(formdata, "currencyProfileId")
     });
 
     return redirect(getFullPath("expenseJournalRoot"));
@@ -98,7 +81,7 @@ const purchaseDeleteActionHandler = async (request: Request) => {
     await purchaseService.removePurchase(purchaseId);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: "purchase is deleted",
+      data: "purchase is deleted"
     };
     return response;
   } catch (e) {

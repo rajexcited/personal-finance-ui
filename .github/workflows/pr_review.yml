@@ -1,5 +1,5 @@
 # For Pull request - verifies whether there are any issues for milestone opened?
-name: PR Milestone issues
+name: Milestone PR Review
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request
 on:
@@ -57,7 +57,7 @@ jobs:
       - id: source-branch
         name: PR source branch
         env:
-          IS_MILESTONE_SOURCE: ${{ startsWith(github.event.pull_request.head.ref, 'ref/head/milestone/') }}
+          IS_MILESTONE_SOURCE: ${{ startsWith(github.event.pull_request.head.ref, 'milestone/') }}
         run: |
           echo "PR source branch is ${{ github.event.pull_request.head.ref }}"
           echo "is-milestone=$IS_MILESTONE_SOURCE" >> $GITHUB_OUTPUT
@@ -74,7 +74,7 @@ jobs:
           echo "PR is in draft state, not ready to review."
           exit 1
       - id: pr-vars
-        name: PR Should be open
+        name: Exporting PR Variables
         env:
           IS_NOT_CLOSED: ${{ github.event.pull_request.state != 'closed' }}
           IS_OPENED: ${{ endsWith(github.event.pull_request.state, 'opened') }}
@@ -96,6 +96,18 @@ jobs:
             JUST_MERGED="true"
           fi
           echo "is-milestone-merged-and-closed=$JUST_MERGED" >> $GITHUB_OUTPUT
+
+  # troubleshoot_eligible_outputs:
+  #   name: Troubleshoot Outputs
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - workflow_eligible
+  #   steps:
+  #     - name: Display Needs
+  #       env:
+  #         NEEDS_WRKFLW_ELGBL: ${{ toJson(needs.workflow_eligible) }}
+  #       run: |
+  #         echo "Workflow Eligible Needs: $NEEDS_WRKFLW_ELGBL"
 
   delete_after_merge:
     name: Delete After Merge
@@ -163,7 +175,7 @@ jobs:
           echo "Milestone title to PR is $MILESTONE_TITLE"
           MILESTONE_BRANCH="milestone/$MILESTONE_TITLE"
           # error if head branch is not ending with milestone branch
-          if [[ ! "$SOURCE_BRANCH_NAME" =~ ${MILESTONE_BRANCH}$ ]]; then
+          if [[ "$SOURCE_BRANCH_NAME" != "$MILESTONE_BRANCH" ]]; then
             echo "Source milestone branch is not matching assigned milestone. please correct the assignment"
             exit 1
           fi
@@ -183,6 +195,25 @@ jobs:
               core.setFailed(`Milestone branch is behind master by ${compareResponse.data.behind_by} commits.`);
               throw new Error(`Milestone branch is behind master by ${compareResponse.data.behind_by} commits.`);
             }
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+      - name: Validate version
+        env:
+          MILESTONE_TITLE: ${{ github.event.pull_request.milestone.title }}
+        run: |
+          # read version of package.json file
+          PACKAGE_VERSION=$(jq -r '.version' package.json)
+          PACKAGE_LOCK_VERSION=$(jq -r '.version' package-lock.json)
+          if [[ "$PACKAGE_VERSION" != "$PACKAGE_LOCK_VERSION" ]]; then
+            echo "version in package.json and package-lock.json files are mismatched"
+            exit 1
+          fi
+          if [[ "v$PACKAGE_VERSION" != "$MILESTONE_TITLE" ]]; then
+            echo "version in package file is mismatched with milestone title"
+            exit 1
+          fi
 
   validate_regression:
     name: validate Regression
@@ -198,7 +229,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            try{
+            try {
               // Fetch all comments on the pull request
               const listCommentsResponse = await github.rest.issues.listComments({
                 owner: context.repo.owner,
@@ -212,56 +243,51 @@ jobs:
               if(matchedComments.length===0) {
                 throw new Error("regression testplan issue link is not found.");
               }
-              const supressErrorWithNull = async (fn) => {
-                try {
-                  return await fn();
-                } catch(e) {
-                  console.log("error is supressed with null", e);
-                  return null;
-                }
-              };
+              
               const allowedLabels = ["regression", "test plan"];
-              const testplanIssuePromises = matchedComments.map(async mc=> {
-                                if(!testplanIssueRegex.test(mc.body)) {
-                                  return null;
-                                }
-                                const matchedTestplanGroups = testplanIssueRegex.exec(mc.body);
-                                const getIssueResponse = supressErrorWithNull(()=> {
-                                  return github.rest.issues.get({
-                                    owner: context.repo.owner,
-                                    repo: context.repo.repo,
-                                    issue_number: matchedTestplanGroups[1]
-                                  });
-                                });
-                                console.log("getIssueResponse: ", getIssueResponse);
-                                if(getIssueResponse?.data.state !== "closed") {
-                                  return null;
-                                }
-                                const issueLables = getIssueResponse.data.labels.filter(lbl=>allowedLabels.includes(lbl.name));
-                                console.log("issueLables=", issueLables);
-                                if(issueLables.length !== allowedLabels.length) {
-                                  return null;
-                                }
-                                const listCommentsResponse = await github.rest.issues.listComments({
-                                  owner: context.repo.owner,
-                                  repo: context.repo.repo,
-                                  issue_number: matchedTestplanGroups[1]
-                                });
-                                console.log("listCommentsResponse: ", listCommentsResponse);
-                                if(listCommentsResponse.data.length===0) {
-                                  return null;
-                                }
-                                return {
-                                  issueDetails: getIssueResponse.data,
-                                  issueComments: listCommentsResponse.data
-                                };
-                              });
+              const findTestplanIssue = async mc => {
+                const matchedTestplanGroups = testplanIssueRegex.exec(mc.body);
+                try {
+                  const getIssueResponse = await github.rest.issues.get({
+                      owner: context.repo.owner, 
+                      repo: context.repo.repo, 
+                      issue_number: matchedTestplanGroups[1] 
+                    });
+                  console.log("getIssueResponse: ", getIssueResponse);
+                  if(getIssueResponse.data.state !== "closed") {
+                    return null;
+                  }
+                  const issueLables = getIssueResponse.data.labels.filter(lbl=>allowedLabels.includes(lbl.name));
+                  // console.log("issueLables=", issueLables);
+                  if(issueLables.length !== allowedLabels.length) {
+                    return null;
+                  }
+                  const listCommentsResponse = await github.rest.issues.listComments({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: matchedTestplanGroups[1]
+                  });
+                  console.log("listCommentsResponse: ", listCommentsResponse);
+                  if(listCommentsResponse.data.length===0) {
+                    return null;
+                  }
+                  return {
+                    issueDetails: getIssueResponse.data,
+                    issueComments: listCommentsResponse.data
+                  };
+                } catch(err) {
+                  console.warn("ignoring error", err);
+                }
+                return null;
+              };
+              const testplanIssuePromises = matchedComments.map(findTestplanIssue);
               // promise with null values, invalid
-              const testplanIssueDetailList = await Promise.all(testplanIssuePromises).filter(iss=>iss!=null);
+              const testplanIssueDetailList = (await Promise.all(testplanIssuePromises)).filter(iss=>iss!=null);
               if(testplanIssueDetailList.length === 0) {
                 throw new Error("regression testplan issue link is not found in PR comments");
               }
-              const foundCompletedTestplanDetail = testplanIssueDetailList.find(testplanIssue => !!testplanIssue.issueComments.find(comment=> comment.body.includes("There are no critical issues") && comment.body.includes("Status-All%20Good")));
+              const isCommentStatusAllGood = comment => comment.body.includes("There are no critical issues") && comment.body.includes("Status-All%20Good");
+              const foundCompletedTestplanDetail = testplanIssueDetailList.find(testplanIssue=>!!testplanIssue.issueComments.find(isCommentStatusAllGood));
               if(!foundCompletedTestplanDetail) {
                 throw new Error("Regression issue is closed but all critical issues are not resolved");
               }
@@ -304,6 +330,10 @@ jobs:
     environment:
       name: testplan
     if: needs.workflow_eligible.outputs.for-milestone-review == 'true'
+    permissions:
+      contents: write
+      issues: write
+      id-token: write
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4

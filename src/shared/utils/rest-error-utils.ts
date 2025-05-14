@@ -106,7 +106,17 @@ export const handleRestErrors = (e: Error, loggerBase: LoggerBase) => {
       logger.debug("throwing error", err);
       throw err;
     }
-    const err = new UnknownError("Unknown error: " + (e.response?.data || e.cause));
+    let msg = "";
+    if (typeof e.response?.data === "string") {
+      msg = e.response.data;
+    } else if (typeof e.response?.data?.Message === "string" || typeof e.response?.data?.message === "string") {
+      msg = e.response?.data?.Message || e.response?.data?.message;
+    } else if (e.message) {
+      msg = e.message;
+    } else if (typeof e.response?.data === "object") {
+      msg = JSON.stringify(e.response.data);
+    }
+    const err = new UnknownError(`Unknown error${msg ? " : " + msg : ""}`);
 
     logger.debug("throwing error", err);
     throw err;

@@ -23,3 +23,21 @@ export const getMissingSharePersons = async (
   const sharePersonList = await Promise.all(missingSharePersonPromises);
   return sharePersonList;
 };
+
+export const getFormData = <T extends ExpenseFields>(formData: FormData, formKey: keyof T) => {
+  const formValue = formData.get(formKey as string);
+
+  if (formValue !== null && formValue !== undefined) {
+    try {
+      const jsonstr = formValue.toString();
+      const jsonObj = JSON.parse(jsonstr);
+      if (typeof jsonObj === "object") {
+        return jsonObj;
+      }
+      return formValue.toString();
+    } catch (ignore) {
+      return formValue.toString();
+    }
+  }
+  return null;
+};

@@ -33,6 +33,7 @@ interface TextInputProps extends BaseInputProps {
     minlength?: number;
     pattern?: string;
     autocomplete?: string;
+    autoCapitalize?: "off" | "none" | "on" | "sentences" | "words" | "characters" | string;
 }
 
 interface NumberInputProps extends BaseInputProps {
@@ -262,6 +263,7 @@ const Input = forwardRef((props: InputProps, ref) => {
                         onClick={ onClickHandler }
                         required={ props.required }
                         autoComplete={ props.autocomplete }
+                        autoCapitalize={ props.autoCapitalize || "off" }
                     />
                 }
                 {
