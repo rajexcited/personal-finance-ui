@@ -330,6 +330,10 @@ jobs:
     environment:
       name: testplan
     if: needs.workflow_eligible.outputs.for-milestone-review == 'true'
+    permissions:
+      contents: write
+      issues: write
+      id-token: write
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
