@@ -30,8 +30,10 @@ jobs:
       - run: |
           echo "Issue number: ${{ github.event.issue.number }}"
           echo "Issue title: ${{ github.event.issue.title }}"
-      - run: |
-          echo "Issue body: ${{ github.event.issue.body }}"
+      - env:
+          ISS_BODY: ${{ github.event.issue.body }}
+        run: |
+          echo "Issue body: $ISS_BODY"
       - env:
           MILESTONE_DTL: ${{ toJson(github.event.issue.milestone) }}
         run: |
@@ -1571,6 +1573,49 @@ jobs:
               core.setOutput("failedReason", `Error deployment wait step, reason: ${error.message}`);
               core.setFailed(error.message);
             }
+      - id: post-deployment-verification-issue
+        name: Post Deployment Verification Issue
+        uses: actions/github-script@v7
+        if: needs.run_eligible.outputs.is-production == 'true'
+        env:
+          POST_DEPLOY_REQ_SECTION: ${{ needs.validate_request.outputs.post-deployment-section }}
+          IS_RELEASE: ${{ needs.run_eligible.outputs.is-prod-provision }}
+        with:
+          script: |
+            try {
+              let deploymentType = "Release";
+              if(process.env.IS_RELEASE != "true") {
+                deploymentType = "Rollback";
+              }
+              let issueBody = "\n## Deployment Completed\n\n";
+              issueBody += `### Parent ${deploymentType} Deployment\n\n`;
+              issueBody += `- Request [Issue-${context.payload.issue.number}](${context.payload.issue.html_url})\n\n`;
+              issueBody += process.env.POST_DEPLOY_REQ_SECTION;
+              issueBody += "\n\n  ";
+              issueBody += "> [!IMPORTANT]  \n";
+              issueBody += "> Please checked tasks if verified successfully. When post deployment verification is completed, close the issue regardless the status to mark the deployment attempt complete.  ";
+              const createIssueResponse = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: "[Task] Post Deployment Verifications for Prod " + deploymentType,
+                body: issueBody,
+                labels: context.payload.issue.labels.map(label=>label.name),
+                milestone: context.payload.issue.milestone.number
+              });
+              console.log("api createIssueResponse: ", createIssueResponse);
+              core.setOutput("issueNumber", createIssueResponse.data.number);
+              
+              const lockIssueResponse = await github.rest.issues.lock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: createIssueResponse.data.number
+              });
+              console.log("lock issue response:", lockIssueResponse);
+            } catch(error) {
+              console.error("failed reason: ", error);
+              core.setOutput("failedReason", `Error during issue update for deployment completion, reason: ${error.message}`);
+              core.setFailed(error.message);
+            }
       - id: update-issue-deployment-complete
         name: Update Issue - Deployment Complete
         uses: actions/github-script@v7
@@ -1579,6 +1624,7 @@ jobs:
           TESTPLAN_ISSUE_NUMBER: ${{ needs.validate_request.outputs.testplan-issue-number }}
           DEPLOYMENT_SCOPE: ${{ needs.validate_request.outputs.deployment-scope }}
           PR_NUMBER: ${{ needs.validate_request.outputs.pr-number }}
+          POST_VERFCT_ISSUE_NUM: ${{ steps.post-deployment-verification-issue.outputs.issueNumber }}
         with:
           script: |
             try {
@@ -1658,6 +1704,11 @@ jobs:
                 commentBody.push("- **Created On:**  " + toTime(stackDetails.api.created_time));
                 commentBody.push("- **Updated On:**  " + toTime(stackDetails.api.updated_time));
               }
+
+              if(process.env.POST_VERFCT_ISSUE_NUM) {
+                commentBody.push("", "### Post Verification Issue Created");
+                commentBody.push("#"+process.env.POST_VERFCT_ISSUE_NUM);
+              }
               
               commentBody.push("<br/>", "");
               commentBody.push("> [!NOTE]", "> The Deployment is completed. This request issue will be closing.");
@@ -1724,47 +1775,6 @@ jobs:
                 });
                 console.log("for PR, commentResponse: ", prCommentResponse);
               }
-            } catch(error) {
-              console.error("failed reason: ", error);
-              core.setOutput("failedReason", `Error during issue update for deployment completion, reason: ${error.message}`);
-              core.setFailed(error.message);
-            }
-      - id: post-deployment-verification-issue
-        name: Post Deployment Verification Issue
-        uses: actions/github-script@v7
-        if: needs.run_eligible.outputs.is-production == 'true'
-        env:
-          POST_DEPLOY_REQ_SECTION: ${{ needs.validate_request.outputs.post-deployment-section }}
-          IS_RELEASE: ${{ needs.run_eligible.outputs.is-prod-provision }}
-        with:
-          script: |
-            try {
-              let deploymentType = "Release";
-              if(process.env.IS_RELEASE != "true") {
-                deploymentType = "Rollback";
-              }
-              let issueBody = "\n## Deployment Completed\n\n";
-              issueBody += `### Parent ${deploymentType} Deployment\n\n`;
-              issueBody += `- Request [Issue-${context.payload.issue.number}](${context.payload.issue.html_url})\n\n`;
-              issueBody += process.env.POST_DEPLOY_REQ_SECTION;
-              issueBody += "\n\n  ";
-              issueBody += "> [!IMPORTANT]  \n";
-              issueBody += "> Please checked tasks if verified successfully. When post deployment verification is completed, close the issue regardless the status to mark the deployment attempt complete.  ";
-              const createIssueResponse = await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: "[Task] Post Deployment Verifications for Prod " + deploymentType,
-                body: issueBody,
-                labels: context.payload.issue.labels.map(label=>label.name),
-                milestone: context.payload.issue.milestone.number
-              });
-              console.log("api createIssueResponse: ", createIssueResponse);
-              const lockIssueResponse = await github.rest.issues.lock({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: createIssueResponse.data.number
-              });
-              console.log("lock issue response:", lockIssueResponse);
             } catch(error) {
               console.error("failed reason: ", error);
               core.setOutput("failedReason", `Error during issue update for deployment completion, reason: ${error.message}`);
