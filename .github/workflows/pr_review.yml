@@ -246,7 +246,7 @@ jobs:
                 throw new Error("regression testplan issue link is not found.");
               }
               
-              const allowedLabels = ["regression", "test plan"];
+              const allowedLabels = ["regression", "env: testplan"];
               const findTestplanIssue = async mc => {
                 const matchedTestplanGroups = testplanIssueRegex.exec(mc.body);
                 try {

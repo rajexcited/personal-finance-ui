@@ -103,15 +103,15 @@ jobs:
           echo Workflow is not eligible to process issue
           exit 1
       - if: >
-          ! contains(github.event.issue.labels.*.name, 'production') && 
-          ! contains(github.event.issue.labels.*.name, 'test plan')
+          ! contains(github.event.issue.labels.*.name, 'env: production') && 
+          ! contains(github.event.issue.labels.*.name, 'env: testplan')
         run: |
           echo "environment label is not defined to issue"
           echo Workflow is not eligible to process issue
           exit 1
       - if: >
-          contains(github.event.issue.labels.*.name, 'production') && 
-          contains(github.event.issue.labels.*.name, 'test plan')
+          contains(github.event.issue.labels.*.name, 'env: production') && 
+          contains(github.event.issue.labels.*.name, 'env: testplan')
         run: |
           echo "both environment labels are defined to issue"
           echo Workflow is not eligible to process issue
@@ -127,10 +127,10 @@ jobs:
       - id: request-form-issue
         name: Request Form Issue categorized
         env:
-          IS_TESTPLAN: ${{ contains(github.event.issue.labels.*.name, 'test plan') }}
+          IS_TESTPLAN: "${{ contains(github.event.issue.labels.*.name, 'env: testplan') }}"
           IS_TESTPLAN_PROVISION: ${{ startsWith(github.event.issue.title, '[Request] Provision Test Plan Environment') }}
           IS_TESTPLAN_DEPROVISION: ${{ startsWith(github.event.issue.title, '[Request] Deprovision Test Plan Environment') }}
-          IS_PRODUCTION: ${{ contains(github.event.issue.labels.*.name, 'production') }}
+          IS_PRODUCTION: "${{ contains(github.event.issue.labels.*.name, 'env: production') }}"
           IS_PRODUCTION_PROVISION: ${{ startsWith(github.event.issue.title, '[Request] Provision Production Environment') }}
           IS_PROD_ROLLBACK_PROVISION: ${{ startsWith(github.event.issue.title, '[Request] [Rollback] Provision Production Environment') }}
         run: |
@@ -352,7 +352,7 @@ jobs:
                 issue_number: testplanIssueNumber
               });
               console.log("getIssueResponse: ", getIssueResponse);
-              const allowedLabels = [foundTypeLabel.name, "test plan"];
+              const allowedLabels = [foundTypeLabel.name, "env: testplan"];
               const testplanLabels = getIssueResponse.data.labels.filter(label=>allowedLabels.includes(label.name));
               if(testplanLabels.length!==allowedLabels.length){
                 throw new Error("missing required labels in given testplan issue");
@@ -571,7 +571,7 @@ jobs:
               const listIssuesResponse = await github.rest.issues.listForRepo({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                labels: ["deployment", "production"],
+                labels: ["deployment", "env: production"],
                 state: "closed",
                 milestone: deployedMilestone.number
               });
@@ -1191,7 +1191,7 @@ jobs:
                 repo: process.env.BACKEND_REPO_NAME,
                 title: process.env.ORIGINAL_ISSUE_TITLE,
                 body: issueBody,
-                labels: ["deployment", "test plan", process.env.TESTPLAN_TYPE],
+                labels: ["deployment", "env: testplan", process.env.TESTPLAN_TYPE],
                 milestone: process.env.API_MILESTONE_NUMBER
               });
               console.log("api createIssueResponse: ", createIssueResponse);

@@ -2,7 +2,7 @@
 name: Request - Deploy or Rollback Production Environment
 about: Submit a request for release deployment or rollback to a previous version in the production environment.
 title: "[Request] [Rollback] Provision Production Environment"
-labels: [deployment, production, rollback, request]
+labels: [deployment, "env: production", rollback, request]
 ---
 
 # Production Environment Deployment Form
