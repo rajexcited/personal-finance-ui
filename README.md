@@ -2,11 +2,14 @@
 
 The personal finance project is to help with finance activities. it helps with tracking expenses, payments; managing goals, configure budget, expense verification and alert me for fraudable item, etc. It helps in tracking investments and savings.
 
-[![UI Deploy v0.1.0](https://github.com/rajexcited/personal-finance-ui/actions/workflows/ui-deploy.yml/badge.svg?event=workflow_run)](https://github.com/rajexcited/personal-finance-ui/actions/workflows/ui-deploy.yml)
+[![UI Build](https://github.com/rajexcited/personal-finance-ui/actions/workflows/ui-build.yml/badge.svg?branch=master)](https://github.com/rajexcited/personal-finance-ui/actions/workflows/ui-build.yml)
 
-#### Recommendation
+### Prod URL:
 
-We recommend using google chrome for better user experience.
+https://d380yt1dhnt8n.cloudfront.net/personal-finance
+
+> [!TIP]  
+> We recommend using google chrome for better user experience.
 
 ## Demo
 
