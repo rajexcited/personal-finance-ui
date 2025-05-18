@@ -200,6 +200,7 @@ jobs:
       deployment-scope: ${{ steps.request-form-testplan.outputs.deployment_scope }}
       api-version: ${{ steps.request-form-testplan.outputs.api_version }}
       post-deployment-section: ${{ steps.request-form-prod.outputs.post_deployment_tasks_section }}
+      use-existing-tag: ${{ steps.request-form-prod.outputs.use_existing_tag }}
       pr-number: ${{ steps.branch-pr.outputs.prNumber }}
       pr-url: ${{ steps.branch-pr.outputs.prUrl }}
     steps:
@@ -371,92 +372,6 @@ jobs:
               core.setOutput("failedReason", `Error during test plan validation, reason: ${error.message}`);
               core.setFailed(error.message);
             }
-      - id: get-milestone-prod
-        if: needs.run_eligible.outputs.is-production == 'true'
-        name: Validate Milestone and Branch
-        uses: actions/github-script@v7
-        env:
-          IS_ROLLBACK: ${{ needs.run_eligible.outputs.is-prod-rollback }}
-        with:
-          script: |
-            try {
-              // Convert UTC to Central Time
-              const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
-                timeZone: "America/Chicago", 
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                timeZoneName: "short"
-              });
-              const toTime = (datetime) => {
-                const date = new Date(datetime);
-                if(date.toString() === "Invalid Date") {
-                  return "NA";
-                }
-                return centralTimeFormat.format(date);
-              };
-              const getBranch = async (branchName, tagName) => {
-                try {
-                  if(branchName) {
-                    const getBranchResponse = await github.rest.repos.getBranch({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      branch: branchName
-                    });
-                    console.log("getBranchResponse: ", getBranchResponse);
-                    return getBranchResponse.data;
-                  }
-                  if(tagName) {
-                    const getRefResponse = await github.rest.git.getRef({
-                      owner: context.repo.owner,
-                      repo: context.repo.repo,
-                      ref: `tags/${tagName}`
-                    });
-                    console.log("getRefResponse: ", getRefResponse);
-                    return getRefResponse.data;
-                  }
-                  throw new Error("requested neither branch nor tag");
-                } catch(e) {
-                  console.error("error during getBranch rest call", e);
-                }
-                return null;
-              };
-              // milestone due Date must be configured and is not past.
-              if(!context.payload.issue.milestone.due_on) {
-                throw new Error("Milestone due date is not set");
-              }
-              if(process.env.IS_ROLLBACK != "true") {
-                // for prod deployment, date has to be today
-                const milestoneDueOnDate = toTime(context.payload.issue.milestone.due_on).substring(0,10);
-                if(milestoneDueOnDate !== toTime(new Date()).substring(0,10)) {
-                  throw new Error("Milestone due date is not today");
-                }
-                // verify milestone branch not exists
-                const milestoneBranch = await getBranch(`milestone/${context.payload.issue.milestone.title}`);
-                if(milestoneBranch) {
-                  throw new Error("milestone branch exist. It has to be merge to master and delete before prod deployment");
-                }
-              }
-              // verify tag ref
-              const tagRef = await getBranch(null, context.payload.issue.milestone.title);
-              if(tagRef && process.env.IS_ROLLBACK != "true") {
-                throw new Error(`for production deploy, tag [${context.payload.issue.milestone.title}] cannot exist.`);
-              }
-              if(!tagRef && process.env.IS_ROLLBACK == "true") {
-                throw new Error(`for production rollback deploy, tag [${context.payload.issue.milestone.title}] not found.`);
-              }
-              if(tagRef) {
-                core.setOutput("tagRefName", tagRef.ref);
-                core.setOutput("tagRefUrl", `${context.payload.repository.html_url}/tree/${tagRef.ref.split("/").splice(-1)[0]}`);
-              }
-            } catch (error) {
-              console.error("failed reason: ", error);
-              core.setOutput("failedReason", `Error during milestone validation, reason: ${error.message}`);
-              core.setFailed(error.message);
-            }
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Python
@@ -524,6 +439,93 @@ jobs:
           fi
           cat deploy_request_output.log
           exit $RETURN_CODE
+      - id: get-milestone-prod
+        if: needs.run_eligible.outputs.is-production == 'true'
+        name: Validate Milestone and Branch
+        uses: actions/github-script@v7
+        env:
+          IS_ROLLBACK: ${{ needs.run_eligible.outputs.is-prod-rollback }}
+          USE_EXISTING_TAG: ${{ steps.request-form-prod.outputs.use_existing_tag }}
+        with:
+          script: |
+            try {
+              // Convert UTC to Central Time
+              const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
+                timeZone: "America/Chicago", 
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                timeZoneName: "short"
+              });
+              const toTime = (datetime) => {
+                const date = new Date(datetime);
+                if(date.toString() === "Invalid Date") {
+                  return "NA";
+                }
+                return centralTimeFormat.format(date);
+              };
+              const getBranch = async (branchName, tagName) => {
+                try {
+                  if(branchName) {
+                    const getBranchResponse = await github.rest.repos.getBranch({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      branch: branchName
+                    });
+                    console.log("getBranchResponse: ", getBranchResponse);
+                    return getBranchResponse.data;
+                  }
+                  if(tagName) {
+                    const getRefResponse = await github.rest.git.getRef({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      ref: `tags/${tagName}`
+                    });
+                    console.log("getRefResponse: ", getRefResponse);
+                    return getRefResponse.data;
+                  }
+                  throw new Error("requested neither branch nor tag");
+                } catch(e) {
+                  console.error("error during getBranch rest call", e);
+                }
+                return null;
+              };
+              // milestone due Date must be configured and is not past.
+              if(!context.payload.issue.milestone.due_on) {
+                throw new Error("Milestone due date is not set");
+              }
+              if(process.env.IS_ROLLBACK != "true") {
+                // for prod deployment, date has to be today
+                const milestoneDueOnDate = toTime(context.payload.issue.milestone.due_on).substring(0,10);
+                if(milestoneDueOnDate !== toTime(new Date()).substring(0,10)) {
+                  throw new Error("Milestone due date is not today");
+                }
+                // verify milestone branch not exists
+                const milestoneBranch = await getBranch(`milestone/${context.payload.issue.milestone.title}`);
+                if(milestoneBranch) {
+                  throw new Error("milestone branch exist. It has to be merge to master and delete before prod deployment");
+                }
+              }
+              // verify tag ref
+              const tagRef = await getBranch(null, context.payload.issue.milestone.title);
+              if(tagRef && process.env.IS_ROLLBACK != "true" && process.env.USE_EXISTING_TAG != "true") {
+                throw new Error(`for production deploy, tag [${context.payload.issue.milestone.title}] cannot exist.`);
+              }
+              if(!tagRef && process.env.IS_ROLLBACK == "true") {
+                throw new Error(`for production rollback deploy, tag [${context.payload.issue.milestone.title}] not found.`);
+              }
+              if(tagRef?.ref) {
+                core.setOutput("tagRefName", tagRef.ref);
+                core.setOutput("tagRefUrl", `${context.payload.repository.html_url}/tree/${context.payload.issue.milestone.title}`);
+              }
+            } catch (error) {
+              console.error("failed reason: ", error);
+              core.setOutput("failedReason", `Error during milestone validation, reason: ${error.message}`);
+              core.setFailed(error.message);
+            }
       - name: Validate Rollback
         if: needs.run_eligible.outputs.is-prod-rollback == 'true'
         uses: actions/github-script@v7
@@ -1043,6 +1045,7 @@ jobs:
           IS_PROD_ROLLBACK: ${{ needs.run_eligible.outputs.is-prod-rollback }}
           IS_PROD_PROVISION: ${{ needs.run_eligible.outputs.is-prod-provision }}
           IS_TESTPLAN: ${{ needs.run_eligible.outputs.is-testplan }}
+          USE_EXISTING_TAG: ${{ needs.validate_request.outputs.use-existing-tag }}
         run: |
           if [[ -z "$BRANCH_NAME" ]]; then
             if [[ "$IS_PROD_ROLLBACK" == "true" ]]; then
@@ -1057,17 +1060,24 @@ jobs:
               echo "$FAILED_REASON"
               exit 1
             fi
-          elif [[ "$IS_PROD_PROVISION" == "true" ]]; then
+          elif [[ "$IS_PROD_PROVISION" == "true" && "$USE_EXISTING_TAG" != "true" ]]; then
             FAILED_REASON="Tag cannot be available for prod."
             echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
             echo "$FAILED_REASON"
             exit 1
           fi
+          CREATE_TAG="false"
+          if [[ "$IS_PROD_PROVISION" == "true" ]]; then
+            if [[ -z "$BRANCH_NAME" ]]; then
+              CREATE_TAG="true"
+            fi
+          fi
+          echo "create_tag=$CREATE_TAG" >> $GITHUB_OUTPUT
       - name: Checkout
         uses: actions/checkout@v4
       - id: create-prod-tag
         name: Create Tag
-        if: needs.run_eligible.outputs.is-prod-provision == 'true'
+        if: steps.no-branch.outputs.create_tag == 'true'
         env:
           TAG_VER: ${{ github.event.issue.milestone.title }}
         run: |
@@ -1161,10 +1171,16 @@ jobs:
       failed-reason: ${{ steps.create-api-issue.outputs.failedReason || steps.dispatch-payload.outputs.failedReason || steps.update-issue-deploying.outputs.failedReason }}
       is-deploying-api-stack: ${{ steps.create-api-issue.outputs.isDeployingApiStack }}
     steps:
-      - run: |
+      - env:
+          VALIDATE_REQ_JSON: ${{ toJson(needs.validate_request) }}
+          VALIDATE_REQ_API_JSON: ${{ toJson(needs.validate_request_api) }}
+          STACK_REQ_JSON: ${{ toJson(needs.validate_stack) }}
+        run: |
+          echo "Needs of Validate Request: $VALIDATE_REQ_JSON"
+          echo "Needs of Validate Request Api: $VALIDATE_REQ_API_JSON"
+          echo "Needs of Validate Request Stack: $STACK_REQ_JSON"
           echo "API Milestone number: ${{ needs.validate_request_api.outputs.api-milestone-number }}"
           echo "Deployment Scope: ${{ needs.validate_request.outputs.deployment-scope }}"
-          echo "Stack details: ${{ toJson(needs.validate_stack.outputs.stack-details) }}"
       - id: create-api-issue
         name: Provision API Environment
         uses: actions/github-script@v7

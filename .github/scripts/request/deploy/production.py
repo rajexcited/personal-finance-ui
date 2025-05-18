@@ -33,6 +33,11 @@ def validate_release_details(release_detail_contents: List, request_form_issue_d
 
     version_listitems = get_list_items(release_detail_contents)
     for item in version_listitems:
+        if isinstance(item, MdListItemTodo):
+            if "use existing tag if available" in item.label:
+                export_to_env({
+                    "use_existing_tag": "true" if item.is_checked else "false"
+                })
         if isinstance(item, MdListItemTitleContent):
             version_match = re.match(
                 r"\s*(v\d+\.\d+\.\d+).*", item.content)

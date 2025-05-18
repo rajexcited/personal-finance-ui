@@ -22,21 +22,27 @@ _(Provide details for the release or rollback)_
 
 - **Version to Deploy (Release/Rollback):** v0.2.0 <!-- Specify the version for release or rollback deployment. -->
 - **Existing Deployed Version:** v0.1.0 <!-- Indicate the current production version. -->
+- [ ] use existing tag if available
 
 #### Release Notes
 
-_(Provide a link to release notes or specify "Not Applicable" for rollbacks)_
+_(Provide priority changes or specify "Not Applicable" for rollbacks)_
+https://github.com/rajexcited/personal-finance-ui/releases/tag/v0.2.0 <!--  tag version  -->
+
+- Not Applicable for rollbacks
 
 ### Reason for Deployment / Rollback:
 
 _(Briefly explan purpose, e.g., feature updates, bug fixes, performance improvements.)_
 
 - **Trigger Conditions (for Rollback):** _(Specify conditions initiating rollback, e.g., critical failures detected.)_
+<!--  Remove this trigger conditions item if rollback is selected  -->
 
 #### Risk Assessment
 
 - **Risk Level:** Low / Medium / High
 - **Justification for Risk level:** _(Provide reasoning for the chosen risk level.)_
+  _(Include why risk level is chosen for release notes, not the notes itself)_
 
 ### Environment Details:
 
