@@ -7,25 +7,28 @@ labels: [task]
 
 ### Task Description
 
-_(Provide a concise summary of the task.)_
+> **Note:** _Provide a concise summary of the task._
 
 ### Reason Needed
 
-_(Explain why this task is necessary. State the problem, issue, or difficulty driving its need.)_
+> **Note:** _Explain why this task is necessary. State the problem, issue, or difficulty driving its need._
 
 ### Area of Scope :
-_(Detail the scope of this task. List what will be covered.)_
+
+> **Note:** _Detail the scope of this task. List what will be covered._
 
 ### Impact & Advantages
-_(Detail the advantages, its potential impact upon completed)_
+
+> **Note:** _Detail the advantages, its potential impact upon completed_
 
 ### Dependencies:
 
-_(List any prerequisite tasks, blockers, or tools that might be required.)_
+> **Note:** _List any prerequisite tasks, blockers, or tools that might be required._
 
 ### Acceptance Criteria
-_(Outline clear and measurable conditions for completion. Mention specific deliverables and outcomes expected from this task.)_
+
+> **Note:** _Outline clear and measurable conditions for completion. Mention specific deliverables and outcomes expected from this task._
 
 ### Additional Notes
 
-_(Include any supplementary details, context, or references.)_
+> **Note:** _Include any supplementary details, context, or references._

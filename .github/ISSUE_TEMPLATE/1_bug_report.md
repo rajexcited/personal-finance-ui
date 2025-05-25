@@ -7,11 +7,11 @@ labels: [bug]
 
 ### Describe the Bug
 
-_(A clear and concise description of what the bug is.)_
+> **Note:** _A clear and concise description of what the bug is._
 
 ### Steps to Reproduce
 
-_(Add steps with details, following are example steps)_
+> **Note:** _Add steps with details, following are example steps_
 
 Steps to reproduce the behavior:
 
@@ -22,11 +22,11 @@ Steps to reproduce the behavior:
 
 ### Expected Behavior
 
-_(Describe what you expected to happen.)_
+> **Note:** _Describe what you expected to happen._
 
 ### Screenshots/Logs
 
-_(If applicable, add screenshots or logs to help explain your problem. Provide testcase id and link if available)_
+> **Note:** _If applicable, add screenshots or logs to help explain your problem. Provide testcase id and link if available_
 
 ### Environment
 
@@ -36,7 +36,6 @@ _(If applicable, add screenshots or logs to help explain your problem. Provide t
 
 ### Additional Context
 
-_(Add any other context about the problem here.)_
+> **Note:** _Add any other context about the problem here._
 
 Ex. During regression test plan execution, <testplan issue link>, found this discrepancy.
-

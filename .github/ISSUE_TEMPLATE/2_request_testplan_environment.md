@@ -13,13 +13,13 @@ labels: [deployment, regression, "env: testplan", request]
 
 ### Test Plan:
 
-_(Provide Link to testplan issue)_
+> **Note:** _Provide Link to testplan issue_
 
 - **Regression Test Plan:** <link>
 
 ### Release Details:
 
-_(Provide details for the release or rollback)_
+> **Note:** _Provide details for the release or rollback_
 
 - **UI Version:** v0.1.0 <!-- Specify version of UI (milestone title) -->
 - **API Version:** v0.1.0 <!-- Specify version of API (assigned milestone title) -->
@@ -31,10 +31,11 @@ _(Provide details for the release or rollback)_
 ### Deployment Schedule:
 
 - **Deployment Scope:** UI only / UI and API
-  _(Specify Only 1 scope value from allowed list)_
+
+> **Note:** _Specify Only 1 scope value from allowed list_
 
 - **Preferred Date and Time:** 03-15-2025 13:40:35
-  _(Use the format mm-dd-yyyy HH:MM:SS in 24-hour CST time.)_
+  > **Note:** _Use the format mm-dd-yyyy HH:MM:SS in 24-hour CST time._
 
 ### Additional Notes/Special Instructions:
 

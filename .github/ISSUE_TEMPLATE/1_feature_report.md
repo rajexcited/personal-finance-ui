@@ -8,16 +8,16 @@ assignees:
 
 ### Feature Description
 
-A clear and concise description of what the feature is and why it is needed.
+> **Note:** _A clear and concise description of what the feature is and why it is needed._
 
 ### Proposed Solution
 
-Describe how you think this should be implemented.
+> **Note:** _Describe how you think this should be implemented._
 
 ### Alternatives Considered
 
-List any alternative approaches or workarounds you've considered.
+> **Note:** _List any alternative approaches or workarounds you've considered._
 
 ### Additional Context
 
-Add any other context or screenshots about the feature request here.
+> **Note:** _Add any other context or screenshots about the feature request here._

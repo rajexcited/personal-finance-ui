@@ -7,13 +7,13 @@ labels: ["question", "help wanted"]
 
 ### 🔍 Question / Issue Details
 
-_( Provide a clear description of your question or the help you need. )_
+> **Note:** _ Provide a clear description of your question or the help you need. _
 
 <!-- Example: "How do I add or update purchase types?" -->
 
 ## 🛠️ Steps Taken So Far
 
-_( What troubleshooting steps or research have you already done? )_
+> **Note:** _ What troubleshooting steps or research have you already done? _
 
 <!-- Example steps -->
 
