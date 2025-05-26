@@ -57,3 +57,64 @@ To prep for regression,
 Wait for artifact to be created
 
 ### Featured
+
+## Automated Testing
+
+For a detailed analysis of framework selection, refer to [Library and Tool Selection Analysis](.github/docs/library-tools-selection.md).
+
+### Cypress Setup
+
+#### Prerequisites
+
+- **Node.js:** It is recommended to use the latest version. The current automation setup is configured with **Node.js v22.15.0** and **npm 11.3.0**.  
+  To verify installed versions, run:
+
+  ```bash
+  node -v
+  npm -v
+  ```
+
+#### Useful Commands
+
+- **Install Dependencies:** Run `npm install` to install or update required packages.
+- **Compile Code:** Use `npm run build` to compile test code and validate syntax/linting errors.
+- **Run Regression Tests:** Execute automated regression tests with:
+  ```bash
+  npm run tests:regression
+  ```
+- **Start Interactive Development Mode:** Enable test development and execute specs using:
+  ```bash
+  npm run tests:developer
+  ```
+
+#### Environment Configuration
+
+Before running any tests or development tasks, ensure the `.env` file is correctly configured with necessary properties.
+
+##### Example: Development Configuration
+
+```properties
+ENV_ID=local
+SITE_BASE_URL=http://localhost:3000/personal-finance-ui
+```
+
+##### Example: Test Plan Configuration (Regression Tests)
+
+```properties
+ENV_ID=testplan
+SITE_BASE_URL=https://d2wfayzoko7f48.cloudfront.net/personal-finance
+UI_VERSION=0.2.0
+API_VERSION=0.2.0
+```
+
+### Execute Regression Tests
+
+Currently, automated regression tests can be executed **locally**, and consolidated test reports can be uploaded to the **Test Plan Execution Task** for review.
+
+#### Prerequisites
+
+Before running the tests, ensure that the `.env` file is properly configured with the necessary environment variables.
+
+#### Execution
+
+Once the environment is set up, use the appropriate command to initiate test execution.
