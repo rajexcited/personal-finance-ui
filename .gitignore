@@ -29,3 +29,8 @@ envdemo
 envlocal
 null
 __pycache__
+.env
+1-getting-started
+2-advanced-examples
+/cypress/fixtures/example.json
+/cypress/videos

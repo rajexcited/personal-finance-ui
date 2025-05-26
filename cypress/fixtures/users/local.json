@@ -1,0 +1,16 @@
+{
+  "user1-success": {
+    "firstName": "Steven",
+    "lastName": "Jobs",
+    "emailId": "steven.jobs@demo.com",
+    "password": "st<Ven987",
+    "countryText": "United States of America"
+  },
+  "user2-success": {
+    "firstName": "Steven",
+    "lastName": "Jobs",
+    "emailId": "steven.jobs@demo.com",
+    "password": "st<Ven987",
+    "countryText": "United States of America"
+  }
+}

@@ -1,7 +1,7 @@
 ---
 id: signup-tc1
 title: User signup successful
-execution: manual
+execution: automate
 created: 12/21/2024
 updated: 02/14/2025
 ---
@@ -74,7 +74,7 @@ User is not logged in and is on the public home page. User does not have an exis
 ## Tags:
 
 - feature=`auth,signup`
-- execution=`manual`
+- execution=`automate`
 - impact=`medium`
 - type=`positive`
 - devices=`desktop,mobile`
