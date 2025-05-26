@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ISSUE_LABELS: "regression,test plan"
+  ISSUE_LABELS: "regression,env: testplan"
 
 jobs:
   validate_milestone:
