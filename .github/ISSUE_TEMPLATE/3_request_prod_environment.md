@@ -7,7 +7,7 @@ labels: [deployment, "env: production", rollback, request]
 
 # Production Environment Deployment Form
 
-This form standardizes deployment requests for production environment, ensuring clarity and completeness.
+> **Note:** _This form standardizes deployment requests for production environment, ensuring clarity and completeness._
 
 ### Deployment Type:
 
@@ -18,15 +18,17 @@ This form standardizes deployment requests for production environment, ensuring 
 
 ### Release Deployment / Rollback Details:
 
-> **Note:** _Provide details for the release or rollback_
+> **Note:** _Provide deployment versions. select the existing tag use if tag is created._
 
 - **Version to Deploy (Release/Rollback):** v0.2.0 <!-- Specify the version for release or rollback deployment. -->
 - **Existing Deployed Version:** v0.1.0 <!-- Indicate the current production version. -->
-- [ ] use existing tag if available
+- [ ] use existing tag for release if available
 
 #### Release Notes
 
-> **Note:** _Provide priority changes or specify "Not Applicable" for rollbacks_ > https://github.com/rajexcited/personal-finance-ui/releases/tag/v0.2.0 <!--  tag version  -->
+> **Note:** _Provide priority changes or specify "Not Applicable" for rollbacks_
+
+https://github.com/rajexcited/personal-finance-ui/releases/tag/v0.2.0 <!--  tag version  -->
 
 - Not Applicable for rollbacks
 
@@ -34,25 +36,26 @@ This form standardizes deployment requests for production environment, ensuring 
 
 > **Note:** _Briefly explan purpose, e.g., feature updates, bug fixes, performance improvements._
 
-- **Trigger Conditions (for Rollback):**
+- **Trigger Conditions (for Rollback):** NA
   > **Note:** _Specify conditions initiating rollback, e.g., critical failures detected._
-  <!--  Remove this trigger conditions item if rollback is selected  -->
+  <!--  if rollback is selected, either remove this trigger conditions or use NA  -->
 
 #### Risk Assessment
 
+> **Note:** _Provide reasoning for the chosen risk level. Include why risk level is chosen for release notes, not the notes itself_
+
 - **Risk Level:** Low / Medium / High
-- **Justification for Risk level:**
-  > **Note:** _Provide reasoning for the chosen risk level. Include why risk level is chosen for release notes, not the notes itself_
+- **Justification for Risk level:** NA
 
 ### Environment Details:
 
-- **Environment Name:** Production Environment
+- [ ] Production Environment
 
 ### Deployment Schedule:
 
-> **Note:** _Use the format mm-dd-yyyy HH:MM:SS in 24-hour CST time._
-
+- **Deployment Scope:** UI only
 - **Preferred Date and Time:** 03-15-2025 13:40:35
+  > **Note:** _Use the format mm-dd-yyyy HH:MM:SS in 24-hour CST time._
 
 ### Pre Deployment Validations:
 
@@ -88,8 +91,12 @@ This form standardizes deployment requests for production environment, ensuring 
 
 > **Note:** _Include any additional notes, considerations, or requirements, e.g. major upgrade, ensure backups are created_
 
+NA
+
 > [!IMPORTANT]  
 > If a release deployment fails and a rollback is required, submit a rollback request form as a sub-issue of this request.
+
+<br/>
 
 > [!TIP]  
 > Update the sub-issue with post-deployment verification results. If failure occurs, include detailed explanations.

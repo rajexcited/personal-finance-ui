@@ -9,11 +9,11 @@ labels: ["question", "help wanted"]
 
 > **Note:** _ Provide a clear description of your question or the help you need. _
 
-<!-- Example: "How do I add or update purchase types?" -->
+Example: How do I add or update purchase types?
 
 ## 🛠️ Steps Taken So Far
 
-> **Note:** _ What troubleshooting steps or research have you already done? _
+> **Note:** _ What troubleshooting steps or research have you already done?_
 
 <!-- Example steps -->
 
