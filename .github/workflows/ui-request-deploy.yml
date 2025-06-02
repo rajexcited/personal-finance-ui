@@ -252,7 +252,6 @@ jobs:
       failed-reason: ${{ steps.testplan-request-eligible.outputs.failedReason || steps.prod-request-eligible.outputs.failedReason || steps.get-milestone-testplan-prov.outputs.failedReason || steps.get-milestone-testplan-deprov.outputs.failedReason || steps.get-milestone-prod.outputs.failedReason || steps.testplan-issue.outputs.failedReason || steps.request-form-testplan.outputs.failedReason || steps.request-form-prod.outputs.failedReason || steps.get-milestone-development.outputs.failedReason || steps.request-form-development.outputs.failedReason || steps.build-workflow-status.outputs.failedReason || steps.verify-deploy-version.outputs.failedReason }}
       testplan-type: ${{ steps.testplan-issue.outputs.testplanType }}
       testplan-issue-number: ${{ steps.testplan-issue.outputs.testplanIssueNumber }}
-      request-type: ${{ steps.get-request-type.outputs.request-type }}
       deployment-scope: ${{ steps.request-form-testplan.outputs.deployment_scope || steps.request-form-development.outputs.deployment_scope }}
       api-version: ${{ steps.request-form-testplan.outputs.api_version || steps.request-form-development.outputs.api_version }}
       post-deployment-section: ${{ steps.request-form-prod.outputs.post_deployment_tasks_section }}
@@ -1338,7 +1337,7 @@ jobs:
       - validate_request
       - validate_stack
       - validate_request_api
-    if: needs.validate_request.outputs.request-type == 'provision'
+    if: needs.run_eligible.outputs.request-type == 'provision'
     outputs:
       failed-reason: ${{ steps.no-branch.outputs.failedReason || steps.create-prod-tag.outputs.failedReason }}
       branch-tag-name: ${{ needs.validate_request.outputs.milestone-branch-name || github.event.issue.milestone.title }}
@@ -2505,7 +2504,7 @@ jobs:
         env:
           VALIDATION_FAIL_REASON: ${{ needs.validate_request.outputs.failed-reason || needs.validate_request_api.outputs.failed-reason || needs.validate_stack.outputs.failed-reason }}
           IS_VALIDATION_FAILED: ${{ needs.update_request.result == 'failure' || needs.validate_request.result == 'failure' || needs.validate_request_api.result == 'failure' || needs.validate_stack.result == 'failure' }}
-          REQUEST_TYPE: ${{ needs.validate_request.outputs.request-type }}
+          REQUEST_TYPE: ${{ needs.run_eligible.outputs.request-type }}
           DEPLOY_FAILED_REASON: ${{ needs.verify_branch_tag.outputs.failed-reason || needs.deployment.outputs.failed-reason || needs.deployment_complete.outputs.failed-reason }}
           IS_DEPLOY_FAILED: ${{ needs.verify_branch_tag.result == 'failure' || needs.deployment.result == 'failure' || needs.deployment_complete.result == 'failure' || needs.build_artifact.result == 'failure' }}
           DESTROY_FAILED_REASON: ${{ needs.destroy.outputs.failed-reason }}
