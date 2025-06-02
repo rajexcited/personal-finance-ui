@@ -18,12 +18,12 @@ def validate_env_details(env_details_contents: List):
     has_prod_env = False
     env_listitems = get_list_items(env_details_contents)
     for listitem in env_listitems:
-        if isinstance(listitem, MdListItemTitleContent):
-            if "Environment Name" in listitem.title and "Production Environment" in listitem.content:
-                has_prod_env = True
+        if isinstance(listitem, MdListItemTodo) and listitem.label is not None:
+            if "Production Environment" in listitem.label:
+                has_prod_env = listitem.is_checked
 
     if not has_prod_env:
-        raise ValueError("Environment details is incorrect")
+        raise ValueError("Environment is incorrect")
 
 
 def validate_release_details(release_detail_contents: List, request_form_issue_details: dict, deployment_type: DeploymentType):
@@ -33,21 +33,20 @@ def validate_release_details(release_detail_contents: List, request_form_issue_d
 
     version_listitems = get_list_items(release_detail_contents)
     for item in version_listitems:
-        if isinstance(item, MdListItemTodo):
-            if "use existing tag if available" in item.label:
+        if isinstance(item, MdListItemTodo) and item.label is not None:
+            if "use existing tag for release if available" in item.label:
                 export_to_env({
                     "use_existing_tag": "true" if item.is_checked else "false"
                 })
-        if isinstance(item, MdListItemTitleContent):
-            version_match = re.match(
-                r"\s*(v\d+\.\d+\.\d+).*", item.content)
+        if isinstance(item, MdListItemTitleContent) and item.content is not None and item.title is not None:
+            version_match = re.match(r"\s*(v\d+\.\d+\.\d+).*", item.content)
             if version_match:
                 if "Version to Deploy (Release/Rollback)" in item.title:
                     release_rollback_version = version_match.group(1)
                 elif "Existing Deployed Version" in item.title:
                     existing_version = version_match.group(1)
     for rdc in release_detail_contents:
-        if isinstance(rdc, MdHeader) and "Release Notes" in rdc.title:
+        if isinstance(rdc, MdHeader) and rdc.title is not None and "Release Notes" in rdc.title:
             has_release_notes = True
 
     if not has_release_notes:
@@ -81,7 +80,7 @@ def validate_release_details(release_detail_contents: List, request_form_issue_d
 def validate_rollback_plan(rollback_list: List):
     header_count = 0
     for header in rollback_list:
-        if isinstance(header, MdHeader):
+        if isinstance(header, MdHeader) and header.title is not None:
             if "Trigger Condition" in header.title or "Rollback Reason" in header.title:
                 header_count += 1
     if header_count < 2:
@@ -108,7 +107,7 @@ def validate_post_deployment_tasks(post_deploy_task_list: List):
     task_count_map[healthcheck_title] = 0
 
     for verification_header in post_deploy_task_list:
-        if isinstance(verification_header, MdHeader):
+        if isinstance(verification_header, MdHeader) and verification_header.title is not None:
             if smoke_test_title in verification_header.title or healthcheck_title in verification_header.title:
                 task_key = smoke_test_title if smoke_test_title in verification_header.title else healthcheck_title
                 mdlist = get_list_items(verification_header.contents)
@@ -133,18 +132,23 @@ def validate_deployment_reason(deployment_reason_list: List, deployment_type: De
 
     depl_rsn_items = get_list_items(deployment_reason_list)
     for listitem in depl_rsn_items:
-        if isinstance(listitem, MdListItemTitleContent) and trigger_cond_content in listitem.title:
-            has_trggr_cndn = True
+        if isinstance(listitem, MdListItemTitleContent) and listitem.title is not None and trigger_cond_content in listitem.title:
+            if listitem.content is not None:
+                item_content = listitem.content.strip()
+                if item_content != "NA" and len(item_content) > 0:
+                    has_trggr_cndn = True
 
     for depl_rsn in deployment_reason_list:
-        if isinstance(depl_rsn, MdHeader) and "Risk Assessment" in depl_rsn.title:
+        if isinstance(depl_rsn, MdHeader) and depl_rsn.title is not None and "Risk Assessment" in depl_rsn.title:
             mdlist = get_list_items(depl_rsn.contents)
             for mditem in mdlist:
-                if isinstance(mditem, MdListItemTitleContent):
+                if isinstance(mditem, MdListItemTitleContent) and mditem.title is not None and mditem.content is not None:
                     if "Risk Level" in mditem.title:
                         risk_level = mditem.content.strip()
                     if "Justification for Risk level" in mditem.title:
-                        has_justification = True
+                        item_content = mditem.content.strip()
+                        if item_content != "NA" and len(item_content) > 0:
+                            has_justification = True
 
     if not risk_level:
         raise ValueError("Risk level is not provided")
@@ -162,11 +166,11 @@ def validate_deployment_reason(deployment_reason_list: List, deployment_type: De
             f"{trigger_cond_content} notes are not provided for rollback")
 
 
-def validate_deployment_schedule(deployment_schedule_list: List):
+def validate_deployment_schedule(deployment_schedule_list: List, deployment_type: DeploymentType):
     preferred_date_obj = None
     mdlist = get_list_items(deployment_schedule_list)
     for listitem in mdlist:
-        if isinstance(listitem, MdListItemTitleContent) and "Preferred Date and Time" in listitem.title:
+        if isinstance(listitem, MdListItemTitleContent) and listitem.title is not None and "Preferred Date and Time" in listitem.title:
             preferred_date_obj = get_preferred_datetime(listitem.content)
 
     if not preferred_date_obj:
@@ -181,16 +185,20 @@ def validate_deployment_schedule(deployment_schedule_list: List):
     milestone_due_date_obj = parse_milestone_dueon(request_form_issue_details["milestone"]["due_on"])
     if not milestone_due_date_obj:
         raise ValueError("cannot convert milestone due date")
-    if preferred_date_obj > milestone_due_date_obj:
-        raise ValueError("Preferred Date and Time is after milestone due date")
+
+    if deployment_type == DeploymentType.Release:
+        if preferred_date_obj > milestone_due_date_obj:
+            raise ValueError("Preferred Date and Time is after milestone due date")
+        if preferred_date_obj.strftime("%Y%m%d") != milestone_due_date_obj.strftime("%Y%m%d"):
+            raise ValueError("Release date is not same as milestone dueon date")
 
 
 def get_deployment_type(form_contents: List):
     for form_header in form_contents:
-        if isinstance(form_header, MdHeader) and "Deployment Type" in form_header.title:
+        if isinstance(form_header, MdHeader) and form_header.title is not None and "Deployment Type" in form_header.title:
             deploytype_list = get_list_items(form_header.contents)
             for item in deploytype_list:
-                if isinstance(item, MdListItemTodo) and item.is_checked:
+                if isinstance(item, MdListItemTodo) and item.is_checked and item.label is not None:
                     if DeploymentType.Release.name in item.label:
                         return DeploymentType.Release
                     if DeploymentType.Rollback.name in item.label:
@@ -228,18 +236,18 @@ def validate_request_form(request_form_issue_details: Dict):
     has_validity[ValidityHeader.PostDeploymentTasks] = False
 
     for form_header in request_form_contents:
-        if isinstance(form_header, MdHeader):
+        if isinstance(form_header, MdHeader) and form_header.title is not None:
             if ValidityHeader.ReleaseRollbackDetails.value in form_header.title:
-                validate_release_details(form_header.contents, request_form_issue_details, deployment_type)
+                validate_release_details(form_header.contents, request_form_issue_details=request_form_issue_details, deployment_type=deployment_type)
                 has_validity[ValidityHeader.ReleaseRollbackDetails] = True
             elif ValidityHeader.EnvironmentDetails.value in form_header.title:
                 validate_env_details(form_header.contents)
                 has_validity[ValidityHeader.EnvironmentDetails] = True
             elif ValidityHeader.DeploymentSchedule.value in form_header.title:
-                validate_deployment_schedule(form_header.contents)
+                validate_deployment_schedule(form_header.contents, deployment_type=deployment_type)
                 has_validity[ValidityHeader.DeploymentSchedule] = True
             elif ValidityHeader.DeploymentReason.value in form_header.title:
-                validate_deployment_reason(form_header.contents, deployment_type)
+                validate_deployment_reason(form_header.contents, deployment_type=deployment_type)
                 has_validity[ValidityHeader.DeploymentReason] = True
             elif ValidityHeader.PostDeploymentTasks.value in form_header.title:
                 validate_post_deployment_tasks(form_header.contents)
@@ -277,5 +285,4 @@ if __name__ == "__main__":
         parser.print_help()
         exit(1)
 
-    # print("request form issue details", request_form_issue_details)
     validate_request_form(request_form_issue_details)

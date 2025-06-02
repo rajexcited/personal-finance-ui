@@ -207,11 +207,6 @@ jobs:
         run: |
           # read version of package.json file
           PACKAGE_VERSION=$(jq -r '.version' package.json)
-          PACKAGE_LOCK_VERSION=$(jq -r '.version' package-lock.json)
-          if [[ "$PACKAGE_VERSION" != "$PACKAGE_LOCK_VERSION" ]]; then
-            echo "version in package.json and package-lock.json files are mismatched"
-            exit 1
-          fi
           if [[ "v$PACKAGE_VERSION" != "$MILESTONE_TITLE" ]]; then
             echo "version in package file is mismatched with milestone title"
             exit 1

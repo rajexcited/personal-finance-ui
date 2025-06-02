@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List
+from typing import List, Optional, Union
 from pydantic import BaseModel
 
 
@@ -10,13 +10,13 @@ class AlertType(Enum):
 
 
 class MdAlert(BaseModel):
-    alert_type: AlertType = None
+    alert_type: Optional[AlertType] = None
     content_lines: List[str] = []
 
 
 class MdHeader(BaseModel):
     level: int = 0
-    title: str = None
+    title: Optional[str] = None
     contents: List = []
     raw_contents: List[str] = []
 
@@ -29,22 +29,22 @@ class ListItemType(Enum):
 
 class MdListItemTodo(BaseModel):
     is_checked: bool = False
-    label: str = None
+    label: Optional[str] = None
 
 
 class MdListItemSimpleText(BaseModel):
-    text: str = None
+    text: Optional[str] = None
 
 
 class MdListItemTitleContent(BaseModel):
-    title: str = None
-    content: str = None
+    title: Optional[str] = None
+    content: Optional[str] = None
 
 
 class MdListItem(BaseModel):
-    item_type: ListItemType = None
-    raw_content: str = None
-    parsed_content: MdListItemTodo | MdListItemSimpleText | MdListItemTitleContent = None
+    item_type: Optional[ListItemType] = None
+    raw_content: Optional[str] = None
+    parsed_content: Union[MdListItemTodo, MdListItemSimpleText, MdListItemTitleContent, None] = None
 
 
 class MdList(BaseModel):

@@ -4,7 +4,7 @@ import re
 from typing import Dict, List, Optional
 from datetime import timedelta
 from ...md_parser import parsed_body, get_list_items
-from ...md_parser.models import MdHeader, MdListItemTitleContent
+from ...md_parser.models import MdHeader, MdListItemTitleContent, MdListItemTodo
 from ...utils import export_to_env, get_converted_enum, get_parsed_arg_value, get_valid_dict, get_preferred_datetime, get_now, parse_milestone_dueon
 
 
@@ -14,14 +14,17 @@ class RequestType(Enum):
 
 
 def validate_test_plan_issue_link(section_contents: List, request_form_issue_details: Dict, parent_issue_details: Dict, testplan_type: str):
-    if testplan_type.lower() not in request_form_issue_details["title"].lower():
+    testplantype = testplan_type.lower()
+    request_title = str(request_form_issue_details["title"])
+    if testplantype not in request_title.lower():
         raise ValueError("Test Plan type is not included in request form title")
 
     testplan_issue_number = None
     section_list_items = get_list_items(section_contents)
     for listitem in section_list_items:
-        if isinstance(listitem, MdListItemTitleContent):
-            if testplan_type.lower() in listitem.title.lower() and "Test Plan" in listitem.title:
+        if isinstance(listitem, MdListItemTitleContent) and listitem.content is not None:
+            item_title = str(listitem.title).lower()
+            if testplantype in item_title and "test plan" in item_title:
                 testplan_link_match = re.match(r".*https://github.com.+/issues/(\d+)", listitem.content)
                 if testplan_link_match:
                     testplan_issue_number = testplan_link_match.group(1)
@@ -37,11 +40,18 @@ def validate_test_plan_issue_link(section_contents: List, request_form_issue_det
 
 
 def validate_deployment_schedule(section_contents: List, request_form_issue_details: Dict, request_type: RequestType):
+    # if request_type == RequestType.Provision:
+    #     if not branch_details["name"].startswith("milestone") and branch_details["name"] != "master":
+    #         raise ValueError("Deployment is only supported for master branch or milestone branch.")
+    #     if branch_details["name"] == "master" and request_form_issue_details["milestone"]["state"] == "open":
+    #         raise ValueError("Deployment on the master branch is prohibited while the milestone is open.")
+    #     if branch_details["name"].startswith("milestone") and request_form_issue_details["milestone"]["state"] == "closed":
+    #         raise ValueError("Deployment on the milestone branch is prohibited while the milestone is closed.")
     preferred_date_obj = None
     deploy_scope = None
     mdlist = get_list_items(section_contents)
     for listitem in mdlist:
-        if isinstance(listitem, MdListItemTitleContent):
+        if isinstance(listitem, MdListItemTitleContent) and listitem.title is not None:
             if "Preferred Date and Time" in listitem.title:
                 preferred_date_obj = get_preferred_datetime(listitem.content)
             if "Deployment Scope" in listitem.title:
@@ -77,12 +87,12 @@ def validate_env_details(env_details_contents: List):
     has_testplan_env = False
     mdlist = get_list_items(env_details_contents)
     for listitem in mdlist:
-        if isinstance(listitem, MdListItemTitleContent):
-            if "Environment Name" in listitem.title and "Test Plan Environment" in listitem.content:
+        if isinstance(listitem, MdListItemTodo) and listitem.label is not None:
+            if "Test Plan Environment" in listitem.label and listitem.is_checked:
                 has_testplan_env = True
 
     if not has_testplan_env:
-        raise ValueError("Environment details is incorrect")
+        raise ValueError("Environment is incorrect")
 
 
 def validate_release_details(section_contents: List, request_form_issue_details: Dict, parent_issue_details: Dict) -> Dict[str, Optional[str]]:
@@ -90,7 +100,7 @@ def validate_release_details(section_contents: List, request_form_issue_details:
     ui_version: Optional[str] = None
     rdc_list = get_list_items(section_contents)
     for listitem in rdc_list:
-        if isinstance(listitem, MdListItemTitleContent):
+        if isinstance(listitem, MdListItemTitleContent) and listitem.content is not None and listitem.title is not None:
             version_match = re.match(r"\s*(v\d+\.\d+\.\d+).*", listitem.content)
             if version_match:
                 if "UI Version" in listitem.title:
@@ -113,7 +123,7 @@ def validate_release_details(section_contents: List, request_form_issue_details:
 
 class ValidityHeader(Enum):
     TestplanDetails = "Test Plan"
-    ReleaseDetails = "Release Details"
+    ReleaseDetails = "Release Deployment"
     EnvironmentDetails = "Environment Details"
     DeploymentSchedule = "Deployment Schedule"
 
@@ -132,7 +142,7 @@ def validate_request_form(request_form_issue_details: Dict, parent_issue_details
     deploy_scope = ""
     version_details = {}
     for form_header in request_form_contents:
-        if isinstance(form_header, MdHeader):
+        if isinstance(form_header, MdHeader) and form_header.title is not None:
             if ValidityHeader.ReleaseDetails.value in form_header.title:
                 version_details = validate_release_details(
                     section_contents=form_header.contents,
@@ -190,7 +200,7 @@ if __name__ == "__main__":
         get_parsed_arg_value(args, key="validate", arg_type_converter=bool)
         parent_issue_details = get_parsed_arg_value(args, key="parent_issue_details", arg_type_converter=get_valid_dict)
         request_form_issue_details = get_parsed_arg_value(args, key="request_form_issue_details", arg_type_converter=get_valid_dict)
-        testplan_type = get_parsed_arg_value(args, key="testplan_type", arg_type_converter=str)
+        testplan_type = get_parsed_arg_value(args, key="testplan_type", arg_type_converter=lambda x: x if isinstance(x, str) else None)
         request_type = get_parsed_arg_value(args, key="request_type", arg_type_converter=lambda x: get_converted_enum(RequestType, str(x)))
 
     except Exception as e:

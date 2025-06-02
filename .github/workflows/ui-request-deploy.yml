@@ -68,7 +68,7 @@ jobs:
       - env:
           GITHUB_JSON_DTL: ${{ toJson(github) }}
         run: |
-          echo "github json: "$GITHUB_JSON_DTL
+          echo "github json= "$GITHUB_JSON_DTL
       - uses: actions/github-script@v7
         with:
           script: |
@@ -82,13 +82,17 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       original-issue-title: ${{ github.event.issue.title }}
-      is-prod-provision: ${{ steps.request-form-issue.outputs.is-prod-provision }}
-      is-testplan-provision: ${{ steps.request-form-issue.outputs.is-testplan-provision }}
-      is-testplan-deprovision: ${{ steps.request-form-issue.outputs.is-testplan-deprovision }}
-      is-prod-rollback: ${{ steps.request-form-issue.outputs.is-prod-rollback }}
-      is-testplan: ${{ steps.request-form-issue.outputs.for-testplan }}
-      is-production: ${{ steps.request-form-issue.outputs.for-production }}
-      env-ref-name: ${{ steps.request-form-issue.outputs.env-ref-name }}
+      is-prod-provision: ${{ steps.request-title.outputs.is-prod-provision }}
+      is-prod-rollback: ${{ steps.request-title.outputs.is-prod-rollback }}
+      is-testplan-provision: ${{ steps.request-title.outputs.is-testplan-provision }}
+      is-testplan-deprovision: ${{ steps.request-title.outputs.is-testplan-deprovision }}
+      is-development-provision: ${{ steps.request-title.outputs.is-development-provision }}
+      is-development-deprovision: ${{ steps.request-title.outputs.is-development-deprovision }}
+      request-type: ${{ steps.request-title.outputs.request-type }}
+      env-ref-name: ${{ steps.env-label.outputs.env-ref-name }}
+      is-production: ${{ steps.env-label.outputs.for-production }}
+      is-testplan: ${{ steps.env-label.outputs.for-testplan }}
+      is-development: ${{ steps.env-label.outputs.for-development }}
     steps:
       - run: |
           echo "Eligibilities"
@@ -104,50 +108,100 @@ jobs:
         run: |
           echo Workflow is not eligible to process issue
           exit 1
-      - if: >
-          ! contains(github.event.issue.labels.*.name, 'env: production') && 
-          ! contains(github.event.issue.labels.*.name, 'env: testplan')
-        run: |
-          echo "environment label is not defined to issue"
-          echo Workflow is not eligible to process issue
-          exit 1
-      - if: >
-          contains(github.event.issue.labels.*.name, 'env: production') && 
-          contains(github.event.issue.labels.*.name, 'env: testplan')
-        run: |
-          echo "both environment labels are defined to issue"
-          echo Workflow is not eligible to process issue
-          exit 1
-      - if: >
-          ! startsWith(github.event.issue.title, '[Request] Provision ') && 
-          ! startsWith(github.event.issue.title, '[Request] [Rollback] Provision ') && 
-          ! startsWith(github.event.issue.title, '[Request] Deprovision ')
-        run: |
-          echo "It is not Request form for provision or deprovision"
-          echo Workflow is not eligible to process issue
-          exit 1
-      - id: request-form-issue
-        name: Request Form Issue categorized
+      - id: env-label
         env:
-          IS_TESTPLAN: "${{ contains(github.event.issue.labels.*.name, 'env: testplan') }}"
-          IS_TESTPLAN_PROVISION: ${{ startsWith(github.event.issue.title, '[Request] Provision Test Plan Environment') }}
-          IS_TESTPLAN_DEPROVISION: ${{ startsWith(github.event.issue.title, '[Request] Deprovision Test Plan Environment') }}
           IS_PRODUCTION: "${{ contains(github.event.issue.labels.*.name, 'env: production') }}"
-          IS_PRODUCTION_PROVISION: ${{ startsWith(github.event.issue.title, '[Request] Provision Production Environment') }}
-          IS_PROD_ROLLBACK_PROVISION: ${{ startsWith(github.event.issue.title, '[Request] [Rollback] Provision Production Environment') }}
+          IS_TESTPLAN: "${{ contains(github.event.issue.labels.*.name, 'env: testplan') }}"
+          IS_DEVELOPMENT: "${{ contains(github.event.issue.labels.*.name, 'env: development') }}"
         run: |
-          if [[ "$IS_TESTPLAN" == "true" ]]; then
-            echo "env-ref-name=testplan" >> $GITHUB_OUTPUT
-          fi
+          echo "Count the number of 'true' values"
+          TRUE_ENV_COUNT=0
           if [[ "$IS_PRODUCTION" == "true" ]]; then
+            TRUE_ENV_COUNT=$((TRUE_ENV_COUNT + 1))
             echo "env-ref-name=production" >> $GITHUB_OUTPUT
           fi
-          echo "for-testplan=$IS_TESTPLAN" >> $GITHUB_OUTPUT
+          if [[ "$IS_TESTPLAN" == "true" ]]; then
+            TRUE_ENV_COUNT=$((TRUE_ENV_COUNT + 1))
+            echo "env-ref-name=testplan" >> $GITHUB_OUTPUT
+          fi
+          if [[ "$IS_DEVELOPMENT" == "true" ]]; then
+            TRUE_ENV_COUNT=$((TRUE_ENV_COUNT + 1))
+            echo "env-ref-name=development" >> $GITHUB_OUTPUT
+          fi
+
+          # Check if only one variable is true
+          if [[ "$TRUE_ENV_COUNT" -eq 0 ]]; then
+            echo "no environment label is defined to issue"
+            echo "Workflow is not eligible to process issue"
+            exit 1
+          fi
+          if [[ "$TRUE_ENV_COUNT" -gt 1 ]]; then
+            echo "$TRUE_ENV_COUNT environment labels are defined to issue which are more than 1"
+            echo "Workflow is not eligible to process issue. ambiguous request."
+            exit 1
+          fi
           echo "for-production=$IS_PRODUCTION" >> $GITHUB_OUTPUT
-          echo "is-testplan-provision=$IS_TESTPLAN_PROVISION" >> $GITHUB_OUTPUT
-          echo "is-testplan-deprovision=$IS_TESTPLAN_DEPROVISION" >> $GITHUB_OUTPUT
-          echo "is-prod-provision=$IS_PRODUCTION_PROVISION" >> $GITHUB_OUTPUT
-          echo "is-prod-rollback=$IS_PROD_ROLLBACK_PROVISION" >> $GITHUB_OUTPUT
+          echo "for-testplan=$IS_TESTPLAN" >> $GITHUB_OUTPUT
+          echo "for-development=$IS_DEVELOPMENT" >> $GITHUB_OUTPUT
+      - id: request-title
+        uses: actions/github-script@v7
+        env:
+          ENV_REF_NAME: ${{ steps.env-label.outputs.env-ref-name }}
+        with:
+          script: |
+            const environmentProvisioningMap = {
+              "is-testplan-provision": false,
+              "is-testplan-deprovision": false,
+              "is-development-provision": false,
+              "is-development-deprovision": false,
+              "is-prod-provision": false,
+              "is-prod-rollback": false,
+            };
+            let environmentProvisioningCount = 0;
+            const nospaceTitle = context.payload.issue.title.replace(/\s+/g, ""); // Removes all spaces
+            if(process.env.ENV_REF_NAME === "development") {
+              if(nospaceTitle.startsWith("[Request]ProvisionDevelopmentEnvironment")) {
+                environmentProvisioningMap["is-development-provision"] = true;
+                environmentProvisioningCount++;
+              } 
+              if(nospaceTitle.startsWith("[Request]DeprovisionDevelopmentEnvironment")) {
+                environmentProvisioningMap["is-development-deprovision"] = true;
+                environmentProvisioningCount++;
+              }
+            }
+            if(process.env.ENV_REF_NAME === "testplan") {
+              if(nospaceTitle.startsWith("[Request]ProvisionTestPlanEnvironment")) {
+                environmentProvisioningMap["is-testplan-provision"] = true;
+                environmentProvisioningCount++;
+              }
+              if(nospaceTitle.startsWith("[Request]DeprovisionTestPlanEnvironment")) {
+                environmentProvisioningMap["is-testplan-deprovision"] = true;
+                environmentProvisioningCount++;
+              }
+            }
+            if(process.env.ENV_REF_NAME === "production") {
+              if(nospaceTitle.startsWith("[Request]ProvisionProductionEnvironment")) {
+                environmentProvisioningMap["is-prod-provision"] = true;
+                environmentProvisioningCount++;
+              }
+              if(nospaceTitle.startsWith("[Request][Rollback]ProvisionProductionEnvironment")) {
+                environmentProvisioningMap["is-prod-rollback"] = true;
+                environmentProvisioningCount++;
+              }
+            }
+            if(environmentProvisioningCount !== 1) {
+              const errorMessage = "The Request is not for provision or deprovision environment. Workflow is not eligible to process issue";
+              core.setFailed(errorMessage);
+              throw new Error(errorMessage);
+            }
+            Object.entries(environmentProvisioningMap).forEach(([key, value])=> {
+              core.setOutput(key, `${value}`);
+            });
+            if(environmentProvisioningMap["is-development-deprovision"] || environmentProvisioningMap["is-testplan-deprovision"]) {
+              core.setOutput("request-type", "deprovision");
+            } else {
+              core.setOutput("request-type", "provision");
+            }
 
   update_request:
     name: Start Request
@@ -193,28 +247,26 @@ jobs:
       - run_eligible
       - update_request
     outputs:
-      milestone-branch-name: ${{ steps.get-milestone-testplan-prov.outputs.milestoneBranchName || steps.get-milestone-prod.outputs.tagRefName }}
-      milestone-branch-url: ${{ steps.get-milestone-testplan-prov.outputs.milestoneBranchUrl || steps.get-milestone-prod.outputs.tagRefUrl }}
-      failed-reason: ${{ steps.testplan-request-eligible.outputs.failedReason || steps.prod-request-eligible.outputs.failedReason || steps.get-milestone-testplan-prov.outputs.failedReason || steps.get-milestone-testplan-deprov.outputs.failedReason || steps.get-milestone-prod.outputs.failedReason || steps.testplan-issue.outputs.failedReason || steps.request-form-testplan.outputs.failedReason || steps.request-form-prod.outputs.failedReason }}
+      milestone-branch-name: ${{ steps.get-milestone-development.outputs.branchName || steps.get-milestone-testplan-prov.outputs.milestoneBranchName || steps.get-milestone-prod.outputs.tagRefName }}
+      milestone-branch-url: ${{ steps.get-milestone-development.outputs.branchUrl || steps.get-milestone-testplan-prov.outputs.milestoneBranchUrl || steps.get-milestone-prod.outputs.tagRefUrl }}
+      failed-reason: ${{ steps.testplan-request-eligible.outputs.failedReason || steps.prod-request-eligible.outputs.failedReason || steps.get-milestone-testplan-prov.outputs.failedReason || steps.get-milestone-testplan-deprov.outputs.failedReason || steps.get-milestone-prod.outputs.failedReason || steps.testplan-issue.outputs.failedReason || steps.request-form-testplan.outputs.failedReason || steps.request-form-prod.outputs.failedReason || steps.get-milestone-development.outputs.failedReason || steps.request-form-development.outputs.failedReason || steps.build-workflow-status.outputs.failedReason || steps.verify-deploy-version.outputs.failedReason }}
       testplan-type: ${{ steps.testplan-issue.outputs.testplanType }}
       testplan-issue-number: ${{ steps.testplan-issue.outputs.testplanIssueNumber }}
       request-type: ${{ steps.get-request-type.outputs.request-type }}
-      deployment-scope: ${{ steps.request-form-testplan.outputs.deployment_scope }}
-      api-version: ${{ steps.request-form-testplan.outputs.api_version }}
+      deployment-scope: ${{ steps.request-form-testplan.outputs.deployment_scope || steps.request-form-development.outputs.deployment_scope }}
+      api-version: ${{ steps.request-form-testplan.outputs.api_version || steps.request-form-development.outputs.api_version }}
       post-deployment-section: ${{ steps.request-form-prod.outputs.post_deployment_tasks_section }}
       use-existing-tag: ${{ steps.request-form-prod.outputs.use_existing_tag }}
       pr-number: ${{ steps.branch-pr.outputs.prNumber }}
       pr-url: ${{ steps.branch-pr.outputs.prUrl }}
     steps:
-      - run: |
-          echo "if provision, allowed environment is either testplan or production"
-          echo "if deprovision, allowed environment is testplan"
-          echo "rollback is only for production environment"
-          echo "if provision, milestone must be open except case of rollback"
-          echo "if production, tag and milestone branch must not exist"
-          echo "if rollback, milestone must be closed."
-          echo "if rollback, milestone must be immediate good previous version"
-          echo "if rollback, tag must exist"
+      - name: Display Needs
+        env:
+          RUN_ELIGIBLE_JSON: ${{ toJson(needs.run_eligible) }}
+          UPDATE_REQ_JSON: ${{ toJson(needs.update_request) }}
+        run: |
+          echo "Needs of Validate Request: $RUN_ELIGIBLE_JSON"
+          echo "Needs of Update Request: $UPDATE_REQ_JSON"
       - id: testplan-request-eligible
         if: needs.run_eligible.outputs.is-testplan == 'true'
         env:
@@ -232,9 +284,8 @@ jobs:
           fi
           if [[ "$ELIGIBLE" == "false" ]]; then
             echo "failed request form criteria"
-            echo "Criteria-1, testplan provision request. But found values, testpln provision? $IS_TESTPLAN_PROVISION, testplan deprovision? $IS_TESTPLAN_DEPROVISION"
-            echo "Criteria-2, testplan environment."
-            echo "Criteria-3, open milestone. But found values, milestone open? $IS_MILESTONE_OPEN"
+            echo "Criteria-1, allow testplan deprovision request. found values, testplan deprovision? $IS_TESTPLAN_DEPROVISION"
+            echo "Criteria-2, allow testplan provision only for open milestone. found values, milestone open? $IS_MILESTONE_OPEN, testplan provision? $IS_TESTPLAN_PROVISION"
             echo "failedReason=for testplan request form, milestone or label assignments are incorrect" >> $GITHUB_OUTPUT
             exit 1
           fi
@@ -254,22 +305,58 @@ jobs:
           fi
           if [[ "$ELIGIBLE" == "false" ]]; then
             echo "failed request form criteria"
-            echo "Criteria-1, production or rollback provision request. But found values, prod provision? $IS_PRODUCTION_PROVISION, prod rollback provision? $IS_PROD_ROLLBACK_PROVISION"
-            echo "Criteria-2, production environment."
-            echo "Criteria-3, open milestone if production, closed milestone if rollback. But found values, milestone open? $IS_MILESTONE_OPEN"
+            echo "Criteria-1, allow production release provision request only for open milestone. found values, prod provision? $IS_PRODUCTION_PROVISION, milestone open? $IS_MILESTONE_OPEN"
+            echo "Criteria-2, allow prod rollback only for closed milestone (indicates that already deployed). found values, prod rollback provision? $IS_PROD_ROLLBACK_PROVISION", milestone open? $IS_MILESTONE_OPEN"
             echo "failedReason=for prod request form, milestone or label assignments are incorrect" >> $GITHUB_OUTPUT
             exit 1
           fi
-      - id: get-request-type
-        env:
-          IS_TESTPLAN_DEPROVISION: ${{ needs.run_eligible.outputs.is-testplan-deprovision }}
-        run: |
-          # since provision and deprovision conditions are verified appropriate to env, here we don't need to have repeatated conditions
-          if [[ "$IS_TESTPLAN_DEPROVISION" == "true" ]]; then
-            echo "request-type=deprovision" >> $GITHUB_OUTPUT
-          else
-            echo "request-type=provision" >> $GITHUB_OUTPUT
-          fi
+      - id: get-milestone-development
+        name: Validate Milestone and Branch
+        if: needs.run_eligible.outputs.is-development == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              // verify milestone branch exists
+              console.log("issue has milestone title: ", context.payload.issue.milestone.title);
+              // if milestone is open, there should be branch with milestone title
+              const branchDetails = { name: "", url: "" };
+              if(context.payload.issue.milestone.state === "open") {
+                if(!context.payload.issue.milestone.due_on) {
+                  throw new Error("Milestone due date is not set");
+                }
+                const milestoneBranch = `milestone/${context.payload.issue.milestone.title}`;
+                try {
+                  const getBranchResponse = await github.rest.repos.getBranch({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    branch: milestoneBranch
+                  });
+                  console.log("getBranchResponse: ", getBranchResponse);
+                  branchDetails.name=getBranchResponse.data.name;
+                  branchDetails.url=getBranchResponse.data._links.html;
+                } catch(ignore) {
+                 console.error("ignoring error:", ignore);
+                }
+              }
+              if(!branchDetails.name) {
+                // since there is no milestone branch, the master branch should have milestone version
+                const getBranchResponse = await github.rest.repos.getBranch({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  branch: "master"
+                });
+                branchDetails.name=getBranchResponse.data.name;
+                branchDetails.url=getBranchResponse.data._links.html;
+              }
+              
+              core.setOutput("branchName", branchDetails.name); 
+              core.setOutput("branchUrl", branchDetails.url);
+            } catch (error) {
+              console.error("failed reason: ", error);
+              core.setOutput("failedReason", `Error during milestone validation, reason: ${error.message}`);
+              core.setFailed(error.message);
+            }
       - id: get-milestone-testplan-prov
         if: needs.run_eligible.outputs.is-testplan-provision == 'true'
         name: Validate Milestone and Branch
@@ -277,12 +364,41 @@ jobs:
         with:
           script: |
             try {
+              const getEndOfDayCentral = (datetime) => {
+                const date = new Date(datetime);
+                if (isNaN(date.getTime())) {
+                  return null; // Invalid Date
+                }
+                date.setHours(23);
+
+                // Convert UTC to Central Time (America/Chicago) using timeZone offset
+                const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
+                  timeZone: "America/Chicago",
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                  timeZoneName: "short"
+                });
+
+                // Format and extract adjusted time
+                const centralTimeString = centralTimeFormat.format(date);
+                const centralDate = new Date(centralTimeString);
+
+                // Ensure time is set to 23:59:59 (end of the day)
+                centralDate.setHours(23, 59, 59, 999);
+
+                return centralDate;
+              };
               // milestone due Date must be configured and is not past.
               if(!context.payload.issue.milestone.due_on) {
                 throw new Error("Milestone due date is not set");
               }
               const milestoneDueOn = new Date(context.payload.issue.milestone.due_on);
-              if(milestoneDueOn < new Date()) {
+              const endOfToday = getEndOfDayCentral(new Date());
+              if(milestoneDueOn.toDateString() < endOfToday.toDateString()) {
                 throw new Error("Milestone due date is already passed");
               }
               // verify milestone branch exists
@@ -330,7 +446,7 @@ jobs:
         name: Validate Testplan issue
         uses: actions/github-script@v7
         env:
-          TESTPLAN_REQUEST_TYPE: ${{ steps.get-request-type.outputs.request-type }}
+          TESTPLAN_REQUEST_TYPE: ${{ needs.run_eligible.outputs.request-type }}
         with:
           script: |
             try {
@@ -386,12 +502,37 @@ jobs:
         with:
           script: |
             core.setOutput("issueDetails", context.payload.issue);
+      - id: request-form-development
+        if: needs.run_eligible.outputs.is-development == 'true'
+        name: Validate Request form details
+        env:
+          REQUEST_TYPE: ${{ needs.run_eligible.outputs.request-type }}
+          ISSUE_DETAILS: ${{ steps.request-issue.outputs.issueDetails }}
+        run: |
+          cd .github
+          echo $ISSUE_DETAILS > request_form_issue_details.json
+          python --version
+          pip install -r scripts/requirements.txt
+          # capture error code +-e
+          set +e
+          python -m scripts.request.deploy.development --validate \
+              --request-form-issue-details "request_form_issue_details.json" \
+              --request-type $REQUEST_TYPE > deploy_request_output.log 2>&1
+          RETURN_CODE=$?
+          set -e
+          if [ $RETURN_CODE -ne 0 ]; then
+            echo "failedReason<<EOF" >> $GITHUB_OUTPUT
+            cat deploy_request_output.log >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+          cat deploy_request_output.log
+          exit $RETURN_CODE
       - id: request-form-testplan
         if: needs.run_eligible.outputs.is-testplan == 'true'
         name: Validate Request Form Details
         env:
           TESTPLAN_TYPE: ${{ steps.testplan-issue.outputs.testplanType }}
-          TESTPLAN_REQUEST_TYPE: ${{ steps.get-request-type.outputs.request-type }}
+          TESTPLAN_REQUEST_TYPE: ${{ needs.run_eligible.outputs.request-type }}
           TESTPLAN_ISSUE_DETAILS: ${{ steps.testplan-issue.outputs.testplanIssue }}
           ISSUE_DETAILS: ${{ steps.request-issue.outputs.issueDetails }}
         run: |
@@ -451,23 +592,33 @@ jobs:
         with:
           script: |
             try {
-              // Convert UTC to Central Time
-              const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
-                timeZone: "America/Chicago", 
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                timeZoneName: "short"
-              });
-              const toTime = (datetime) => {
+              const getEndOfDayCentral = (datetime) => {
                 const date = new Date(datetime);
-                if(date.toString() === "Invalid Date") {
-                  return "NA";
+                if (isNaN(date.getTime())) {
+                  return null; // Invalid Date
                 }
-                return centralTimeFormat.format(date);
+                date.setHours(23);
+
+                // Convert UTC to Central Time (America/Chicago) using timeZone offset
+                const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
+                  timeZone: "America/Chicago",
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                  timeZoneName: "short"
+                });
+
+                // Format and extract adjusted time
+                const centralTimeString = centralTimeFormat.format(date);
+                const centralDate = new Date(centralTimeString);
+
+                // Ensure time is set to 23:59:59 (end of the day)
+                centralDate.setHours(23, 59, 59, 999);
+
+                return centralDate;
               };
               const getBranch = async (branchName, tagName) => {
                 try {
@@ -501,8 +652,9 @@ jobs:
               }
               if(process.env.IS_ROLLBACK != "true") {
                 // for prod deployment, date has to be today
-                const milestoneDueOnDate = toTime(context.payload.issue.milestone.due_on).substring(0,10);
-                if(milestoneDueOnDate !== toTime(new Date()).substring(0,10)) {
+                const milestoneDueOnDate = getEndOfDayCentral(context.payload.issue.milestone.due_on).toDateString();
+                const endOfToday = getEndOfDayCentral(new Date());
+                if(milestoneDueOnDate !== endOfToday.toDateString()) {
                   throw new Error("Milestone due date is not today");
                 }
                 // verify milestone branch not exists
@@ -540,25 +692,6 @@ jobs:
               // here, verify rollback milestone is closed
               // verify released approved issue exists
               // relaxed other validations
-
-              // Convert UTC to Central Time
-              const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
-                timeZone: "America/Chicago", 
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                timeZoneName: "short"
-              });
-              const toTime = (datetime) => {
-                const date = new Date(datetime);
-                if(date.toString() === "Invalid Date") {
-                  return "NA";
-                }
-                return centralTimeFormat.format(date);
-              };
               // find related issue of release form
               // verify rollback version is immediate valid previous version, milestone and tag
               const listMilestonesResponse = await github.rest.issues.listMilestones({
@@ -592,7 +725,7 @@ jobs:
       - id: branch-pr
         uses: actions/github-script@v7
         env:
-          BRANCH_NAME: ${{ steps.get-milestone-testplan-prov.outputs.milestoneBranchName }}
+          BRANCH_NAME: ${{ steps.get-milestone-development.outputs.branchName || steps.get-milestone-testplan-prov.outputs.milestoneBranchName }}
         with:
           script: |
             try {
@@ -608,6 +741,96 @@ jobs:
               core.setOutput("prUrl", foundPr?.html_url);
             } catch(ignore) {
             }
+      - id: build-workflow-status
+        name: Verify Latest Build Workflow Succeed
+        uses: actions/github-script@v7
+        env:
+          BRANCH_NAME: ${{ steps.get-milestone-development.outputs.branchName || steps.get-milestone-testplan-prov.outputs.branch-name }}
+          TAG_NAME: ${{ steps.get-milestone-prod.outputs.tagRefName }}
+        with:
+          script: |
+            try {
+              if(process.env.TAG_NAME) {
+                console.log("tag exists for release/rollback. no need to verify workflow status");
+                return;
+              }
+              // Convert UTC to Central Time
+              const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
+                timeZone: "America/Chicago", 
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                timeZoneName: "short"
+              });
+              const toTime = (datetime) => {
+                const date = new Date(datetime);
+                if(date.toString() === "Invalid Date") {
+                  return "NA";
+                }
+                return centralTimeFormat.format(date);
+              };
+              const workflowName = "ui-build.yml";
+              const branchName = process.env.BRANCH_NAME || "master";
+
+              const listWorkflowRunsResponse = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: workflowName,
+                branch: branchName,
+                event: "push",
+                per_page: 1
+              });
+              console.log("listWorkflowRunsResponse=", listWorkflowRunsResponse);
+
+              if (listWorkflowRunsResponse.data.workflow_runs.length === 0) {
+                throw new Error(`No workflow runs found for branch [${branchName}].`);
+              }
+
+              const latestRun = listWorkflowRunsResponse.data.workflow_runs[0];
+              console.log(`Latest run status: ${latestRun.status}, conclusion: ${latestRun.conclusion}`);
+
+              if (latestRun.conclusion !== "success") {
+                throw new Error(`Latest [Build workflow](${latestRun.html_url}) did not succeed. but found conclusion ${latestRun.conclusion} updated at ${toTime(latestRun.updated_at)}.`);
+              }
+            } catch(error) {
+              console.error("failed reason: ", error);
+              core.setOutput("failedReason", `Error during build workflow status validation, reason: ${error.message}`);
+              core.setFailed(error.message);
+            }
+      - id: verify-deploy-version
+        uses: actions/github-script@v7
+        env:
+          BRANCH_NAME: ${{ steps.get-milestone-development.outputs.branchName || steps.get-milestone-testplan.outputs.branch-name }}
+          TAG_NAME: ${{ steps.get-milestone-prod.outputs.tagRefName }}
+        with:
+          script: |
+            try {
+              if(process.env.TAG_NAME) {
+                console.log("tag exists for release/rollback. no need to verify workflow status");
+                return;
+              }
+              const branchName = process.env.BRANCH_NAME || "master";
+              const getContentResponse = await github.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: "package.json",
+                ref: branchName
+              });
+              console.log("getContentResponse=", getContentResponse);
+              // compare package.json and milestone version in master or milestone branch
+              const packageJsonContent = Buffer.from(getContentResponse.data.content, 'base64').toString();
+              const packageJsonObj = JSON.parse(packageJsonContent);
+              if(`v${packageJsonObj.version}` !== context.payload.issue.milestone.title) {
+                throw new Error(`package.json version [${packageJsonObj.version}] in branch [${branchName}] does not match with requested release/milestone version [${context.payload.issue.milestone.title}]`);
+              }
+            } catch(error) {
+              console.error("failed reason: ", error);
+              core.setOutput("failedReason", `Error during verifying deploy version, reason: ${error.message}`);
+              core.setFailed(error.message);
+            }
 
   validate_stack:
     name: Validate Stacks
@@ -618,10 +841,10 @@ jobs:
     environment:
       name: ${{ needs.run_eligible.outputs.env-ref-name }}
     outputs:
-      failed-reason: ${{ steps.provision-stack-testplan.outputs.failedReason || steps.deprovision-stack-testplan.outputs.failedReason || steps.provision-stack-prod.outputs.failedReason || steps.provision-stack-prod-rollback.outputs.failedReason }}
-      stack-details: ${{ steps.provision-stack-testplan.outputs.stack_details || steps.deprovision-stack-testplan.outputs.stack_details || steps.provision-stack-prod.outputs.stack_details || steps.provision-stack-prod-rollback.outputs.stack_details || '{}' }}
-      api-stack-status: ${{ steps.provision-stack-testplan.outputs.api_stack_status || steps.deprovision-stack-testplan.outputs.api_stack_status || steps.provision-stack-prod.outputs.api_stack_status || steps.provision-stack-prod-rollback.outputs.api_stack_status }}
-      ui-stack-status: ${{ steps.provision-stack-testplan.outputs.ui_stack_status || steps.deprovision-stack-testplan.outputs.ui_stack_status || steps.provision-stack-prod.outputs.ui_stack_status || steps.provision-stack-prod-rollback.outputs.ui_stack_status }}
+      failed-reason: ${{ steps.provision-stack-testplan.outputs.failedReason || steps.deprovision-stack-testplan.outputs.failedReason || steps.provision-stack-prod.outputs.failedReason || steps.provision-stack-prod-rollback.outputs.failedReason || steps.stack-development.outputs.failedReason }}
+      stack-details: ${{ steps.provision-stack-testplan.outputs.stack_details || steps.deprovision-stack-testplan.outputs.stack_details || steps.provision-stack-prod.outputs.stack_details || steps.provision-stack-prod-rollback.outputs.stack_details || steps.stack-development.outputs.stack_details || '{}' }}
+      api-stack-status: ${{ steps.provision-stack-testplan.outputs.api_stack_status || steps.deprovision-stack-testplan.outputs.api_stack_status || steps.provision-stack-prod.outputs.api_stack_status || steps.provision-stack-prod-rollback.outputs.api_stack_status || steps.stack-development.outputs.api_stack_status }}
+      ui-stack-status: ${{ steps.provision-stack-testplan.outputs.ui_stack_status || steps.deprovision-stack-testplan.outputs.ui_stack_status || steps.provision-stack-prod.outputs.ui_stack_status || steps.provision-stack-prod-rollback.outputs.ui_stack_status || steps.stack-development.outputs.ui_stack_status }}
     steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -629,6 +852,87 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_CICD_ROLE_ARN }}
           role-session-name: cdkSession
+      - id: stack-development
+        if: needs.run_eligible.outputs.is-development == 'true'
+        name: Verify stack deployable or destroyable
+        env:
+          ENVID: ${{ vars.AWS_ENVID }}
+          API_VERSION: ${{ needs.validate_request.outputs.api-version }}
+          IS_PROVISION_REQ: ${{ needs.run_eligible.outputs.is-development-provision }}
+          IS_DEPROVISION_REQ: ${{ needs.run_eligible.outputs.is-development-deprovision }}
+        run: |
+          UI_STACK_NAME="prsfin-$ENVID-ui-deploy-stack"  
+          set +e
+          DESCRIBE_UI_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$UI_STACK_NAME")
+          RET_CODE=$?
+          set -e
+          if [[ $RET_CODE -ne 0 && "$IS_PROVISION_REQ" == "true" ]]; then
+            echo "UI Stack does not exist. given branch can be deployed."
+            exit 0
+          fi
+
+          if [[ $RET_CODE -ne 0 && "$IS_DEPROVISION_REQ" == "true" ]]; then
+            FAILED_REASON="UI Stack does not exist. it has already been destroyed."
+            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            echo "Failed Reason: $FAILED_REASON"
+            exit 1
+          fi
+
+          STACK_STATUS=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].StackStatus')
+          echo "ui_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
+
+          # environment tag match must never fail
+          TAG_VALUE=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="environment").Value')
+          if [[ "$TAG_VALUE" != "$ENVID" ]]; then
+            FAILED_REASON="Stack is deployed for other environment $TAG_VALUE stack."
+            echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+            echo "Failed Reason: $FAILED_REASON"
+            exit 1
+          fi
+
+          UI_CREATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
+          UI_UPDATED_TIME=$(echo "$DESCRIBE_UI_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
+          UI_STACK_AUDIT='{"created_time":"'$UI_CREATED_TIME'","updated_time":"'$UI_UPDATED_TIME'"}'
+
+          if [[ -z "$API_VERSION" ]]; then
+            echo "Api version is not provided. Will not deploy api stack."
+            API_STACK_AUDIT='{}'
+          else
+            echo "Found UI stack and API version is provided. Proceeding with API stack validation."
+            API_STACK_NAME="prsfin-$ENVID-infra-stack"
+            set +e
+            DESCRIBE_API_STACK_OUT=$(aws cloudformation describe-stacks --stack-name "$API_STACK_NAME")
+            RET_CODE=$?
+            set -e
+
+            if [[ $RET_CODE -ne 0 && "$IS_DEPROVISION_REQ" == "true" ]]; then
+              FAILED_REASON="Unable to describe API stack. It should exist. Unknown error"
+              echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+              echo "Failed Reason: $FAILED_REASON"
+              exit 1
+            fi
+
+            STACK_STATUS=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r '.Stacks[0].StackStatus')
+            echo "api_stack_status=$STACK_STATUS" >> $GITHUB_OUTPUT
+
+            # environment tag match must never fail
+            TAG_VALUE=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r '.Stacks[0].Tags[] | select(.Key=="environment").Value')
+            if [[ "$TAG_VALUE" != "$ENVID" ]]; then
+              FAILED_REASON="Stack is deployed for other environment $TAG_VALUE stack."
+              echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+              echo "Failed Reason: $FAILED_REASON"
+              exit 1
+            fi
+
+            API_CREATED_TIME=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].CreationTime")
+            API_UPDATED_TIME=$(echo "$DESCRIBE_API_STACK_OUT" | jq -r ".Stacks[0].LastUpdatedTime")
+            API_STACK_AUDIT='{"created_time":"'$API_CREATED_TIME'","updated_time":"'$API_UPDATED_TIME'"}'
+          fi
+
+          STACK_AUDIT='{"ui":'$UI_STACK_AUDIT',"api":'$API_STACK_AUDIT'}'
+          echo "stack_details<<EOF" >> $GITHUB_OUTPUT
+          echo "$STACK_AUDIT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
       - id: provision-stack-testplan
         if: needs.run_eligible.outputs.is-testplan-provision == 'true'
         name: Verify milestone branch is deployable
@@ -998,7 +1302,8 @@ jobs:
         name: Validate API Milestone
         if: >
           contains(needs.validate_request.outputs.deployment-scope, 'api') &&
-          needs.run_eligible.outputs.is-testplan == 'true'
+          ( needs.run_eligible.outputs.is-testplan == 'true' ||
+           needs.run_eligible.outputs.is-development == 'true' )
         uses: actions/github-script@v7
         env:
           BACKEND_REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
@@ -1024,12 +1329,9 @@ jobs:
               core.setOutput("failedReason", `Error during milestone validation, reason: ${error.message}`);
               core.setFailed(error.message);
             }
-      - run: |
-          echo "api-milestone: ${{ steps.api-milestone-testplan.outputs.apiMilestoneNumber }}"
-          echo "failed-reason: ${{ steps.api-milestone-testplan.outputs.failedReason }}"
 
-  create_tag:
-    name: Create Tag
+  verify_branch_tag:
+    name: Verify Branch or Tag
     runs-on: ubuntu-latest
     needs:
       - run_eligible
@@ -1047,6 +1349,7 @@ jobs:
           IS_PROD_ROLLBACK: ${{ needs.run_eligible.outputs.is-prod-rollback }}
           IS_PROD_PROVISION: ${{ needs.run_eligible.outputs.is-prod-provision }}
           IS_TESTPLAN: ${{ needs.run_eligible.outputs.is-testplan }}
+          IS_DEVELOPMENT: ${{ needs.run_eligible.outputs.is-development }}
           USE_EXISTING_TAG: ${{ needs.validate_request.outputs.use-existing-tag }}
         run: |
           if [[ -z "$BRANCH_NAME" ]]; then
@@ -1058,6 +1361,12 @@ jobs:
             fi
             if [[ "$IS_TESTPLAN" == "true" ]]; then
               FAILED_REASON="Milestone Branch is not defined."
+              echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
+              echo "$FAILED_REASON"
+              exit 1
+            fi
+            if [[ "$IS_DEVELOPMENT" == "true" ]]; then
+              FAILED_REASON="Milestone or master Branch is not defined."
               echo "failedReason=$FAILED_REASON" >> $GITHUB_OUTPUT
               echo "$FAILED_REASON"
               exit 1
@@ -1075,6 +1384,7 @@ jobs:
             fi
           fi
           echo "create_tag=$CREATE_TAG" >> $GITHUB_OUTPUT
+          echo "create_tag=$CREATE_TAG"
       - name: Checkout
         uses: actions/checkout@v4
       - id: create-prod-tag
@@ -1107,7 +1417,7 @@ jobs:
     needs:
       - run_eligible
       - validate_request
-      - create_tag
+      - verify_branch_tag
     environment: static-site
     outputs:
       artifact-name: ${{ steps.run-build.outputs.artifact-name }}
@@ -1115,10 +1425,17 @@ jobs:
       artifact-url: ${{ steps.upload-artifact.outputs.artifact-url }}
       artifact-digest: ${{ steps.upload-artifact.outputs.artifact-digest }}
     steps:
+      - name: Display Needs
+        env:
+          VALIDATE_REQ_JSON: ${{ toJson(needs.validate_request) }}
+          VERIFY_BRANCH_TAG_JSON: ${{ toJson(needs.verify_branch_tag) }}
+        run: |
+          echo "Needs of Validate Request: $VALIDATE_REQ_JSON"
+          echo "Needs of Veralidate Request: $VERIFY_BRANCH_TAG_JSON"
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ needs.create_tag.outputs.branch-tag-name }}
+          ref: ${{ needs.verify_branch_tag.outputs.branch-tag-name }}
       - name: Setup Node Latest
         # https://github.com/actions/setup-node
         uses: actions/setup-node@v4
@@ -1137,7 +1454,7 @@ jobs:
           REACT_APP_BASE_PATH: ${{ vars.REACT_APP_BASE_PATH }}
           REACT_APP_REST_API_BASE_PATH: ${{ vars.REACT_APP_REST_API_BASE_PATH }}
           REACT_APP_MINIMUM_SESSION_TIME: ${{ vars.REACT_APP_MINIMUM_SESSION_TIME }}
-          GENERATE_SOURCEMAP: ${{ needs.run_eligible.outputs.is-testplan == 'true' }}
+          GENERATE_SOURCEMAP: ${{ needs.run_eligible.outputs.is-production != 'true' }}
           PUBLIC_URL: ${{ vars.PUBLIC_URL }}
           ARTIFACT_NAME_PREFIX: ${{ env.ARTIFACT_NAME_PREFIX }}
           ENV_REF_NAME: ${{ needs.run_eligible.outputs.env-ref-name }}
@@ -1188,10 +1505,10 @@ jobs:
         uses: actions/github-script@v7
         if: >
           contains(needs.validate_request.outputs.deployment-scope, 'api') &&
-          needs.run_eligible.outputs.is-testplan == 'true'
+          ( needs.run_eligible.outputs.is-testplan == 'true' ||
+           needs.run_eligible.outputs.is-development == 'true' )
         env:
           BACKEND_REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
-          TESTPLAN_TYPE: ${{ needs.validate_request.outputs.testplan-type }}
           ORIGINAL_ISSUE_TITLE: ${{ needs.run_eligible.outputs.original-issue-title }}
           API_MILESTONE_NUMBER: ${{ needs.validate_request_api.outputs.api-milestone-number }}
         with:
@@ -1204,12 +1521,13 @@ jobs:
               issueBody += "Created because of UI Provision Issue "
               issueBody += `[Issue-${context.payload.issue.number}](${context.payload.issue.html_url})`;
               issueBody += "\n\n";
+              
               const createIssueResponse = await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: process.env.BACKEND_REPO_NAME,
                 title: process.env.ORIGINAL_ISSUE_TITLE,
                 body: issueBody,
-                labels: ["deployment", "env: testplan", process.env.TESTPLAN_TYPE],
+                labels: context.payload.issue.labels.map(label=>label.name),
                 milestone: process.env.API_MILESTONE_NUMBER
               });
               console.log("api createIssueResponse: ", createIssueResponse);
@@ -1233,6 +1551,7 @@ jobs:
           STACK_REPO_NAME: ${{ vars.UI_DEPLOY_REPO_NAME }}
           ARTIFACT_NAME: ${{ needs.build_artifact.outputs.artifact-name }}
           ENV_TYPE: ${{ needs.run_eligible.outputs.env-ref-name }}
+          IS_DEVELOPMENT: ${{ needs.run_eligible.outputs.is-development }}
           IS_TESTPLAN: ${{ needs.run_eligible.outputs.is-testplan }}
           IS_PRODUCTION: ${{ needs.run_eligible.outputs.is-production }}
           INITIAL_API_STACK_STATUS: ${{ needs.validate_stack.outputs.api-stack-status }}
@@ -1244,6 +1563,7 @@ jobs:
               const clientPayload = {
                 env: {
                   env_type: process.env.ENV_TYPE,
+                  is_development: process.env.IS_DEVELOPMENT,
                   is_testplan: process.env.IS_TESTPLAN,
                   is_prod: process.env.IS_PRODUCTION
                 },
@@ -1295,6 +1615,7 @@ jobs:
           ARTIFACT_ID: ${{ needs.build_artifact.outputs.artifact-id }}
           ARTIFACT_NAME: ${{ needs.build_artifact.outputs.artifact-name }}
           MILESTONE_BRANCH_NAME: ${{ needs.validate_request.outputs.milestone-branch-name || github.event.issue.milestone.title }}
+          IS_FOR_DEVELOPMENT: ${{ needs.run_eligible.outputs.is-development }}
           IS_FOR_TESTPLAN: ${{ needs.run_eligible.outputs.is-testplan }}
           IS_PROD_RELEASE: ${{ needs.run_eligible.outputs.is-prod-provision }}
           IS_PROD_ROLLBACK: ${{ needs.run_eligible.outputs.is-prod-rollback }}
@@ -1337,8 +1658,8 @@ jobs:
                 "", "### Start Time: ", "",
                 "  " + toTime(process.env.DEPLOY_START_TIME), 
               ];
-              if("true" == process.env.IS_FOR_TESTPLAN) {
-                commentBody.push("", "### Milestone Branch: ", "");
+              if("true" == process.env.IS_FOR_TESTPLAN || "true" === process.env.IS_FOR_DEVELOPMENT) {
+                commentBody.push("", "### Branch: ", "");
               } else {
                 commentBody.push("", "### Tag: ", "");
               }
@@ -2155,7 +2476,7 @@ jobs:
       - validate_request
       - validate_stack
       - validate_request_api
-      - create_tag
+      - verify_branch_tag
       - build_artifact
       - deployment
       - deployment_complete
@@ -2169,7 +2490,7 @@ jobs:
           echo 'Validate Request: ${{ needs.validate_request }}'
           echo 'Validate Request Api: ${{ needs.validate_stack }}'
           echo 'Validate Request Api: ${{ needs.validate_request_api }}'
-          echo 'Create Tag: ${{ needs.create_tag }}'
+          echo 'Create Tag: ${{ needs.verify_branch_tag }}'
           echo 'Build Artifact: ${{ needs.build_artifact }}'
           echo 'Deployment: ${{ needs.deployment }}'
           echo 'Deployment Complete: ${{ needs.deployment_complete }}'
@@ -2185,8 +2506,8 @@ jobs:
           VALIDATION_FAIL_REASON: ${{ needs.validate_request.outputs.failed-reason || needs.validate_request_api.outputs.failed-reason || needs.validate_stack.outputs.failed-reason }}
           IS_VALIDATION_FAILED: ${{ needs.update_request.result == 'failure' || needs.validate_request.result == 'failure' || needs.validate_request_api.result == 'failure' || needs.validate_stack.result == 'failure' }}
           REQUEST_TYPE: ${{ needs.validate_request.outputs.request-type }}
-          DEPLOY_FAILED_REASON: ${{ needs.create_tag.outputs.failed-reason || needs.deployment.outputs.failed-reason || needs.deployment_complete.outputs.failed-reason }}
-          IS_DEPLOY_FAILED: ${{ needs.create_tag.result == 'failure' || needs.deployment.result == 'failure' || needs.deployment_complete.result == 'failure' || needs.build_artifact.result == 'failure' }}
+          DEPLOY_FAILED_REASON: ${{ needs.verify_branch_tag.outputs.failed-reason || needs.deployment.outputs.failed-reason || needs.deployment_complete.outputs.failed-reason }}
+          IS_DEPLOY_FAILED: ${{ needs.verify_branch_tag.result == 'failure' || needs.deployment.result == 'failure' || needs.deployment_complete.result == 'failure' || needs.build_artifact.result == 'failure' }}
           DESTROY_FAILED_REASON: ${{ needs.destroy.outputs.failed-reason }}
           IS_DESTROY_FAILED: ${{ needs.destroy.result == 'failure' || needs.destroy_complete.result == 'failure' }}
         with:
