@@ -1,6 +1,6 @@
 import pMemoize, { pMemoizeClear } from "p-memoize";
 import { AxiosResponse, AxiosResponseHeaders } from "axios";
-import ms from "ms";
+import ms, { StringValue } from "ms";
 import { capitalize } from "lodash";
 import { AccessTokenResource, UpdateUserDetailsResource, UserDetailsResource, UserStatus } from "./field-types";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18,7 +18,7 @@ const userLoggedInKey = "ul";
 const userLoggedInValue = "true";
 const storeLogger = getLogger("service.store.auth", null, null, "DISABLED");
 
-const MIN_SESSION_TIME_IN_SEC = ms(process.env.REACT_APP_MINIMUM_SESSION_TIME as string) / 1000;
+const MIN_SESSION_TIME_IN_SEC = ms(process.env.REACT_APP_MINIMUM_SESSION_TIME as StringValue) / 1000;
 
 interface AuthStore {
   token: AccessTokenResource & AuditFields;
@@ -124,7 +124,10 @@ export const updateAuthorizationToken = (response: AxiosResponse<AccessTokenReso
   accessToken = getHeaderValue(responseHeader, "Authorization");
   logger.debug("attempted to retrieve accesstoken from response header. value=", accessToken);
   if (typeof accessToken === "string" && response.data.expiresIn && response.data.expiryTime) {
-    if (response.data.expiresIn >= MIN_SESSION_TIME_IN_SEC && subtractDatesDefaultToZero(response.data.expiryTime).toSeconds() >= MIN_SESSION_TIME_IN_SEC) {
+    if (
+      response.data.expiresIn >= MIN_SESSION_TIME_IN_SEC &&
+      subtractDatesDefaultToZero(response.data.expiryTime).toSeconds() >= MIN_SESSION_TIME_IN_SEC
+    ) {
       logger.debug("found valid response");
       authStore.token.accessToken = accessToken;
       authStore.token.expiresIn = response.data.expiresIn;
@@ -227,7 +230,11 @@ const populateUserDetailsFromJsonString = (json: string) => {
   logger.debug("attempting to populate user details on page loads/reloads");
   try {
     const user = JSON.parse(json);
-    if (user && typeof user.isAuthenticated === "boolean" && [UserStatus.ACTIVE_USER, UserStatus.DEACTIVATED_USER, UserStatus.DELETED_USER].includes(user.status)) {
+    if (
+      user &&
+      typeof user.isAuthenticated === "boolean" &&
+      [UserStatus.ACTIVE_USER, UserStatus.DEACTIVATED_USER, UserStatus.DELETED_USER].includes(user.status)
+    ) {
       logger.debug("found valid user after load/reload, updating");
       authStore.userDetails.isAuthenticated = user.isAuthenticated;
       authStore.userDetails.status = user.status;

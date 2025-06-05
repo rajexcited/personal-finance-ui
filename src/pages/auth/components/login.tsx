@@ -6,7 +6,7 @@ import useAuth from "../hooks/use-auth";
 import { getFullPath } from "../../root";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock, faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
-import { ConflictError, getLogger } from "../../../shared";
+import { ConflictError, getLogger, testAttributes } from "../../../shared";
 
 
 enum LoginSubmitStatus {
@@ -135,7 +135,8 @@ const LoginPage: FunctionComponent = () => {
                 <div className="columns">
                     <div className="column">
                         <div className="buttons is-centered is-hidden-mobile">
-                            <button className="button is-link is-medium" type="button" onClick={ onClickSignupHandler }>
+                            <button className="button is-link is-medium" type="button" onClick={ onClickSignupHandler }
+                                { ...testAttributes("signup-button") }>
                                 <span className="icon">
                                     <FontAwesomeIcon icon={ faUserPlus } />
                                 </span>
@@ -145,7 +146,7 @@ const LoginPage: FunctionComponent = () => {
                     </div>
                     <div className="column">
                         <div className="buttons has-addons is-centered">
-                            <button className="button is-dark is-medium" type="submit">
+                            <button className="button is-dark is-medium" type="submit" { ...testAttributes("login-button") }>
                                 <span className="icon">
                                     <FontAwesomeIcon icon={ faSignIn } />
                                 </span>

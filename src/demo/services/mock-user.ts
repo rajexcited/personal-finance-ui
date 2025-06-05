@@ -7,15 +7,16 @@ import datetime from "date-and-time";
 import { UserDetailsResource, UserLoginResource } from "../../pages/auth";
 import { UserStatus } from "../../pages/auth/services";
 import { getLogger } from "../../shared";
-import ms from "ms";
+import ms, { StringValue } from "ms";
 
 type UserDetailsRsc = Omit<UserDetailsResource, "isAuthenticated" | "fullName">;
 
 const _rootLogger = getLogger("mock.api.user", null, null, "DISABLED");
 
 export const MockUser = (demoMock: MockAdapter) => {
-  const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#$%^&*])[\w!@#$%^&\(\)\=*]{8,25}$/;
-  const expiresInSec = ms(process.env.REACT_APP_MINIMUM_SESSION_TIME as string) / 500;
+  const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#<$>%^&*])[\w!@#<$>%^&\(\)\=*]{8,25}$/;
+  const sessionTime = (process.env.REACT_APP_MINIMUM_SESSION_TIME as StringValue) || "1 min";
+  const expiresInSec = ms(sessionTime) / 500;
 
   const isInvalidDemoEmailId = (emailId: string) => {
     return !emailId.endsWith("@demo.com");
@@ -29,7 +30,7 @@ export const MockUser = (demoMock: MockAdapter) => {
 
     const data = JSON.parse(config.data);
     const missingErrors = missingValidation(data, ["emailId", "password", "firstName", "lastName", "countryCode"]);
-    if (missingErrors) {
+    if (missingErrors.length > 0) {
       return responseCreator.toValidationError(missingErrors);
     }
 
@@ -48,7 +49,10 @@ export const MockUser = (demoMock: MockAdapter) => {
       expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime()
     });
 
-    return responseCreator.toCreateResponse({ expiresIn: response.expiresIn, expiryTime: response.expiryTime }, { Authorization: response.accessToken });
+    return responseCreator.toCreateResponse(
+      { expiresIn: response.expiresIn, expiryTime: response.expiryTime },
+      { Authorization: response.accessToken }
+    );
   });
 
   demoMock.onPost("/user/login").reply((config) => {
@@ -83,7 +87,10 @@ export const MockUser = (demoMock: MockAdapter) => {
       expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime()
     });
 
-    return responseCreator.toSuccessResponse({ expiresIn: response.expiresIn, expiryTime: response.expiryTime }, { Authorization: response.accessToken });
+    return responseCreator.toSuccessResponse(
+      { expiresIn: response.expiresIn, expiryTime: response.expiryTime },
+      { Authorization: response.accessToken }
+    );
   });
 
   demoMock.onPost("/user/logout").reply((config) => {
@@ -116,7 +123,10 @@ export const MockUser = (demoMock: MockAdapter) => {
       expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime()
     });
 
-    return responseCreator.toSuccessResponse({ expiresIn: response.expiresIn, expiryTime: response.expiryTime }, { Authorization: response.accessToken });
+    return responseCreator.toSuccessResponse(
+      { expiresIn: response.expiresIn, expiryTime: response.expiryTime },
+      { Authorization: response.accessToken }
+    );
   });
 
   demoMock.onGet("/user/details").reply((config) => {
@@ -147,7 +157,7 @@ export const MockUser = (demoMock: MockAdapter) => {
     if (data.password) {
       // change password logic
       const missingErrors = missingValidation(data, ["newPassword"]);
-      if (missingErrors) {
+      if (missingErrors.length > 0) {
         return responseCreator.toValidationError(missingErrors);
       }
       if (!passwordRegex.test(data.password) || !passwordRegex.test(data.newPassword)) {
