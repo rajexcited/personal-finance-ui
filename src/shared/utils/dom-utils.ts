@@ -11,10 +11,10 @@ const isAutomationTest = () => {
   //   process.env.REACT_APP_TEST_COOKIE_KEY,
   //   "testCookie=",
   //   testCookie,
-  //   "REACT_APP_TEST_ATTR_ADD=",
-  //   process.env.REACT_APP_TEST_ATTR_ADD
+  //   "REACT_APP_TEST_ATTR_CNDN=",
+  //   process.env.REACT_APP_TEST_ATTR_CNDN
   // );
-  return process.env.REACT_APP_TEST_ATTR_ADD === testCookie;
+  return process.env.REACT_APP_TEST_ATTR_CNDN === testCookie;
 };
 
 export const testAttributes = (attrValues: string[] | string) => {
