@@ -1596,7 +1596,7 @@ jobs:
                 clientPayload.stack_tags.push(`apiVersion=${apiVersion}`);
                 clientPayload.apiVersion = apiVersion;
               }
-              client_payload.stack_tags.push(`testAttrConditionId=${process.env.TEST_ATTR_CNDN_ID}`)
+              clientPayload.stack_tags.push(`testAttrConditionId=${process.env.TEST_ATTR_CNDN_ID}`)
               console.log(`submitting event [${process.env.EVENT_TYPE}] with Client Payload:`, clientPayload);
               const createDispatchEventResponse = await github.rest.repos.createDispatchEvent({
                 owner:context.repo.owner,
