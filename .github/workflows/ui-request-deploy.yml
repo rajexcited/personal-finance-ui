@@ -1423,6 +1423,7 @@ jobs:
       artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}
       artifact-url: ${{ steps.upload-artifact.outputs.artifact-url }}
       artifact-digest: ${{ steps.upload-artifact.outputs.artifact-digest }}
+      test-attr-cond-id: ${{ steps.test-attr-condition.outputs.uuid }}
     steps:
       - name: Display Needs
         env:
@@ -1441,6 +1442,8 @@ jobs:
         with:
           node-version: "latest"
           cache: "npm"
+      - id: test-attr-condition
+        run: echo "::set-output name=uuid::$(uuidgen)"
       - id: run-build
         name: Build Code
         run: |
@@ -1457,6 +1460,7 @@ jobs:
           PUBLIC_URL: ${{ vars.PUBLIC_URL }}
           ARTIFACT_NAME_PREFIX: ${{ env.ARTIFACT_NAME_PREFIX }}
           ENV_REF_NAME: ${{ needs.run_eligible.outputs.env-ref-name }}
+          REACT_APP_TEST_ATTR_CNDN: ${{ steps.test-attr-condition.outputs.uuid }}
       - name: upload artifact
         id: upload-artifact
         uses: actions/upload-artifact@v4
@@ -1555,6 +1559,7 @@ jobs:
           IS_PRODUCTION: ${{ needs.run_eligible.outputs.is-production }}
           INITIAL_API_STACK_STATUS: ${{ needs.validate_stack.outputs.api-stack-status }}
           IS_API_STACK_DEPLOYING: ${{ steps.create-api-issue.outputs.isDeployingApiStack }}
+          TEST_ATTR_CNDN_ID: ${{ needs.build_artifact.outputs.test-attr-cond-id }}
         with:
           github-token: ${{ secrets.ON_DEMAND_DEPLOY_UI_PAT }}
           script: |
@@ -1591,6 +1596,7 @@ jobs:
                 clientPayload.stack_tags.push(`apiVersion=${apiVersion}`);
                 clientPayload.apiVersion = apiVersion;
               }
+              client_payload.stack_tags.push(`testAttrConditionId=${process.env.TEST_ATTR_CNDN_ID}`)
               console.log(`submitting event [${process.env.EVENT_TYPE}] with Client Payload:`, clientPayload);
               const createDispatchEventResponse = await github.rest.repos.createDispatchEvent({
                 owner:context.repo.owner,
