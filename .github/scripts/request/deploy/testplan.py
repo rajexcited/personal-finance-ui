@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 from datetime import timedelta
 from ...md_parser import parsed_body, get_list_items
 from ...md_parser.models import MdHeader, MdListItemTitleContent, MdListItemTodo
-from ...utils import export_to_env, get_converted_enum, get_parsed_arg_value, get_valid_dict, get_preferred_datetime, get_now, parse_milestone_dueon
+from ...utils import convert_to_human_readable, export_to_env, get_converted_enum, get_parsed_arg_value, get_valid_dict, get_preferred_datetime, get_now, parse_milestone_dueon
 
 
 class RequestType(Enum):
@@ -49,6 +49,7 @@ def validate_deployment_schedule(section_contents: List, request_form_issue_deta
     #         raise ValueError("Deployment on the milestone branch is prohibited while the milestone is closed.")
     preferred_date_obj = None
     deploy_scope = None
+    delete_schedule_date_obj = None
     mdlist = get_list_items(section_contents)
     for listitem in mdlist:
         if isinstance(listitem, MdListItemTitleContent) and listitem.title is not None:
@@ -56,6 +57,11 @@ def validate_deployment_schedule(section_contents: List, request_form_issue_deta
                 preferred_date_obj = get_preferred_datetime(listitem.content)
             if "Deployment Scope" in listitem.title:
                 deploy_scope = listitem.content
+            if "Schedule to delete after" in listitem.title and listitem.content is not None:
+                if "Preserve previous schedule" in listitem.content:
+                    export_to_env({"delete_schedule": "PreservePreviousSchedule"})
+                else:
+                    delete_schedule_date_obj = get_preferred_datetime(listitem.content)
 
     if not preferred_date_obj:
         raise ValueError("Preferred Date and Time format is not correct.")
@@ -79,6 +85,15 @@ def validate_deployment_schedule(section_contents: List, request_form_issue_deta
 
     if "API" not in deploy_scope and request_type == RequestType.Deprovision:
         raise ValueError("for deprovisioning, scope must have both UI and API.")
+
+    if delete_schedule_date_obj is not None:
+        time_diff = abs(delete_schedule_date_obj-preferred_date_obj)
+        if time_diff < timedelta(minutes=15):
+            raise ValueError(f"Invalid schedule deletion request. The difference [{convert_to_human_readable(time_diff)}] is less than 15 minutes")
+        if time_diff > timedelta(days=30):
+            raise ValueError(f"Invalid schedule deletion request. The difference [{convert_to_human_readable(time_diff)}] is greater than 1 month")
+        formatted_datetime = preferred_date_obj.strftime("%Y-%m-%d %H:%M:%S %Z")
+        export_to_env({"delete_schedule": formatted_datetime})
 
     return deploy_scope
 

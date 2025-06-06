@@ -41,9 +41,9 @@ labels: [deployment, regression, "env: testplan", "env: development", request]
 
   > **Note:** _Use the format mm-dd-yyyy HH:MM:SS in 24-hour CST time._
 
-- **Schedule to delete after:** 03-15-2025 15:40:35 / NA
+- **Schedule to delete after:** 03-15-2025 15:40:35 / NA / Preserve previous schedule
 
-  > **Note:** _Use the same date and time format or NA to not schedule. Deletion will occur exactly 2 hours after the deployment time._
+  > **Note:** _Use the same date and time format to schedule auto deletion. NA to not schedule or remove schedule. Preserve previous schedule to keep same schedule deletion._
 
 ### Additional Notes/Special Instructions:
 
