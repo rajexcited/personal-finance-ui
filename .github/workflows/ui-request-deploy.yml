@@ -1461,6 +1461,7 @@ jobs:
           ARTIFACT_NAME_PREFIX: ${{ env.ARTIFACT_NAME_PREFIX }}
           ENV_REF_NAME: ${{ needs.run_eligible.outputs.env-ref-name }}
           REACT_APP_TEST_ATTR_CNDN: ${{ steps.test-attr-condition.outputs.uuid }}
+          REACT_APP_TEST_COOKIE_KEY: ${{ vars.REACT_APP_TEST_COOKIE_KEY }}
       - name: upload artifact
         id: upload-artifact
         uses: actions/upload-artifact@v4
