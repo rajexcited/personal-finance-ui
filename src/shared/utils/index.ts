@@ -32,3 +32,5 @@ export { ObjectDeepDifference } from "./deep-obj-difference";
 export { ascCompare, descCompare } from "./comparator";
 
 export { getCacheOption, pMemoizeSync } from "./cache-utils";
+
+export { testAttributes } from "./dom-utils";

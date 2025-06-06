@@ -1,6 +1,6 @@
 import "./confirm-dialog.css";
 import { FunctionComponent, ReactNode, useEffect, useState } from "react";
-import { getLogger } from "../shared";
+import { getLogger, testAttributes } from "../shared";
 
 
 interface ConfirmDialogProps {
@@ -78,7 +78,7 @@ const ConfirmDialog: FunctionComponent<ConfirmDialogProps> = (props) => {
             <div className="modal-card">
                 <header className="modal-card-head is-small">
                     <p className="modal-card-title">{ props.title || <>&nbsp;</> }</p>
-                    <button className="delete" aria-label="close" onClick={ onClickCloseOrCancelHandler }></button>
+                    <button className="delete" aria-label="close" onClick={ onClickCloseOrCancelHandler } { ...testAttributes("close-confirm-button") }></button>
                 </header>
                 <section className="modal-card-body">
                     { content }
@@ -88,8 +88,14 @@ const ConfirmDialog: FunctionComponent<ConfirmDialogProps> = (props) => {
                 </section>
                 <footer className="modal-card-foot is-small">
                     <div className="buttons">
-                        <button className={ `button ${props.noButtonClassname || ""}` } onClick={ onClickCloseOrCancelHandler }>{ props.noButtonContent || "No" }</button>
-                        <button className={ `button ${props.yesButtonClassname || ""}` } onClick={ onClickConfirmHandler }> { props.yesButtonContent || "Yes" } </button>
+                        <button className={ `button ${props.noButtonClassname || ""}` }
+                            onClick={ onClickCloseOrCancelHandler }
+                            { ...testAttributes("no-confirm-button") }
+                        >{ props.noButtonContent || "No" }</button>
+                        <button className={ `button ${props.yesButtonClassname || ""}` }
+                            onClick={ onClickConfirmHandler }
+                            { ...testAttributes("yes-confirm-button") }
+                        > { props.yesButtonContent || "Yes" } </button>
                     </div>
                 </footer>
             </div>

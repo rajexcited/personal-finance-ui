@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import ReactMarkdown from "react-markdown";
 import { Animated, DropDown, DropDownItemType, Input, InputValidateResponse, InputValidators, LoadSpinner } from "../../../components";
 import useAuth from "../hooks/use-auth";
-import { RouteHandlerResponse } from "../../../shared";
+import { RouteHandlerResponse, testAttributes } from "../../../shared";
 import { SignupDetailsLoaderResource } from "../route-handlers/signup-loader";
 import { getFullPath } from "../../root";
 
@@ -90,8 +90,10 @@ const SignupPage: FunctionComponent = () => {
 
             {
                 !!errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ !submitting } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
-                    <div className="columns is-centered">
+                <Animated animateOnMount={ true } isPlayIn={ !submitting }
+                    animatedIn="fadeInDown" animatedOut="fadeOutUp"
+                    isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
+                    <div className="columns is-centered" { ...testAttributes("signup-error") }>
                         <div className="column is-half">
                             <article className="message is-danger mb-5">
                                 <div className="message-body">
@@ -109,7 +111,7 @@ const SignupPage: FunctionComponent = () => {
                         <div className="columns">
                             <div className="column">
                                 <Input
-                                    id="firstname"
+                                    id="firstName"
                                     type="text"
                                     label="First Name "
                                     placeholder="Enter First Name"
@@ -124,7 +126,7 @@ const SignupPage: FunctionComponent = () => {
                             </div>
                             <div className="column">
                                 <Input
-                                    id="lastname"
+                                    id="lastName"
                                     type="text"
                                     label="Last Name "
                                     placeholder="Enter Last Name"
@@ -169,7 +171,7 @@ const SignupPage: FunctionComponent = () => {
                                     autocomplete="new-password"
                                 />
                                 <Input
-                                    id="password-repeat"
+                                    id="passwordRepeat"
                                     type="password"
                                     label="Re-type Password "
                                     placeholder="Re type password"
@@ -188,8 +190,8 @@ const SignupPage: FunctionComponent = () => {
                         <div className="columns">
                             <div className="column">
                                 <DropDown
-                                    id="cntry-cde"
-                                    key={ "cntry-cde" }
+                                    id="countryCode"
+                                    key={ "countryCode" }
                                     label="Country: "
                                     items={ countries }
                                     onSelect={ (country: DropDownItemType) => setSelectedCountry(country) }
@@ -204,7 +206,8 @@ const SignupPage: FunctionComponent = () => {
                 <div className="columns">
                     <div className="column">
                         <div className="buttons has-addons is-centered">
-                            <button className="button is-link is-medium" type="button" onClick={ onClickLoginHandler }>
+                            <button className="button is-link is-medium" type="button" onClick={ onClickLoginHandler }
+                                { ...testAttributes("login-button") } >
                                 <span className="icon">
                                     <FontAwesomeIcon icon={ faSignIn } />
                                 </span>
@@ -214,7 +217,7 @@ const SignupPage: FunctionComponent = () => {
                     </div>
                     <div className="column">
                         <div className="buttons has-addons is-centered">
-                            <button className="button is-dark is-medium" type="submit">
+                            <button className="button is-dark is-medium" type="submit" { ...testAttributes("signup-button") }>
                                 <span className="icon">
                                     <FontAwesomeIcon icon={ faUserPlus } />
                                 </span>

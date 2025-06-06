@@ -1,5 +1,5 @@
 import datetime from "date-and-time";
-import ms from "ms";
+import ms, { StringValue } from "ms";
 
 const DEFAULT_FORMAT_PATTERN = "MM-DD-YYYY HH:mm:ss.SSS Z";
 export const parseTimestamp = (timestampStr: string, formatPattern?: string | null) => {
@@ -102,7 +102,7 @@ export const subtractDates = (endDate: DateParamType, startDate?: DateParamType,
   return null;
 };
 
-export const sleep = (wait: string): Promise<void> => {
+export const sleep = (wait: StringValue): Promise<void> => {
   return new Promise((resolve) => {
     setTimeout(resolve, ms(wait));
   });
