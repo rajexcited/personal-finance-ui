@@ -2,6 +2,7 @@
 
 import { setCustomViewPortPreset } from "./change-view-port";
 import { getUserDetails } from "./read-user";
+import { NavBarSelectors } from "./resource-types";
 
 // ***********************************************
 // This example commands.ts shows you how to
@@ -60,6 +61,7 @@ Cypress.Commands.add("setViewport", (device: CustomDevicePreset | Cypress.Viewpo
 
 Cypress.Commands.add("enterSignupDetails", (userRef: string) => {
   return getUserDetails(userRef).then((user) => {
+    cy.get("form").should("be.visible");
     // Verify input fields exist
     cy.get("#firstName").should("be.visible");
     cy.get("#lastName").should("be.visible");
@@ -69,12 +71,7 @@ Cypress.Commands.add("enterSignupDetails", (userRef: string) => {
     cy.get("#countryCode").should("be.visible");
     cy.log(`all inputs are visibles. not entering details ${user}`);
     // Fill out the signup form
-    let uiVersion: string | null = Cypress.env("uiVersion");
     cy.get("#firstName").type(user.firstName);
-    if (uiVersion) {
-      cy.get("#firstName").type(" " + uiVersion);
-      cy.get("#emailId").type(uiVersion);
-    }
     cy.get("#lastName").type(user.lastName);
     cy.get("#emailId").type(user.emailId);
     cy.get("#password").type(user.password);
@@ -94,6 +91,12 @@ Cypress.Commands.add("openNavMenu", () => {
     }
   });
 });
+Cypress.Commands.add("clickNavLinkAndWait", (navSelector: NavBarSelectors, timeoutInSec?: number) => {
+  cy.openNavMenu();
+  cy.get(navSelector).should("be.visible").click();
+  timeoutInSec = timeoutInSec || 60;
+  cy.get('[data-test="loading-spinner"]', { timeout: timeoutInSec * 1000 }).should("not.be.visible");
+});
 
 Cypress.Commands.add("clearIndexedDB", () => {
   const dbNames = ["expenseDb", "mock-expenseDb"];
@@ -101,5 +104,27 @@ Cypress.Commands.add("clearIndexedDB", () => {
     dbNames.forEach((db) => {
       win.indexedDB.deleteDatabase(db);
     });
+  });
+});
+
+Cypress.Commands.add("createUser", (userRef: string) => {
+  return getUserDetails(userRef).then((userData) => {
+    const apiBody = {
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      emailId: userData.emailId,
+      password: btoa(userData.password),
+      countryCode: userData.countryCode
+    };
+    return cy
+      .request({
+        method: "POST",
+        url: Cypress.env("API_BASE_URL") + "/user/signup",
+        body: apiBody,
+        failOnStatusCode: false
+      })
+      .then((response) => {
+        return cy.wrap(() => userData);
+      });
   });
 });

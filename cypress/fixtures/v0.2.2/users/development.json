@@ -1,0 +1,58 @@
+{
+  "user01-success": {
+    "firstName": "Steven",
+    "lastName": "Jobs",
+    "emailId": "steven.jobs@example.com",
+    "password": "st<Ven987",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user02-success": {
+    "firstName": "sardar vallabhbhai",
+    "lastName": "patel",
+    "emailId": "sardar.vallabhbhai.patel@demo.com",
+    "password": "$Ardar456",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user1-success": {
+    "firstName": "Steven 2",
+    "lastName": "Jobs",
+    "emailId": "steven.jobs2@example.com",
+    "password": "st<Ven987",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user2-success": {
+    "firstName": "sardar vallabhbhai 2",
+    "lastName": "patel",
+    "emailId": "sardar.vallabhbhai.patel2@demo.com",
+    "password": "$Ardar456",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user3-duplicate": {
+    "firstName": "Steven 2",
+    "lastName": "Jobs",
+    "emailId": "steven.jobs@example.com",
+    "password": "$tEven123",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user4-success": {
+    "firstName": "Goku",
+    "lastName": "Son",
+    "emailId": "goku.saiyan@example.com",
+    "password": "$anG0ku1",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user5-success": {
+    "firstName": "Naruto",
+    "lastName": "Uzumaki",
+    "emailId": "naruto.uzumaki@demo.com",
+    "password": "Ras<ngan2025!",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  }
+}

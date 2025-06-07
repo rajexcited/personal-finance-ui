@@ -1,0 +1,23 @@
+{
+  "user1-success": {
+    "firstName": "Steven",
+    "lastName": "Jobs",
+    "emailId": "steven.jobs@demo.com",
+    "password": "st<Ven987",
+    "countryText": "United States of America"
+  },
+  "user2-success": {
+    "firstName": "Steven2",
+    "lastName": "Jobs2",
+    "emailId": "steven.jobs2@demo.com",
+    "password": "$tEven123",
+    "countryText": "United States of America"
+  },
+  "user3-duplicate": {
+    "firstName": "sardar vallabhbhai",
+    "lastName": "patel",
+    "emailId": "sardar.vallabhbhai.patel@demo.com",
+    "password": "$Ardar456",
+    "countryText": "United States of America"
+  }
+}

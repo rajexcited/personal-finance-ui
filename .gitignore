@@ -34,3 +34,5 @@ __pycache__
 2-advanced-examples
 /cypress/fixtures/example.json
 /cypress/videos
+/cypress/reports
+/cypress/screenshots

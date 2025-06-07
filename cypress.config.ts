@@ -1,7 +1,15 @@
 import { defineConfig } from "cypress";
-import { config } from "dotenv";
+import dotenvFlow from "dotenv-flow";
 
-config();
+console.log(dotenvFlow.listFiles());
+dotenvFlow.config();
+
+// Dynamically extract all CYPRESS_ variables and strip prefix
+const cypressEnvVars = Object.fromEntries(
+  Object.entries(process.env)
+    .filter(([key]) => key.startsWith("CYPRESS_"))
+    .map(([key, value]) => [key.replace("CYPRESS_", ""), value])
+);
 
 export default defineConfig({
   e2e: {
@@ -16,13 +24,9 @@ export default defineConfig({
     }
   },
   env: {
-    envId: process.env.ENV_ID,
-    uiVersion: process.env.UI_VERSION,
-    apiVersion: process.env.API_VERSION,
-    apiBase: "/api",
-    grepTags: process.env.TEST_TYPE,
     grepOmitFiltered: true, // Completely omits filtered-out tests
-    grepFilterSpecs: true // Ensures only matching specs run
+    grepFilterSpecs: true, // Ensures only matching specs run
+    ...cypressEnvVars
   },
   reporter: "cypress-mochawesome-reporter",
   reporterOptions: {
