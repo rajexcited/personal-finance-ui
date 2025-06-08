@@ -6,8 +6,8 @@
     "clean": "tsc --build --clean",
     "build": "tsc",
     "postbuild": "npm run clean",
-    "tests:regression": "cross-env NODE_ENV=local cypress run --env grepTags=regression",
-    "tests:developer": "cross-env NODE_ENV=development cypress open"
+    "tests:regression": "cross-env NODE_ENV=development cypress run --env grepTags=regression",
+    "tests:developer": "cross-env NODE_ENV=local cypress open"
   },
   "license": "ISC",
   "homepage": "https://github.com/rajexcited/personal-finance-ui#readme",

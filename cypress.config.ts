@@ -11,6 +11,21 @@ const cypressEnvVars = Object.fromEntries(
     .map(([key, value]) => [key.replace("CYPRESS_", ""), value])
 );
 
+const getDateTimeForReportsDirectory = () => {
+  const now = new Date();
+
+  // Extract parts
+  const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+  const day = String(now.getDate()).padStart(2, "0");
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+
+  // Format as MMDDYYYY_HHMMSS
+  return `${month}${day}${year}_${hours}${minutes}${seconds}`;
+};
+
 export default defineConfig({
   e2e: {
     baseUrl: process.env.SITE_BASE_URL,
@@ -30,7 +45,7 @@ export default defineConfig({
   },
   reporter: "cypress-mochawesome-reporter",
   reporterOptions: {
-    reportDir: "cypress/reports",
+    reportDir: "cypress/reports" + getDateTimeForReportsDirectory(),
     charts: true, // time chart
     embeddedScreenshots: true, // screenshot and video as context
     inlineAssets: true, // to add custom contexts
