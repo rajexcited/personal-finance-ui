@@ -45,7 +45,7 @@ export default defineConfig({
   },
   reporter: "cypress-mochawesome-reporter",
   reporterOptions: {
-    reportDir: "cypress/reports" + getDateTimeForReportsDirectory(),
+    reportDir: "cypress/reports/" + getDateTimeForReportsDirectory(),
     charts: true, // time chart
     embeddedScreenshots: true, // screenshot and video as context
     inlineAssets: true, // to add custom contexts

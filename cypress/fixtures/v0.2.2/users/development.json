@@ -10,7 +10,7 @@
   "user02-success": {
     "firstName": "sardar vallabhbhai",
     "lastName": "patel",
-    "emailId": "sardar.vallabhbhai.patel@demo.com",
+    "emailId": "sardar.vallabhbhai.patel@example.com",
     "password": "$Ardar456",
     "countryText": "United States of America",
     "countryCode": "USA"

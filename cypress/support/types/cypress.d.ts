@@ -12,9 +12,8 @@ declare namespace Cypress {
      */
     setViewport(device: CustomDevicePreset | ViewportPreset, orientation?: ViewportOrientation): Chainable<null>;
     /**
-     * find user details by reference id and update input fields with details
+     * makes an API call to create user with details provided by reference id
      */
-    enterSignupDetails(userRef: string): Chainable<UserType>;
     createUser(userRef: string): Chainable<UserType>;
     /**
      * in large or small responsive screen, navbar style and functioning slight varies.
@@ -31,5 +30,9 @@ declare namespace Cypress {
      * This is useful when starting test fresh specifically among different viewports.
      */
     clearIndexedDB(): Chainable<void>;
+    /**
+     * click on logout from navbar and wait to make sure public links are exists
+     */
+    logoutFromNav(): Chainable<void>;
   }
 }

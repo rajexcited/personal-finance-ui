@@ -10,3 +10,9 @@ export enum NavBarSelectors {
 export enum EnvId {
   Local = "local"
 }
+
+export enum DeviceWidth {
+  Large = "large",
+  Medium = "medium",
+  Small = "small"
+}

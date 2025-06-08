@@ -15,31 +15,9 @@ import { NavBarSelectors } from "./resource-types";
 // ***********************************************
 //
 //
-// -- This is a parent command --
-// Cypress.Commands.add('login', (email, password) => { ... })
-//
-//
-// -- This is a child command --
-// Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 //
-// declare global {
-//   namespace Cypress {
-//     interface Chainable {
-//       login(email: string, password: string): Chainable<void>
-//       drag(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       dismiss(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       visit(originalFn: CommandOriginalFn, url: string, options: Partial<VisitOptions>): Chainable<Element>
-//     }
-//   }
-// }
 
 /**
  * for desktop,
@@ -59,38 +37,24 @@ Cypress.Commands.add("setViewport", (device: CustomDevicePreset | Cypress.Viewpo
   });
 });
 
-Cypress.Commands.add("enterSignupDetails", (userRef: string) => {
-  return getUserDetails(userRef).then((user) => {
-    cy.get("form").should("be.visible");
-    // Verify input fields exist
-    cy.get("#firstName").should("be.visible");
-    cy.get("#lastName").should("be.visible");
-    cy.get("#emailId").should("be.visible");
-    cy.get("#password").should("be.visible");
-    cy.get("#passwordRepeat").should("be.visible");
-    cy.get("#countryCode").should("be.visible");
-    cy.log(`all inputs are visibles. not entering details ${user}`);
-    // Fill out the signup form
-    cy.get("#firstName").type(user.firstName);
-    cy.get("#lastName").type(user.lastName);
-    cy.get("#emailId").type(user.emailId);
-    cy.get("#password").type(user.password);
-    cy.get("#passwordRepeat").type(user.password);
-    cy.get("#countryCode button").should("have.text", user.countryText);
-    cy.log("all input fields are typed");
-  });
-});
-
 Cypress.Commands.add("openNavMenu", () => {
+  cy.get(".navbar-burger").then(($el) => {
+    if ($el.is(":visible")) {
+      cy.wait(500);
+    }
+  });
   cy.get(".navbar-menu").then(($el) => {
     if ($el.is(":visible")) {
       cy.log("Navmenu is open and visible");
     } else {
       cy.log("Navmenu is not visible");
-      cy.get(".navbar-burger").click();
+      cy.get(".navbar-burger").should("be.visible").click();
+      cy.wait(500);
+      cy.get(".navbar-menu").should("be.visible");
     }
   });
 });
+
 Cypress.Commands.add("clickNavLinkAndWait", (navSelector: NavBarSelectors, timeoutInSec?: number) => {
   cy.openNavMenu();
   cy.get(navSelector).should("be.visible").click();
@@ -127,4 +91,15 @@ Cypress.Commands.add("createUser", (userRef: string) => {
         return cy.wrap(() => userData);
       });
   });
+});
+
+Cypress.Commands.add("logoutFromNav", () => {
+  cy.get(NavBarSelectors.LogoutNavlink).then(($el) => {
+    if ($el.length) {
+      cy.clickNavLinkAndWait(NavBarSelectors.LogoutNavlink);
+    }
+  });
+  cy.get(NavBarSelectors.LogoutNavlink).should("not.exist");
+  cy.get(NavBarSelectors.SignupNavlink).should("exist");
+  cy.get(NavBarSelectors.LoginNavlink).should("exist");
 });

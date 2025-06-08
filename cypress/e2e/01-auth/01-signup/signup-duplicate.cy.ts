@@ -1,5 +1,6 @@
 import { EnvId, NavBarSelectors } from "../../../support/resource-types";
-import { verifyPublicLinks, verifySecuredLinks } from "./signup-utils";
+import { verifyPublicLinks, verifySecuredLinks } from "../auth-utils";
+import { enterSignupDetails } from "./signup-utils";
 
 function runSignupTest(signupSelector: string, userRef: string) {
   const envId = Cypress.env("ENV_ID");
@@ -15,7 +16,7 @@ function runSignupTest(signupSelector: string, userRef: string) {
   verifySecuredLinks(false);
   cy.get(signupSelector).should("be.visible").click();
   cy.url().should("include", "/signup");
-  cy.enterSignupDetails(userRef);
+  enterSignupDetails(userRef);
   cy.get('[data-test="signup-button"]').should("be.visible").click();
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]', { timeout: 60000 }).should("not.be.visible");
@@ -27,7 +28,7 @@ function runSignupTest(signupSelector: string, userRef: string) {
 describe("User Signup - Duplicate Account Flow", () => {
   context(
     "Ensures a public user with an existing email ID cannot sign up, triggering an 'account already exists' error",
-    { tags: ["signup", "regression", "negative"] },
+    { tags: ["signup", "regression", "negative", "signup-tc2"] },
     () => {
       it("Fails signup via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");
