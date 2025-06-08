@@ -48,7 +48,6 @@ User is logged in and is on any secured pages e.g. secured home page.
 ## Type of Test:
 
 - End to End
-- Regression
 - Demo site testable
 
 ## Tags:
