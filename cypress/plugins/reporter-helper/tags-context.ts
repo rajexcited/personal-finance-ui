@@ -9,4 +9,5 @@ Cypress.on("test:after:run", (test) => {
   const tagsStr = uniqueTags.join(", ");
   addContext({ test } as Mocha.Context, { title: "Tags", value: tagsStr });
   test.title += " Tags: [" + tagsStr + "]";
+  // if need to customize html report, can use lib - mochawesome-report-generator
 });
