@@ -80,6 +80,7 @@ const getPurchaseDropdownContent = (purchaseDetails: PurchaseFields) => {
 
     return ddContent;
 };
+const debouncedTimeout = 300;
 
 export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (props) => {
     const [billName, setBillName] = useState("");
@@ -158,7 +159,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
         } else {
             setTimeout(() => {
                 loadMorePurchaseList();
-            }, 300);
+            }, debouncedTimeout);
         }
 
         setRefundDate(prev => {

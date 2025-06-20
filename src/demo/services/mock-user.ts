@@ -1,7 +1,7 @@
 import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
 import { missingValidation, validateAuthorization } from "./common-validators";
-import { tokenSessionData, userSessionDetails } from "./userDetails";
+import { tokenSessionData, UserDataType, userSessionDetails } from "./userDetails";
 import { v4 as uuidv4 } from "uuid";
 import datetime from "date-and-time";
 import { UserDetailsResource, UserLoginResource } from "../../pages/auth";
@@ -28,7 +28,7 @@ export const MockUser = (demoMock: MockAdapter) => {
       return responseCreator.toForbiddenError("it is not secured");
     }
 
-    const data = JSON.parse(config.data);
+    const data = JSON.parse(config.data) as UserDataType;
     const missingErrors = missingValidation(data, ["emailId", "password", "firstName", "lastName", "countryCode"]);
     if (missingErrors.length > 0) {
       return responseCreator.toValidationError(missingErrors);
@@ -40,6 +40,10 @@ export const MockUser = (demoMock: MockAdapter) => {
 
     if (isInvalidDemoEmailId(data.emailId)) {
       return responseCreator.toValidationError([{ path: "emailId", message: "invalid demo email id. email id must ends with '@demo.com'" }]);
+    }
+
+    if (data.emailId.includes("exists")) {
+      return responseCreator.toValidationError([{ path: "emailId", message: "the user with emailId already exists" }]);
     }
 
     userSessionDetails(data);
@@ -58,7 +62,7 @@ export const MockUser = (demoMock: MockAdapter) => {
   demoMock.onPost("/user/login").reply((config) => {
     const responseCreator = AxiosResponseCreator(config);
 
-    const data = JSON.parse(config.data);
+    const data = JSON.parse(config.data) as UserDataType;
     const missingErrors = missingValidation(data, ["emailId", "password"]);
     if (missingErrors.length > 0) {
       return responseCreator.toValidationError(missingErrors);
@@ -79,6 +83,10 @@ export const MockUser = (demoMock: MockAdapter) => {
       countryCode: "USA",
       password: atob(data.password)
     };
+
+    if (responseData.emailId.includes("wrong") || responseData.password.includes("wrong")) {
+      return responseCreator.toForbiddenError("emailId or password invalid");
+    }
 
     userSessionDetails({ ...responseData });
     const response = tokenSessionData({
