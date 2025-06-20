@@ -1,6 +1,6 @@
-import { getUserDetails } from "../../../support/read-user";
-import { DeviceWidth, NavBarSelectors } from "../../../support/resource-types";
-import { verifyPublicLinks, verifySecuredLinks, verifySecuredLinksFunctional } from "../auth-utils";
+import { getUserDetails } from "../../support/read-user";
+import { DeviceWidth, NavBarSelectors } from "../../support/resource-types";
+import { verifyPublicLinks, verifySecuredLinks, verifySecuredLinksFunctional } from "../utils/auth-utils";
 
 function runLoginTests(userRef: string, deviceWidth: DeviceWidth) {
   verifyPublicLinks(true);
@@ -16,7 +16,7 @@ function runLoginTests(userRef: string, deviceWidth: DeviceWidth) {
   cy.get('[data-test="login-button"]').should("be.visible").click();
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]', { timeout: 60000 }).should("not.be.visible");
-  cy.get('[data-test="login-error"]').should("not.exist");
+  cy.get('[data-test="login-error-message"]').should("not.exist");
   verifyPublicLinks(false);
   verifySecuredLinksFunctional();
 }

@@ -6,14 +6,14 @@
     "password": "st<Ven987",
     "countryText": "United States of America"
   },
-  "user2-success": {
-    "firstName": "Steven2",
-    "lastName": "Jobs2",
-    "emailId": "steven.jobs2@demo.com",
+  "user3-duplicate": {
+    "firstName": "Steven",
+    "lastName": "Jobs",
+    "emailId": "steven.jobs.exists@demo.com",
     "password": "$tEven123",
     "countryText": "United States of America"
   },
-  "user3-duplicate": {
+  "user2-success": {
     "firstName": "sardar vallabhbhai",
     "lastName": "patel",
     "emailId": "sardar.vallabhbhai.patel@demo.com",

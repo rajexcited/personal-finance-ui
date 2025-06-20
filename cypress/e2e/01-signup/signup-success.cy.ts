@@ -1,10 +1,10 @@
-import { NavBarSelectors } from "../../../support/resource-types";
-import { verifyPublicLinks, verifySecuredLinks, verifySecuredLinksFunctional } from "../auth-utils";
+import { NavBarSelectors } from "../../support/resource-types";
+import { verifyPublicLinks, verifySecuredLinks, verifySecuredLinksFunctional } from "../utils/auth-utils";
 import { enterSignupDetails } from "./signup-utils";
 
 function runSignupTest(signupSelector: string, userRef: string) {
   // clearing cache data to force reload data through api
-  cy.clearIndexedDB();
+  cy.deleteIndexedDb();
   // wait for 5 sec to allow site to emit and clear
   cy.wait(5000);
   cy.visit("/");
@@ -17,7 +17,7 @@ function runSignupTest(signupSelector: string, userRef: string) {
   cy.get('[data-test="signup-button"]').should("be.visible").click();
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]', { timeout: 60000 }).should("not.be.visible");
-  cy.get('[data-test="signup-error"]').should("not.exist");
+  cy.get('[data-test="signup-error-message"]').should("not.exist");
   verifyPublicLinks(false);
   verifySecuredLinksFunctional();
 }
@@ -33,12 +33,12 @@ describe("User Signup Success Flow", () => {
 
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");
-        runSignupTest('[data-test="signup-button-home"]', "user02-success");
+        runSignupTest('[data-test="signup-button-home"]', "user2-success");
       });
 
       it("via large desktop", { tags: ["desktop"] }, () => {
         cy.setViewport("desktop");
-        runSignupTest(NavBarSelectors.SignupNavlink, "user01-success");
+        runSignupTest(NavBarSelectors.SignupNavlink, "user1-success");
       });
     }
   );

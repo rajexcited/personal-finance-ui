@@ -1,4 +1,4 @@
-import { getUserDetails } from "../../../support/read-user";
+import { getUserDetails } from "../../support/read-user";
 
 export const enterSignupDetails = (userRef: string) => {
   getUserDetails(userRef).then((user) => {
@@ -9,6 +9,7 @@ export const enterSignupDetails = (userRef: string) => {
     cy.get("#emailId").should("be.visible").type(user.emailId);
     cy.get("#password").should("be.visible").type(user.password);
     cy.get("#passwordRepeat").should("be.visible").type(user.password);
+    // cy.selectDropdownItem({dropdownId:"countryCode", selectNewItemText:user.countryText})
     cy.get("#countryCode").should("be.visible");
     cy.get("#countryCode button").should("have.text", user.countryText);
     // cy.log(`all inputs are visibles and entered details ${user}`);
