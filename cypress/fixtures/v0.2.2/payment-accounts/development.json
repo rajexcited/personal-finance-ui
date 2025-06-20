@@ -1,0 +1,10 @@
+{
+  "cash": {
+    "shortName": "cash",
+    "accountName": "cash",
+    "institutionName": "",
+    "accountType": "cash",
+    "tags": "cash",
+    "description": "my cash, notes or coins"
+  }
+}

@@ -1,0 +1,71 @@
+import { IndexedDbName } from "../../plugins/indexedDb/resource";
+import { getPaymentAccount, PaymentAccountDetailType } from "../../support/read-payment-account";
+import { NavBarSelectors } from "../../support/resource-types";
+import { validateCard } from "./view-payment-account-utils";
+
+function runAddPaymentAccountTest(paymentAccountRef: string) {
+  cy.loginThroughUI("user1-success");
+  cy.clickNavLinkAndWait(NavBarSelectors.PaymentAccountNavlink);
+  cy.url().should("include", "/payment-accounts");
+  cy.get('[data-test="add-payment-account-button"]').should("be.visible").click();
+  cy.url().should("include", "/account/add");
+  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
+
+  getPaymentAccount(paymentAccountRef).as("paymentAccountData");
+
+  cy.get("@paymentAccountData").then((paymentAccountData: any) => {
+    const pymtAccData = paymentAccountData as PaymentAccountDetailType;
+    cy.get("#account-short-name").should("be.visible").should("have.value", "").type(pymtAccData.shortName);
+    cy.get("#account-instritution-name").should("be.visible").should("have.value", "").type(pymtAccData.institutionName);
+    cy.get("#account-number").should("be.visible").should("have.value", "").type(pymtAccData.accountName);
+    cy.selectDropdownItem({ dropdownSelectorId: "account-type", selectNewItemText: pymtAccData.accountTypeName });
+    cy.selectTags({ tagsSelectorId: "pymt-acc-tags", addTagValues: pymtAccData.tags, isInDropdownList: false, existingTagValues: [] });
+    cy.get('[data-test="account-desc-counter"]').should("be.visible").should("have.text", `counter: 0/150`);
+    cy.get("#account-desc").should("be.visible").should("have.value", "").type(pymtAccData.description);
+    cy.get('[data-test="account-desc-counter"]').should("be.visible").should("have.text", `counter: ${pymtAccData.description.length}/150`);
+    // wait for debounce events to complete for inputs
+    cy.wait(310);
+  });
+  cy.verifyCurrencySection();
+  cy.get('button[data-test="cancel-payment-account"]').should("be.visible");
+  cy.get('button[data-test="submit-payment-account"]').filter(":visible").should("be.visible").click();
+  cy.get('[data-test="loading-spinner"]').should("be.visible");
+  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
+  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.get('[data-test="add-payment-account-error-message"]').should("not.exist");
+  cy.get('section[data-test="payment-account-section"]').should("be.visible");
+
+  cy.get('[data-test="payment-account-card"]')
+    .should("have.length.at.least", 2)
+    .then(($els) => {
+      validateCard(paymentAccountRef, $els, true);
+    });
+}
+
+describe("Payment Account - Add Flow", () => {
+  before(() => {
+    cy.deleteIndexedDb(IndexedDbName.MockExpense);
+  });
+  beforeEach(() => {
+    cy.deleteIndexedDb(IndexedDbName.Expense);
+  });
+  afterEach(() => {
+    cy.logoutFromNav();
+  });
+
+  context(
+    "A logged in and active user can add a new payment account successfully",
+    { tags: ["payment-account", "regression", "positive", "add", "add-payment-account-tc2"] },
+    () => {
+      it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
+        cy.setViewport("pixel9-pro");
+        runAddPaymentAccountTest("primary-checking");
+      });
+
+      it("via large desktop view", { tags: ["desktop"] }, () => {
+        cy.setViewport("desktop");
+        runAddPaymentAccountTest("biz-exp-checking");
+      });
+    }
+  );
+});

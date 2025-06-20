@@ -30,14 +30,20 @@ beforeEach(() => {
   console.log("siteUrl=", siteUrl);
   // assuming each tests are completed within 5 minutes
   const ageInSeconds = 5 * 60;
-  cy.intercept("GET", siteUrl, (req) => {
-    req.continue((res) => {
-      // console.log("get called in response");
-      const testCookieValue = Cypress.env("E2E_TEST_COOKIE_VALUE");
-      const newResponseCookie = `automation=${testCookieValue}; Domain=${domain}; Path=/; Secure; Max-Age=${ageInSeconds}`;
-      const existingResponseCookies = res.headers["set-cookie"] || [];
-      res.headers["set-cookie"] = [...existingResponseCookies, newResponseCookie];
-      // console.log("response cookies=", res.headers["Cookie"]);
+  cy.fixture("idb-bundle.js.txt").then((scriptContent) => {
+    cy.intercept("GET", siteUrl, (req) => {
+      req.continue((res) => {
+        // console.log("get called in response");
+        const testCookieValue = Cypress.env("E2E_TEST_COOKIE_VALUE");
+        const newResponseCookie = `automation=${testCookieValue}; Domain=${domain}; Path=/; Secure; Max-Age=${ageInSeconds}`;
+        const existingResponseCookies = res.headers["set-cookie"] || [];
+        res.headers["set-cookie"] = [...existingResponseCookies, newResponseCookie];
+        // console.log("response cookies=", res.headers["Cookie"]);
+        // console.log("body", typeof res.body, res.body);
+        // const body = res.body as string;
+        // const bodyParts = body.split("</body>");
+        // res.body = [bodyParts[0], '<script type="text/javascript">' + scriptContent + "</script>", bodyParts[1]].join("</body>");
+      });
     });
   });
 });

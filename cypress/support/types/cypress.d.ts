@@ -12,10 +12,6 @@ declare namespace Cypress {
      */
     setViewport(device: CustomDevicePreset | ViewportPreset, orientation?: ViewportOrientation): Chainable<null>;
     /**
-     * makes an API call to create user with details provided by reference id
-     */
-    createUser(userRef: string): Chainable<UserType>;
-    /**
      * in large or small responsive screen, navbar style and functioning slight varies.
      * if navbar is not visible, open nav bar
      */
@@ -25,14 +21,16 @@ declare namespace Cypress {
      */
     clickNavLinkAndWait(navSelector: NavBarSelectors, timeoutInSec?: number): Chainable<void>;
     /**
-     * clear indexDb cache. between spec executions, indexDb databases are cleared.
-     * But within spec, all executions share the same cache data, only cookies, localData and sessionData are getting cleared each tests.
-     * This is useful when starting test fresh specifically among different viewports.
-     */
-    clearIndexedDB(): Chainable<void>;
-    /**
      * click on logout from navbar and wait to make sure public links are exists
      */
     logoutFromNav(): Chainable<void>;
+    /**
+     * logins to UI and make user session active to access secured functionality
+     */
+    loginThroughUI(userRef: string): Chainable<void>;
+    getCurrencyProfile(): Chainable<ApiCurrencyProfileResource>;
+    selectDropdownItem(options: { dropdownSelectorId: string; selectNewItemText: string; selectedItemText?: string }): Chainable<void>;
+    selectTags(options: { tagsSelectorId: string; addTagValues: string[]; isInDropdownList: boolean; existingTagValues: string[] }): Chainable<void>;
+    verifyCurrencySection<E extends Node = HTMLElement>(): Chainable<JQuery<E>>;
   }
 }
