@@ -72,6 +72,7 @@ export const ViewDialog: FunctionComponent<ViewDialogProps> = (props) => {
                         <LoadSpinner
                             loading={ !!props.loading }
                             insideModal={ true }
+                            id="dialog-content"
                         />
                     </section>
                 </div>

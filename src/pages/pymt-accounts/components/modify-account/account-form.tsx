@@ -5,6 +5,7 @@ import { TagsInput, Input, TextArea, DropDown, InputValidators, DropDownItemType
 import { ConfigResource, PymtAccountFields, PymtAccStatus, getLogger } from "../../services";
 import { faBank } from "@fortawesome/free-solid-svg-icons";
 import { CurrencyProfileResource } from "../../../settings/services";
+import { testAttributes } from "../../../../shared";
 
 
 
@@ -178,7 +179,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                             <div className="column">
                                 <div className="ml-2 pl-2">
                                     <TagsInput
-                                        id="xpns-tags"
+                                        id="pymt-acc-tags"
                                         label="Tags: "
                                         defaultValue={ tags }
                                         sourceValues={ props.sourceTags }
@@ -208,7 +209,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                     <div className="columns">
                         <div className="column">
                             <div className="buttons is-centered is-display-mobile">
-                                <button className="button is-dark is-large" type="submit">
+                                <button className="button is-dark is-large" type="submit" { ...testAttributes("submit-payment-account") }>
                                     <span className="px-2-label">
                                         { props.submitLabel }
                                     </span>
@@ -217,7 +218,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                         </div>
                         <div className="column">
                             <div className="buttons">
-                                <button className="button is-light" type="button" onClick={ onCancelHandler }>
+                                <button className="button is-light" type="button" onClick={ onCancelHandler } { ...testAttributes("cancel-payment-account") }>
                                     <span className="px-2-label">
                                         Cancel
                                     </span>
@@ -226,7 +227,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
                         </div>
                         <div className="column">
                             <div className="buttons is-centered is-hidden-mobile">
-                                <button className="button is-dark is-medium" type="submit">
+                                <button className="button is-dark is-medium" type="submit" { ...testAttributes("submit-payment-account") }>
                                     <span className="px-2-label">
                                         { props.submitLabel }
                                     </span>

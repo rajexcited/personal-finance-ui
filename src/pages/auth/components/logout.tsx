@@ -1,6 +1,7 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import useAuth from "../hooks/use-auth";
 import { useLocation } from "react-router-dom";
+import { testAttributes } from "../../../shared";
 
 
 const LogoutPage: FunctionComponent = () => {
@@ -19,7 +20,7 @@ const LogoutPage: FunctionComponent = () => {
         <section className="section">
             <div className="columns is-centered">
                 <div className="column is-two-thirds">
-                    <article className="message is-link">
+                    <article className="message is-link" { ...testAttributes("logout-message") }>
                         <div className="message-header">
                             <p>Bye, { name }!</p>
                         </div>

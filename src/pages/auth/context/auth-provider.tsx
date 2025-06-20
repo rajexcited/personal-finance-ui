@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import AuthContext, { dummyUserDetails } from "./auth-context";
 import { authService, UserDetailsResource, UserSignupResource } from "../services";
 import { Anchor, Animated } from "../../../components";
-import { ObjectDeepDifference, getLogger } from "../../../shared";
+import { ObjectDeepDifference, getLogger, testAttributes } from "../../../shared";
 import { useLocation } from "react-router-dom";
 
 
@@ -179,7 +179,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
                 {
                     <div className="container mt-2 pt-2">
                         <div className="notification-container px-5 mx-5">
-                            <div className="notification is-link is-light">
+                            <div className="notification is-link is-light" { ...testAttributes("expire-status-msg") }>
                                 {
                                     expiringStatus === ExpireStatus.ExpiringSoon &&
                                     <p>Time is running out. <Anchor onClick={ onClickRefreshHandler }>click to continue</Anchor> </p>

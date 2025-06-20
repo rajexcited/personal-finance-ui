@@ -15,6 +15,7 @@ export interface PurchaseSubItemProps {
 }
 
 const fcLogger = getLogger("FC.PurchaseBreakDownItem", null, null, "DISABLED");
+const debouncedTimeout = 300;
 
 export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (props) => {
     const [itemBillName, setItemBillName] = useState(props.itemDetail.billName || '');
@@ -36,7 +37,7 @@ export const PurchaseBreakDownItem: FunctionComponent<PurchaseSubItemProps> = (p
                 purchaseTypeId: undefined,
             };
             props.onChange(data);
-        }, 500);
+        }, debouncedTimeout);
 
         return () => {
             clearTimeout(timeoutId);

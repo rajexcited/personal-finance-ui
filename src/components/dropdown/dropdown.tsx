@@ -3,7 +3,7 @@ import "./dropdown.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleUp, faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import DropDownItem from "./dropdown-item";
-import { getLogger } from "../../shared";
+import { getLogger, testAttributes } from "../../shared";
 import { Input } from "../input";
 
 
@@ -153,7 +153,7 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
 
 
     return (
-        <div className="field">
+        <div className="field" { ...testAttributes("dropdown-field") }>
             <label htmlFor={ props.id } className="label">{ props.label }</label>
             <div className="control">
                 <div className={ `dropdown is-${props.direction === "down" ? "down" : "up"} ${isOpen ? "is-active" : ""}` } id={ props.id }>

@@ -246,7 +246,7 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                         <button className="delete" type="button" aria-label="close" onClick={ onClickModalCloseHandler }></button>
                     </header>
                     <section className="modal-card-body">
-                        <LoadSpinner loading={ isReceiptLoading } />
+                        <LoadSpinner loading={ isReceiptLoading } id="download-receipt" />
                         <div className={ `file ${!!errorMessage ? "is-danger" : ""}` }>
                             <label className="file-label">
                                 <input

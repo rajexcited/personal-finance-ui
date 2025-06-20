@@ -10,13 +10,21 @@ import { TAB_HEADS as SettingsTabs } from "../../../settings/components/settings
 import { getLogger } from "../../services";
 import { sleep } from "../../../../shared";
 
+enum NavLinkId {
+    Expenses = "expenses-navlink",
+    PaymentAccounts = "payment-accounts-navlink",
+    Settings = "settings-navlink",
+    Signup = "signup-navlink",
+    Login = "login-navlink",
+    Logout = "logout-navlink"
+}
 
 const items: NavbarItemProp[] = [
-    { link: getFullPath("expenseJournalRoot"), label: "Expenses", icon: faMoneyBill, id: "expenses", isProtected: true, isSelected: false },
-    { link: getFullPath("pymtAccountsRoot"), label: "Accounts", icon: faBank, id: "accounts", isProtected: true, isSelected: false },
-    { link: getFullPath("settingsRoot"), label: "Settings", icon: faGears, id: "settings", isProtected: true, isSelected: false },
-    { link: getFullPath("signupPage"), label: "Signup", icon: faUserPlus, id: "signup", isProtected: false, isSelected: false },
-    { link: getFullPath("loginPage"), label: "Login", icon: faSignInAlt, id: "Login", isProtected: false, isSelected: false },
+    { link: getFullPath("expenseJournalRoot"), label: "Expenses", icon: faMoneyBill, id: NavLinkId.Expenses, isProtected: true, isSelected: false },
+    { link: getFullPath("pymtAccountsRoot"), label: "Accounts", icon: faBank, id: NavLinkId.PaymentAccounts, isProtected: true, isSelected: false },
+    { link: getFullPath("settingsRoot"), label: "Settings", icon: faGears, id: NavLinkId.Settings, isProtected: true, isSelected: false },
+    { link: getFullPath("signupPage"), label: "Signup", icon: faUserPlus, id: NavLinkId.Signup, isProtected: false, isSelected: false },
+    { link: getFullPath("loginPage"), label: "Login", icon: faSignInAlt, id: NavLinkId.Login, isProtected: false, isSelected: false },
 ];
 
 type NavbarItemDropDownProp = NavbarItemProp & { dropdownItems?: NavbarItemProp[]; };
@@ -41,12 +49,12 @@ const NavBar: FunctionComponent = () => {
             logger.debug("updated navbar item list because of auth mismatched");
         }
         if (auth.userDetails.isAuthenticated) {
-            const settingsNavItem = navbarItemlist.find(ni => ni.id === "settings");
+            const settingsNavItem = navbarItemlist.find(ni => ni.id === NavLinkId.Settings);
             if (settingsNavItem) {
                 if (deviceMode === DeviceMode.Mobile && !settingsNavItem.dropdownItems) {
                     settingsNavItem.dropdownItems = SettingsTabs.map(st => {
                         const subItem: NavbarItemProp = {
-                            id: st.id,
+                            id: st.id + "-navlink",
                             icon: st.icon,
                             isProtected: true,
                             isSelected: false,
@@ -196,7 +204,7 @@ const NavBar: FunctionComponent = () => {
                         icon={ faCalculator }
                         label="Personal Finance"
                         link={ rootPath }
-                        id="brandfinance"
+                        id="brandfinance-navlink"
                         key={ "brandfinance" }
                         isProtected={ false }
                         isSelected={ pathname === rootPath }
@@ -264,7 +272,7 @@ const NavBar: FunctionComponent = () => {
                                     icon={ faSignOut }
                                     label="Logout"
                                     link={ logoutPage }
-                                    id="logout"
+                                    id={ NavLinkId.Logout }
                                     key="logout"
                                     isProtected={ true }
                                     isSelected={ false }

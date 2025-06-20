@@ -1,6 +1,13 @@
 export { MyLocalDatabase, LocalDBStore, LocalDBStoreIndex } from "./db";
 
-export type { AuditFields, ConfigResource, UpdateConfigStatusResource, UpdateConfigDetailsResource, DeleteConfigDetailsResource, TagQueryParams } from "./services";
+export type {
+  AuditFields,
+  ConfigResource,
+  UpdateConfigStatusResource,
+  UpdateConfigDetailsResource,
+  DeleteConfigDetailsResource,
+  TagQueryParams
+} from "./services";
 export {
   TagBelongsTo,
   TagsService,
@@ -41,7 +48,8 @@ export {
   handleAndRethrowServiceError,
   isUuid,
   getShortForm,
-  sleep
+  sleep,
+  testAttributes
 } from "./utils";
 
 export type { RouteHandlerResponse } from "./utils";
