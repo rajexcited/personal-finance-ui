@@ -73,7 +73,7 @@ const DropDownItem: FunctionComponent<DropDownItemProps> = (props) => {
                             props.tooltip &&
                             <span className={ `icon has-text-info${isActive ? "-light" : ""} tooltip is-tooltip-multiline is-tooltip-right` } data-tooltip={ props.tooltip.split(";").join("    ") }> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
                         }
-                        <span className={ "icon unselect has-text-info-light" }>
+                        <span className="icon unselect has-text-info-light">
                             <FontAwesomeIcon icon={ faXmark } />
                         </span>
                     </div>

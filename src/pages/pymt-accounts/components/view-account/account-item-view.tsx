@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { getFullPath } from "../../../root";
 import { Animated } from "../../../../components";
 import { useAuth } from "../../../auth";
+import { testAttributes } from "../../../../shared";
 
 export interface AccountItemProps {
     id: string;
@@ -35,7 +36,7 @@ export const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
 
     return (
         <section className="container mb-3 px-2">
-            <div className="card">
+            <div className="card" { ...testAttributes("payment-account-card") }>
                 <header className="card-header">
                     <p className="card-header-title">
                         <span className="card-header-icon" onClick={ onClickBodyToggleHandler }>
@@ -44,13 +45,13 @@ export const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                     </p>
                     {
                         !auth.readOnly && [PymtAccStatus.Enable, PymtAccStatus.Immutable].includes(props.details.status) &&
-                        <button className="card-header-icon" onClick={ onClickUpdateHandler }>Update</button>
+                        <button className="card-header-icon" onClick={ onClickUpdateHandler } { ...testAttributes("card-header-action-update") }>Update</button>
                     }
                     {
                         !auth.readOnly && props.details.status === PymtAccStatus.Enable &&
-                        <button className="card-header-icon" onClick={ onClickDeleteHandler }>Delete</button>
+                        <button className="card-header-icon" onClick={ onClickDeleteHandler } { ...testAttributes("card-header-action-delete") } >Delete</button>
                     }
-                    <button className="card-header-icon" aria-label="expand breakdown" onClick={ onClickBodyToggleHandler }>
+                    <button className="card-header-icon" aria-label="expand breakdown" onClick={ onClickBodyToggleHandler } { ...testAttributes("card-header-action-expand-collapse") } >
                         <span className="icon">
                             <FontAwesomeIcon icon={ isBodyOpen ? faAngleUp : faAngleDown } />
                         </span>
@@ -62,21 +63,21 @@ export const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                             <div className="columns is-variable">
                                 <div className="column">
                                     <label className="label">Account Name / Number: </label>
-                                    <span>{ props.details.accountIdNum }</span>
+                                    <span { ...testAttributes("outvalue") } >{ props.details.accountIdNum }</span>
                                 </div>
                                 <div className="column">
                                     <label className="label">Institution Name: </label>
-                                    <span>{ props.details.institutionName }</span>
+                                    <span { ...testAttributes("outvalue") }>{ props.details.institutionName }</span>
                                 </div>
                             </div>
                             <div className="columns is-variable">
                                 <div className="column">
                                     <label className="label">Account Type: </label>
-                                    <span>{ props.details.typeName }</span>
+                                    <span { ...testAttributes("outvalue") }>{ props.details.typeName }</span>
                                 </div>
                                 <div className="column">
                                     <label className="label">Tags: </label>
-                                    <div className="tags">
+                                    <div className="tags" { ...testAttributes("outvalue") }>
                                         {
                                             props.details.tags &&
                                             props.details.tags.map(tag =>
@@ -95,7 +96,7 @@ export const AccountItemCard: FunctionComponent<AccountItemProps> = (props) => {
                             <div className="columns is-variable">
                                 <div className="column">
                                     <label className="label">Description: </label>
-                                    <span>{ props.details.description }</span>
+                                    <span { ...testAttributes("outvalue") }>{ props.details.description }</span>
                                 </div>
                             </div>
                         </div>

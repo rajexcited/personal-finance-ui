@@ -202,7 +202,7 @@ export const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
                                 </button>
                             </div>
                         }
-                        <LoadSpinner loading={ isReceiptLoading } insideModal={ true } />
+                        <LoadSpinner loading={ isReceiptLoading } insideModal={ true } id="carousel-download-receipt" />
                         { !isReceiptLoading && !!errorMessage &&
                             <article className="message is-danger error">
                                 <div className="message-body">

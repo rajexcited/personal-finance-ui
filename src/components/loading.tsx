@@ -6,6 +6,7 @@ import { testAttributes } from "../shared";
 
 
 interface LoadSpinnerProps {
+    id: string;
     loading: boolean;
     insideModal?: boolean;
     color?: string;
@@ -16,7 +17,7 @@ export const LoadSpinner: FunctionComponent<LoadSpinnerProps> = (props) => {
     if (!props.insideModal) {
 
         return (
-            <div className={ `modal spinner ${props.loading ? "is-active" : ""}` } { ...testAttributes("loading-spinner") }>
+            <div className={ `modal spinner ${props.loading ? "is-active" : ""}` } { ...testAttributes("loading-spinner", "loading-spinner-id", props.id) }>
                 <div className="modal-background"></div>
                 <div className="modal-card">
                     <section className="modal-card-body">
@@ -32,7 +33,7 @@ export const LoadSpinner: FunctionComponent<LoadSpinnerProps> = (props) => {
     }
 
     return (
-        <div className={ `nomodal spinner ${props.loading ? "is-active" : ""}` } { ...testAttributes("loading-spinner") }>
+        <div className={ `nomodal spinner ${props.loading ? "is-active" : ""}` } { ...testAttributes("loading-spinner", "spinner-id", props.id) }>
             <div className={ `has-text-centered ${props.color ? props.color : ""}` }>
                 <span className="icon">
                     <FontAwesomeIcon icon={ faSpinner } className="fa-pulse" />

@@ -86,10 +86,10 @@ const LoginPage: FunctionComponent = () => {
 
     return (
         <section className="login-section section is-px-0-mobile">
-            <LoadSpinner loading={ submitStatus === LoginSubmitStatus.InProgress } />
+            <LoadSpinner loading={ submitStatus === LoginSubmitStatus.InProgress } id="login-inprogress" />
 
             <Animated animateOnMount={ true } isPlayIn={ submitStatus === LoginSubmitStatus.CompletedError } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
-                <div className="columns is-centered">
+                <div className="columns is-centered" { ...testAttributes("login-error-message") }>
                     <div className="column is-half">
                         <article className="message is-danger mb-3">
                             <div className="message-body">

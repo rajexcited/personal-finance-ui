@@ -127,7 +127,7 @@ export const ExpenseList: FunctionComponent = () => {
 
     return (
         <section>
-            <LoadSpinner loading={ loadingExpenses } />
+            <LoadSpinner loading={ loadingExpenses } id="view-expense-list" />
 
             <Animated animateOnMount={ false } isPlayIn={ !!errorMessage } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
                 <div className="columns is-centered">

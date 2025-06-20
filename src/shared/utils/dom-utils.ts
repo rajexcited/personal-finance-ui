@@ -17,12 +17,14 @@ const isAutomationTest = () => {
   return process.env.REACT_APP_TEST_ATTR_CNDN === testCookie;
 };
 
-export const testAttributes = (attrValues: string[] | string) => {
+export const testAttributes = (...attrValues: string[]) => {
   const attrObj: Record<string, string> = {};
   if (isAutomationTest()) {
     if (!Array.isArray(attrValues)) {
       attrValues = ["test", attrValues];
     }
+    attrValues = ["test", ...attrValues];
+
     for (let i = 0; i < attrValues.length; i = i + 2) {
       const dataKey = attrValues[i].startsWith("data-") ? attrValues[i] : "data-" + attrValues[i];
       attrObj[dataKey] = attrValues[i + 1] || attrValues[i];

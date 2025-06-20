@@ -2,7 +2,7 @@ import "./tags-input.css";
 import { FunctionComponent, useRef, useEffect, useState } from "react";
 import BulmaTagsInput, { BulmaTagsInputOptions } from '@creativebulma/bulma-tagsinput';
 import "@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css";
-import { getLogger, sleep } from "../../shared";
+import { getLogger, sleep, testAttributes } from "../../shared";
 import { DeviceMode, useOrientation } from "../../hooks";
 import { buildDropdown, initializeEventHandler } from "./events";
 
@@ -128,7 +128,7 @@ export const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
 
 
   return (
-    <div className="field">
+    <div className="field" { ...testAttributes("tags-field", "id", props.id) }>
       <label className="label">{ props.label }</label>
       {
         deviceMode === DeviceMode.Mobile &&
@@ -146,7 +146,7 @@ export const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
           autoCapitalize="off"
         />
       </div>
-      <p className="help is-info has-text-right">
+      <p className="help is-info has-text-right" { ...testAttributes(props.id + "-tags-counter") }>
         { "counter: " + tagCount + (props.maxTags ? "/" + props.maxTags : "") }
       </p>
     </div>

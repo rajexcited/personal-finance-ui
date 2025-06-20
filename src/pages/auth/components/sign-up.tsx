@@ -86,14 +86,14 @@ const SignupPage: FunctionComponent = () => {
 
     return (
         <section className="section is-px-0-mobile">
-            <LoadSpinner loading={ submitting } />
+            <LoadSpinner loading={ submitting } id="signup-submitting" />
 
             {
                 !!errorMessage &&
                 <Animated animateOnMount={ true } isPlayIn={ !submitting }
                     animatedIn="fadeInDown" animatedOut="fadeOutUp"
                     isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
-                    <div className="columns is-centered" { ...testAttributes("signup-error") }>
+                    <div className="columns is-centered" { ...testAttributes("signup-error-message") }>
                         <div className="column is-half">
                             <article className="message is-danger mb-5">
                                 <div className="message-body">
