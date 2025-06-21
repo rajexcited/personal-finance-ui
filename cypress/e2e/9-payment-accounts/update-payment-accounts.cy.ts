@@ -4,7 +4,7 @@ import { NavBarSelectors } from "../../support/resource-types";
 import { createOrUpdatePaymentAccount } from "./utils/payment-account-api-utils";
 import { getPaymentAccountCard, validateCard } from "./utils/view-payment-account-utils";
 
-export const verifyViewPaymentAccountCard = (existingPaymentAccountRef: string) => {
+const verifyViewPaymentAccountCard = (existingPaymentAccountRef: string) => {
   cy.url().should("include", "/payment-accounts");
   cy.get('[data-test="add-payment-account-button"]').should("be.visible");
 

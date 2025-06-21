@@ -63,7 +63,8 @@ Cypress.Commands.add("clickNavLinkAndWait", (navSelector: NavBarSelectors, timeo
   cy.openNavMenu();
   cy.get(navSelector).should("be.visible").click();
   timeoutInSec = timeoutInSec || 60;
-  cy.get('[data-test="loading-spinner"]', { timeout: timeoutInSec * 1000 }).should("not.be.visible");
+  cy.get('[data-loading-spinner-id="page-route"]', { timeout: timeoutInSec * 1000 }).should("not.be.visible");
+  cy.get('[data-test="loading-spinner"]').should("not.be.visible");
 });
 
 Cypress.Commands.add("logoutFromNav", () => {
