@@ -1,8 +1,13 @@
-import { IndexedDbName } from "../../plugins/indexedDb/resource";
-import { ApiPaymentAccountResource, PaymentAccountStatus, ApiCurrencyProfileResource, ApiConfigTypeResource } from "../../support/api-resource-types";
-import { getPaymentAccountList, PaymentAccountDetailType } from "../../support/read-payment-account";
+import { IndexedDbName } from "../../../plugins/indexedDb/resource";
+import {
+  ApiPaymentAccountResource,
+  PaymentAccountStatus,
+  ApiCurrencyProfileResource,
+  ApiConfigTypeResource
+} from "../../../support/api-resource-types";
+import { getPaymentAccountList, PaymentAccountDetailType } from "../../../support/read-payment-account";
 import { v4 as uuidv4 } from "uuid";
-import { getPaymentAccountTypesFromApi } from "../99-settings/config-type-utils";
+import { getPaymentAccountTypesFromApi } from "../../9-settings/utils/config-type-utils";
 
 const paymentAccountStore = "pymt-account-store";
 
@@ -91,7 +96,8 @@ export const createOrUpdatePaymentAccount = (requests: Array<{ ref: string; stat
                 apiRes.typeId = paymentAccountTypeMap[paymentAccountData.accountTypeName].id || "NA";
                 paymentAccountData.accountTypeId = apiRes.typeId;
                 // special case for local
-                if (paymentAccountMap[apiRes.shortName].status === "immutable") {
+                console.log(paymentAccountMap, apiRes);
+                if (paymentAccountMap[apiRes.shortName]?.status === "immutable") {
                   apiRes.status = "immutable";
                 }
                 return apiRes;

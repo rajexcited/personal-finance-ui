@@ -1,7 +1,7 @@
 import { getUserDetails } from "../../support/read-user";
 import { NavBarSelectors } from "../../support/resource-types";
 import { verifyPublicLinks, verifySecuredLinks } from "../utils/auth-utils";
-import { enterSignupDetails } from "./signup-utils";
+import { enterSignupDetails } from "./utils/signup-utils";
 
 const createUser = (userRef: string) => {
   const apiBaseUrl = Cypress.env("API_BASE_URL");

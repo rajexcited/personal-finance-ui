@@ -1,6 +1,6 @@
 import { NavBarSelectors } from "../../support/resource-types";
-import { createOrUpdatePaymentAccount } from "./payment-account-api-utils";
-import { validateCard } from "./view-payment-account-utils";
+import { createOrUpdatePaymentAccount } from "./utils/payment-account-api-utils";
+import { validateCard } from "./utils/view-payment-account-utils";
 
 function runPaymentAccountsTest() {
   cy.loginThroughUI("user1-success");

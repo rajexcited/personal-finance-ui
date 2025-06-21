@@ -1,15 +1,17 @@
 import { IndexedDbName } from "../../plugins/indexedDb/resource";
 import { getPaymentAccount, PaymentAccountDetailType } from "../../support/read-payment-account";
 import { NavBarSelectors } from "../../support/resource-types";
-import { validateCard } from "./view-payment-account-utils";
+import { validateCard } from "./utils/view-payment-account-utils";
 
 function runAddPaymentAccountTest(paymentAccountRef: string) {
   cy.loginThroughUI("user1-success");
   cy.clickNavLinkAndWait(NavBarSelectors.PaymentAccountNavlink);
   cy.url().should("include", "/payment-accounts");
   cy.get('[data-test="add-payment-account-button"]').should("be.visible").click();
+  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.url().should("include", "/account/add");
   cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
+  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
 
   getPaymentAccount(paymentAccountRef).as("paymentAccountData");
 
@@ -19,16 +21,17 @@ function runAddPaymentAccountTest(paymentAccountRef: string) {
     cy.get("#account-instritution-name").should("be.visible").should("have.value", "").type(pymtAccData.institutionName);
     cy.get("#account-number").should("be.visible").should("have.value", "").type(pymtAccData.accountName);
     cy.selectDropdownItem({ dropdownSelectorId: "account-type", selectNewItemText: pymtAccData.accountTypeName });
-    cy.selectTags({ tagsSelectorId: "pymt-acc-tags", addTagValues: pymtAccData.tags, isInDropdownList: false, existingTagValues: [] });
+    cy.selectTags({ tagsSelectorId: "pymt-acc-tags", addTagValues: pymtAccData.tags, existingTagValues: [], removeTagValues: [] });
     cy.get('[data-test="account-desc-counter"]').should("be.visible").should("have.text", `counter: 0/150`);
     cy.get("#account-desc").should("be.visible").should("have.value", "").type(pymtAccData.description);
     cy.get('[data-test="account-desc-counter"]').should("be.visible").should("have.text", `counter: ${pymtAccData.description.length}/150`);
     // wait for debounce events to complete for inputs
-    cy.wait(310);
+    cy.wait(500);
   });
   cy.verifyCurrencySection();
   cy.get('button[data-test="cancel-payment-account"]').should("be.visible");
-  cy.get('button[data-test="submit-payment-account"]').filter(":visible").should("be.visible").click();
+  cy.get('button[data-test="submit-payment-account"]').filter(":visible").should("be.visible").should("have.text", "Add").click();
+  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
   cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
@@ -43,12 +46,11 @@ function runAddPaymentAccountTest(paymentAccountRef: string) {
 }
 
 describe("Payment Account - Add Flow", () => {
-  before(() => {
-    cy.deleteIndexedDb(IndexedDbName.MockExpense);
-  });
   beforeEach(() => {
+    // to force call api instead of testing on cache data
     cy.deleteIndexedDb(IndexedDbName.Expense);
   });
+
   afterEach(() => {
     cy.logoutFromNav();
   });

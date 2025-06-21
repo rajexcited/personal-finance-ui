@@ -1,5 +1,5 @@
-import { IndexedDbName } from "../../plugins/indexedDb/resource";
-import { ApiConfigTypeResource, ConfigBelongsTo } from "../../support/api-resource-types";
+import { IndexedDbName } from "../../../plugins/indexedDb/resource";
+import { ApiConfigTypeResource, ConfigBelongsTo } from "../../../support/api-resource-types";
 
 export const configStoreName = "config-store";
 

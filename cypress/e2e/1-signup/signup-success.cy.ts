@@ -1,6 +1,6 @@
 import { NavBarSelectors } from "../../support/resource-types";
 import { verifyPublicLinks, verifySecuredLinks, verifySecuredLinksFunctional } from "../utils/auth-utils";
-import { enterSignupDetails } from "./signup-utils";
+import { enterSignupDetails } from "./utils/signup-utils";
 
 function runSignupTest(signupSelector: string, userRef: string) {
   // clearing cache data to force reload data through api
