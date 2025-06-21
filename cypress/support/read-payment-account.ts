@@ -45,6 +45,12 @@ export const getPaymentAccount = (paymentAccountRef: string) => {
   return getPaymentAccountList([paymentAccountRef]).then((list) => list[0]);
 };
 
+/**
+ * reads payment account details from fixture test data setup file
+ *
+ * @param paymentAccountRefs
+ * @returns
+ */
 export const getPaymentAccountList = (paymentAccountRefs: string[]) => {
   const filterListPredicate = () => paymentAccountRefs.map(findPaymentAccount);
 

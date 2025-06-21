@@ -26,7 +26,7 @@
     "tags": ["single", "job-salary", "primary"],
     "description": "Primary account for salary deposits"
   },
-  "add-travel-saving": {
+  "travel-saving": {
     "shortName": "travel fund 5678",
     "accountName": "fund acc 5678",
     "institutionName": "Global Credit Union",

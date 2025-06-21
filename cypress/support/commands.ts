@@ -162,7 +162,7 @@ Cypress.Commands.add("selectDropdownItem", (options: SelectDropdownItemOptions) 
     });
 });
 
-type SelectTagsOptions = { tagsSelectorId: string; addTagValues: string[]; existingTagValues: string[] };
+type SelectTagsOptions = { tagsSelectorId: string; addTagValues: string[]; existingTagValues: string[]; removeTagValues: string[] };
 Cypress.Commands.add("selectTags", (options: SelectTagsOptions) => {
   cy.get('[data-test="tags-field"][data-id="' + options.tagsSelectorId + '"]')
     .find(".dropdown-menu")
@@ -177,9 +177,30 @@ Cypress.Commands.add("selectTags", (options: SelectTagsOptions) => {
     .should("be.visible")
     .should("have.text", `counter: ${options.existingTagValues.length}/10`);
 
-  for (let tagValue of options.addTagValues) {
+  for (let tagValue of options.removeTagValues) {
     cy.get('[data-test="tags-field"][data-id="' + options.tagsSelectorId + '"]')
       .find(".tags-input")
+      .find("span.tag[data-value]")
+      .filter('[data-value="' + tagValue + '"]')
+      .should("be.visible")
+      .find('.delete[data-tag="delete"]')
+      .should("be.visible")
+      .click();
+
+    cy.get('[data-test="tags-field"][data-id="' + options.tagsSelectorId + '"]')
+      .find(".tags-input")
+      .find("span.tag[data-value]")
+      .filter('[data-value="' + tagValue + '"]')
+      .should("not.exist");
+  }
+
+  const existingTagValuesAfterRemoved = options.existingTagValues.filter((tv) => !options.removeTagValues.includes(tv));
+  const addTagValues = options.addTagValues.filter((tv) => !existingTagValuesAfterRemoved.includes(tv));
+
+  for (let tagValue of addTagValues) {
+    cy.get('[data-test="tags-field"][data-id="' + options.tagsSelectorId + '"]')
+      .find(".tags-input")
+      .find("span.tag[data-value]")
       .filter('span[data-value="' + tagValue + '"]')
       .should("not.exist");
 
@@ -215,7 +236,7 @@ Cypress.Commands.add("selectTags", (options: SelectTagsOptions) => {
     .find(".dropdown-menu")
     .should("not.be.visible");
 
-  const tagValues = [...options.addTagValues, ...options.existingTagValues];
+  const tagValues = [...addTagValues, ...existingTagValuesAfterRemoved];
 
   cy.get('[data-test="tags-field"][data-id="' + options.tagsSelectorId + '"]')
     .find(".tags-input")

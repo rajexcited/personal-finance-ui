@@ -30,7 +30,7 @@ declare namespace Cypress {
     loginThroughUI(userRef: string): Chainable<void>;
     getCurrencyProfile(): Chainable<ApiCurrencyProfileResource>;
     selectDropdownItem(options: { dropdownSelectorId: string; selectNewItemText: string; selectedItemText?: string }): Chainable<void>;
-    selectTags(options: { tagsSelectorId: string; addTagValues: string[]; isInDropdownList: boolean; existingTagValues: string[] }): Chainable<void>;
+    selectTags(options: { tagsSelectorId: string; addTagValues: string[]; existingTagValues: string[]; removeTagValues: string[] }): Chainable<void>;
     verifyCurrencySection<E extends Node = HTMLElement>(): Chainable<JQuery<E>>;
   }
 }

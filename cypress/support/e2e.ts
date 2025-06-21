@@ -18,6 +18,7 @@ import "./commands";
 import registerCypressGrep from "@cypress/grep";
 import "cypress-mochawesome-reporter/register";
 import "../plugins/reporter-helper";
+import { IndexedDbName } from "../plugins/indexedDb/resource";
 
 registerCypressGrep();
 
@@ -46,4 +47,11 @@ beforeEach(() => {
       });
     });
   });
+});
+
+before(() => {
+  if (!Cypress.browser.isHeadless) {
+    // to re-initialize mock data for test
+    cy.deleteIndexedDb(IndexedDbName.MockExpense);
+  }
 });
