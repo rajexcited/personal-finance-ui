@@ -91,20 +91,45 @@ For a detailed analysis of framework selection, refer to [Library and Tool Selec
 
 Before running any tests or development tasks, ensure the `.env` file is correctly configured with necessary properties.
 
-##### Example: Development Configuration
+##### Example: local Configuration `.env.local`
 
-```properties
-ENV_ID=local
+```properties .env.local
+CYPRESS_ENV_ID=local
 SITE_BASE_URL=http://localhost:3000/personal-finance-ui
+# the value to generated for each environment and release. can find id through deployed stack 
+CYPRESS_E2E_TEST_COOKIE_VALUE=local-e2e
 ```
 
-##### Example: Test Plan Configuration (Regression Tests)
+##### Example: Development Configuration `.env.development.local`
 
-```properties
-ENV_ID=testplan
+```properties .env.development.local
+CYPRESS_ENV_ID=development
+SITE_BASE_URL=https://d5n3v07w6tibn.cloudfront.net/personal-finance
+CYPRESS_API_BASE_URL=https://d5n3v07w6tibn.cloudfront.net/api
+# the value to generated for each environment and release. can find id through deployed stack 
+CYPRESS_E2E_TEST_COOKIE_VALUE=local-e2e
+CYPRESS_UI_VERSION=v0.2.2
+```
+
+##### Example: Test Plan Configuration `.env.testplan.local`
+
+```properties .env.testplan.local
+CYPRESS_ENV_ID=testplan
 SITE_BASE_URL=https://d2wfayzoko7f48.cloudfront.net/personal-finance
-UI_VERSION=0.2.0
-API_VERSION=0.2.0
+CYPRESS_API_BASE_URL=https://d5n3v07w6tibn.cloudfront.net/api
+# the value to generated for each environment and release. can find id through deployed stack 
+CYPRESS_E2E_TEST_COOKIE_VALUE=local-e2e
+CYPRESS_UI_VERSION=v0.2.2
+```
+##### Example: Production Configuration `.env.production.local`
+
+```properties .env.production.local
+CYPRESS_ENV_ID=production
+SITE_BASE_URL=https://d380yt1dhnt8n.cloudfront.net/personal-finance
+CYPRESS_API_BASE_URL=https://d380yt1dhnt8n.cloudfront.net/api
+# the value to generated for each environment and release. can find id through deployed stack 
+CYPRESS_E2E_TEST_COOKIE_VALUE=local-e2e
+CYPRESS_UI_VERSION=v0.2.2
 ```
 
 ### Execute Regression Tests
