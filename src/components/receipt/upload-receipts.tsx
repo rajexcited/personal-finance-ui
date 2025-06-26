@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import ReactMarkdown from "react-markdown";
 import { LoadSpinner } from "../loading";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, ReceiptType } from "./field-types";
-import { getLogger } from "../../shared";
+import { getLogger, testAttributes } from "../../shared";
 import { ExpenseBelongsTo } from "../../pages/expenses/services";
 
 interface UploadReceiptsModalProps {
@@ -200,27 +200,33 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
     return (
         <section className="upload-receipts-section">
             <div className="form-field">
-                <button className="button is-light is-link" type="button" onClick={ onClickModalOpenHandler }>Upload { receipts.length > 0 ? "/ View" : "" } Receipt(s)</button>
+                <button className="button is-light is-link" type="button" onClick={ onClickModalOpenHandler }
+                    { ...testAttributes("container-open-action") }
+                >
+                    Upload { receipts.length > 0 ? "/ View" : "" } Receipt(s)</button>
                 { receipts.length > 0 &&
-                    <span className="subtitle"> { receipts.length } receipt file{ receipts.length > 1 ? "s are" : " is" } uploaded </span>
+                    <span className="subtitle" { ...testAttributes("receipt-message") }> { receipts.length } receipt file{ receipts.length > 1 ? "s are" : " is" } uploaded </span>
                 }
                 { receipts.length === 0 &&
-                    <span className="subtitle">No receipt uploaded</span>
+                    <span className="subtitle" { ...testAttributes("no-receipt-message") }>No receipt uploaded</span>
                 }
             </div>
-            <div className={ `fullscreen-image-container ${fullscreenReceipt ? "is-active" : ""}` }>
+            <div className={ `fullscreen-image-container modal ${fullscreenReceipt ? "is-active" : ""}` }>
+                <div className="modal-background"></div>
                 <div className="modal-close">
-                    <button className="delete" type="button" onClick={ onClickHideFullscreenImageHandler }></button>
+                    <button className="delete" type="button"
+                        onClick={ onClickHideFullscreenImageHandler }
+                        { ...testAttributes("hide-fullscreen") }></button>
                 </div>
                 {
                     fullscreenReceipt && fullscreenReceipt.contentType !== ReceiptType.PDF &&
                     <div className="modal-card-header-actions">
-                        <button className="button is-white is-inverted image-zoomIn" type="button" onClick={ onClickZoomInHandler }>
-                            <span className="icon tooltip is-tooltip-left" data-tooltip={ nextScaleTooltip + scaleTooltip }>
+                        <button className="button is-white is-inverted image-zoomIn" type="button" onClick={ onClickZoomInHandler } { ...testAttributes("image-zoomin") }>
+                            <span className="icon tooltip is-tooltip-left" data-tooltip={ nextScaleTooltip + scaleTooltip } >
                                 <FontAwesomeIcon icon={ faMagnifyingGlassPlus } size="1x" />
                             </span>
                         </button>
-                        <button className="button is-white is-inverted image-zoomOut" type="button" onClick={ onClickZoomOutHandler }>
+                        <button className="button is-white is-inverted image-zoomOut" type="button" onClick={ onClickZoomOutHandler } { ...testAttributes("image-zoomout") }>
                             <span className="icon tooltip is-tooltip-left" data-tooltip={ prevScaleTooltip + scaleTooltip }>
                                 <FontAwesomeIcon icon={ faMagnifyingGlassMinus } />
                             </span>
@@ -229,26 +235,28 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                 }
                 {
                     fullscreenReceipt && (fullscreenReceipt.contentType === ReceiptType.JPEG || fullscreenReceipt.contentType === ReceiptType.PNG) &&
-                    <figure className="image">
+                    <figure className="image" { ...testAttributes("image", "receipt-type", fullscreenReceipt.contentType) }>
                         <img src={ fullscreenReceipt.url } alt={ fullscreenReceipt.name } style={ { transform: "scale(" + scaleValue + ")" } } />
                     </figure>
                 }
                 {
                     fullscreenReceipt && fullscreenReceipt.contentType === ReceiptType.PDF &&
-                    <embed src={ fullscreenReceipt.url } type={ fullscreenReceipt.contentType } height={ "99%" } width={ "93%" } />
+                    <embed src={ fullscreenReceipt.url } type={ fullscreenReceipt.contentType } height={ "99%" } width={ "93%" } { ...testAttributes("pdf", "receipt-type", fullscreenReceipt.contentType) } />
                 }
             </div>
             <div className={ `modal ${isModalOpen ? "is-active" : ""}` }>
                 <div className="modal-background"></div>
                 <div className="modal-card is-fullscreen">
                     <header className="modal-card-head">
-                        <p className="modal-card-title">View / Upload Purchase Receipts</p>
-                        <button className="delete" type="button" aria-label="close" onClick={ onClickModalCloseHandler }></button>
+                        <p className="modal-card-title" { ...testAttributes("container-header-title") }>View / Upload Purchase Receipts</p>
+                        <button className="delete" type="button" aria-label="close"
+                            onClick={ onClickModalCloseHandler }
+                            { ...testAttributes("container-header-close-action") }></button>
                     </header>
                     <section className="modal-card-body">
                         <LoadSpinner loading={ isReceiptLoading } id="download-receipt" />
                         <div className={ `file ${!!errorMessage ? "is-danger" : ""}` }>
-                            <label className="file-label">
+                            <label className="file-label" { ...testAttributes("file-receipts") }>
                                 <input
                                     id="file-receipts"
                                     name="file-receipts"
@@ -268,7 +276,7 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                                 </span>
                             </label>
                             { !!errorMessage &&
-                                <article className="message is-danger error">
+                                <article className="message is-danger error" { ...testAttributes("receipt-select-error") }>
                                     <div className="message-body">
                                         <ReactMarkdown children={ errorMessage } />
                                     </div>
@@ -280,22 +288,27 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                             {
                                 receipts.map(rct =>
                                     <div className="column" key={ "receipt-view-" + rct.id }>
-                                        <article className="message is-light" key={ rct.id }>
+                                        <article className="message is-light" key={ rct.id } { ...testAttributes("receipt-view", "receipt-filename", rct.name) }>
                                             <div className="message-header">
-                                                <p>{ rct.name }</p>
-                                                <button className="button tooltip" type="button" onClick={ e => onClickShowFullscreenHandler(e, rct) } data-tooltip="View Fullscreen">View</button>
-                                                <button className="delete" aria-label="delete" onClick={ e => onClickUploadFileRemoveHandler(e, rct) }></button>
+                                                <p { ...testAttributes("receipt-title") }>{ rct.name }</p>
+                                                <button className="button tooltip" type="button" onClick={ e => onClickShowFullscreenHandler(e, rct) } data-tooltip="View Fullscreen" { ...testAttributes("receipt-fullscreen-view-action") }>View</button>
+                                                <button className="delete" aria-label="delete" onClick={ e => onClickUploadFileRemoveHandler(e, rct) }
+                                                    { ...testAttributes("receipt-delete-action") }></button>
                                             </div>
                                             <div className="message-body">
                                                 {
                                                     rct.contentType !== ReceiptType.PDF &&
-                                                    <figure className="image is-height-256">
+                                                    <figure className="image is-height-256" { ...testAttributes("receipt-fullscreen") }>
                                                         <img src={ rct.url } alt={ rct.name } onClick={ onClickShowFullscreenImageHandler } />
                                                     </figure>
                                                 }
                                                 {
                                                     rct.contentType === ReceiptType.PDF &&
-                                                    <embed height={ 256 } src={ rct.url + "#toolbar=0" } type={ rct.contentType } />
+                                                    <embed height={ 256 }
+                                                        src={ rct.url + "#toolbar=0" }
+                                                        type={ rct.contentType }
+                                                        { ...testAttributes("receipt-fullscreen") }
+                                                    />
                                                 }
                                             </div>
                                         </article>
@@ -304,12 +317,14 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                             }
                         </div>
                         { !receipts.length &&
-                            <p className="subtitle">There are no receipts</p>
+                            <p className="subtitle" { ...testAttributes("container-no-receipt-message") }>There are no receipts</p>
                         }
 
                     </section>
                     <footer className="modal-card-foot">
-                        <button className="button" type="button" onClick={ onClickModalCloseHandler }>Close</button>
+                        <button className="button" type="button" onClick={ onClickModalCloseHandler }
+                            { ...testAttributes("container-close-action") }
+                        >Close</button>
                     </footer>
                 </div>
             </div>

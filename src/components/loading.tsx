@@ -1,8 +1,8 @@
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { FunctionComponent } from "react";
+import { FunctionComponent, useEffect } from "react";
 import "./loading.css";
-import { testAttributes } from "../shared";
+import { getLogger, testAttributes } from "../shared";
 
 
 interface LoadSpinnerProps {
@@ -12,7 +12,14 @@ interface LoadSpinnerProps {
     color?: string;
 }
 
+const fcLogger = getLogger("FC.LoadSpinner", null, null, "DISABLED");
+
 export const LoadSpinner: FunctionComponent<LoadSpinnerProps> = (props) => {
+
+    useEffect(() => {
+        const logger = getLogger("useEffect.dep[props.loading, props.id]", fcLogger);
+        logger.debug(props.id, props.loading);
+    }, [props.loading, props.id]);
 
     if (!props.insideModal) {
 
@@ -33,7 +40,7 @@ export const LoadSpinner: FunctionComponent<LoadSpinnerProps> = (props) => {
     }
 
     return (
-        <div className={ `nomodal spinner ${props.loading ? "is-active" : ""}` } { ...testAttributes("loading-spinner", "spinner-id", props.id) }>
+        <div className={ `nomodal spinner ${props.loading ? "is-active" : ""}` } { ...testAttributes("loading-spinner", "loading-spinner-id", props.id) }>
             <div className={ `has-text-centered ${props.color ? props.color : ""}` }>
                 <span className="icon">
                     <FontAwesomeIcon icon={ faSpinner } className="fa-pulse" />

@@ -81,7 +81,7 @@ const AddAccount: FunctionComponent = () => {
             { auth.readOnly &&
                 <div className="columns">
                     <div className="column">
-                        <span>Not Allowed to add Payment Account</span>
+                        <span { ...testAttributes("add-payment-account-not-allowed") }>Not Allowed to add Payment Account</span>
                     </div></div>
             }
 

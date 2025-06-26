@@ -6,35 +6,48 @@ import { v4 as uuidv4 } from "uuid";
 
 const configTypeDb = new MyLocalDatabase<ConfigResource>(LocalDBStore.Config);
 
-const randomStatus = () => {
-  const statuses = [ConfigTypeStatus.Enable, ConfigTypeStatus.Disable];
-  const randomIndex = Math.floor(Math.random() * statuses.length);
-  return statuses[randomIndex];
+const randomStatus = (statusList: Array<ConfigTypeStatus>) => {
+  const randomIndex = Math.floor(Math.random() * statusList.length);
+  return statusList[randomIndex];
+};
+
+const randomNotDeletedStatus = () => {
+  return randomStatus([ConfigTypeStatus.Enable, ConfigTypeStatus.Disable]);
 };
 
 const initializePymtAccTypes = async () => {
   const pymtAccTypes = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ConfigTypeBelongsTo.PaymentAccountType);
   if (pymtAccTypes.length === 0) {
-    const defaultAccTypes = ["checking", "savings", "credit card", "loan", "cash", "gift card"];
+    const defaultEnabledAccTypes = ["checking", "savings", "credit card", "loan", "cash", "gift card"];
+    const defaultNotEnabledAccTypes = ["investment", "wallet", "prepaid", "rewards", "escrow"];
 
-    const accTypes = defaultAccTypes.map(
+    const accTypes = defaultEnabledAccTypes.map(
       (type) =>
         ({
           belongsTo: ConfigTypeBelongsTo.PaymentAccountType,
           id: uuidv4(),
           name: type,
           value: type,
-          status: randomStatus(),
+          status: ConfigTypeStatus.Enable,
           tags: [],
           description: type + " account type",
-          auditDetails: auditData(),
+          auditDetails: auditData()
         } as ConfigResource)
     );
 
-    // making sure at least 1 enable
-    accTypes[0].status = ConfigTypeStatus.Enable;
-    // having only 1 with deleted status
-    accTypes[accTypes.length - 1].status = ConfigTypeStatus.Deleted;
+    defaultNotEnabledAccTypes.forEach((type) => {
+      accTypes.push({
+        belongsTo: ConfigTypeBelongsTo.PaymentAccountType,
+        id: uuidv4(),
+        name: type,
+        value: type,
+        status: randomStatus([ConfigTypeStatus.Enable, ConfigTypeStatus.Disable, ConfigTypeStatus.Deleted]),
+        tags: [],
+        description: type + " account type",
+        auditDetails: auditData()
+      });
+    });
+
     const pymtAccTypePromises = accTypes.map(async (pymtAccType) => {
       await configTypeDb.addItem(pymtAccType);
     });
@@ -45,33 +58,56 @@ const initializePymtAccTypes = async () => {
 const initializePurchaseTypes = async () => {
   const purchaseTypes = await configTypeDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ConfigTypeBelongsTo.PurchaseType);
   if (purchaseTypes.length === 0) {
-    const defaultPurchaseTypes = [
+    const defaultEnabledPurchaseTypes = [
       "fee",
       "commute",
       "food shopping",
       "health",
       "home stuffs",
-      // "investment",
+      "investment",
       "maintenance",
-      // "nri transfer",
       "hangout",
       "gift",
-      "shopping",
+      "shopping"
+    ];
+    const defaultNotEnabledPurchaseTypes = [
+      "subscription",
+      "education",
+      "utilities",
+      "insurance",
+      "pet care",
+      "travel",
+      "charity",
+      "entertainment",
+      "electronics",
+      "personal care"
     ];
 
-    const purchaseTypes = defaultPurchaseTypes.map((ptype) => {
-      return {
+    const purchaseTypes: Array<ConfigResource> = [];
+    defaultEnabledPurchaseTypes.forEach((ptype) => {
+      purchaseTypes.push({
         belongsTo: ConfigTypeBelongsTo.PurchaseType,
         id: uuidv4(),
         name: ptype,
         value: ptype,
-        status: randomStatus(),
+        status: ConfigTypeStatus.Enable,
         tags: [],
         description: "Purchase type is " + ptype + ". Used to tag purchase transactions.",
-        auditDetails: auditData(),
-      } as ConfigResource;
+        auditDetails: auditData()
+      });
     });
-    purchaseTypes[purchaseTypes.length - 1].status = ConfigTypeStatus.Deleted;
+    defaultNotEnabledPurchaseTypes.forEach((ptype) => {
+      purchaseTypes.push({
+        belongsTo: ConfigTypeBelongsTo.PurchaseType,
+        id: uuidv4(),
+        name: ptype,
+        value: ptype,
+        status: randomStatus([ConfigTypeStatus.Enable, ConfigTypeStatus.Disable, ConfigTypeStatus.Deleted]),
+        tags: [],
+        description: "Purchase type is " + ptype + ". Used to tag purchase transactions.",
+        auditDetails: auditData()
+      });
+    });
 
     const purchaseTypePromises = purchaseTypes.map(async (purchaseType) => {
       await configTypeDb.addItem(purchaseType);
@@ -92,10 +128,10 @@ const initializeRefundReasons = async () => {
         id: uuidv4(),
         name: rfdrsn,
         value: rfdrsn,
-        status: randomStatus(),
+        status: randomNotDeletedStatus(),
         tags: [],
         description: "Refund Reason is " + rfdrsn + ". Used to tag refund transactions.",
-        auditDetails: auditData(),
+        auditDetails: auditData()
       } as ConfigResource;
     });
     refundReasons[refundReasons.length - 1].status = ConfigTypeStatus.Deleted;
@@ -119,7 +155,7 @@ const initializeIncomeTypes = async () => {
       "credit card points",
       "divident",
       "stock profit/loss",
-      "cd interest",
+      "cd interest"
     ];
 
     const incomeTypeCfgList = defaultIncomeTypes.map((inctyp) => {
@@ -128,10 +164,10 @@ const initializeIncomeTypes = async () => {
         id: uuidv4(),
         name: inctyp,
         value: inctyp,
-        status: randomStatus(),
+        status: randomNotDeletedStatus(),
         tags: [],
         description: "Income Type is " + inctyp + ". Used to tag income transactions.",
-        auditDetails: auditData(),
+        auditDetails: auditData()
       } as ConfigResource;
     });
     incomeTypeCfgList[incomeTypeCfgList.length - 1].status = ConfigTypeStatus.Deleted;
@@ -155,7 +191,7 @@ const initializeCurrencyProfile = async () => {
       status: ConfigTypeStatus.Enable,
       tags: [],
       description: "currency profile for country, United States of America and currency, Dollar",
-      auditDetails: auditData(),
+      auditDetails: auditData()
     };
 
     await configTypeDb.addItem(defaultCurrencyProfile);
@@ -168,7 +204,7 @@ const init = async () => {
     initializePymtAccTypes(),
     initializeRefundReasons(),
     initializeIncomeTypes(),
-    initializeCurrencyProfile(),
+    initializeCurrencyProfile()
   ]);
 };
 
@@ -234,7 +270,7 @@ export const addUpdateConfigType = async (data: ConfigResource) => {
     const updatingConfigType: ConfigResource = {
       ...data,
       auditDetails: auditData(existingConfigType.auditDetails.createdBy, existingConfigType.auditDetails.createdOn),
-      status: ConfigTypeStatus.Enable,
+      status: ConfigTypeStatus.Enable
     };
     await configTypeDb.addUpdateItem(updatingConfigType);
     return { updated: updatingConfigType };
@@ -243,7 +279,7 @@ export const addUpdateConfigType = async (data: ConfigResource) => {
   const addingConfigType: ConfigResource = {
     ...data,
     auditDetails: auditData(),
-    status: ConfigTypeStatus.Enable,
+    status: ConfigTypeStatus.Enable
   };
   await configTypeDb.addUpdateItem(addingConfigType);
 
@@ -256,7 +292,7 @@ export const deleteConfigType = async (configId: string) => {
     const deletingConfigType: ConfigResource = {
       ...existingConfigType,
       status: ConfigTypeStatus.Deleted,
-      auditDetails: auditData(existingConfigType.auditDetails.createdBy, existingConfigType.auditDetails.createdOn),
+      auditDetails: auditData(existingConfigType.auditDetails.createdBy, existingConfigType.auditDetails.createdOn)
     };
     await configTypeDb.addUpdateItem(deletingConfigType);
     return { deleted: { ...deletingConfigType } };
@@ -270,7 +306,7 @@ export const updateConfigTypeStatus = async (configId: string, belongsTo: Config
     const updatingConfigTypeStatus: ConfigResource = {
       ...existingConfigType,
       status: status,
-      auditDetails: auditData(existingConfigType.auditDetails.createdBy, existingConfigType.auditDetails.createdOn),
+      auditDetails: auditData(existingConfigType.auditDetails.createdBy, existingConfigType.auditDetails.createdOn)
     };
     await configTypeDb.addUpdateItem(updatingConfigTypeStatus);
     return { updated: { ...updatingConfigTypeStatus } };

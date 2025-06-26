@@ -2,6 +2,7 @@ import { FunctionComponent } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { getFullPath } from "../../root";
 import { useAuth } from "../../auth";
+import { testAttributes } from "../../../shared";
 
 
 export const ExpenseJournalPage: FunctionComponent = () => {
@@ -38,10 +39,10 @@ export const ExpenseJournalPage: FunctionComponent = () => {
             <div className="columns">
                 <div className="column">
                     <div className="buttons">
-                        <button className="button is-link" onClick={ onClickNavigateAddPurchaseHandler } disabled={ auth.readOnly } >Add Purchase</button>
-                        <button className="button is-link" onClick={ onClickNavigateAddIncomeHandler } disabled={ auth.readOnly }>Add Income</button>
+                        <button className="button is-link" onClick={ onClickNavigateAddPurchaseHandler } disabled={ auth.readOnly } { ...testAttributes("add-purchase-button") }>Add Purchase</button>
+                        <button className="button is-link" onClick={ onClickNavigateAddIncomeHandler } disabled={ auth.readOnly } { ...testAttributes("add-income-button") }>Add Income</button>
                         {/* <button className="button is-link" onClick={ onClickNavigateAddInvestmentHandler }>Add Investment</button> */ }
-                        <button className="button is-link" onClick={ onClickNavigateAddPurchaseRefundHandler } disabled={ auth.readOnly } >Add Refund</button>
+                        <button className="button is-link" onClick={ onClickNavigateAddPurchaseRefundHandler } disabled={ auth.readOnly } { ...testAttributes("add-refund-button") }>Add Refund</button>
                     </div>
                 </div>
             </div>

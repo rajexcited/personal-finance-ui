@@ -12,7 +12,7 @@ import { ExpenseListTable } from "./expense-list-table";
 import { ExpenseListCards } from "./expense-list-cards";
 import { SharePersonResource } from "../../../settings/services";
 import { ExpenseListLoaderResource } from "../../route-handlers";
-import { sleep } from "../../../../shared";
+import { sleep, testAttributes } from "../../../../shared";
 
 enum ExpenseListOperation {
     Merge = "merge",
@@ -126,11 +126,11 @@ export const ExpenseList: FunctionComponent = () => {
     fcLogger.debug("view expense list", [...expenseList], "list of billname", expenseList.map(xpns => xpns.billName), "errorMessage =", errorMessage, "receipts=", expenseReceipts);
 
     return (
-        <section>
+        <section { ...testAttributes("expense-list-view") }>
             <LoadSpinner loading={ loadingExpenses } id="view-expense-list" />
 
             <Animated animateOnMount={ false } isPlayIn={ !!errorMessage } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
-                <div className="columns is-centered">
+                <div className="columns is-centered" { ...testAttributes("expense-list-error-message") }>
                     <div className="column is-four-fifths">
                         <article className="message is-danger mb-3">
                             <div className="message-body">

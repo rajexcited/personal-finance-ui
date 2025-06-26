@@ -19,7 +19,7 @@ import { ConfigResource, PurchaseFields, PurchaseItemFields, formatTimestamp, ge
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../../components/receipt";
 import { PymtAccountFields } from "../../../../pymt-accounts/services";
 import { CurrencyProfileResource, SharePersonResource } from "../../../../settings/services";
-import { getDateInstance, InvalidError } from "../../../../../shared";
+import { getDateInstance, InvalidError, testAttributes } from "../../../../../shared";
 import { createSharePersonTagSourceList, filterSharePersons } from "../../common";
 
 
@@ -375,7 +375,7 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
             <div className="columns">
                 <div className="column">
                     <div className="buttons is-centered is-display-mobile">
-                        <button className="button is-dark is-large" type="submit">
+                        <button className="button is-dark is-large" type="submit" { ...testAttributes("submit-purchase") }>
                             <span className="px-2-label">
                                 { props.submitLabel }
                             </span>
@@ -384,7 +384,7 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
                 </div>
                 <div className="column">
                     <div className="buttons">
-                        <button className="button is-light" type="button" onClick={ onCancelHandler }>
+                        <button className="button is-light" type="button" onClick={ onCancelHandler } { ...testAttributes("cancel-purchase") }>
                             <span className="px-2-label">
                                 Cancel
                             </span>
@@ -393,7 +393,7 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
                 </div>
                 <div className="column">
                     <div className="buttons is-centered is-hidden-mobile">
-                        <button className="button is-dark is-medium" type="submit">
+                        <button className="button is-dark is-medium" type="submit" { ...testAttributes("submit-purchase") }>
                             <span className="px-2-label">
                                 { props.submitLabel }
                             </span>
