@@ -5,7 +5,7 @@ import {
   ApiCurrencyProfileResource,
   ApiConfigTypeResource
 } from "../../../support/api-resource-types";
-import { getPaymentAccountList, PaymentAccountDetailType } from "../../../support/read-payment-account";
+import { getPaymentAccountList, PaymentAccountDetailType } from "../../../support/fixture-utils/read-payment-account";
 import { v4 as uuidv4 } from "uuid";
 import { getPaymentAccountTypesFromApi } from "../../9-settings/utils/config-type-utils";
 

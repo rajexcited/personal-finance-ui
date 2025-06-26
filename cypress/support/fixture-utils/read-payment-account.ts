@@ -1,0 +1,81 @@
+import { getFixtureFile } from "./fixture-util";
+
+export interface PaymentAccountDetailType {
+  ref: string;
+  id: string;
+  shortName: string;
+  accountName: string;
+  institutionName: string;
+  accountTypeName: string;
+  accountTypeId: string;
+  tags: string[];
+  description: string;
+}
+
+const aliasName = "paymentAccountMap";
+beforeEach(() => {
+  cy.wrap({}).as(aliasName);
+});
+
+export const updatePaymentAccount = (key: string, paymentAccount: PaymentAccountDetailType) => {
+  cy.get(`@${aliasName}`).then((data: any) => {
+    const paymentAccountMap: Record<string, PaymentAccountDetailType> = data;
+    paymentAccountMap[key] = paymentAccount;
+    cy.wrap(paymentAccountMap).as(aliasName);
+  });
+};
+
+const populatePaymentAccountMap = () => {
+  return getFixtureFile("payment-accounts").then((data) => {
+    const paymentAccountMap: Record<string, PaymentAccountDetailType> = {};
+    Object.entries(data).forEach(([key, value]) => {
+      const val = typeof value === "object" ? (value as PaymentAccountDetailType) : null;
+      paymentAccountMap[key] = {
+        ref: key,
+        id: val?.id || "",
+        shortName: val?.shortName || "",
+        accountName: val?.accountName || "",
+        institutionName: val?.institutionName || "",
+        accountTypeName: val?.accountTypeName || "",
+        accountTypeId: val?.accountTypeId || "",
+        tags: val?.tags || [],
+        description: val?.description || ""
+      };
+    });
+    const refKeys = Object.keys(data);
+    cy.log(`total ${refKeys.length} payment accounts are populated. ref keys: ${refKeys}`);
+    console.log(`total ${refKeys.length} payment accounts are populated. ref keys: ${refKeys}`);
+    cy.wrap(paymentAccountMap).as(aliasName);
+  });
+};
+
+const findPaymentAccount = (paymentAccountMap: Record<string, PaymentAccountDetailType>, paymentAccountRef: string) => {
+  if (paymentAccountMap[paymentAccountRef]) {
+    return paymentAccountMap[paymentAccountRef];
+  }
+  throw new Error(`No matching payment account found for ref [${paymentAccountRef}]`);
+};
+
+export const getPaymentAccount = (paymentAccountRef: string) => {
+  return getPaymentAccountList([paymentAccountRef]).then((list) => list[0]);
+};
+
+/**
+ * reads payment account details from fixture test data setup file
+ *
+ * @param paymentAccountRefs
+ * @returns
+ */
+export const getPaymentAccountList = (paymentAccountRefs: string[]) => {
+  cy.get(`@${aliasName}`).then((data: any) => {
+    const paymentAccountMap: Record<string, PaymentAccountDetailType> = data;
+    if (Object.keys(paymentAccountMap).length === 0) {
+      populatePaymentAccountMap();
+    }
+  });
+  return cy.get(`@${aliasName}`).then((data: any) => {
+    const paymentAccountMap: Record<string, PaymentAccountDetailType> = data;
+    const results = paymentAccountRefs.map((ref) => findPaymentAccount(paymentAccountMap, ref));
+    return results;
+  });
+};

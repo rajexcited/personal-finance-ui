@@ -1,4 +1,4 @@
-import { getPaymentAccount, PaymentAccountDetailType } from "../../../support/read-payment-account";
+import { getPaymentAccount, PaymentAccountDetailType } from "../../../support/fixture-utils/read-payment-account";
 
 export const validateViewCardDetails = (paymentAccountData: PaymentAccountDetailType) => {
   const paymentAccountDataList = [

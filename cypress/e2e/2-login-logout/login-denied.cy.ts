@@ -1,4 +1,4 @@
-import { getUserDetails } from "../../support/read-user";
+import { getUserDetails } from "../../support/fixture-utils/read-user";
 import { NavBarSelectors } from "../../support/resource-types";
 import { verifyPublicLinks, verifySecuredLinks } from "../utils/auth-utils";
 

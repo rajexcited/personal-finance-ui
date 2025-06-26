@@ -1,4 +1,4 @@
-import { getUserDetails } from "../../../support/read-user";
+import { getUserDetails } from "../../../support/fixture-utils/read-user";
 
 export const enterSignupDetails = (userRef: string) => {
   getUserDetails(userRef).then((user) => {

@@ -1,4 +1,4 @@
-import { getUserDetails } from "../../support/read-user";
+import { getUserDetails } from "../../support/fixture-utils/read-user";
 import { DeviceWidth, NavBarSelectors } from "../../support/resource-types";
 import { verifyPublicLinks, verifySecuredLinks, verifySecuredLinksFunctional } from "../utils/auth-utils";
 

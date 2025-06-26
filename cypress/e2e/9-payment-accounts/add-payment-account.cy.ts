@@ -1,5 +1,5 @@
 import { IndexedDbName } from "../../plugins/indexedDb/resource";
-import { getPaymentAccount, PaymentAccountDetailType } from "../../support/read-payment-account";
+import { getPaymentAccount, PaymentAccountDetailType } from "../../support/fixture-utils/read-payment-account";
 import { NavBarSelectors } from "../../support/resource-types";
 import { validateCard } from "./utils/view-payment-account-utils";
 
@@ -12,11 +12,10 @@ function runAddPaymentAccountTest(paymentAccountRef: string) {
   cy.url().should("include", "/account/add");
   cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
   cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.get('[data-loading-spinner-id="add-payment-account-not-allowed"]').should("not.exist");
+  cy.get('[data-loading-spinner-id="add-payment-account-error-message"]').should("not.exist");
 
-  getPaymentAccount(paymentAccountRef).as("paymentAccountData");
-
-  cy.get("@paymentAccountData").then((paymentAccountData: any) => {
-    const pymtAccData = paymentAccountData as PaymentAccountDetailType;
+  getPaymentAccount(paymentAccountRef).then((pymtAccData) => {
     cy.get("#account-short-name").should("be.visible").should("have.value", "").type(pymtAccData.shortName);
     cy.get("#account-instritution-name").should("be.visible").should("have.value", "").type(pymtAccData.institutionName);
     cy.get("#account-number").should("be.visible").should("have.value", "").type(pymtAccData.accountName);
@@ -28,8 +27,9 @@ function runAddPaymentAccountTest(paymentAccountRef: string) {
     // wait for debounce events to complete for inputs
     cy.wait(500);
   });
+
   cy.verifyCurrencySection();
-  cy.get('button[data-test="cancel-payment-account"]').should("be.visible");
+  cy.get('button[data-test="cancel-payment-account"]').should("be.visible").should("have.text", "Cancel");
   cy.get('button[data-test="submit-payment-account"]').filter(":visible").should("be.visible").should("have.text", "Add").click();
   cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]').should("be.visible");

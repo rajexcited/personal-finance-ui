@@ -1,8 +1,8 @@
-import { EnvId } from "./resource-types";
+import { EnvId } from "../resource-types";
 
-export const getFixtureFile = (fileFor: "users" | "payment-accounts") => {
+export const getFixtureFile = (subpath: string) => {
   const pathDetails = getFixtureRootPathDetails();
-  return cy.fixture(`${pathDetails.rootPath}/${fileFor}/${pathDetails.envId}.json`);
+  return cy.fixture(`${pathDetails.rootPath}/${subpath}/${pathDetails.envId}.json`);
 };
 
 export const getFixtureRootPathDetails = () => {
