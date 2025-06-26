@@ -185,9 +185,9 @@ Cypress.Commands.add("selectTags", (options: SelectTagsOptions) => {
             .should("be.visible")
             .find('.delete[data-tag="delete"]')
             .should("be.visible")
-            .click();
+            .click()
+            .should("not.exist");
 
-          cy.get('[data-value="' + tagValue + '"]').should("not.exist");
         }
       });
 
