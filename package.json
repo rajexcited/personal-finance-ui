@@ -25,6 +25,7 @@
     "@cypress/grep": "^4.1.0",
     "cypress": "^14.4.0",
     "cypress-mochawesome-reporter": "^3.8.2",
+    "date-and-time": "^3.6.0",
     "dotenv": "^16.5.0",
     "dotenv-flow": "^4.1.0",
     "idb": "^8.0.3",
