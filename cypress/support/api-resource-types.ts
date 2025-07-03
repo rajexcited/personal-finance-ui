@@ -33,13 +33,13 @@ export enum ConfigBelongsTo {
 }
 
 export interface ApiConfigTypeResource {
-  id?: string;
+  id: string;
   belongsTo: ConfigBelongsTo;
   name: string;
   status: ConfigStatus;
-  description?: string;
+  description: string;
   tags: string[];
-  auditDetails?: AuditDetailsType;
+  auditDetails: AuditDetailsType;
   value: string;
 }
 
@@ -107,10 +107,10 @@ export interface ApiResourcePurchaseItemDetails {
 
 export interface ApiResourcePurchaseDetails extends ApiResourceExpense {
   belongsTo: ExpenseBelongsTo.Purchase;
-  amount?: string;
+  amount: string;
   description: string;
   purchaseTypeId: string;
-  paymentAccountId?: string;
+  paymentAccountId: string;
   purchaseDate: string;
   items: ApiResourcePurchaseItemDetails[];
 }

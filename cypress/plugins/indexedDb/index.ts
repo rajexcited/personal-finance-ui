@@ -14,10 +14,10 @@ import {
 import { IndexedDbName } from "./resource";
 
 function injectIdb() {
-  cy.window().then((win) => {
+  return cy.window().then((win) => {
     const wind = win as IdbWindow;
     if (!wind.__idb__) {
-      console.log("idb not initialized");
+      console.log(new Date(), "idb not initialized");
       return cy.fixture("idb-bundle.js.txt").then((scriptContent) => {
         console.log("idb bundle script content");
         return cy.get("head").then(($head) => {
@@ -36,12 +36,13 @@ function injectIdb() {
           // console.log((win as IdbWindow).__idb__);
           // return scriptLoadedPromise.then((ev) => {
           console.log("Script loaded and executed");
-          console.log("inside head after load", wind.__idb__);
+          console.log(new Date(), "inside head after idb load", wind.__idb__);
           if (!wind.__idb__) {
             throw new Error("idb is not initialized");
           }
           //   return ev;
           // });
+          cy.wait(100);
         });
         // console.log("delete database", (win as IdbWindow).__idb__);
         // let promise;
@@ -56,74 +57,27 @@ function injectIdb() {
       });
     }
 
-    console.log("script is loaded and idb is initialized");
+    // console.log(new Date(), "script is loaded and idb is initialized already");
   });
 }
 
 Cypress.Commands.add("deleteIndexedDb", (databaseName?: IndexedDbName) => {
-  /*
-  cy.window().then((win) => {
-    console.log(win);
-    if (!(win as IdbWindow).__idb__) {
-      console.log("idb not initialized");
-      return cy.fixture("idb-bundle.js.txt").then((scriptContent) => {
-        console.log("idb bundle script content");
-        return cy.get("head").then(($head) => {
-          const script = document.createElement("script");
-          script.type = "text/javascript";
-          // script.src = "cypress/fixures/idb-bundle.js.txt";
-          script.text = scriptContent;
-          // const scriptLoadedPromise = new Cypress.Promise((resolve) => {
-          //   script.onload = resolve;
-          // });
-          $head.append(script);
-          // $body.append("<span>aksdhjaksda</span>");
-          // console.log($body);
-          // console.log(script);
-          // console.log($body.find("script"));
-          // console.log((win as IdbWindow).__idb__);
-          // return scriptLoadedPromise.then((ev) => {
-          console.log("Script loaded and executed");
-          console.log("inside head after load", (win as IdbWindow).__idb__);
-          if (!(win as IdbWindow).__idb__) {
-            throw new Error("idb is not initialized");
-          }
-          //   return ev;
-          // });
-        });
-        // console.log("delete database", (win as IdbWindow).__idb__);
-        // let promise;
-        // if (databaseName) {
-        //   promise = deleteDatabase(win, databaseName);
-        // } else {
-        //   deleteDatabase(win, "expenseDb").then(() => {
-        //     promise = deleteDatabase(win, "mock-expenseDb");
-        //   });
-        // }
-        // return promise;
-      });
-    } else {
-      console.log("script is loaded and idb is initialized");
-    }
+  injectIdb().then(() => {
+    cy.window().then(async (win) => {
+      console.log("delete database");
+      if (databaseName) {
+        return deleteDatabase(win, databaseName);
+      }
+      return deleteDatabase(win, IndexedDbName.Expense).then(async () => deleteDatabase(win, IndexedDbName.MockExpense));
+    });
   });
-  */
-  injectIdb();
-  cy.window().then(async (win) => {
-    // return cy.then(async () => {
-    console.log("delete database");
-    if (databaseName) {
-      return deleteDatabase(win, databaseName);
-    }
-    return deleteDatabase(win, IndexedDbName.Expense).then(async () => deleteDatabase(win, IndexedDbName.MockExpense));
-  });
-
-  // });
 });
 
 Cypress.Commands.add("indexedDb", (databaseName: IndexedDbName) => {
-  injectIdb();
-  return cy.window().then((win) => {
-    return openDatabase(win, databaseName);
+  injectIdb().then(() => {
+    return cy.window().then((win) => {
+      return openDatabase(win, databaseName);
+    });
   });
 });
 
@@ -179,13 +133,18 @@ Cypress.Commands.add("deleteItem", { prevSubject: true }, (db: IDBPDatabase, key
 
 Cypress.Commands.add("deleteItems", { prevSubject: true }, (db: IDBPDatabase, keys: string | string[], options: StoreOptions) => {
   cy.then(async () => {
-    if (options.indexName) {
-      return deleteItemsFromIndex(db, options.storeName, options.indexName, keys);
-    }
+    const deleteItems = async (k: string) => {
+      if (options.indexName) {
+        await deleteItemsFromIndex(db, options.storeName, options.indexName, k);
+      } else {
+        await deleteItemFromStore(db, options.storeName, k);
+      }
+    };
+
     if (Array.isArray(keys)) {
-      const promises = keys.map((k) => deleteItemFromStore(db, options.storeName, k));
+      const promises = keys.map(deleteItems);
       return Promise.all(promises);
     }
-    return deleteItemFromStore(db, options.storeName, keys);
+    return deleteItems(keys);
   }).then(() => db.close());
 });

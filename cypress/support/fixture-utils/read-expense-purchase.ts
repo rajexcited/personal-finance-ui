@@ -4,6 +4,7 @@ import { getFixtureFile } from "./fixture-util";
 export interface ReceiptDetailType {
   name: string;
   contentType: ReceiptContentType;
+  id?: string;
 }
 
 export interface ExpensePurchaseDetailType {
@@ -16,6 +17,7 @@ export interface ExpensePurchaseDetailType {
   amount: string;
   description: string;
   purchaseTypeName: string;
+  purchaseTypeRef: string;
   paymentAccountName: string;
   paymentAccountRef: string;
   purchaseDate: string;
@@ -50,6 +52,7 @@ const populateExpensePurchaseMap = () => {
         amount: val?.amount || "",
         description: val?.description || "",
         purchaseTypeName: val?.purchaseTypeName || "",
+        purchaseTypeRef: val?.purchaseTypeRef || "",
         paymentAccountName: val?.paymentAccountName || "",
         paymentAccountRef: val?.paymentAccountRef || "",
         purchaseDate: val?.purchaseDate || "",

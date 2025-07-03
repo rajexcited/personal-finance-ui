@@ -5,7 +5,7 @@ import {
   ApiCurrencyProfileResource,
   ApiConfigTypeResource
 } from "../../../support/api-resource-types";
-import { getPaymentAccountList, PaymentAccountDetailType } from "../../../support/fixture-utils/read-payment-account";
+import { getPaymentAccountList, PaymentAccountDetailType, updatePaymentAccount } from "../../../support/fixture-utils/read-payment-account";
 import { v4 as uuidv4 } from "uuid";
 import { getPaymentAccountTypesFromApi } from "../../9-settings/utils/config-type-utils";
 
@@ -35,6 +35,7 @@ const convertToApiResource = (
 };
 
 export const createOrUpdatePaymentAccount = (requests: Array<{ ref: string; status: PaymentAccountStatus }>) => {
+  console.log("createOrUpdatePaymentAccount, requests=", requests);
   const paymentAccountRequestMap = requests.reduce((obj, req) => {
     obj[req.ref] = req.status;
     return obj;
@@ -93,8 +94,8 @@ export const createOrUpdatePaymentAccount = (requests: Array<{ ref: string; stat
                   }
                 }
                 paymentAccountData.id = apiRes.id;
-                apiRes.typeId = paymentAccountTypeMap[paymentAccountData.accountTypeName].id || "NA";
                 paymentAccountData.accountTypeId = apiRes.typeId;
+                apiRes.typeId = paymentAccountTypeMap[paymentAccountData.accountTypeName].id || "NA";
                 // special case for local
                 console.log(paymentAccountMap, apiRes);
                 if (paymentAccountMap[apiRes.shortName]?.status === "immutable") {
@@ -102,6 +103,10 @@ export const createOrUpdatePaymentAccount = (requests: Array<{ ref: string; stat
                 }
                 return apiRes;
               });
+
+              for (let paymentAccountData of paymentAccountDataList) {
+                updatePaymentAccount(paymentAccountData.ref, paymentAccountData);
+              }
 
               // update
               console.log("updating api resource ", apiResources);

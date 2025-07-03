@@ -85,8 +85,8 @@ export const deleteItemFromStore = async (db: IDBPDatabase, storeName: string, k
   await db.delete(storeName, key);
 };
 
-export const deleteItemsFromIndex = async (db: IDBPDatabase, storeName: string, indexName: string, keys: string | string[]) => {
-  const dbkeys = await db.getAllKeysFromIndex(storeName, indexName, keys);
+export const deleteItemsFromIndex = async (db: IDBPDatabase, storeName: string, indexName: string, key: string) => {
+  const dbkeys = await db.getAllKeysFromIndex(storeName, indexName, key);
   const promises = dbkeys.map((k) => db.delete(storeName, k));
   await Promise.all(promises);
 };

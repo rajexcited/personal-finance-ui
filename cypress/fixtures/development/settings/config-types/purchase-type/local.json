@@ -1,0 +1,23 @@
+{
+  "maintenance": {
+    "ref": "maintenance",
+    "name": "maintenance",
+    "description": "Purchase type is maintenance. Used to tag purchase transactions.",
+    "tags": [],
+    "value": "maintenance"
+  },
+  "homestuffs": {
+    "ref": "homestuffs",
+    "name": "home stuffs",
+    "description": "Purchase type is home stuffs. Used to tag purchase transactions.",
+    "tags": [],
+    "value": "home stuffs"
+  },
+  "foodshopping": {
+    "ref": "foodshopping",
+    "name": "food shopping",
+    "description": "Purchase type is food shopping. Used to tag purchase transactions.",
+    "tags": [],
+    "value": "food shopping"
+  }
+}
