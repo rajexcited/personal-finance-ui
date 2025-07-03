@@ -61,13 +61,17 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
       const expenseCountPromise = getExpenseCount(queryParams);
       await Promise.all([dbExpensePromise, expenseCountPromise]);
       const dbExpenses = await dbExpensePromise;
-      logger.info("expenseDb.getAllFromIndex and expenseCount.api execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec.");
+      logger.debug(
+        "expenseDb.getAllFromIndex and expenseCount.api execution time =",
+        subtractDatesDefaultToZero(null, startTime).toSeconds(),
+        " sec."
+      );
 
       const rangeStartDate = datetime.addMonths(new Date(), queryPageMonths * -1 * pageNo);
       const rangeEndDate = datetime.addMonths(new Date(), queryPageMonths * -1 * (pageNo - 1));
       const filteredExpenses = dbExpenses.filter((xpns) => isExpenseWithinRange(xpns, rangeStartDate, rangeEndDate, logger));
-      logger.info("db expenses =", [...filteredExpenses]);
       expenseCount = await expenseCountPromise;
+      logger.debug(filteredExpenses.length, "db expenses =", [...filteredExpenses], "and expense count from api is", expenseCount);
       if (filteredExpenses.length === expenseCount) {
         logger.info(
           "filteredExpenses from DB, queryParams =",
@@ -103,6 +107,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
       const expenseYears = expenses.map((xpns) => getExpenseDateInstance(xpns, logger)?.getFullYear() as number).filter((yr) => yr !== undefined);
 
       const years = [...new Set(expenseYears)];
+      logger.debug("expenses=", expenses, "expenseYears=", expenseYears, "years=", years, "belongsTo=", belongsTo);
 
       if (!belongsTo) {
         const statCacheClearPromiseList = [StatBelongsTo.Purchase, StatBelongsTo.Income, StatBelongsTo.Refund].map((statBelongsTo) =>

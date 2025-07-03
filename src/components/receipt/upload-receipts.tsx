@@ -1,10 +1,9 @@
 import "./upload-receipts.css";
-import { faMagnifyingGlassMinus, faMagnifyingGlassPlus, faUpload } from "@fortawesome/free-solid-svg-icons";
+import { faMagnifyingGlassMinus, faMagnifyingGlassPlus, faSpinner, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useState, MouseEventHandler, useMemo, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import ReactMarkdown from "react-markdown";
-import { LoadSpinner } from "../loading";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, ReceiptType } from "./field-types";
 import { getLogger, testAttributes } from "../../shared";
 import { ExpenseBelongsTo } from "../../pages/expenses/services";
@@ -30,10 +29,19 @@ const findNextScaleValue = (scale: number, findBigger: boolean) => {
 
 const fcLogger = getLogger("FC.UploadReceiptsModal", null, null, "DISABLED");
 
+interface LoadingReceiptProps extends ReceiptProps {
+    isLoading: boolean;
+    errorMessage: string;
+}
+
+const receiptTypeValues = Object.values(ReceiptType);
+const getValidType = (receiptFileType: string) => {
+    return receiptTypeValues.find(rtv => rtv === receiptFileType);
+};
+
 export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = (props) => {
-    const [receipts, setReceipts] = useState<ReceiptProps[]>(props.receipts);
+    const [receipts, setReceipts] = useState<LoadingReceiptProps[]>([]);
     const [isModalOpen, setModalOpen] = useState(false);
-    const [isReceiptLoading, setReceiptLoading] = useState(false);
     const [fullscreenReceipt, setFullscreenReceipt] = useState<ReceiptProps>();
     const [errorMessage, setErrorMessage] = useState("");
     const [scaleValue, setScaleValue] = useState(1);
@@ -41,6 +49,7 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
     useEffect(() => {
         const logger = getLogger("useEffect.dep[]", fcLogger);
         logger.debug("initialized component");
+        setReceipts(() => props.receipts.map(rct => ({ ...rct, isLoading: true, errorMessage: "" })));
         return () => {
             logger.debug("destroyed along with temp blob urls, so file memory will not be leaked");
         };
@@ -68,29 +77,27 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
         setScaleValue(prev => findNextScaleValue(prev, false));
     };
 
-    const preProcessUploadedReceipts = async (files: FileList | null) => {
-        const logger = getLogger("preProcessUploadedReceipts", fcLogger);
-        const supportedReceipts: ReceiptProps[] = [];
-        const unsupportedReceiptFiles: File[] = [];
+    const validateAndCacheReceipts = async (files: FileList | null, tempReceipts: LoadingReceiptProps[]) => {
+        const logger = getLogger("validateAndCacheReceipts", fcLogger);
+        const supportedReceipts: LoadingReceiptProps[] = [];
+        const unsupportedReceiptFiles: LoadingReceiptProps[] = [];
         logger.info("how many file? ", files?.length, ", files =", files);
+        const tempReceiptsMap: Record<string, LoadingReceiptProps> = {};
+        tempReceipts.forEach(rct => {
+            tempReceiptsMap[rct.name] = rct;
+        });
         if (!!files?.length)
             for (const file of files) {
-                const fileType = Object.entries(ReceiptType).find(entry => entry[1] === file.type)?.[1];
+                const fileType = getValidType(file.type);
+                const receipt = tempReceiptsMap[file.name];
                 try {
                     if (!fileType) {
-                        unsupportedReceiptFiles.push(file);
+                        unsupportedReceiptFiles.push(receipt);
                         continue;
                     }
 
-                    logger.info("fileType =", fileType, ", name =", file.name, "lastModified =", file.lastModified, "byte size =", file.size);
-                    const receipt: ReceiptProps = {
-                        name: file.name,
-                        id: uuidv4(),
-                        file,
-                        contentType: fileType,
-                        relationId: props.relationId,
-                        belongsTo: props.belongsTo
-                    };
+                    logger.debug("fileType =", fileType, ", name =", file.name, "lastModified =", file.lastModified, "byte size =", file.size);
+
                     const cachedReceiptResponse = await props.cacheReceiptFile(receipt, CacheAction.AddUpdateGet);
                     supportedReceipts.push({
                         ...receipt,
@@ -98,40 +105,83 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                     });
                 } catch (e) {
                     logger.log("unsupported file", e);
-                    unsupportedReceiptFiles.push(file);
+                    unsupportedReceiptFiles.push(receipt);
                 }
             }
-        logger.info("supportedReceipts =", supportedReceipts, ", unsupportedReceiptFiles =", unsupportedReceiptFiles);
+        logger.info("supportedReceipts =", [...supportedReceipts], ", unsupportedReceiptFiles =", [...unsupportedReceiptFiles]);
         return {
             supportedReceipts,
             unsupportedReceiptFiles
         };
     };
 
+    const addReceiptsTempDetails = (files: FileList | null) => {
+        const logger = getLogger("addReceiptsTempDetails", fcLogger);
+        const tempReceipts: LoadingReceiptProps[] = [];
+        if (!!files?.length) {
+            for (const file of files) {
+                tempReceipts.push({
+                    name: file.name,
+                    id: uuidv4(),
+                    file,
+                    contentType: file.type as ReceiptType,
+                    relationId: props.relationId,
+                    belongsTo: props.belongsTo,
+                    isLoading: true,
+                    errorMessage: ""
+                });
+            }
+        }
+        return tempReceipts;
+    };
+
     const onChangeFileUploadHandler: React.ChangeEventHandler<HTMLInputElement> = async event => {
         event.preventDefault();
         const logger = getLogger("onChangeFileUploadHandler", fcLogger);
-        logger.info("pre-processing upload receipt file", event, event.target, event.target.files);
-        const processedReceipts = await preProcessUploadedReceipts(event.target.files);
+        // update receipts list with temp details
+        const tempReceipts = addReceiptsTempDetails(event.target.files);
         setReceipts(prev => {
-            const newReceipts = [...prev, ...processedReceipts.supportedReceipts];
-            Promise.resolve(newReceipts)
-                .then(rcts => {
-                    props.onChange(rcts.map(rct => {
-                        return { ...rct };
-                    }));
-                });
-            return newReceipts;
+            return [...prev, ...tempReceipts];
         });
-        let msg = "";
-        if (processedReceipts.unsupportedReceiptFiles.length) {
-            const errorFileList = processedReceipts.unsupportedReceiptFiles.map(ff => ff.name);
-            const toBeForm = errorFileList.length > 1 ? " are not" : " is not";
-            msg = errorFileList.join(",")
-                + toBeForm
-                + " supported. Hence, the system cannot accept.";
-        }
-        setErrorMessage(msg);
+        // validate uploaded receipt
+        logger.debug("pre-processing upload receipt file", event, event.target, event.target.files);
+        validateAndCacheReceipts(event.target.files, tempReceipts).then(processedReceipts => {
+            // if all valid, cache and update view
+            setReceipts(prevlist => {
+                const supportedReceiptMap: Record<string, LoadingReceiptProps> = {};
+                const unsupportedReceiptMap: Record<string, LoadingReceiptProps> = {};
+                processedReceipts.supportedReceipts.forEach(sprtRct => {
+                    supportedReceiptMap[sprtRct.id] = sprtRct;
+                });
+                processedReceipts.unsupportedReceiptFiles.forEach(unsprtRct => {
+                    unsupportedReceiptMap[unsprtRct.id] = unsprtRct;
+                });
+                const newReceipts = prevlist.map(prevrct => {
+                    if (supportedReceiptMap[prevrct.id]) {
+                        return { ...supportedReceiptMap[prevrct.id], isLoading: false } as LoadingReceiptProps;
+                    }
+                    if (unsupportedReceiptMap[prevrct.id]) {
+                        return { ...unsupportedReceiptMap[prevrct.id], errorMessage: "Not supported. Hence, the system cannot accept." } as LoadingReceiptProps;
+                    }
+                    return prevrct;
+                });
+                Promise.resolve(newReceipts)
+                    .then(rcts => {
+                        props.onChange(rcts.filter(rct => !rct.isLoading && !rct.errorMessage).map(rct => ({ ...rct })));
+                    });
+                return newReceipts;
+            });
+            // if invalid, show error message
+            let msg = "";
+            if (processedReceipts.unsupportedReceiptFiles.length) {
+                const errorFileList = processedReceipts.unsupportedReceiptFiles.map(ff => ff.name);
+                const toBeForm = errorFileList.length > 1 ? " are not" : " is not";
+                msg = errorFileList.join(",")
+                    + toBeForm
+                    + " supported. Hence, the system cannot accept.";
+            }
+            setErrorMessage(msg);
+        });
     };
 
     const onClickUploadFileRemoveHandler = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>, receiptToBeRemoved: ReceiptProps) => {
@@ -146,26 +196,30 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
 
     const onClickModalOpenHandler: MouseEventHandler<HTMLButtonElement> = event => {
         event.preventDefault();
+        setReceipts(prev => prev.map(rct => ({ ...rct, isLoading: true })));
         props.downloadReceipts(receipts).then((downloadedReceipts) => {
+            const logger = getLogger("downloadReceipts.resolves", fcLogger);
+            logger.debug("downloaded ", downloadedReceipts.length, "receipts");
             const failedMessages = downloadedReceipts.map(dr => (dr.status === "fail" && dr.error) || "").filter(r => r);
             if (failedMessages.length > 0) {
+                logger.debug("failedMessages=", failedMessages);
                 setErrorMessage(failedMessages.join("\n"));
             }
             if (failedMessages.length !== downloadedReceipts.length) {
-                setReceipts(rcts => {
-                    return rcts.map(rct => {
+                logger.debug("failedMessages.length and downloadedReceipts.length are not same", failedMessages.length, downloadedReceipts.length);
+                setReceipts(rcts =>
+                    rcts.map(rct => {
                         const downloaded = downloadedReceipts.find(dr => dr.id === rct.id);
+                        logger.debug("downloaded result", downloaded);
                         if (downloaded?.status === "success") {
-                            return { ...rct, url: downloaded.url };
+                            return { ...rct, url: downloaded.url, isLoading: false };
                         }
                         return { ...rct };
-                    });
-                });
+                    })
+                );
             }
-            setReceiptLoading(false);
         });
         setModalOpen(true);
-        setReceiptLoading(true);
         document.documentElement.classList.add("is-clipped");
     };
 
@@ -196,23 +250,31 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
     const scaleTooltip = " current scale: " + (scaleValue * 100).toFixed(2) + "%";
     const nextScaleTooltip = !!nextScaleValue ? "next zoom In: " + nextScaleValue : "cannot zoom in anymore.";
     const prevScaleTooltip = !!previousScaleValue ? "previous zoom out: " + previousScaleValue : "cannot zoom out anymore.";
+    const validReceiptSize = receipts.filter(rct => !rct.errorMessage).length;
+    const invalidReceiptSize = receipts.length - validReceiptSize;
+    fcLogger.debug("all receipts = ", receipts.map(r => ({ ...r })), "validReceiptSize=", validReceiptSize, "invalidReceiptSize=", invalidReceiptSize);
 
     return (
         <section className="upload-receipts-section">
             <div className="form-field">
                 <button className="button is-light is-link" type="button" onClick={ onClickModalOpenHandler }
-                    { ...testAttributes("container-open-action") }
-                >
-                    Upload { receipts.length > 0 ? "/ View" : "" } Receipt(s)</button>
-                { receipts.length > 0 &&
-                    <span className="subtitle" { ...testAttributes("receipt-message") }> { receipts.length } receipt file{ receipts.length > 1 ? "s are" : " is" } uploaded </span>
+                    { ...testAttributes("container-open-action") }                >
+                    Upload { validReceiptSize > 0 ? "/ View" : "" } Receipt(s)</button>
+                { validReceiptSize > 0 &&
+                    <span className="subtitle" { ...testAttributes("valid-receipt-message") }> { validReceiptSize } uploaded</span>
+                }
+                {
+                    validReceiptSize > 0 && invalidReceiptSize > 0 &&
+                    <span className="subtitle">,</span>
+                }
+                { invalidReceiptSize > 0 &&
+                    <span className="subtitle" { ...testAttributes("invalid-receipt-message") }> { invalidReceiptSize } invalid and skipped.</span>
                 }
                 { receipts.length === 0 &&
                     <span className="subtitle" { ...testAttributes("no-receipt-message") }>No receipt uploaded</span>
                 }
             </div>
             <div className={ `fullscreen-image-container modal ${fullscreenReceipt ? "is-active" : ""}` }>
-                <div className="modal-background"></div>
                 <div className="modal-close">
                     <button className="delete" type="button"
                         onClick={ onClickHideFullscreenImageHandler }
@@ -254,7 +316,6 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                             { ...testAttributes("container-header-close-action") }></button>
                     </header>
                     <section className="modal-card-body">
-                        <LoadSpinner loading={ isReceiptLoading } id="download-receipt" />
                         <div className={ `file ${!!errorMessage ? "is-danger" : ""}` }>
                             <label className="file-label" { ...testAttributes("file-receipts") }>
                                 <input
@@ -291,19 +352,41 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                                         <article className="message is-light" key={ rct.id } { ...testAttributes("receipt-view", "receipt-filename", rct.name) }>
                                             <div className="message-header">
                                                 <p { ...testAttributes("receipt-title") }>{ rct.name }</p>
-                                                <button className="button tooltip" type="button" onClick={ e => onClickShowFullscreenHandler(e, rct) } data-tooltip="View Fullscreen" { ...testAttributes("receipt-fullscreen-view-action") }>View</button>
+                                                {
+                                                    !rct.isLoading &&
+                                                    <button className="button tooltip" type="button" onClick={ e => onClickShowFullscreenHandler(e, rct) } data-tooltip="View Fullscreen" { ...testAttributes("receipt-fullscreen-view-action") }>View</button>
+                                                }
                                                 <button className="delete" aria-label="delete" onClick={ e => onClickUploadFileRemoveHandler(e, rct) }
                                                     { ...testAttributes("receipt-delete-action") }></button>
+
                                             </div>
                                             <div className="message-body">
                                                 {
-                                                    rct.contentType !== ReceiptType.PDF &&
+                                                    rct.isLoading &&
+                                                    <div className="has-text-centered receipt-loading"
+                                                        { ...testAttributes("download-receipt", "receipt-name", rct.name) }
+                                                    >
+                                                        <span className="icon">
+                                                            <FontAwesomeIcon icon={ faSpinner } className="fa-pulse" />
+                                                        </span>
+                                                    </div>
+                                                }
+                                                {
+                                                    rct.errorMessage &&
+                                                    <article className="message is-danger error" { ...testAttributes("unsupported-receipt") }>
+                                                        <div className="message-body">
+                                                            <ReactMarkdown children={ rct.errorMessage } />
+                                                        </div>
+                                                    </article>
+                                                }
+                                                {
+                                                    !rct.isLoading && rct.contentType !== ReceiptType.PDF &&
                                                     <figure className="image is-height-256" { ...testAttributes("receipt-fullscreen") }>
                                                         <img src={ rct.url } alt={ rct.name } onClick={ onClickShowFullscreenImageHandler } />
                                                     </figure>
                                                 }
                                                 {
-                                                    rct.contentType === ReceiptType.PDF &&
+                                                    !rct.isLoading && rct.contentType === ReceiptType.PDF &&
                                                     <embed height={ 256 }
                                                         src={ rct.url + "#toolbar=0" }
                                                         type={ rct.contentType }

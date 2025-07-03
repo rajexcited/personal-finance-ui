@@ -12,7 +12,7 @@ import { ExpenseListTable } from "./expense-list-table";
 import { ExpenseListCards } from "./expense-list-cards";
 import { SharePersonResource } from "../../../settings/services";
 import { ExpenseListLoaderResource } from "../../route-handlers";
-import { sleep, testAttributes } from "../../../../shared";
+import { testAttributes } from "../../../../shared";
 
 enum ExpenseListOperation {
     Merge = "merge",

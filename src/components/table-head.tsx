@@ -2,7 +2,7 @@ import { faArrowDown, faArrowUp, faArrowsUpDown, faSortAlphaDown, faSortAlphaUp,
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { FunctionComponent, useEffect, useState } from "react";
 import { useDebounceState } from "../hooks";
-import { getLogger } from "../shared";
+import { getLogger, testAttributes } from "../shared";
 
 export type SortDirection = "asc" | "desc" | "";
 const directions: SortDirection[] = ["", "asc", "desc"];
@@ -75,7 +75,8 @@ const Th: FunctionComponent<ThProps> = (props) => {
     }
 
     return (
-        <th onClick={ onClickCellHandler } className={ `${props.className || ""} ${props.sortable ? "is-clickable" : ""}` }>
+        <th onClick={ onClickCellHandler }
+            className={ `${props.className || ""} ${props.sortable ? "is-clickable" : ""}` }>
             <span className="icon-text">
                 {
                     icon &&

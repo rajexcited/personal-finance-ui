@@ -5,6 +5,7 @@ import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { v4 as uuidv4 } from "uuid";
 
 const configTypeDb = new MyLocalDatabase<ConfigResource>(LocalDBStore.Config);
+const _rootLogger = getLogger("mock.db.configtype", null, null, "DISABLED");
 
 const randomStatus = (statusList: Array<ConfigTypeStatus>) => {
   const randomIndex = Math.floor(Math.random() * statusList.length);
@@ -245,7 +246,11 @@ export const getPaymentAccountTypes = async () => {
 };
 
 export const getPurchaseTypes = async () => {
-  return await getConfigTypesWithRetry(ConfigTypeBelongsTo.PurchaseType);
+  const logger = getLogger("getPurchaseTypes", _rootLogger);
+  logger.log("retrieving purchase types from mock db");
+  const results = await getConfigTypesWithRetry(ConfigTypeBelongsTo.PurchaseType);
+  logger.debug("found", results.list.length, "purchase types. list=", results.list);
+  return results;
 };
 
 export const getRefundReasons = async () => {

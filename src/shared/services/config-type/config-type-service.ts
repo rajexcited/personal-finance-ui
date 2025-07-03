@@ -10,7 +10,7 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
   const configDb = new MyLocalDatabase<ConfigResource>(LocalDBStore.Config);
 
   const rootPath = `/config/types/belongs-to/${belongsToParam}`;
-  const _logger = getLogger("service.config-type");
+  const _logger = getLogger("service.config-type." + belongsToParam, null, null, "DISABLED");
 
   /**
    * retieves list of configType. filter configType list by given parameter
@@ -37,13 +37,16 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
       const countPromises = dbKeys.map(async (dbKey) => configDb.countFromIndex(dbIndex, dbKey));
       const totalCount = (await Promise.all(countPromises)).reduce((prev, curr) => curr + prev, 0);
       if (totalCount === 0 || (minSize && totalCount < minSize)) {
+        logger.debug("total count is", totalCount, "and min size requested is", minSize, "determining whether to call api or skip ?");
         // no records found
         const skipApiCall = await apiUtils.isApiCalled({ listSize: 0, minSize }, rootPath, queyParams);
         if (skipApiCall) {
           return [];
         }
+        logger.debug("do not skip api call");
         // call api to get list
         const response = await axios.get(rootPath, { params: queyParams });
+        logger.log("api response", response);
         apiUtils.updateApiResponse(response);
         const configTypes = response.data as ConfigResource[];
         const dbAddPromises = configTypes.map(async (configType) => {
@@ -51,12 +54,15 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
           return await configDb.addItem(configType);
         });
         await Promise.all(dbAddPromises);
+        logger.log("added to db, responding configTypes=", configTypes);
         return configTypes;
       }
 
+      logger.log("retrieving values from db");
       const configTypePromises = dbKeys.map(async (dbKey) => configDb.getAllFromIndex(dbIndex, dbKey));
       const configTypesNested = await Promise.all(configTypePromises);
       const configTypes = configTypesNested.flatMap((configType) => configType);
+      logger.log("responding configTypes=", configTypes);
       return configTypes;
     } catch (e) {
       handleAndRethrowServiceError(e as Error, logger);

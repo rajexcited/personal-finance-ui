@@ -92,6 +92,6 @@ export const getExpenses = async (filters: ExpenseFilter) => {
         return res as PurchaseFields;
       }
       return xp;
-    }),
+    })
   };
 };

@@ -6,6 +6,10 @@
     padding-left: 1rem;
 }
 
+.upload-receipts-section .subtitle:not(:first-of-type) {
+    padding-left: 0;
+}
+
 .upload-receipts-section .modal .image.is-height-256 {
     height: 256px;
     width: fit-content;
@@ -54,6 +58,10 @@
 
 .upload-receipts-section .modal-card .file .error.message .message-body {
     padding: 0.5rem 1rem;
+}
+
+.upload-receipts-section .modal-card .message-body .receipt-loading {
+    font-size: 2em;
 }
 
 .upload-receipts-section .modal-close {

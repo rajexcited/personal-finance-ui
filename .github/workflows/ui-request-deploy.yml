@@ -1443,7 +1443,7 @@ jobs:
           node-version: "latest"
           cache: "npm"
       - id: test-attr-condition
-        run: echo "::set-output name=uuid::$(uuidgen)"
+        run: echo "uuid=$(uuidgen)" >> $GITHUB_OUTPUT
       - id: run-build
         name: Build Code
         run: |

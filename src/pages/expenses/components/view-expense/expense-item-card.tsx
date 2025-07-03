@@ -139,8 +139,7 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
     const viewReceiptsAction = (
         <button className="button is-link is-active" onClick={ onClickShowReceiptsHandler }
             key={ "view-receipts-action" + props.id }
-            { ...testAttributes("expense-view-receipts-action") }
-        >
+            { ...testAttributes("expense-view-receipts-action") }        >
             <span className="icon tooltip" data-tooltip="View Receipts">
                 <FontAwesomeIcon icon={ faReceipt } />
             </span>
@@ -150,8 +149,7 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
     const addRefundAction = (
         <button className="button is-link is-active" onClick={ onClickAddRefundHandler }
             key={ "add-refund-action" + props.id }
-            { ...testAttributes("expense-add-refund-action") }
-        >
+            { ...testAttributes("expense-add-refund-action") }        >
             <span className="icon tooltip" data-tooltip="Add Refund">
                 <FontAwesomeIcon icon={ faCircleDollarToSlot } />
             </span>
@@ -264,7 +262,7 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
                                     verifiedDate.length === 1 &&
                                     <div className="column">
                                         <div className="level is-mobile">
-                                            <span className="level-item is-narrow">{ belongsTo } un-verified</span>
+                                            <span className="level-item is-narrow" { ...testAttributes("outvalue") }>{ belongsTo } un-verified</span>
                                             <span className="level-item">
                                                 <VerifyIndicator
                                                     id={ "purchase-verify-indicator-body" + props.details.id }
