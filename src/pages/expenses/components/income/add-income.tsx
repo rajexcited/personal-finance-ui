@@ -9,6 +9,7 @@ import { Animated } from "../../../../components";
 import { getLogger, IncomeFields, RouteHandlerResponse } from "../../services";
 import { IncomeDetailLoaderResource } from "../../route-handlers";
 import { IncomeForm } from "./income-form";
+import { testAttributes } from "../../../../shared";
 
 
 const fcLogger = getLogger("FC.AddIncome", null, null, "DISABLED");
@@ -56,7 +57,8 @@ export const AddIncome: FunctionComponent = () => {
         <>
             {
                 errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
+                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp"
+                    scrollBeforePlayIn={ true } { ...testAttributes("add-income-error-message") }>
                     <article className="message is-danger">
                         <div className="message-body">
                             <ReactMarkdown children={ errorMessage } />
@@ -85,7 +87,7 @@ export const AddIncome: FunctionComponent = () => {
             { auth.readOnly &&
                 <div className="columns">
                     <div className="column">
-                        <span>Not Allowed to add Income</span>
+                        <span { ...testAttributes("add-income-not-allowed") }>Not Allowed to add Income</span>
                     </div></div>
             }
         </>

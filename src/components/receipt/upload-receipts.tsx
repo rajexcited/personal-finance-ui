@@ -15,6 +15,7 @@ interface UploadReceiptsModalProps {
     cacheReceiptFile (receipt: ReceiptProps, cacheAction: CacheAction): Promise<DownloadReceiptResource>;
     downloadReceipts (receipts: ReceiptProps[]): Promise<DownloadReceiptResource[]>;
     belongsTo: ExpenseBelongsTo;
+    belongsToLabel: string;
 }
 
 const allowedScales = [0.125, 0.25, 0.5, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
@@ -310,7 +311,7 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                 <div className="modal-background"></div>
                 <div className="modal-card is-fullscreen">
                     <header className="modal-card-head">
-                        <p className="modal-card-title" { ...testAttributes("container-header-title") }>View / Upload Purchase Receipts</p>
+                        <p className="modal-card-title" { ...testAttributes("container-header-title") }>View / Upload { props.belongsToLabel } Receipts</p>
                         <button className="delete" type="button" aria-label="close"
                             onClick={ onClickModalCloseHandler }
                             { ...testAttributes("container-header-close-action") }></button>

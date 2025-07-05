@@ -340,6 +340,7 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
                                 cacheReceiptFile={ cacheReceiptFileHandler }
                                 downloadReceipts={ downloadReceiptsHandler }
                                 belongsTo={ ExpenseBelongsTo.Purchase }
+                                belongsToLabel="Purchase"
                             />
                         </div>
                     </div>

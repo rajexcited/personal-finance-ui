@@ -94,7 +94,7 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
     let belongsTo = "NA";
     let expenseCategory = "";
     let belongsToIconTip = <span></span>;
-    let verifiedDate = "";
+    let verifiedDate = "-";
 
     if (props.details.belongsTo === ExpenseBelongsTo.Income) {
         belongsTo = "Income";
@@ -104,7 +104,7 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
         belongsTo = "Purchase";
         expenseCategory = props.details.purchaseTypeName || "";
         belongsToIconTip = <span className="icon has-text-info tooltip is-tooltip-top" data-tooltip={ belongsTo }> <FontAwesomeIcon icon={ faShoppingCart } /> </span>;
-        verifiedDate = "-";
+
         if (props.details.verifiedTimestamp) {
             const verifiedDateInstance = getDateInstance(props.details.verifiedTimestamp);
             if (verifiedDateInstance) {
@@ -184,7 +184,7 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
                                         </div>
                                         <div className="level-item">
                                             { expenseDate }
-                                            { verifiedDate.length > 0 &&
+                                            { verifiedDate.length > 1 &&
                                                 <VerifyIndicator
                                                     id={ "purchase-verify-indicator-title" + props.details.id }
                                                     verifiedDateTime={ verifiedDate }
@@ -259,7 +259,7 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
                                     </div>
                                 }
                                 {
-                                    verifiedDate.length === 1 &&
+                                    props.details.belongsTo === ExpenseBelongsTo.Purchase && verifiedDate.length === 1 &&
                                     <div className="column">
                                         <div className="level is-mobile">
                                             <span className="level-item is-narrow" { ...testAttributes("outvalue") }>{ belongsTo } un-verified</span>

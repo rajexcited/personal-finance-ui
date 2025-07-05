@@ -662,6 +662,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                     cacheReceiptFile={ cacheReceiptFileHandler }
                                     downloadReceipts={ downloadReceiptsHandler }
                                     belongsTo={ ExpenseBelongsTo.PurchaseRefund }
+                                    belongsToLabel="Refund"
                                 />
                             </div>
                         </div>
