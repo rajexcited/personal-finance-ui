@@ -1,7 +1,8 @@
 import { IndexedDbName } from "../../../plugins/indexedDb/resource";
 import { ApiConfigTypeResource, ConfigBelongsTo, ConfigStatus } from "../../../support/api-resource-types";
 import { formatTimestamp } from "../../../support/date-utils";
-import { ConfigDetailType, getPurchaseType, updatePurchaseType } from "../../../support/fixture-utils/read-config-type";
+import { ConfigDetailType, getConfigType, updateConfigType } from "../../../support/fixture-utils/read-config-type";
+import { v4 as uuidv4 } from "uuid";
 
 export const configStoreName = "config-store";
 const belongsToIndexInStore = "belongsTo-index";
@@ -38,7 +39,7 @@ const createOrUpdateConfigTypeViaApi = (configDetails: ConfigDetailType, status:
     tags: configDetails.tags,
     value: configDetails.value,
     description: configDetails.description,
-    id: configDetails.id || "new-id",
+    id: configDetails.id || uuidv4(),
     auditDetails: {
       createdOn: formatTimestamp(new Date()),
       updatedOn: formatTimestamp(new Date())
@@ -59,35 +60,45 @@ export const getPaymentAccountTypesFromApi = (typeNames: string[]) => {
 export const getPurchaseTypesFromApi = (options: { typeNames: string[] }) => {
   return getConfigTypesFromApi(ConfigBelongsTo.PaymentAccountType, options.typeNames);
 };
+export const getIncomeTypesFromApi = (options: { typeNames: string[] }) => {
+  return getConfigTypesFromApi(ConfigBelongsTo.IncomeType, options.typeNames);
+};
 
-export const createOrUpdatePurchaseType = (purchaseTypeOptions: { ref: string; status: ConfigStatus }) => {
-  getPurchaseType(purchaseTypeOptions.ref).then((purchaseTypeData) => {
-    if (!purchaseTypeData) {
-      throw new Error("cannot create or update purchase type as data not found");
+const createOrUpdateConfigType = (belongsTo: ConfigBelongsTo, configTypeOptions: { ref: string; status: ConfigStatus }) => {
+  getConfigType(belongsTo, configTypeOptions.ref).then((configTypeData) => {
+    if (!configTypeData) {
+      throw new Error(`cannot create or update ${belongsTo} as data not found for ref [${configTypeOptions.ref}]`);
     }
-    if (purchaseTypeData.id) {
+    if (configTypeData.id) {
       // update directly
-      createOrUpdateConfigTypeViaApi(purchaseTypeData, purchaseTypeOptions.status);
+      createOrUpdateConfigTypeViaApi(configTypeData, configTypeOptions.status);
     } else {
-      getPurchaseTypesFromApi({ typeNames: [purchaseTypeData.name] }).then((datalist) => {
+      getConfigTypesFromApi(belongsTo, [configTypeData.name]).then((datalist) => {
         if (!datalist.length) {
           // create
-          createOrUpdateConfigTypeViaApi(purchaseTypeData, purchaseTypeOptions.status);
+          createOrUpdateConfigTypeViaApi(configTypeData, configTypeOptions.status);
         } else {
           // update
-          createOrUpdateConfigTypeViaApi({ ...purchaseTypeData, id: datalist[0].id! }, purchaseTypeOptions.status);
+          createOrUpdateConfigTypeViaApi({ ...configTypeData, id: datalist[0].id! }, configTypeOptions.status);
         }
       });
-      getPurchaseTypesFromApi({ typeNames: [purchaseTypeData.name] }).then((datalist) => {
+      getConfigTypesFromApi(belongsTo, [configTypeData.name]).then((datalist) => {
         if (datalist.length) {
           const apiData = datalist[0];
           const data: ConfigDetailType = {
-            ...purchaseTypeData,
+            ...configTypeData,
             id: apiData.id!
           };
-          updatePurchaseType(purchaseTypeOptions.ref, data);
+          updateConfigType(belongsTo, configTypeOptions.ref, data);
         }
       });
     }
   });
+};
+
+export const createOrUpdatePurchaseType = (purchaseTypeOptions: { ref: string; status: ConfigStatus }) => {
+  createOrUpdateConfigType(ConfigBelongsTo.PurchaseType, purchaseTypeOptions);
+};
+export const createOrUpdateIncomeType = (incomeTypeOptions: { ref: string; status: ConfigStatus }) => {
+  createOrUpdateConfigType(ConfigBelongsTo.IncomeType, incomeTypeOptions);
 };

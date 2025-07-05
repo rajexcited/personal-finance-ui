@@ -3,7 +3,7 @@ import datetime from "date-and-time";
 export const DEFAULT_FORMAT_PATTERN = "YYYY-MM-DD HH:mm:ss Z";
 export const dateFormatLabel = "MMM DD, YYYY";
 export const dateTimestampFormatApi = "MM-DD-YYYY HH:mm:ss.SSS Z";
-export const purchaseDateFormatFixture = "YYYY-MM-DD";
+export const expenseDateFormatFixture = "YYYY-MM-DD";
 export const fullMonthFullYearFormat = "MMMM YYYY";
 export const fullMonthFormat = "MMMM";
 

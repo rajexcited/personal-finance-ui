@@ -63,9 +63,9 @@ export enum ExpenseStatus {
 
 export enum ExpenseBelongsTo {
   Purchase = "purchase",
-  Income = "income",
-  Investment = "investment",
-  Refund = "refund"
+  Income = "income"
+  // Investment = "investment",
+  // Refund = "refund"
 }
 
 export enum ReceiptContentType {
@@ -87,13 +87,14 @@ interface ApiResourceExpense {
   billName: string;
   description: string;
   tags: string[];
-  verifiedTimestamp?: string;
   belongsTo: ExpenseBelongsTo;
   receipts: ApiResourceReceipt[];
   auditDetails: AuditDetailsType;
   status: ExpenseStatus;
   personIds: string[];
   profileId: string;
+  amount: string;
+  paymentAccountId: string;
 }
 
 export interface ApiResourcePurchaseItemDetails {
@@ -107,10 +108,14 @@ export interface ApiResourcePurchaseItemDetails {
 
 export interface ApiResourcePurchaseDetails extends ApiResourceExpense {
   belongsTo: ExpenseBelongsTo.Purchase;
-  amount: string;
-  description: string;
   purchaseTypeId: string;
-  paymentAccountId: string;
   purchaseDate: string;
+  verifiedTimestamp?: string;
   items: ApiResourcePurchaseItemDetails[];
+}
+
+export interface ApiResourceIncomeDetails extends ApiResourceExpense {
+  belongsTo: ExpenseBelongsTo.Income;
+  incomeTypeId: string;
+  incomeDate: string;
 }

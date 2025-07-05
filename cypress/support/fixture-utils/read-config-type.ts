@@ -32,7 +32,7 @@ const getAliasName = (belongsTo: ConfigBelongsTo) => {
   return aliasName;
 };
 
-const updateConfigType = (belongsTo: ConfigBelongsTo, key: string, configDetails: ConfigDetailType) => {
+export const updateConfigType = (belongsTo: ConfigBelongsTo, key: string, configDetails: ConfigDetailType) => {
   const aliasName = getAliasName(belongsTo);
   cy.get(`@${aliasName}`).then((data: any) => {
     const configPurchaseTypeMap: Record<string, ConfigDetailType> = data;
@@ -82,7 +82,7 @@ const findConfigType = (configTypeMap: Record<string, ConfigDetailType>, configT
  * @param expensePurchaseRefs
  * @returns
  */
-const getConfigTypeList = (belogsTo: ConfigBelongsTo, configTypeRefs: string[]) => {
+export const getConfigTypeList = (belogsTo: ConfigBelongsTo, configTypeRefs: string[]) => {
   const aliasName = getAliasName(belogsTo);
 
   cy.get(`@${aliasName}`).then((data: any) => {
@@ -98,17 +98,25 @@ const getConfigTypeList = (belogsTo: ConfigBelongsTo, configTypeRefs: string[]) 
   });
 };
 
-export const getPurchaseTypeList = (purchaseTypeRefs: string[]) => {
-  const aliasName = getAliasName(ConfigBelongsTo.PurchaseType);
-  return getConfigTypeList(ConfigBelongsTo.PurchaseType, purchaseTypeRefs);
-};
-
-export const getPurchaseType = (purchaseTypeRef: string) => {
-  return getPurchaseTypeList([purchaseTypeRef]).then((list) => {
+export const getConfigType = (belongsTo: ConfigBelongsTo, configTypeRef: string) => {
+  return getConfigTypeList(belongsTo, [configTypeRef]).then((list) => {
     let cdt: ConfigDetailType | null = null;
     if (list.length) {
       cdt = list[0];
     }
     return cy.wrap(cdt);
   });
+};
+
+export const getPurchaseTypeList = (purchaseTypeRefs: string[]) => {
+  const aliasName = getAliasName(ConfigBelongsTo.PurchaseType);
+  return getConfigTypeList(ConfigBelongsTo.PurchaseType, purchaseTypeRefs);
+};
+
+export const getPurchaseType = (purchaseTypeRef: string) => {
+  return getConfigType(ConfigBelongsTo.PurchaseType, purchaseTypeRef);
+};
+
+export const getIncomeType = (incomeTypeRef: string) => {
+  return getConfigType(ConfigBelongsTo.IncomeType, incomeTypeRef);
 };

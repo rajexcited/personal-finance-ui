@@ -1,24 +1,16 @@
 import { IndexedDbName } from "../../plugins/indexedDb/resource";
-import { dateFormatLabel, formatTimestamp, parseTimestamp, purchaseDateFormatFixture } from "../../support/date-utils";
 import { getExpensePurchase, getExpensePurchaseList } from "../../support/fixture-utils/read-expense-purchase";
 import { NavBarSelectors } from "../../support/resource-types";
-import {
-  selectPurchaseDate,
-  validateAndToggleVerifyIndicator,
-  validatePurchaseDateInForm,
-  validateUploadReceiptSection
-} from "./utils/purchase-form-utils";
-import { ExpenseStatus } from "../../support/api-resource-types";
-import { belongsToLabel, validatePurchaseCardOnSmall, validatePurchaseTableRowOnLarge } from "./utils/view-expense-utils";
-import { createOrUpdateExpensePurchase } from "./utils/expense-api-utils";
+import { validateAndToggleVerifyIndicator } from "./utils/purchase-form-utils";
+import { ExpenseBelongsTo, ExpenseStatus } from "../../support/api-resource-types";
+import { createOrUpdateExpensePurchase } from "../9-expense/utils/expense-api-utils";
+import { selectExpenseDate, validateExpenseDateInForm, validateUploadReceiptSection } from "../9-expense/utils/expense-form-utils";
+import { getBelongsToLabel, validateExpenseCardOnSmall, validateExpenseTableRowOnLarge } from "../9-expense/utils/view-expense-utils";
+import { createOrUpdatePaymentAccount } from "../9-payment-accounts/utils/payment-account-api-utils";
+import { createOrUpdatePurchaseType } from "../9-settings/utils/config-type-utils";
 
-function navigateToEditPurchase($actionContainer: JQuery<HTMLElement>, purchaseRef: string) {
-  getExpensePurchase(purchaseRef).then((purchaseData) => {
-    const purchaseDate = formatTimestamp(parseTimestamp(purchaseData.purchaseDate, purchaseDateFormatFixture), dateFormatLabel);
-    const verifiedTimestamp = purchaseData.verifiedTimestamp ? formatTimestamp(parseTimestamp(purchaseData.verifiedTimestamp), dateFormatLabel) : "-";
-
-    cy.wrap($actionContainer).find('[data-test="expense-update-action"]').should("be.visible").click();
-  });
+function navigateToEditPurchase($actionContainer: JQuery<HTMLElement>) {
+  cy.wrap($actionContainer).find('[data-test="expense-update-action"]').should("be.visible").click();
   cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
   cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
@@ -30,12 +22,16 @@ function runUpdatePurchaseTest(
   validateViewCallback: (purchaseRef: string) => Cypress.Chainable<JQuery<HTMLElement>>
 ) {
   cy.loginThroughUI("user1-success");
+  getExpensePurchase(purchaseRefOptions.updatingPurchaseRef).then((purchaseData) => {
+    createOrUpdatePaymentAccount([{ ref: purchaseData.paymentAccountRef, status: "enable" }]);
+    createOrUpdatePurchaseType({ ref: purchaseData.purchaseTypeRef, status: "enable" });
+  });
   createOrUpdateExpensePurchase(purchaseRefOptions.existingPurchaseRef, ExpenseStatus.ENABLE);
 
   cy.clickNavLinkAndWait(NavBarSelectors.ExpenseNavlink);
   cy.url().should("include", "/expense-journal");
   validateViewCallback(purchaseRefOptions.existingPurchaseRef).then(($actionContainer) => {
-    navigateToEditPurchase($actionContainer, purchaseRefOptions.existingPurchaseRef);
+    navigateToEditPurchase($actionContainer);
   });
   cy.get('[data-test="update-purchase-not-allowed"]').should("not.exist");
   cy.get('[data-test="update-purchase-error-message"]').should("not.exist");
@@ -77,10 +73,10 @@ function runUpdatePurchaseTest(
       });
       validateAndToggleVerifyIndicator(existingPurchaseData.verifiedTimestamp, false);
 
-      validatePurchaseDateInForm(existingPurchaseData.purchaseDate);
-      selectPurchaseDate({ newPurchaseDate: updatingPuchaseData.purchaseDate, existingPurchaseDate: existingPurchaseData.purchaseDate });
-      validatePurchaseDateInForm(updatingPuchaseData.purchaseDate);
-      validateUploadReceiptSection(existingPurchaseData.receipts);
+      validateExpenseDateInForm(existingPurchaseData.purchaseDate);
+      selectExpenseDate({ newExpenseDate: updatingPuchaseData.purchaseDate, existingExpenseDate: existingPurchaseData.purchaseDate });
+      validateExpenseDateInForm(updatingPuchaseData.purchaseDate);
+      validateUploadReceiptSection(existingPurchaseData.receipts, getBelongsToLabel(ExpenseBelongsTo.Purchase));
       // wait for debounce events to complete for inputs
       cy.wait(500);
     }
@@ -121,13 +117,18 @@ describe("Expense - Update Purchase Flow", () => {
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");
-        runUpdatePurchaseTest({ existingPurchaseRef: "energy-utility", updatingPurchaseRef: "energy-utility-v2" }, validatePurchaseCardOnSmall);
+        runUpdatePurchaseTest(
+          { existingPurchaseRef: "energy-utility", updatingPurchaseRef: "energy-utility-v2" },
+          validateExpenseCardOnSmall.bind(null, ExpenseBelongsTo.Purchase)
+        );
       });
 
       it("via large desktop view", { tags: ["desktop"] }, () => {
         cy.setViewport("desktop");
-        const validateCallback = (ref: string) => validatePurchaseTableRowOnLarge(ref, true);
-        runUpdatePurchaseTest({ existingPurchaseRef: "energy-utility-v2", updatingPurchaseRef: "energy-utility" }, validateCallback);
+        runUpdatePurchaseTest(
+          { existingPurchaseRef: "energy-utility-v2", updatingPurchaseRef: "energy-utility" },
+          validateExpenseTableRowOnLarge.bind(null, ExpenseBelongsTo.Purchase)
+        );
       });
     }
   );

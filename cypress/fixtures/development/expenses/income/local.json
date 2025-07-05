@@ -1,0 +1,50 @@
+{
+  "active-salary": {
+    "billName": "june payroll salary",
+    "tags": ["salary", "active", "job"],
+    "receipts": [{ "name": "june_paystub.pdf", "contentType": "application/pdf" }],
+    "amount": "3800.00",
+    "description": "Monthly salary credited by employer",
+    "incomeTypeName": "salary",
+    "incomeTypeRef": "salary",
+    "paymentAccountName": "primary 7823",
+    "paymentAccountRef": "primary-checking",
+    "incomeDate": "2025-06-30"
+  },
+  "passive-divident": {
+    "billName": "q2 dividend abc",
+    "tags": ["passive", "dividend", "investment"],
+    "receipts": [{ "name": "dividend_statement.jpg", "contentType": "image/jpeg" }],
+    "amount": "120.50",
+    "description": "Quarterly dividend from ABC Corp shares",
+    "incomeTypeName": "dividend",
+    "incomeTypeRef": "dividend",
+    "paymentAccountName": "investments 3344",
+    "paymentAccountRef": "long-investment",
+    "incomeDate": "2025-06-15"
+  },
+  "passive-divident-v2": {
+    "billName": "q1 dividend abc",
+    "tags": ["passive", "dividend", "investment"],
+    "receipts": [{ "name": "dividend_statement.jpg", "contentType": "image/jpeg" }],
+    "amount": "105.50",
+    "description": "Quarterly dividend from ABC Corp shares",
+    "incomeTypeName": "passive income",
+    "incomeTypeRef": "passive-income",
+    "paymentAccountName": "backup fund 9812",
+    "paymentAccountRef": "backup-savings",
+    "incomeDate": "2025-03-15"
+  },
+  "passive-rental": {
+    "billName": "june rent unitA",
+    "tags": ["rental", "passive", "property"],
+    "receipts": [{ "name": "tenant_payment.png", "contentType": "image/png" }],
+    "amount": "950.00",
+    "description": "Monthly rent received from tenant in Unit A",
+    "incomeTypeName": "rental income",
+    "incomeTypeRef": "rental-income",
+    "paymentAccountName": "biz expenses 4321",
+    "paymentAccountRef": "biz-exp-checking",
+    "incomeDate": "2025-06-05"
+  }
+}

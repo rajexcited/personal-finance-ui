@@ -25,29 +25,6 @@
     "paymentAccountRef": "daily-cc",
     "purchaseDate": "2025-06-19"
   },
-  "software-subscription": {
-    "billName": "figma pro annual",
-    "description": "Annual subscription to Figma Pro",
-    "tags": ["tools", "design", "saas"],
-    "receipts": [{ "name": "figma_invoice.jpg", "contentType": "image/jpeg" }],
-    "amount": "143.88",
-    "purchaseTypeName": "subscription",
-    "paymentAccountName": "primary 7823",
-    "paymentAccountRef": "primary-checking",
-    "purchaseDate": "2025-03-12"
-  },
-  "nyc-flight": {
-    "billName": "nyc-trip-july",
-    "description": "Round-trip flight to NYC for ReactConf",
-    "tags": ["travel", "flight", "conference"],
-    "verifiedTimestamp": "2025-06-01 09:15:00Z",
-    "receipts": [{ "name": "flight_receipt.png", "contentType": "image/png" }],
-    "amount": "326.99",
-    "purchaseTypeName": "travel",
-    "paymentAccountName": "travel rewards 2025",
-    "paymentAccountRef": "travel-rewards-cc",
-    "purchaseDate": "2025-06-01"
-  },
   "energy-utility": {
     "billName": "may electricity",
     "description": "Monthly electricity bill for apartment",
@@ -71,28 +48,5 @@
     "paymentAccountName": "bofa demo checking",
     "paymentAccountRef": "view-checking1",
     "purchaseDate": "2025-06-28"
-  },
-  "birthday-gift": {
-    "billName": "birthday-gift-for-ash",
-    "description": "Bluetooth speaker from TechWorld",
-    "tags": ["gift", "personal", "electronics"],
-    "verifiedTimestamp": "2025-06-12 11:45:00Z",
-    "receipts": [{ "name": "gift_receipt.png", "contentType": "image/png" }],
-    "amount": "49.99",
-    "purchaseTypeName": "gifting",
-    "paymentAccountName": "amazon gift 50",
-    "paymentAccountRef": "amazon-giftcard",
-    "purchaseDate": "2025-06-11"
-  },
-  "pet-supplies": {
-    "billName": "monthly-pet-supplies",
-    "description": "Pet food and grooming items from PawMart",
-    "tags": ["pets", "grocery", "monthly"],
-    "receipts": [{ "name": "pet_invoice.png", "contentType": "image/png" }],
-    "amount": "73.20",
-    "purchaseTypeName": "pet care",
-    "paymentAccountName": "cash",
-    "paymentAccountRef": "cash",
-    "purchaseDate": "2025-06-05"
   }
 }

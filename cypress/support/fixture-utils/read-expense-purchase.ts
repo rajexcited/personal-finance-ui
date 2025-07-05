@@ -1,4 +1,4 @@
-import { ReceiptContentType } from "../api-resource-types";
+import { ExpenseBelongsTo, ReceiptContentType } from "../api-resource-types";
 import { getFixtureFile } from "./fixture-util";
 
 export interface ReceiptDetailType {
@@ -21,6 +21,7 @@ export interface ExpensePurchaseDetailType {
   paymentAccountName: string;
   paymentAccountRef: string;
   purchaseDate: string;
+  belongsTo: ExpenseBelongsTo.Purchase;
   items: [];
 }
 
@@ -29,7 +30,7 @@ beforeEach(() => {
   cy.wrap({}).as(aliasName);
 });
 
-export const updateExpense = (key: string, expense: ExpensePurchaseDetailType) => {
+export const updateExpensePurchase = (key: string, expense: ExpensePurchaseDetailType) => {
   cy.get(`@${aliasName}`).then((data: any) => {
     const expensePurchaseMap: Record<string, ExpensePurchaseDetailType> = data;
     expensePurchaseMap[key] = expense;
@@ -56,7 +57,8 @@ const populateExpensePurchaseMap = () => {
         paymentAccountName: val?.paymentAccountName || "",
         paymentAccountRef: val?.paymentAccountRef || "",
         purchaseDate: val?.purchaseDate || "",
-        items: val?.items || []
+        items: val?.items || [],
+        belongsTo: ExpenseBelongsTo.Purchase
       };
     });
     const refKeys = Object.keys(data);

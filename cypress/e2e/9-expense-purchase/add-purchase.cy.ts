@@ -1,17 +1,18 @@
 import { IndexedDbName } from "../../plugins/indexedDb/resource";
 import { formatTimestamp } from "../../support/date-utils";
-import { getExpensePurchase, updateExpense } from "../../support/fixture-utils/read-expense-purchase";
+import { getExpensePurchase, updateExpensePurchase } from "../../support/fixture-utils/read-expense-purchase";
 import { NavBarSelectors } from "../../support/resource-types";
 import { createOrUpdatePaymentAccount } from "../9-payment-accounts/utils/payment-account-api-utils";
-import { validatePurchaseCardOnSmall, validatePurchaseTableRowOnLarge } from "./utils/view-expense-utils";
-import {
-  selectPurchaseDate,
-  selectUploadReceipts,
-  validateAndToggleVerifyIndicator,
-  validatePurchaseDateInForm,
-  validateUploadReceiptSection
-} from "./utils/purchase-form-utils";
+import { validateAndToggleVerifyIndicator } from "./utils/purchase-form-utils";
 import { createOrUpdatePurchaseType } from "../9-settings/utils/config-type-utils";
+import {
+  selectExpenseDate,
+  selectUploadReceipts,
+  validateExpenseDateInForm,
+  validateUploadReceiptSection
+} from "../9-expense/utils/expense-form-utils";
+import { ExpenseBelongsTo } from "../../support/api-resource-types";
+import { getBelongsToLabel, validateExpenseCardOnSmall, validateExpenseTableRowOnLarge } from "../9-expense/utils/view-expense-utils";
 
 function runAddPurchaseTest(purchaseRef: string) {
   cy.loginThroughUI("user1-success");
@@ -42,14 +43,13 @@ function runAddPurchaseTest(purchaseRef: string) {
     cy.get('[data-test="purchase-desc-counter"]').should("be.visible").should("have.text", `counter: ${purchaseData.description.length}/150`);
     cy.selectTags({ tagsSelectorId: "purchase-tags", addTagValues: purchaseData.tags, existingTagValues: [], removeTagValues: [] });
     validateAndToggleVerifyIndicator("", true);
-    updateExpense(purchaseRef, { ...purchaseData, verifiedTimestamp: formatTimestamp(new Date()) });
+    updateExpensePurchase(purchaseRef, { ...purchaseData, verifiedTimestamp: formatTimestamp(new Date()) });
 
-    console.log("updated data", purchaseData);
-    selectPurchaseDate({ newPurchaseDate: purchaseData.purchaseDate, existingPurchaseDate: new Date() });
-    validatePurchaseDateInForm(purchaseData.purchaseDate);
+    selectExpenseDate({ newExpenseDate: purchaseData.purchaseDate, existingExpenseDate: new Date() });
+    validateExpenseDateInForm(purchaseData.purchaseDate);
 
-    validateUploadReceiptSection([]);
-    selectUploadReceipts(purchaseData.receipts);
+    validateUploadReceiptSection([], getBelongsToLabel(ExpenseBelongsTo.Purchase));
+    selectUploadReceipts(purchaseData.receipts, ExpenseBelongsTo.Purchase, getBelongsToLabel(ExpenseBelongsTo.Purchase));
 
     // wait for debounce events to complete for inputs
     cy.wait(500);
@@ -85,13 +85,13 @@ describe("Expense - Add Purchase Flow", () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");
         runAddPurchaseTest("local-grocery1");
-        validatePurchaseCardOnSmall("local-grocery1");
+        validateExpenseCardOnSmall(ExpenseBelongsTo.Purchase, "local-grocery1");
       });
 
       it("via large desktop view", { tags: ["desktop"] }, () => {
         cy.setViewport("desktop");
         runAddPurchaseTest("local-grocery2");
-        validatePurchaseTableRowOnLarge("local-grocery2", true);
+        validateExpenseTableRowOnLarge(ExpenseBelongsTo.Purchase, "local-grocery2");
       });
     }
   );

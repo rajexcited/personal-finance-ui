@@ -16,3 +16,10 @@ export enum DeviceWidth {
   Medium = "medium",
   Small = "small"
 }
+
+export class UnSupportedError extends Error {
+  public name = "UnSupportedError";
+  constructor(message: string) {
+    super(message);
+  }
+}
