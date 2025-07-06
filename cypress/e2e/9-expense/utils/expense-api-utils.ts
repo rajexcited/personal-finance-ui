@@ -7,13 +7,7 @@ import {
   ExpenseBelongsTo,
   ExpenseStatus
 } from "../../../support/api-resource-types";
-import {
-  dateTimestampFormatApi,
-  expenseDateFormatFixture,
-  formatTimestamp,
-  parseTimestamp,
-  purchaseDateFormatFixture
-} from "../../../support/date-utils";
+import { dateTimestampFormatApi, expenseDateFormatFixture, formatTimestamp, parseTimestamp } from "../../../support/date-utils";
 import { getIncomeType, getPurchaseType } from "../../../support/fixture-utils/read-config-type";
 import { ExpensePurchaseDetailType, getExpensePurchase } from "../../../support/fixture-utils/read-expense-purchase";
 import { getPaymentAccount, PaymentAccountDetailType } from "../../../support/fixture-utils/read-payment-account";
@@ -51,7 +45,7 @@ const dispatchApiExpenseReceiptAdd = (dbItem: DbReceiptFileResource) => {
   }
 };
 
-const prepareExpenseReceipts = <T extends ExpenseBelongsTo>(options: {
+const prepareExpenseReceipts = <T extends keyof ExpenseDetailTypeMap>(options: {
   apiExpenseData: ApiResourceExpenseDetailsMap[T] | null;
   testExpenseData: ExpenseDetailTypeMap[T];
 }) => {
@@ -101,7 +95,7 @@ const prepareExpenseReceipts = <T extends ExpenseBelongsTo>(options: {
   return cy.wrap(dataReceipts);
 };
 
-const dispatchApiExpenseGetById = <T extends ExpenseBelongsTo>(belongsTo: T, id?: string | null) => {
+const dispatchApiExpenseGetById = <T extends keyof ApiResourceExpenseDetailsMap>(belongsTo: T, id?: string | null) => {
   if (!id) {
     return cy.wrap(null);
   }
@@ -129,13 +123,13 @@ const dispatchApiExpenseAddUpdate = (apiExpenseData: UnionApiResourceExpenseDeta
   }
 };
 
-interface ExpenseAddUpdatePrepareType<T extends ExpenseBelongsTo> {
+interface ExpenseAddUpdatePrepareType<T extends keyof ApiResourceExpenseDetailsMap> {
   expenseApiData: ApiResourceExpenseDetailsMap[T] | null;
   expenseReceipts: ApiResourceReceipt[];
   paymentAccountData: PaymentAccountDetailType;
   currencyProfileData: ApiCurrencyProfileResource;
 }
-const prepareExpenseData = <T extends ExpenseBelongsTo>(belongsTo: T, expenseData: ExpenseDetailTypeMap[T]) => {
+const prepareExpenseData = <T extends keyof ExpenseDetailTypeMap>(belongsTo: T, expenseData: ExpenseDetailTypeMap[T]) => {
   // console.log("purchase data", purchaseData, "and status", status);
   dispatchApiExpenseGetById(belongsTo, expenseData.id).then((expenseApiData) => {
     // console.log("retrieved purchase data from api", purchaseApiData);
@@ -184,7 +178,7 @@ const createOrUpdateExpensePurchaseViaApi = (purchaseData: ExpensePurchaseDetail
         belongsTo: ExpenseBelongsTo.Purchase,
         billName: purchaseData.billName,
         amount: purchaseData.amount,
-        purchaseDate: formatTimestamp(parseTimestamp(purchaseData.purchaseDate, purchaseDateFormatFixture), dateTimestampFormatApi),
+        purchaseDate: formatTimestamp(parseTimestamp(purchaseData.purchaseDate, expenseDateFormatFixture), dateTimestampFormatApi),
         description: purchaseData.description,
         profileId: purchaseAddUpdateData.currencyProfileData.id,
         purchaseTypeId: purchaseTypeData?.id!,

@@ -67,8 +67,8 @@ function runUpdateIncomeTest(
   });
   cy.verifyCurrencySection();
 
-  cy.get('button[data-test="cancel-income"]').should("be.visible").should("have.text", "Cancel").should("have.length", 1);
-  cy.get('button[data-test="submit-income"]').filter(":visible").should("be.visible").should("have.text", "Update").should("have.length", 1).click();
+  cy.get('button[data-test="cancel-income"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
+  cy.get('button[data-test="submit-income"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Update").click();
   cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");

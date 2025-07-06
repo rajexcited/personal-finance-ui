@@ -42,6 +42,7 @@ function runAddPurchaseTest(purchaseRef: string) {
     cy.get("#purchase-desc").should("be.visible").should("have.value", "").type(purchaseData.description);
     cy.get('[data-test="purchase-desc-counter"]').should("be.visible").should("have.text", `counter: ${purchaseData.description.length}/150`);
     cy.selectTags({ tagsSelectorId: "purchase-tags", addTagValues: purchaseData.tags, existingTagValues: [], removeTagValues: [] });
+    cy.selectSharePersonTags({ selectorId: "person-tags", addValues: [], existingValues: [], removeValues: [] });
     validateAndToggleVerifyIndicator("", true);
     updateExpensePurchase(purchaseRef, { ...purchaseData, verifiedTimestamp: formatTimestamp(new Date()) });
 
@@ -56,8 +57,8 @@ function runAddPurchaseTest(purchaseRef: string) {
   });
   cy.verifyCurrencySection();
 
-  cy.get('button[data-test="cancel-purchase"]').should("be.visible").should("have.text", "Cancel");
-  cy.get('button[data-test="submit-purchase"]').filter(":visible").should("be.visible").should("have.text", "Add").click();
+  cy.get('button[data-test="cancel-purchase"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
+  cy.get('button[data-test="submit-purchase"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Add").click();
   cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");

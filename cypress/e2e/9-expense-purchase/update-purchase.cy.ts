@@ -71,6 +71,7 @@ function runUpdatePurchaseTest(
         existingTagValues: existingPurchaseData.tags,
         removeTagValues: existingPurchaseData.tags.filter((tv) => !updatingPuchaseData.tags.includes(tv))
       });
+      cy.selectSharePersonTags({ selectorId: "person-tags", addValues: [], existingValues: [], removeValues: [] });
       validateAndToggleVerifyIndicator(existingPurchaseData.verifiedTimestamp, false);
 
       validateExpenseDateInForm(existingPurchaseData.purchaseDate);
@@ -83,12 +84,12 @@ function runUpdatePurchaseTest(
   );
   cy.verifyCurrencySection();
 
-  cy.get('button[data-test="cancel-purchase"]').should("be.visible").should("have.text", "Cancel").should("have.length", 1);
+  cy.get('button[data-test="cancel-purchase"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
   cy.get('button[data-test="submit-purchase"]')
     .filter(":visible")
+    .should("have.length", 1)
     .should("be.visible")
     .should("have.text", "Update")
-    .should("have.length", 1)
     .click();
   cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]').should("be.visible");
