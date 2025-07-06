@@ -15,7 +15,7 @@ export interface ExpenseRefundDetailType {
   paymentAccountName: string;
   paymentAccountRef: string;
   purchaseId?: string;
-  purchaseRef?: string;
+  purchaseRef: string;
   refundDate: string;
   belongsTo: ExpenseBelongsTo.Refund;
 }
@@ -51,8 +51,8 @@ const populateExpenseRefundMap = () => {
         paymentAccountName: val?.paymentAccountName || "",
         paymentAccountRef: val?.paymentAccountRef || "",
         refundDate: val?.refundDate || "",
-        belongsTo: ExpenseBelongsTo.Refund,
-        purchaseRef: val?.purchaseRef
+        purchaseRef: val?.purchaseRef || "",
+        belongsTo: ExpenseBelongsTo.Refund
       };
     });
     const refKeys = Object.keys(data);
