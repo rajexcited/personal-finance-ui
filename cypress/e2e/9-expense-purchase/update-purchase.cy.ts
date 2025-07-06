@@ -47,12 +47,14 @@ function runUpdatePurchaseTest(
       cy.selectDropdownItem({
         dropdownSelectorId: "purchase-pymt-acc",
         selectNewItemText: updatingPuchaseData.paymentAccountName,
-        selectedItemText: existingPurchaseData.paymentAccountName
+        selectedItemText: existingPurchaseData.paymentAccountName,
+        requiredError: true
       });
       cy.selectDropdownItem({
         dropdownSelectorId: "purchase-type",
         selectNewItemText: updatingPuchaseData.purchaseTypeName,
-        selectedItemText: existingPurchaseData.purchaseTypeName
+        selectedItemText: existingPurchaseData.purchaseTypeName,
+        requiredError: true
       });
       cy.get('[data-test="purchase-desc-counter"]')
         .should("be.visible")

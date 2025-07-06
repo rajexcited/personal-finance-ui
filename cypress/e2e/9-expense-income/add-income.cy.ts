@@ -34,8 +34,8 @@ function runAddIncomeTest(incomeRef: string) {
   getExpenseIncome(incomeRef).then((incomeData) => {
     cy.get("#income-bill-name").should("be.visible").should("have.value", "").type(incomeData.billName);
     cy.get("#income-amount").should("be.visible").should("have.value", "").type(incomeData.amount);
-    cy.selectDropdownItem({ dropdownSelectorId: "income-pymt-acc", selectNewItemText: incomeData.paymentAccountName });
-    cy.selectDropdownItem({ dropdownSelectorId: "income-type", selectNewItemText: incomeData.incomeTypeName });
+    cy.selectDropdownItem({ dropdownSelectorId: "income-pymt-acc", selectNewItemText: incomeData.paymentAccountName, requiredError: true });
+    cy.selectDropdownItem({ dropdownSelectorId: "income-type", selectNewItemText: incomeData.incomeTypeName, requiredError: true });
     cy.get('[data-test="income-desc-counter"]').should("be.visible").should("have.text", `counter: 0/150`);
     cy.get("#income-desc").should("be.visible").should("have.value", "").type(incomeData.description);
     cy.get('[data-test="income-desc-counter"]').should("be.visible").should("have.text", `counter: ${incomeData.description.length}/150`);

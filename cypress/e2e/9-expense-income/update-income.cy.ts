@@ -41,12 +41,14 @@ function runUpdateIncomeTest(
     cy.selectDropdownItem({
       dropdownSelectorId: "income-pymt-acc",
       selectNewItemText: updatingPuchaseData.paymentAccountName,
-      selectedItemText: existingIncomeData.paymentAccountName
+      selectedItemText: existingIncomeData.paymentAccountName,
+      requiredError: true
     });
     cy.selectDropdownItem({
       dropdownSelectorId: "income-type",
       selectNewItemText: updatingPuchaseData.incomeTypeName,
-      selectedItemText: existingIncomeData.incomeTypeName
+      selectedItemText: existingIncomeData.incomeTypeName,
+      requiredError: true
     });
     cy.get('[data-test="income-desc-counter"]').should("be.visible").should("have.text", `counter: ${existingIncomeData.description.length}/150`);
     cy.get("#income-desc").should("be.visible").should("have.value", existingIncomeData.description).clear().type(updatingPuchaseData.description);

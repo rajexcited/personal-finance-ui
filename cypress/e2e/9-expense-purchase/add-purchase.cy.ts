@@ -36,8 +36,8 @@ function runAddPurchaseTest(purchaseRef: string) {
   getExpensePurchase(purchaseRef).then((purchaseData) => {
     cy.get("#purchase-bill-name").should("be.visible").should("have.value", "").type(purchaseData.billName);
     cy.get("#purchase-amount").should("be.visible").should("have.value", "").type(purchaseData.amount);
-    cy.selectDropdownItem({ dropdownSelectorId: "purchase-pymt-acc", selectNewItemText: purchaseData.paymentAccountName });
-    cy.selectDropdownItem({ dropdownSelectorId: "purchase-type", selectNewItemText: purchaseData.purchaseTypeName });
+    cy.selectDropdownItem({ dropdownSelectorId: "purchase-pymt-acc", selectNewItemText: purchaseData.paymentAccountName, requiredError: true });
+    cy.selectDropdownItem({ dropdownSelectorId: "purchase-type", selectNewItemText: purchaseData.purchaseTypeName, requiredError: true });
     cy.get('[data-test="purchase-desc-counter"]').should("be.visible").should("have.text", `counter: 0/150`);
     cy.get("#purchase-desc").should("be.visible").should("have.value", "").type(purchaseData.description);
     cy.get('[data-test="purchase-desc-counter"]').should("be.visible").should("have.text", `counter: ${purchaseData.description.length}/150`);

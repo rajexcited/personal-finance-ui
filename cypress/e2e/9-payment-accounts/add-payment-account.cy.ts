@@ -19,7 +19,7 @@ function runAddPaymentAccountTest(paymentAccountRef: string) {
     cy.get("#account-short-name").should("be.visible").should("have.value", "").type(pymtAccData.shortName);
     cy.get("#account-instritution-name").should("be.visible").should("have.value", "").type(pymtAccData.institutionName);
     cy.get("#account-number").should("be.visible").should("have.value", "").type(pymtAccData.accountName);
-    cy.selectDropdownItem({ dropdownSelectorId: "account-type", selectNewItemText: pymtAccData.accountTypeName });
+    cy.selectDropdownItem({ dropdownSelectorId: "account-type", selectNewItemText: pymtAccData.accountTypeName, requiredError: true });
     cy.selectTags({ tagsSelectorId: "pymt-acc-tags", addTagValues: pymtAccData.tags, existingTagValues: [], removeTagValues: [] });
     cy.get('[data-test="account-desc-counter"]').should("be.visible").should("have.text", `counter: 0/150`);
     cy.get("#account-desc").should("be.visible").should("have.value", "").type(pymtAccData.description);

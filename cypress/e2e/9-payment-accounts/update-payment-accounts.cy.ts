@@ -55,7 +55,8 @@ function runUpdatePaymentAccountTest(options: { existingPaymentAccountRef: strin
           cy.selectDropdownItem({
             dropdownSelectorId: "account-type",
             selectedItemText: existingPaymentAccountData.accountTypeName,
-            selectNewItemText: updatingPaymentAccountData.accountTypeName
+            selectNewItemText: updatingPaymentAccountData.accountTypeName,
+            requiredError: true
           });
           cy.selectTags({
             tagsSelectorId: "pymt-acc-tags",

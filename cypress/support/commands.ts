@@ -134,8 +134,9 @@ Cypress.Commands.add("getCurrencyProfile", () => {
     });
 });
 
-Cypress.Commands.add("validateDropdownSelectedItem", (options: { dropdownSelectorId: string; selectedItemText?: string }) => {
-  cy.get(`#${options.dropdownSelectorId}`)
+type ValidateDropdownSelectedItemOptions = { dropdownSelectorId: string; selectedItemText?: string; requiredError: boolean };
+Cypress.Commands.add("validateDropdownSelectedItem", (options: ValidateDropdownSelectedItemOptions) => {
+  cy.get(`[data-test="dropdown-field"][data-dropdown-id="${options.dropdownSelectorId}"]`)
     .should("be.visible")
     .within(() => {
       cy.get(".dropdown-menu").should("not.be.visible");
@@ -146,12 +147,18 @@ Cypress.Commands.add("validateDropdownSelectedItem", (options: { dropdownSelecto
         .then((text) => {
           expect(text.trim()).to.equal(selectedItemText);
         });
+
+      if (options.requiredError && !options.selectedItemText) {
+        cy.get('[data-test="dropdown-error"]').should("be.visible").should("contain.text", "Please select an item from dropdown.");
+      } else {
+        cy.get('[data-test="dropdown-error"]').should("not.exist");
+      }
     });
 });
 
-type SelectDropdownItemOptions = { dropdownSelectorId: string; selectNewItemText: string; selectedItemText?: string };
+type SelectDropdownItemOptions = ValidateDropdownSelectedItemOptions & { selectNewItemText: string };
 Cypress.Commands.add("selectDropdownItem", (options: SelectDropdownItemOptions) => {
-  cy.get(`#${options.dropdownSelectorId}`)
+  cy.get(`[data-test="dropdown-field"][data-dropdown-id="${options.dropdownSelectorId}"]`)
     .should("be.visible")
     .within(() => {
       cy.get(".dropdown-menu").should("not.be.visible");
@@ -163,6 +170,13 @@ Cypress.Commands.add("selectDropdownItem", (options: SelectDropdownItemOptions) 
           expect(text.trim()).to.equal(selectedItemText);
           expect(text.trim()).not.to.equal(options.selectNewItemText);
         });
+
+      if (options.requiredError && !options.selectedItemText) {
+        cy.get('[data-test="dropdown-error"]').should("be.visible").should("contain.text", "Please select an item from dropdown.");
+      } else {
+        cy.get('[data-test="dropdown-error"]').should("not.exist");
+      }
+
       cy.get('button[data-test="toggle-dropdown-action"]').click();
       cy.get(".dropdown-menu")
         .should("be.visible")
