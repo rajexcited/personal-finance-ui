@@ -1,10 +1,11 @@
 import { FunctionComponent, useState } from "react";
-import { getLogger } from "../shared";
+import { getLogger, testAttributes } from "../shared";
 import { LoadSpinner } from "./loading";
-import Animated, { AnimatedProps } from "./animated";
+import Animated from "./animated";
 
 
 interface ViewDialogProps {
+    id: string;
     /** when open dialog upon initialized  */
     openDefault: boolean;
     /** if content is not present, default loading indicator will be displayed */
@@ -46,16 +47,18 @@ export const ViewDialog: FunctionComponent<ViewDialogProps> = (props) => {
 
 
     return (
-        <>
+        <section className="view-dialog" { ...testAttributes("view-dialog") }>
             {
                 props.animateLink &&
                 <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ props.isLinkPlayIn } animateOnMount={ true }  >
-                    <button className="button is-text view-dialog-button" onClick={ onClickOpenHandler }> { props.linkText } </button>
+                    <button className="button is-text view-dialog-button" onClick={ onClickOpenHandler }
+                        { ...testAttributes("open-dialog", "dialog-id", props.id) }> { props.linkText } </button>
                 </Animated>
             }
             {
                 !props.animateLink &&
-                <button className="button is-text view-dialog-button" onClick={ onClickOpenHandler }> { props.linkText } </button>
+                <button className="button is-text view-dialog-button" onClick={ onClickOpenHandler }
+                    { ...testAttributes("open-dialog", "dialog-id", props.id) }> { props.linkText } </button>
             }
             <div className={ `modal view-dialog-model ${isOpen ? "is-active" : ""}` }>
                 <div className="modal-background"></div>
@@ -77,7 +80,7 @@ export const ViewDialog: FunctionComponent<ViewDialogProps> = (props) => {
                     </section>
                 </div>
             </div>
-        </>
+        </section>
     );
 };
 

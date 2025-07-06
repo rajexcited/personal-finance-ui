@@ -9,6 +9,7 @@ import { Animated } from "../../../../components";
 import { getLogger, PurchaseRefundFields, RouteHandlerResponse } from "../../services";
 import { PurchaseRefundForm } from "./refund-form";
 import { RefundDetailLoaderResource } from "../../route-handlers";
+import { testAttributes } from "../../../../shared";
 
 
 const fcLogger = getLogger("FC.AddRefund", null, null, "DISABLED");
@@ -56,7 +57,8 @@ export const AddRefund: FunctionComponent = () => {
         <>
             {
                 errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
+                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp"
+                    scrollBeforePlayIn={ true } { ...testAttributes("add-refund-error-message") }>
                     <article className="message is-danger">
                         <div className="message-body">
                             <ReactMarkdown children={ errorMessage } />
@@ -85,7 +87,7 @@ export const AddRefund: FunctionComponent = () => {
             { auth.readOnly &&
                 <div className="columns">
                     <div className="column">
-                        <span>Not Allowed to add Refund</span>
+                        <span { ...testAttributes("add-refund-not-allowed") }>Not Allowed to add Refund</span>
                     </div></div>
             }
         </>
