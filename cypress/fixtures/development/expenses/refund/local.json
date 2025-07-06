@@ -1,0 +1,40 @@
+{
+  "overcharge-reversal": {
+    "billName": "subscription overcharge reversal",
+    "tags": ["subscription", "adjustment"],
+    "receipts": [{ "name": "saas_refund_receipt.png", "contentType": "image/png" }],
+    "amount": "19.00",
+    "description": "Refund for incorrect double billing on July Figma Pro plan",
+    "reasonName": "billing error",
+    "reasonRef": "billing-error",
+    "paymentAccountName": "business pro 7788",
+    "paymentAccountRef": "business-cc",
+    "refundDate": "2025-07-04"
+  },
+  "electronic-return": {
+    "billName": "headphones return",
+    "tags": ["electronics", "return", "partial"],
+    "receipts": [{ "name": "headphones_refund.jpg", "contentType": "image/jpeg" }],
+    "amount": "89.99",
+    "description": "Refund issued for returned noise-canceling headphones",
+    "reasonName": "product defect",
+    "reasonRef": "product-defect",
+    "paymentAccountName": "travel rewards 2025",
+    "paymentAccountRef": "travel-rewards-cc",
+    "purchaseRef": "office-supplies",
+    "refundDate": "2025-07-01"
+  },
+  "giftcard-return": {
+    "billName": "giftcard balance reversal",
+    "tags": ["gift card", "e-commerce", "partial"],
+    "receipts": [{ "name": "giftcard_refund.pdf", "contentType": "application/pdf" }],
+    "amount": "25.00",
+    "description": "Remaining balance refunded after canceled order",
+    "reasonName": "cancelled",
+    "reasonRef": "cancelled",
+    "paymentAccountName": "amazon gift 50",
+    "paymentAccountRef": "amazon-giftcard",
+    "purchaseRef": "giftcard",
+    "refundDate": "2025-06-28"
+  }
+}

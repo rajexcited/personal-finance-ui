@@ -134,6 +134,21 @@ Cypress.Commands.add("getCurrencyProfile", () => {
     });
 });
 
+Cypress.Commands.add("validateDropdownSelectedItem", (options: { dropdownSelectorId: string; selectedItemText?: string }) => {
+  cy.get(`#${options.dropdownSelectorId}`)
+    .should("be.visible")
+    .within(() => {
+      cy.get(".dropdown-menu").should("not.be.visible");
+      const selectedItemText = options.selectedItemText ? options.selectedItemText : "Select";
+      cy.get('button[data-test="toggle-dropdown-action"]')
+        .should("be.visible")
+        .invoke("text")
+        .then((text) => {
+          expect(text.trim()).to.equal(selectedItemText);
+        });
+    });
+});
+
 type SelectDropdownItemOptions = { dropdownSelectorId: string; selectNewItemText: string; selectedItemText?: string };
 Cypress.Commands.add("selectDropdownItem", (options: SelectDropdownItemOptions) => {
   cy.get(`#${options.dropdownSelectorId}`)
@@ -141,14 +156,14 @@ Cypress.Commands.add("selectDropdownItem", (options: SelectDropdownItemOptions) 
     .within(() => {
       cy.get(".dropdown-menu").should("not.be.visible");
       const selectedItemText = options.selectedItemText ? options.selectedItemText : "Select";
-      cy.get("button")
+      cy.get('button[data-test="toggle-dropdown-action"]')
         .should("be.visible")
         .invoke("text")
         .then((text) => {
           expect(text.trim()).to.equal(selectedItemText);
           expect(text.trim()).not.to.equal(options.selectNewItemText);
         });
-      cy.get("button").click();
+      cy.get('button[data-test="toggle-dropdown-action"]').click();
       cy.get(".dropdown-menu")
         .should("be.visible")
         .find(".dropdown-item")
@@ -157,7 +172,7 @@ Cypress.Commands.add("selectDropdownItem", (options: SelectDropdownItemOptions) 
         .should("be.visible")
         .click();
       cy.get(".dropdown-menu").should("not.be.visible");
-      cy.get("button")
+      cy.get('button[data-test="toggle-dropdown-action"]')
         .should("be.visible")
         .invoke("text")
         .then((text) => {
@@ -187,7 +202,6 @@ Cypress.Commands.add("selectTags", (options: SelectTagsOptions) => {
             .should("be.visible")
             .click()
             .should("not.exist");
-
         }
       });
 
@@ -222,6 +236,71 @@ Cypress.Commands.add("selectTags", (options: SelectTagsOptions) => {
 
       cy.get(".tags-input").find("span.tag[data-value]").should("have.length", tagValues.length);
       cy.get('[data-test="' + options.tagsSelectorId + '-tags-counter"]')
+        .should("be.visible")
+        .should("have.text", `counter: ${tagValues.length}/10`);
+
+      cy.get(".tags-input").within(() => {
+        for (let tagValue of tagValues) {
+          cy.get('span[data-value="' + tagValue + '"]').should("be.visible");
+        }
+      });
+    });
+});
+
+type SelectSharePersonTagsOptions = { selectorId: string; addValues: string[]; existingValues: string[]; removeValues: string[] };
+Cypress.Commands.add("selectSharePersonTags", (options: SelectSharePersonTagsOptions) => {
+  cy.get('[data-test="tags-share-person-field"][data-id="' + options.selectorId + '"]')
+    .should("be.visible")
+    .within(() => {
+      cy.get(".dropdown-menu").should("not.be.visible");
+      cy.get(".tags-input").should("be.visible").find("span.tag[data-value]").should("have.length", options.existingValues.length);
+
+      cy.get('[data-test="' + options.selectorId + '-tags-counter"]')
+        .should("be.visible")
+        .should("have.text", `counter: ${options.existingValues.length}/10`);
+
+      cy.get(".tags-input").within(() => {
+        for (let tagValue of options.removeValues) {
+          cy.get('[data-value="' + tagValue + '"]')
+            .should("be.visible")
+            .find('.delete[data-tag="delete"]')
+            .should("be.visible")
+            .click()
+            .should("not.exist");
+        }
+      });
+
+      const existingTagValuesAfterRemoved = options.existingValues.filter((tv) => !options.removeValues.includes(tv));
+      const addTagValues = options.addValues.filter((tv) => !existingTagValuesAfterRemoved.includes(tv));
+
+      for (let tagValue of addTagValues) {
+        cy.get(".tags-input")
+          .find('span[data-value="' + tagValue + '"]')
+          .should("not.exist");
+
+        cy.get(".tags-input").find("input.input").should("have.length", 1).should("be.visible").type(tagValue);
+
+        cy.get(".dropdown-menu")
+          .should("be.visible")
+          .find(".dropdown-item")
+          .should("have.length.at.least", 1)
+          .then(($items) => {
+            const $filtered = $items.filter((i, el) => el.textContent === tagValue);
+            if ($filtered.length === 0) {
+              cy.get(".tags-input").find("input.input").type("{enter}");
+            } else {
+              expect($filtered.length).to.equal(1);
+              cy.wrap($filtered).should("be.visible").click();
+            }
+          });
+      }
+
+      cy.get(".dropdown-menu").should("not.be.visible");
+
+      const tagValues = [...addTagValues, ...existingTagValuesAfterRemoved];
+
+      cy.get(".tags-input").find("span.tag[data-value]").should("have.length", tagValues.length);
+      cy.get('[data-test="' + options.selectorId + '-tags-counter"]')
         .should("be.visible")
         .should("have.text", `counter: ${tagValues.length}/10`);
 

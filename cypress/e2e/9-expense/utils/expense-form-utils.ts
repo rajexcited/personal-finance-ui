@@ -74,7 +74,11 @@ export const selectExpenseDate = (options: { newExpenseDate: string; existingExp
       cy.get(".datepicker-dates")
         .should("be.visible")
         .within(() => {
-          cy.get(".datepicker-date").should("have.length.at.least", 31).filter(`:contains("${preferredExpenseDate.getDate()}")`).last().click();
+          cy.get(".datepicker-date")
+            .should("have.length.at.least", 31)
+            .filter((_, el) => el.textContent?.trim() === `${preferredExpenseDate.getDate()}`)
+            .last()
+            .click();
         });
     });
 };
@@ -87,7 +91,7 @@ export const validateExpenseDateInForm = (expenseDateFromData: string | Date) =>
       cy.get(".datetimepicker-header")
         .should("be.visible")
         .within(() => {
-          cy.get(".datetimepicker-selection-day").should("have.text", expenseDate.getDate());
+          cy.get(".datetimepicker-selection-day").should("have.text", String(expenseDate.getDate()).padStart(2, "0"));
           cy.get(".datetimepicker-selection-month").should("have.text", formatTimestamp(expenseDate, fullMonthFullYearFormat));
         });
     });

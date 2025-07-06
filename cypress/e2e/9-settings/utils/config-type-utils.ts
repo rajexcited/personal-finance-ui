@@ -63,6 +63,9 @@ export const getPurchaseTypesFromApi = (options: { typeNames: string[] }) => {
 export const getIncomeTypesFromApi = (options: { typeNames: string[] }) => {
   return getConfigTypesFromApi(ConfigBelongsTo.IncomeType, options.typeNames);
 };
+export const getRefundReasonsFromApi = (options: { typeNames: string[] }) => {
+  return getConfigTypesFromApi(ConfigBelongsTo.RefundReason, options.typeNames);
+};
 
 const createOrUpdateConfigType = (belongsTo: ConfigBelongsTo, configTypeOptions: { ref: string; status: ConfigStatus }) => {
   getConfigType(belongsTo, configTypeOptions.ref).then((configTypeData) => {
@@ -101,4 +104,7 @@ export const createOrUpdatePurchaseType = (purchaseTypeOptions: { ref: string; s
 };
 export const createOrUpdateIncomeType = (incomeTypeOptions: { ref: string; status: ConfigStatus }) => {
   createOrUpdateConfigType(ConfigBelongsTo.IncomeType, incomeTypeOptions);
+};
+export const createOrUpdateRefundReason = (refundReasonOptions: { ref: string; status: ConfigStatus }) => {
+  createOrUpdateConfigType(ConfigBelongsTo.RefundReason, refundReasonOptions);
 };

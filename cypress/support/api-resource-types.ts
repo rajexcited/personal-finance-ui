@@ -63,9 +63,9 @@ export enum ExpenseStatus {
 
 export enum ExpenseBelongsTo {
   Purchase = "purchase",
-  Income = "income"
+  Income = "income",
   // Investment = "investment",
-  // Refund = "refund"
+  Refund = "refund"
 }
 
 export enum ReceiptContentType {

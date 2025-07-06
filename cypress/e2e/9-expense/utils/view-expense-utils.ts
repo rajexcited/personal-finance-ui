@@ -2,12 +2,13 @@ import { ExpenseBelongsTo } from "../../../support/api-resource-types";
 import { dateFormatLabel, dateTimestampFormatApi, expenseDateFormatFixture, formatTimestamp, parseTimestamp } from "../../../support/date-utils";
 import { ExpenseIncomeDetailType, getExpenseIncome } from "../../../support/fixture-utils/read-expense-income";
 import { ExpensePurchaseDetailType, getExpensePurchase } from "../../../support/fixture-utils/read-expense-purchase";
+import { ExpenseRefundDetailType, getExpenseRefund } from "../../../support/fixture-utils/read-expense-refund";
 import { UnSupportedError } from "../../../support/resource-types";
 
 const SEC_60_IN_MILLIS = 60 * 1000;
 const SEC_30_IN_MILLIS = 30 * 1000;
 
-export type UnionExpenseDetailType = ExpensePurchaseDetailType | ExpenseIncomeDetailType;
+export type UnionExpenseDetailType = ExpensePurchaseDetailType | ExpenseIncomeDetailType | ExpenseRefundDetailType;
 
 export const getExpense = (belongsTo: ExpenseBelongsTo, ref: string): Cypress.Chainable<any> => {
   if (belongsTo === ExpenseBelongsTo.Purchase) {
@@ -15,6 +16,9 @@ export const getExpense = (belongsTo: ExpenseBelongsTo, ref: string): Cypress.Ch
   }
   if (belongsTo === ExpenseBelongsTo.Income) {
     return getExpenseIncome(ref) as Cypress.Chainable<ExpenseIncomeDetailType>;
+  }
+  if (belongsTo === ExpenseBelongsTo.Refund) {
+    return getExpenseRefund(ref) as Cypress.Chainable<ExpenseRefundDetailType>;
   }
   throw new UnSupportedError(belongsTo + " not configured in fixture");
 };
@@ -25,6 +29,8 @@ export const getExpenseDateFormatLabel = (expenseData: UnionExpenseDetailType) =
     expenseDateFromData = expenseData.purchaseDate;
   } else if (expenseData.belongsTo === ExpenseBelongsTo.Income) {
     expenseDateFromData = expenseData.incomeDate;
+  } else if (expenseData.belongsTo === ExpenseBelongsTo.Refund) {
+    expenseDateFromData = expenseData.refundDate;
   }
 
   if (expenseDateFromData) {
@@ -53,12 +59,17 @@ const getVerifiedTimestampLabel = (expenseData: UnionExpenseDetailType) => {
 };
 
 const getExpenseCategoryName = (expenseData: UnionExpenseDetailType) => {
-  if (expenseData.belongsTo === ExpenseBelongsTo.Purchase) {
+  const belongsTo = expenseData.belongsTo;
+  if (belongsTo === ExpenseBelongsTo.Purchase) {
     return expenseData.purchaseTypeName;
   }
-  if (expenseData.belongsTo === ExpenseBelongsTo.Income) {
+  if (belongsTo === ExpenseBelongsTo.Income) {
     return expenseData.incomeTypeName;
   }
+  if (belongsTo === ExpenseBelongsTo.Refund) {
+    return expenseData.reasonName;
+  }
+  throw new UnSupportedError(`cannot get category name for ${belongsTo}`);
 };
 
 export const getBelongsToLabel = (belongsTo: ExpenseBelongsTo) => {
@@ -67,6 +78,9 @@ export const getBelongsToLabel = (belongsTo: ExpenseBelongsTo) => {
   }
   if (belongsTo === ExpenseBelongsTo.Income) {
     return "Income";
+  }
+  if (belongsTo === ExpenseBelongsTo.Refund) {
+    return "Refund";
   }
   throw new UnSupportedError(belongsTo + " is not matched");
 };
