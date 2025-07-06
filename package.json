@@ -22,15 +22,15 @@
     "@types/mochawesome": "^6.2.4",
     "@types/node": "^22.15.21",
     "cross-env": "^7.0.3",
+    "cypress": "^14.5.1",
+    "dotenv": "^17.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {
     "@cypress/grep": "^4.1.0",
-    "cypress": "^14.4.0",
     "cypress-mochawesome-reporter": "^3.8.2",
     "date-and-time": "^3.6.0",
-    "dotenv": "^16.5.0",
     "dotenv-flow": "^4.1.0",
     "idb": "^8.0.3",
     "mochawesome": "^7.1.3",
