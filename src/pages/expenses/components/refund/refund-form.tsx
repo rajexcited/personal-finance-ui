@@ -13,7 +13,8 @@ import {
     TagsInputSharePerson,
     CurrencySymbol,
     ViewDialog,
-    Animated
+    Animated,
+    ScrollReset
 } from "../../../../components";
 import { ExpenseBelongsTo, expenseService, ExpenseStatus, formatTimestamp, getLogger, PurchaseFields, PurchaseRefundFields, receiptService } from "../../services";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../components/receipt";
@@ -131,28 +132,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                 purchaseItemId: null,
                 taggingPersons: props.purchaseDetails.personIds.map(pid => spObj[pid]).filter(sp => sp)
             });
-            logger.debug("refund amount =", props.refundDetails?.amount, ", and amount =", amount, " purchase amount =", props.purchaseDetails.amount);
-            setAmount(prev => {
-                if (props.refundDetails?.amount) {
-                    return props.refundDetails.amount;
-                } else if (props.purchaseDetails?.amount && amount === "" && props.refundDetails?.amount === undefined) {
-                    logger.debug("setting refund amount same as purchase amount");
-                    return props.purchaseDetails.amount;
-                }
-                return prev;
-            });
-            logger.debug("refund billname =", props.refundDetails?.billName, ", and billname =", billName, " purchase billname =", props.purchaseDetails.billName);
-            setBillName(prev => {
-                if (props.refundDetails?.billName) {
-                    logger.debug("setting refund billname as Refund for ", props.refundDetails.billName);
-                    return props.refundDetails.billName;
-                } else if (props.purchaseDetails && billName === "") {
-                    logger.debug("setting refund billname as Refund for ", props.purchaseDetails.billName);
-                    return "Refund for " + props.purchaseDetails.billName;
-                }
-                logger.debug("not changing refund billname ", prev);
-                return prev;
-            });
+
             logger.debug("refund pymtAccId =", props.refundDetails?.paymentAccountId, " purchase pymtAccId =", props.purchaseDetails.paymentAccountId, "will configure selected pymtAcc if possible.");
             purchasePymtAccId = props.purchaseDetails.paymentAccountId;
 
@@ -161,6 +141,30 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                 loadMorePurchaseList();
             }, debouncedTimeout);
         }
+
+        logger.debug("refund amount =", props.refundDetails?.amount, ", and amount =", amount, " purchase amount =", props.purchaseDetails?.amount);
+        setAmount(prev => {
+            if (!isNaN(Number(props.refundDetails?.amount)) && props.refundDetails?.amount) {
+                return props.refundDetails.amount;
+            }
+            if (!isNaN(Number(props.purchaseDetails?.amount)) && props.purchaseDetails?.amount && amount === "") {
+                logger.debug("setting refund amount same as purchase amount");
+                return props.purchaseDetails.amount;
+            }
+            return prev;
+        });
+        logger.debug("refund billname =", props.refundDetails?.billName, ", and billname =", billName, " purchase billname =", props.purchaseDetails?.billName);
+        setBillName(prev => {
+            if (props.refundDetails?.billName) {
+                // logger.debug("setting refund billname as Refund for ", props.refundDetails.billName);
+                return props.refundDetails.billName;
+            } else if (props.purchaseDetails?.billName && billName === "") {
+                // logger.debug("setting refund billname as Refund for ", props.purchaseDetails.billName);
+                return "Refund for " + props.purchaseDetails.billName;
+            }
+            // logger.debug("not changing refund billname ", prev);
+            return prev;
+        });
 
         setRefundDate(prev => {
             const dateInstance = getDateInstance(props.refundDetails?.refundDate);
@@ -410,18 +414,20 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             <form onSubmit={ onSubmitHandler }>
                 <div className="columns">
                     <div className="column is-narrow">
-                        <DropDown
-                            id="purchase-dd"
-                            label="Purchase: "
-                            items={ dropdownPurchaseDetailList }
-                            key="purchase-dd"
-                            onSelect={ onSelectPurchaseHandler }
-                            direction="down"
-                            selectedItem={ selectedDropdownPurchaseDetail }
-                            defaultItem={ selectedDropdownPurchaseDetail }
-                            loadMore={ loadMorePurchaseList }
-                            allowSearch={ true }
-                        />
+                        <ScrollReset once={ true } key={ selectedDropdownPurchaseDetail?.id }>
+                            <DropDown
+                                id="purchase-dd"
+                                label="Purchase: "
+                                items={ dropdownPurchaseDetailList }
+                                key="purchase-dd"
+                                onSelect={ onSelectPurchaseHandler }
+                                direction="down"
+                                selectedItem={ selectedDropdownPurchaseDetail }
+                                defaultItem={ selectedDropdownPurchaseDetail }
+                                loadMore={ loadMorePurchaseList }
+                                allowSearch={ true }
+                            />
+                        </ScrollReset>
                     </div>
                     <div className="column">
                         <div className="block"></div>
@@ -435,16 +441,27 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                             isLinkPlayIn={ !!selectedPurchaseReference }
                         >
                             <div className="block">
-                                <label>BillName: </label> <span>{ selectedPurchaseReference?.billName }</span>
+                                <label>BillName: </label> <span { ...testAttributes("outvalue") }>{ selectedPurchaseReference?.billName }</span>
                             </div>
                             <div className="block">
-                                <label>Amount: </label> <span>{ selectedPurchaseReference?.amount }</span>
+                                <label>Amount: </label> <span { ...testAttributes("outvalue") }>{ selectedPurchaseReference?.amount }</span>
                             </div>
                             <div className="block">
-                                <label>Payment Account: </label> <span>{ selectedPurchaseReference?.paymentAccountName }</span>
+                                <label>Payment Account: </label> <span { ...testAttributes("outvalue") }>{ selectedPurchaseReference?.paymentAccountName }</span>
                             </div>
                             <div className="block">
-                                <label>Tag Persons: </label> <ul>{ selectedPurchaseReference?.taggingPersons.map(sp => (<li>{ sp }</li>)) }</ul>
+                                <label>Tag Persons: </label>
+                                {
+                                    !!selectedPurchaseReference?.taggingPersons.length &&
+                                    <ul { ...testAttributes("outvalue") }>
+                                        { selectedPurchaseReference.taggingPersons.map(sp => (<li>{ sp }</li>)) }
+                                    </ul>
+                                }
+                                {
+                                    !selectedPurchaseReference?.taggingPersons.length &&
+                                    <span { ...testAttributes("outvalue") }>-</span>
+
+                                }
                             </div>
                         </ViewDialog>
                     </div>
@@ -489,7 +506,8 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                         minlength={ 2 }
                                     />
                                 }
-                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference }
+                                    animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
                                     <pre { ...testAttributes("selected-purchase-billname-info") }>
                                         <span className="icon-text">
                                             <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
@@ -582,7 +600,8 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                         </div>
                         <div className="columns">
                             <div className="column">
-                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference }
+                                    animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
                                     <pre { ...testAttributes("selected-purchase-payment-account-info") }>
                                         <span className="icon-text">
                                             <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
@@ -608,7 +627,8 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                         </div>
                         <div className="columns">
                             <div className="column">
-                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference }
+                                    animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
                                     <pre { ...testAttributes("selected-purchase-share-person-info") }>
                                         <span className="icon-text">
                                             <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
@@ -643,7 +663,8 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                     sourceValues={ props.sourceTags }
                                     maxTags={ 10 }
                                 />
-                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference }
+                                    animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
                                     <pre { ...testAttributes("selected-purchase-tags-info") }>
                                         <span className="icon-text">
                                             <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>

@@ -69,7 +69,9 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
 
       const rangeStartDate = datetime.addMonths(new Date(), queryPageMonths * -1 * pageNo);
       const rangeEndDate = datetime.addMonths(new Date(), queryPageMonths * -1 * (pageNo - 1));
-      const filteredExpenses = dbExpenses.filter((xpns) => isExpenseWithinRange(xpns, rangeStartDate, rangeEndDate, logger));
+      const filteredExpenses = dbExpenses
+        .filter((xpns) => isExpenseWithinRange(xpns, rangeStartDate, rangeEndDate, logger))
+        .filter((xpns) => !belongsTo || belongsTo === xpns.belongsTo);
       expenseCount = await expenseCountPromise;
       logger.debug(filteredExpenses.length, "db expenses =", [...filteredExpenses], "and expense count from api is", expenseCount);
       if (filteredExpenses.length === expenseCount) {

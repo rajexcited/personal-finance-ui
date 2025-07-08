@@ -153,7 +153,7 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
 
 
     return (
-        <div className="field" { ...testAttributes("dropdown-field") }>
+        <div className="field" { ...testAttributes("dropdown-field", "dropdown-id", props.id) }>
             <label htmlFor={ props.id } className="label">{ props.label }</label>
             <div className="control">
                 <div className={ `dropdown is-${props.direction === "down" ? "down" : "up"} ${isOpen ? "is-active" : ""}` } id={ props.id }>

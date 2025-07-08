@@ -3,6 +3,7 @@ import { Input } from "../input";
 import './dropdown-item.css';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInfoCircle, faSpinner, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { testAttributes } from "../../shared";
 
 
 interface WaitDropDownItemPropBase {
@@ -61,10 +62,9 @@ const DropDownItem: FunctionComponent<DropDownItemProps> = (props) => {
 
     return (
         <>
-            <div
-                className={ `dropdown-item ${isActive ? "is-active" : ""}` }
+            <div className={ `dropdown-item ${isActive ? "is-active" : ""}` }
                 onClick={ (e) => selectItemHandler(e, props.id) }
-            >
+                { ...testAttributes(`dropdown-item-${props.type}`) } >
 
                 { props.type === "text" &&
                     <div className="unselectable">

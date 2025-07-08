@@ -47,25 +47,27 @@ export const ViewDialog: FunctionComponent<ViewDialogProps> = (props) => {
 
 
     return (
-        <section className="view-dialog" { ...testAttributes("view-dialog") }>
+        <section className="view-dialog" { ...testAttributes("view-dialog", "dialog-id", props.id) }>
             {
                 props.animateLink &&
                 <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ props.isLinkPlayIn } animateOnMount={ true }  >
                     <button className="button is-text view-dialog-button" onClick={ onClickOpenHandler }
-                        { ...testAttributes("open-dialog", "dialog-id", props.id) }> { props.linkText } </button>
+                        { ...testAttributes("open-dialog-action") }> { props.linkText } </button>
                 </Animated>
             }
             {
                 !props.animateLink &&
                 <button className="button is-text view-dialog-button" onClick={ onClickOpenHandler }
-                    { ...testAttributes("open-dialog", "dialog-id", props.id) }> { props.linkText } </button>
+                    { ...testAttributes("open-dialog-action") }> { props.linkText } </button>
             }
             <div className={ `modal view-dialog-model ${isOpen ? "is-active" : ""}` }>
                 <div className="modal-background"></div>
                 <div className="modal-card">
                     <header className="modal-card-head is-small">
                         <p className="modal-card-title">{ props.title || <>&nbsp;</> }</p>
-                        <button className="delete" aria-label="close" onClick={ onClickCloseHandler }></button>
+                        <button className="delete" aria-label="close" onClick={ onClickCloseHandler }
+                            { ...testAttributes("close-dialog-action") }
+                        ></button>
                     </header>
                     <section className="modal-card-body">
                         {

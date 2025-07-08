@@ -19,6 +19,7 @@ export interface ExpenseFilter {
   status?: ExpenseStatus[];
   pageNo?: number;
   pageMonths?: number;
+  belongsTo?: ExpenseBelongsTo;
 }
 
 const getDateInstance = (date: string | Date) => {
@@ -57,6 +58,7 @@ export const getExpenses = async (filters: ExpenseFilter) => {
   const pageNo = filters.pageNo || 1;
   const rangeStartDate = datetime.addMonths(new Date(), pageMonths * -1 * pageNo);
   const rangeEndDate = datetime.addMonths(new Date(), pageMonths * -1 * (pageNo - 1));
+
   logger.debug(
     "filter params with given or default values",
     "pageMonths =",
@@ -66,13 +68,22 @@ export const getExpenses = async (filters: ExpenseFilter) => {
     ", rangeStartDate =",
     rangeStartDate,
     ", rangeEndDate =",
-    rangeEndDate
+    rangeEndDate,
+    "belongsTo =",
+    filters.belongsTo
   );
 
-  const filteredExpenses = expenses.filter((xpns) => {
-    const expenseDate = getExpenseDate(xpns, logger);
-    return expenseDate >= rangeStartDate && expenseDate <= rangeEndDate;
-  });
+  const filteredExpenses = expenses
+    .filter((xpns) => {
+      const expenseDate = getExpenseDate(xpns, logger);
+      return expenseDate >= rangeStartDate && expenseDate <= rangeEndDate;
+    })
+    .filter((xpns) => {
+      if (filters.belongsTo && filters.belongsTo !== xpns.belongsTo) {
+        return false;
+      }
+      return true;
+    });
 
   logger.debug(
     "expense Ids =",
