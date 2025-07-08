@@ -175,3 +175,11 @@ export const selectUploadReceipts = (receipts: Array<ReceiptDetailType>, belongs
     });
   validateUploadReceiptSection(receipts, belongsToLabel);
 };
+
+export const navigateToEditExpense = ($actionContainer: JQuery<HTMLElement>, belongsTo: ExpenseBelongsTo) => {
+  cy.wrap($actionContainer).find('[data-test="expense-update-action"]').should("be.visible").click();
+  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
+  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
+  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.url().should("include", `/${belongsTo}/`).should("include", "/update");
+};

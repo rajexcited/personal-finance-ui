@@ -1,4 +1,3 @@
-import { IndexedDbName } from "../../plugins/indexedDb/resource";
 import { formatTimestamp } from "../../support/date-utils";
 import { getExpensePurchase, updateExpensePurchase } from "../../support/fixture-utils/read-expense-purchase";
 import { NavBarSelectors } from "../../support/resource-types";
@@ -12,9 +11,15 @@ import {
   validateUploadReceiptSection
 } from "../9-expense/utils/expense-form-utils";
 import { ExpenseBelongsTo } from "../../support/api-resource-types";
-import { getBelongsToLabel, validateExpenseCardOnSmall, validateExpenseTableRowOnLarge } from "../9-expense/utils/view-expense-utils";
+import {
+  getBelongsToLabel,
+  ValidateExpenseCallbackFn,
+  validateExpenseCardOnSmall,
+  validateExpenseTableRowOnLarge
+} from "../9-expense/utils/view-expense-utils";
+import { IndexedDbName } from "../../plugins/indexedDb/resource";
 
-function runAddPurchaseTest(purchaseRef: string) {
+function runAddPurchaseTest(purchaseRef: string, validateExpense: ValidateExpenseCallbackFn) {
   cy.loginThroughUI("user1-success");
 
   getExpensePurchase(purchaseRef).then((purchaseData) => {
@@ -67,6 +72,8 @@ function runAddPurchaseTest(purchaseRef: string) {
   cy.get('[data-test="add-purchase-error-message"]').should("not.exist");
   cy.get('[data-test="add-purchase-not-allowed"]').should("not.exist");
   cy.get('section[data-test="expense-list-view"]').should("be.visible");
+
+  validateExpense(ExpenseBelongsTo.Purchase, purchaseRef);
 }
 
 describe("Expense - Add Purchase Flow", () => {
@@ -85,14 +92,12 @@ describe("Expense - Add Purchase Flow", () => {
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");
-        runAddPurchaseTest("local-grocery1");
-        validateExpenseCardOnSmall(ExpenseBelongsTo.Purchase, "local-grocery1");
+        runAddPurchaseTest("local-grocery1", validateExpenseCardOnSmall);
       });
 
       it("via large desktop view", { tags: ["desktop"] }, () => {
         cy.setViewport("desktop");
-        runAddPurchaseTest("local-grocery2");
-        validateExpenseTableRowOnLarge(ExpenseBelongsTo.Purchase, "local-grocery2");
+        runAddPurchaseTest("local-grocery2", validateExpenseTableRowOnLarge);
       });
     }
   );

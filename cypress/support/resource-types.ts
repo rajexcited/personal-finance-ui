@@ -23,3 +23,8 @@ export class UnSupportedError extends Error {
     super(message);
   }
 }
+
+export interface UpdateRefOptions {
+  existingRef: string;
+  updatingRef: string;
+}

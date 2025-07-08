@@ -4,17 +4,19 @@ import {
   ApiResourceIncomeDetails,
   ApiResourcePurchaseDetails,
   ApiResourceReceipt,
+  ApiResourceRefundDetails,
   ExpenseBelongsTo,
   ExpenseStatus
 } from "../../../support/api-resource-types";
 import { dateTimestampFormatApi, expenseDateFormatFixture, formatTimestamp, parseTimestamp } from "../../../support/date-utils";
-import { getIncomeType, getPurchaseType } from "../../../support/fixture-utils/read-config-type";
+import { getIncomeType, getPurchaseType, getRefundReason } from "../../../support/fixture-utils/read-config-type";
 import { ExpensePurchaseDetailType, getExpensePurchase } from "../../../support/fixture-utils/read-expense-purchase";
 import { getPaymentAccount, PaymentAccountDetailType } from "../../../support/fixture-utils/read-payment-account";
 import { createOrUpdatePaymentAccount } from "../../9-payment-accounts/utils/payment-account-api-utils";
-import { createOrUpdateIncomeType, createOrUpdatePurchaseType } from "../../9-settings/utils/config-type-utils";
+import { createOrUpdateIncomeType, createOrUpdatePurchaseType, createOrUpdateRefundReason } from "../../9-settings/utils/config-type-utils";
 import { v4 as uuidv4, validate } from "uuid";
 import { ExpenseIncomeDetailType, getExpenseIncome } from "../../../support/fixture-utils/read-expense-income";
+import { ExpenseRefundDetailType, getExpenseRefund, updateExpenseRefund } from "../../../support/fixture-utils/read-expense-refund";
 
 interface DbReceiptFileResource {
   filedata: ArrayBuffer;
@@ -28,14 +30,16 @@ interface DbReceiptFileResource {
 const expenseStoreName = "expense-items-store";
 const receiptStoreName = "receipt-items-store";
 
-type UnionApiResourceExpenseDetails = ApiResourcePurchaseDetails | ApiResourceIncomeDetails;
+type UnionApiResourceExpenseDetails = ApiResourcePurchaseDetails | ApiResourceIncomeDetails | ApiResourceRefundDetails;
 type ApiResourceExpenseDetailsMap = {
   [ExpenseBelongsTo.Purchase]: ApiResourcePurchaseDetails;
   [ExpenseBelongsTo.Income]: ApiResourceIncomeDetails;
+  [ExpenseBelongsTo.Refund]: ApiResourceRefundDetails;
 };
 type ExpenseDetailTypeMap = {
   [ExpenseBelongsTo.Purchase]: ExpensePurchaseDetailType;
   [ExpenseBelongsTo.Income]: ExpenseIncomeDetailType;
+  [ExpenseBelongsTo.Refund]: ExpenseRefundDetailType;
 };
 
 const dispatchApiExpenseReceiptAdd = (dbItem: DbReceiptFileResource) => {
@@ -115,11 +119,12 @@ const dispatchApiExpenseGetById = <T extends keyof ApiResourceExpenseDetailsMap>
   return cy.wrap(null);
 };
 
-const dispatchApiExpenseAddUpdate = (apiExpenseData: UnionApiResourceExpenseDetails) => {
+const dispatchApiExpenseAddUpdate = (apiExpenseData: UnionApiResourceExpenseDetails, expenseRef: string) => {
   const apiBaseUrl = Cypress.env("API_BASE_URL");
   if (!apiBaseUrl) {
     cy.indexedDb(IndexedDbName.MockExpense).updateItems([apiExpenseData], { storeName: expenseStoreName });
     cy.indexedDb(IndexedDbName.Expense).clearStore({ storeName: expenseStoreName });
+    cy.wrap(apiExpenseData).as(`createdExpense/${apiExpenseData.belongsTo}/${expenseRef}`);
   }
 };
 
@@ -130,13 +135,9 @@ interface ExpenseAddUpdatePrepareType<T extends keyof ApiResourceExpenseDetailsM
   currencyProfileData: ApiCurrencyProfileResource;
 }
 const prepareExpenseData = <T extends keyof ExpenseDetailTypeMap>(belongsTo: T, expenseData: ExpenseDetailTypeMap[T]) => {
-  // console.log("purchase data", purchaseData, "and status", status);
   dispatchApiExpenseGetById(belongsTo, expenseData.id).then((expenseApiData) => {
-    // console.log("retrieved purchase data from api", purchaseApiData);
     prepareExpenseReceipts({ apiExpenseData: expenseApiData, testExpenseData: expenseData }).then((expenseReceipts) => {
-      // console.log("prepared purchase receipt data", purchaseReceipts);
       getPaymentAccount(expenseData.paymentAccountRef).then((paymentAccountData) => {
-        // console.log("retrieved purchase data", paymentAccountData);
         cy.getCurrencyProfile().then((currencyProfileData) => {
           const result: ExpenseAddUpdatePrepareType<T> = {
             expenseApiData,
@@ -156,19 +157,9 @@ const prepareExpenseData = <T extends keyof ExpenseDetailTypeMap>(belongsTo: T, 
 
 const createOrUpdateExpensePurchaseViaApi = (purchaseData: ExpensePurchaseDetailType, status: ExpenseStatus) => {
   prepareExpenseData(ExpenseBelongsTo.Purchase, purchaseData).then((purchaseAddUpdateData) => {
-    // // console.log("purchase data", purchaseData, "and status", status);
-    // dispatchApiExpenseGetById(ExpenseBelongsTo.Purchase, purchaseData.id).then((purchaseApiData) => {
-    //   // console.log("retrieved purchase data from api", purchaseApiData);
-    //   prepareExpenseReceipts({ apiExpenseData: purchaseApiData, testExpenseData: purchaseData }).then((purchaseReceipts) => {
-    //     // console.log("prepared purchase receipt data", purchaseReceipts);
-    //     getPaymentAccount(purchaseData.paymentAccountRef).then((paymentAccountData) => {
-    // console.log("retrieved purchase data", paymentAccountData);
     getPurchaseType(purchaseData.purchaseTypeRef).then((purchaseTypeData) => {
-      // console.log("retrieved purchase type", purchaseTypeData);
-      // cy.getCurrencyProfile().then((currencyProfileData) => {
-      //   // console.log("retrieved currency profile", currencyProfileData);
-      // console.log("gathered all details. preparing api resource");
-      const purchaseId = purchaseAddUpdateData.expenseReceipts[0]?.relationId || purchaseAddUpdateData.expenseApiData?.id || purchaseData.id;
+      const purchaseId =
+        purchaseAddUpdateData.expenseReceipts[0]?.relationId || purchaseAddUpdateData.expenseApiData?.id || purchaseData.id || uuidv4();
       let verifiedTimestamp: string | undefined = undefined;
       if (purchaseData.verifiedTimestamp) {
         verifiedTimestamp = formatTimestamp(parseTimestamp(purchaseData.verifiedTimestamp), dateTimestampFormatApi);
@@ -194,18 +185,14 @@ const createOrUpdateExpensePurchaseViaApi = (purchaseData: ExpensePurchaseDetail
           updatedOn: purchaseAddUpdateData.expenseApiData?.auditDetails.updatedOn || formatTimestamp(new Date(), dateTimestampFormatApi)
         }
       };
-      dispatchApiExpenseAddUpdate(apiPurchaseData);
+      dispatchApiExpenseAddUpdate(apiPurchaseData, purchaseData.ref);
     });
   });
-  //   });
-  // });
-  // });
 };
 
 const createOrUpdateExpenseIncomeViaApi = (incomeData: ExpenseIncomeDetailType, status: ExpenseStatus) => {
   prepareExpenseData(ExpenseBelongsTo.Income, incomeData).then((incomeAddUpdateData) => {
     getIncomeType(incomeData.incomeTypeRef).then((incomeTypeData) => {
-      // console.log("gathered all details. preparing api resource");
       const incomeId = incomeAddUpdateData.expenseReceipts[0]?.relationId || incomeAddUpdateData.expenseApiData?.id || incomeData.id;
 
       const apiIncomeData: ApiResourceIncomeDetails = {
@@ -227,7 +214,50 @@ const createOrUpdateExpenseIncomeViaApi = (incomeData: ExpenseIncomeDetailType, 
           updatedOn: incomeAddUpdateData.expenseApiData?.auditDetails.updatedOn || formatTimestamp(new Date(), dateTimestampFormatApi)
         }
       };
-      dispatchApiExpenseAddUpdate(apiIncomeData);
+      dispatchApiExpenseAddUpdate(apiIncomeData, incomeData.ref);
+    });
+  });
+};
+
+const createOrUpdateExpenseRefundViaApi = (refundData: ExpenseRefundDetailType, status: ExpenseStatus) => {
+  prepareExpenseData(ExpenseBelongsTo.Refund, refundData).then((refundAddUpdateData) => {
+    getRefundReason(refundData.reasonRef).then((reasonData) => {
+      if (refundData.purchaseRef && !refundData.purchaseId) {
+        createOrUpdateExpensePurchase(refundData.purchaseRef, status);
+      } else {
+        cy.wrap({ id: refundData.purchaseId }).as(`createdExpense/${ExpenseBelongsTo.Purchase}/${refundData.purchaseRef}`);
+      }
+
+      cy.get(`@createdExpense/${ExpenseBelongsTo.Purchase}/${refundData.purchaseRef}`).then((data: any) => {
+        const createdPurchaseData = data as ExpensePurchaseDetailType;
+        const refundId = refundAddUpdateData.expenseReceipts[0]?.relationId || refundAddUpdateData.expenseApiData?.id || refundData.id;
+        const purchaseId = refundData.purchaseRef ? refundData.purchaseId || createdPurchaseData.id : undefined;
+
+        const apiRefundData: ApiResourceRefundDetails = {
+          id: refundId,
+          belongsTo: ExpenseBelongsTo.Refund,
+          billName: refundData.billName,
+          amount: refundData.amount,
+          refundDate: formatTimestamp(parseTimestamp(refundData.refundDate, expenseDateFormatFixture), dateTimestampFormatApi),
+          description: refundData.description,
+          profileId: refundAddUpdateData.currencyProfileData.id,
+          reasonId: reasonData?.id!,
+          status: status,
+          personIds: [],
+          receipts: refundAddUpdateData.expenseReceipts,
+          tags: refundData.tags,
+          paymentAccountId: refundAddUpdateData.paymentAccountData.id,
+          purchaseId: purchaseId,
+          auditDetails: {
+            createdOn: refundAddUpdateData.expenseApiData?.auditDetails.createdOn || formatTimestamp(new Date(), dateTimestampFormatApi),
+            updatedOn: refundAddUpdateData.expenseApiData?.auditDetails.updatedOn || formatTimestamp(new Date(), dateTimestampFormatApi)
+          }
+        };
+        dispatchApiExpenseAddUpdate(apiRefundData, refundData.ref);
+        if (purchaseId) {
+          updateExpenseRefund({ ...refundData, purchaseId: purchaseId });
+        }
+      });
     });
   });
 };
@@ -247,5 +277,17 @@ export const createOrUpdateExpenseIncome = (incomeRef: string, status: ExpenseSt
     createOrUpdatePaymentAccount([{ ref: incomeData.paymentAccountRef, status: "enable" }]);
     createOrUpdateIncomeType({ ref: incomeData.incomeTypeRef, status: "enable" });
     createOrUpdateExpenseIncomeViaApi(incomeData, status);
+  });
+};
+
+export const createOrUpdateExpenseRefund = (refundRef: string, status: ExpenseStatus) => {
+  getExpenseRefund(refundRef).then((refundData) => {
+    console.log("refund Data=", refundData);
+    createOrUpdatePaymentAccount([{ ref: refundData.paymentAccountRef, status: "enable" }]);
+    createOrUpdateRefundReason({ ref: refundData.reasonRef, status: "enable" });
+    if (refundData.purchaseRef) {
+      createOrUpdateExpensePurchase(refundData.purchaseRef, ExpenseStatus.ENABLE);
+    }
+    createOrUpdateExpenseRefundViaApi(refundData, status);
   });
 };

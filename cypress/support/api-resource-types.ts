@@ -119,3 +119,10 @@ export interface ApiResourceIncomeDetails extends ApiResourceExpense {
   incomeTypeId: string;
   incomeDate: string;
 }
+
+export interface ApiResourceRefundDetails extends ApiResourceExpense {
+  belongsTo: ExpenseBelongsTo.Refund;
+  reasonId: string;
+  refundDate: string;
+  purchaseId?: string;
+}

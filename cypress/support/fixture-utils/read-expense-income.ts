@@ -85,7 +85,8 @@ export const getExpenseIncomeList = (expenseIncomeRefs: string[]) => {
   });
   return cy.get(`@${aliasName}`).then((data: any) => {
     const expenseIncomeMap: Record<string, ExpenseIncomeDetailType> = data;
-    const results = expenseIncomeRefs.map((ref) => findExpenseIncome(expenseIncomeMap, ref));
+    const nonNullRefs = expenseIncomeRefs.filter((r) => r !== null && r !== undefined).filter((r) => !!r);
+    const results = nonNullRefs.map((ref) => findExpenseIncome(expenseIncomeMap, ref));
     return results;
   });
 };

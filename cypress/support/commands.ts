@@ -208,8 +208,11 @@ Cypress.Commands.add("selectTags", (options: SelectTagsOptions) => {
         .should("be.visible")
         .should("have.text", `counter: ${options.existingTagValues.length}/10`);
 
+      const removeTagValues = [
+        ...new Set(options.removeTagValues.concat(options.existingTagValues.filter((tv) => !options.addTagValues.includes(tv))))
+      ];
       cy.get(".tags-input").within(() => {
-        for (let tagValue of options.removeTagValues) {
+        for (let tagValue of removeTagValues) {
           cy.get('[data-value="' + tagValue + '"]')
             .should("be.visible")
             .find('.delete[data-tag="delete"]')
@@ -219,7 +222,7 @@ Cypress.Commands.add("selectTags", (options: SelectTagsOptions) => {
         }
       });
 
-      const existingTagValuesAfterRemoved = options.existingTagValues.filter((tv) => !options.removeTagValues.includes(tv));
+      const existingTagValuesAfterRemoved = options.existingTagValues.filter((tv) => !removeTagValues.includes(tv));
       const addTagValues = options.addTagValues.filter((tv) => !existingTagValuesAfterRemoved.includes(tv));
 
       for (let tagValue of addTagValues) {

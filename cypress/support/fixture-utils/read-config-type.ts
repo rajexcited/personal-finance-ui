@@ -93,7 +93,8 @@ export const getConfigTypeList = (belogsTo: ConfigBelongsTo, configTypeRefs: str
   });
   return cy.get(`@${aliasName}`).then((data: any) => {
     const configTypeMap: Record<string, ConfigDetailType> = data;
-    const results = configTypeRefs.map((ref) => findConfigType(configTypeMap, ref)).filter((cdt) => cdt !== null);
+    const nonNullRefs = configTypeRefs.filter((r) => r !== null && r !== undefined).filter((r) => !!r);
+    const results = nonNullRefs.map((ref) => findConfigType(configTypeMap, ref)).filter((cdt) => cdt !== null);
     return results;
   });
 };
@@ -119,4 +120,8 @@ export const getPurchaseType = (purchaseTypeRef: string) => {
 
 export const getIncomeType = (incomeTypeRef: string) => {
   return getConfigType(ConfigBelongsTo.IncomeType, incomeTypeRef);
+};
+
+export const getRefundReason = (reasonRef: string) => {
+  return getConfigType(ConfigBelongsTo.RefundReason, reasonRef);
 };

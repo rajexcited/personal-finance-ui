@@ -1,41 +1,40 @@
-import { IndexedDbName } from "../../plugins/indexedDb/resource";
 import { getExpenseIncome, getExpenseIncomeList } from "../../support/fixture-utils/read-expense-income";
-import { NavBarSelectors } from "../../support/resource-types";
+import { NavBarSelectors, UpdateRefOptions } from "../../support/resource-types";
 import { ExpenseBelongsTo, ExpenseStatus } from "../../support/api-resource-types";
 import { createOrUpdateExpenseIncome } from "../9-expense/utils/expense-api-utils";
-import { selectExpenseDate, validateExpenseDateInForm, validateUploadReceiptSection } from "../9-expense/utils/expense-form-utils";
-import { getBelongsToLabel, validateExpenseCardOnSmall, validateExpenseTableRowOnLarge } from "../9-expense/utils/view-expense-utils";
+import {
+  navigateToEditExpense,
+  selectExpenseDate,
+  validateExpenseDateInForm,
+  validateUploadReceiptSection
+} from "../9-expense/utils/expense-form-utils";
+import {
+  getBelongsToLabel,
+  ValidateExpenseCallbackFn,
+  validateExpenseCardOnSmall,
+  validateExpenseTableRowOnLarge
+} from "../9-expense/utils/view-expense-utils";
 import { createOrUpdatePaymentAccount } from "../9-payment-accounts/utils/payment-account-api-utils";
 import { createOrUpdateIncomeType } from "../9-settings/utils/config-type-utils";
+import { IndexedDbName } from "../../plugins/indexedDb/resource";
 
-function navigateToEditIncome($actionContainer: JQuery<HTMLElement>) {
-  cy.wrap($actionContainer).find('[data-test="expense-update-action"]').should("be.visible").click();
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
-  cy.url().should("include", "/income/").should("include", "/update");
-}
-
-function runUpdateIncomeTest(
-  incomeRefOptions: { existingIncomeRef: string; updatingIncomeRef: string },
-  validateViewCallback: (incomeRef: string) => Cypress.Chainable<JQuery<HTMLElement>>
-) {
+function runUpdateIncomeTest(incomeOptions: UpdateRefOptions, validateExpense: ValidateExpenseCallbackFn) {
   cy.loginThroughUI("user1-success");
-  getExpenseIncome(incomeRefOptions.updatingIncomeRef).then((incomeData) => {
+  getExpenseIncome(incomeOptions.updatingRef).then((incomeData) => {
     createOrUpdatePaymentAccount([{ ref: incomeData.paymentAccountRef, status: "enable" }]);
     createOrUpdateIncomeType({ ref: incomeData.incomeTypeRef, status: "enable" });
   });
-  createOrUpdateExpenseIncome(incomeRefOptions.existingIncomeRef, ExpenseStatus.ENABLE);
+  createOrUpdateExpenseIncome(incomeOptions.existingRef, ExpenseStatus.ENABLE);
 
   cy.clickNavLinkAndWait(NavBarSelectors.ExpenseNavlink);
   cy.url().should("include", "/expense-journal");
-  validateViewCallback(incomeRefOptions.existingIncomeRef).then(($actionContainer) => {
-    navigateToEditIncome($actionContainer);
+  validateExpense(ExpenseBelongsTo.Income, incomeOptions.existingRef).then(($actionContainer) => {
+    navigateToEditExpense($actionContainer, ExpenseBelongsTo.Income);
   });
   cy.get('[data-test="update-income-not-allowed"]').should("not.exist");
   cy.get('[data-test="update-income-error-message"]').should("not.exist");
 
-  getExpenseIncomeList([incomeRefOptions.existingIncomeRef, incomeRefOptions.updatingIncomeRef]).then(([existingIncomeData, updatingPuchaseData]) => {
+  getExpenseIncomeList([incomeOptions.existingRef, incomeOptions.updatingRef]).then(([existingIncomeData, updatingPuchaseData]) => {
     cy.get("#income-bill-name").should("be.visible").should("have.value", existingIncomeData.billName).clear().type(updatingPuchaseData.billName);
     cy.get("#income-amount").should("be.visible").should("have.value", existingIncomeData.amount).clear().type(updatingPuchaseData.amount);
     cy.selectDropdownItem({
@@ -57,7 +56,7 @@ function runUpdateIncomeTest(
       tagsSelectorId: "income-tags",
       addTagValues: updatingPuchaseData.tags,
       existingTagValues: existingIncomeData.tags,
-      removeTagValues: existingIncomeData.tags.filter((tv) => !updatingPuchaseData.tags.includes(tv))
+      removeTagValues: []
     });
 
     validateExpenseDateInForm(existingIncomeData.incomeDate);
@@ -79,7 +78,7 @@ function runUpdateIncomeTest(
   cy.get('[data-test="update-income-not-allowed"]').should("not.exist");
   cy.get('[data-test="update-income-error-message"]').should("not.exist");
   cy.get('section[data-test="expense-list-view"]').should("be.visible");
-  validateViewCallback(incomeRefOptions.updatingIncomeRef);
+  validateExpense(ExpenseBelongsTo.Income, incomeOptions.updatingRef);
 }
 
 describe("Expense - Update Income Flow", () => {
@@ -98,18 +97,12 @@ describe("Expense - Update Income Flow", () => {
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");
-        runUpdateIncomeTest(
-          { existingIncomeRef: "passive-divident", updatingIncomeRef: "passive-divident-v2" },
-          validateExpenseCardOnSmall.bind(null, ExpenseBelongsTo.Income)
-        );
+        runUpdateIncomeTest({ existingRef: "passive-divident", updatingRef: "passive-divident-v2" }, validateExpenseCardOnSmall);
       });
 
       it("via large desktop view", { tags: ["desktop"] }, () => {
         cy.setViewport("desktop");
-        runUpdateIncomeTest(
-          { existingIncomeRef: "passive-divident-v2", updatingIncomeRef: "passive-divident" },
-          validateExpenseTableRowOnLarge.bind(null, ExpenseBelongsTo.Income)
-        );
+        runUpdateIncomeTest({ existingRef: "passive-divident-v2", updatingRef: "passive-divident" }, validateExpenseTableRowOnLarge);
       });
     }
   );

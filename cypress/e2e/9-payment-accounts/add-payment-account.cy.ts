@@ -1,5 +1,5 @@
 import { IndexedDbName } from "../../plugins/indexedDb/resource";
-import { getPaymentAccount, PaymentAccountDetailType } from "../../support/fixture-utils/read-payment-account";
+import { getPaymentAccount } from "../../support/fixture-utils/read-payment-account";
 import { NavBarSelectors } from "../../support/resource-types";
 import { validateCard } from "./utils/view-payment-account-utils";
 

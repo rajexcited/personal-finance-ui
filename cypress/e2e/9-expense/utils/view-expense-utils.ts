@@ -8,6 +8,7 @@ import { UnSupportedError } from "../../../support/resource-types";
 const SEC_60_IN_MILLIS = 60 * 1000;
 const SEC_30_IN_MILLIS = 30 * 1000;
 
+export type ValidateExpenseCallbackFn = (belongsTo: ExpenseBelongsTo, ref: string) => Cypress.Chainable<JQuery<HTMLElement>>;
 export type UnionExpenseDetailType = ExpensePurchaseDetailType | ExpenseIncomeDetailType | ExpenseRefundDetailType;
 
 export const getExpense = (belongsTo: ExpenseBelongsTo, ref: string): Cypress.Chainable<any> => {

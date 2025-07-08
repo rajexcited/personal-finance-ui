@@ -8,11 +8,16 @@ import {
   validateExpenseDateInForm,
   validateUploadReceiptSection
 } from "../9-expense/utils/expense-form-utils";
-import { getBelongsToLabel, validateExpenseCardOnSmall, validateExpenseTableRowOnLarge } from "../9-expense/utils/view-expense-utils";
+import {
+  getBelongsToLabel,
+  ValidateExpenseCallbackFn,
+  validateExpenseCardOnSmall,
+  validateExpenseTableRowOnLarge
+} from "../9-expense/utils/view-expense-utils";
 import { createOrUpdatePaymentAccount } from "../9-payment-accounts/utils/payment-account-api-utils";
 import { createOrUpdateIncomeType } from "../9-settings/utils/config-type-utils";
 
-function runAddIncomeTest(incomeRef: string) {
+function runAddIncomeTest(incomeRef: string, validateExpense: ValidateExpenseCallbackFn) {
   cy.loginThroughUI("user1-success");
 
   getExpenseIncome(incomeRef).then((incomeData) => {
@@ -62,6 +67,8 @@ function runAddIncomeTest(incomeRef: string) {
   cy.get('[data-test="add-income-error-message"]').should("not.exist");
   cy.get('[data-test="add-income-not-allowed"]').should("not.exist");
   cy.get('section[data-test="expense-list-view"]').should("be.visible");
+
+  validateExpense(ExpenseBelongsTo.Income, incomeRef);
 }
 
 describe("Expense - Add Income Flow", () => {
@@ -80,14 +87,12 @@ describe("Expense - Add Income Flow", () => {
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");
-        runAddIncomeTest("active-salary");
-        validateExpenseCardOnSmall(ExpenseBelongsTo.Income, "active-salary");
+        runAddIncomeTest("active-salary", validateExpenseCardOnSmall);
       });
 
       it("via large desktop view", { tags: ["desktop"] }, () => {
         cy.setViewport("desktop");
-        runAddIncomeTest("active-salary");
-        validateExpenseTableRowOnLarge(ExpenseBelongsTo.Income, "active-salary");
+        runAddIncomeTest("active-salary", validateExpenseTableRowOnLarge);
       });
     }
   );

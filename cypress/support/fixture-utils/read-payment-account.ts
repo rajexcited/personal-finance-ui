@@ -75,7 +75,8 @@ export const getPaymentAccountList = (paymentAccountRefs: string[]) => {
   });
   return cy.get(`@${aliasName}`).then((data: any) => {
     const paymentAccountMap: Record<string, PaymentAccountDetailType> = data;
-    const results = paymentAccountRefs.map((ref) => findPaymentAccount(paymentAccountMap, ref));
+    const nonNullRefs = paymentAccountRefs.filter((r) => r !== null && r !== undefined).filter((r) => !!r);
+    const results = nonNullRefs.map((ref) => findPaymentAccount(paymentAccountMap, ref));
     return results;
   });
 };

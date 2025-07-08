@@ -85,7 +85,7 @@ export const getExpensePurchase = (expensePurchaseRef: string) => {
  * @param expensePurchaseRefs
  * @returns
  */
-export const getExpensePurchaseList = (expensePurchaseRefs: string[]) => {
+export const getExpensePurchaseList = (expensePurchaseRefs: Array<string | undefined | null>) => {
   cy.get(`@${aliasName}`).then((data: any) => {
     const expensePurchaseMap: Record<string, ExpensePurchaseDetailType> = data;
     if (Object.keys(expensePurchaseMap).length === 0) {
@@ -94,7 +94,8 @@ export const getExpensePurchaseList = (expensePurchaseRefs: string[]) => {
   });
   return cy.get(`@${aliasName}`).then((data: any) => {
     const expensePurchaseMap: Record<string, ExpensePurchaseDetailType> = data;
-    const results = expensePurchaseRefs.map((ref) => findExpensePurchase(expensePurchaseMap, ref));
+    const nonNullRefs = expensePurchaseRefs.filter((r) => r !== null && r !== undefined).filter((r) => !!r);
+    const results = nonNullRefs.map((ref) => findExpensePurchase(expensePurchaseMap, ref));
     return results;
   });
 };

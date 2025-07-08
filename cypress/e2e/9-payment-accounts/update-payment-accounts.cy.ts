@@ -1,6 +1,6 @@
 import { IndexedDbName } from "../../plugins/indexedDb/resource";
 import { getPaymentAccount } from "../../support/fixture-utils/read-payment-account";
-import { NavBarSelectors } from "../../support/resource-types";
+import { NavBarSelectors, UpdateRefOptions } from "../../support/resource-types";
 import { createOrUpdatePaymentAccount } from "./utils/payment-account-api-utils";
 import { getPaymentAccountCard, validateCard } from "./utils/view-payment-account-utils";
 
@@ -18,13 +18,13 @@ const verifyViewPaymentAccountCard = (existingPaymentAccountRef: string) => {
     });
 };
 
-function runUpdatePaymentAccountTest(options: { existingPaymentAccountRef: string; updatingPaymentAccountRef: string }) {
+function runUpdatePaymentAccountTest(paymentAccountoptions: UpdateRefOptions) {
   cy.loginThroughUI("user1-success");
-  createOrUpdatePaymentAccount([{ ref: options.existingPaymentAccountRef, status: "enable" }]);
+  createOrUpdatePaymentAccount([{ ref: paymentAccountoptions.existingRef, status: "enable" }]);
   cy.clickNavLinkAndWait(NavBarSelectors.PaymentAccountNavlink);
-  verifyViewPaymentAccountCard(options.existingPaymentAccountRef);
+  verifyViewPaymentAccountCard(paymentAccountoptions.existingRef);
 
-  getPaymentAccount(options.existingPaymentAccountRef).then((existingPaymentAccountData) => {
+  getPaymentAccount(paymentAccountoptions.existingRef).then((existingPaymentAccountData) => {
     cy.get('[data-test="payment-account-card"]').then(($cardElementList) => {
       getPaymentAccountCard($cardElementList, existingPaymentAccountData.shortName).then((filteredElement) => {
         cy.wrap(filteredElement).within(() => {
@@ -36,7 +36,7 @@ function runUpdatePaymentAccountTest(options: { existingPaymentAccountRef: strin
         cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
         cy.url().should("include", "/update");
 
-        getPaymentAccount(options.updatingPaymentAccountRef).then((updatingPaymentAccountData) => {
+        getPaymentAccount(paymentAccountoptions.updatingRef).then((updatingPaymentAccountData) => {
           cy.get("#account-short-name")
             .should("be.visible")
             .should("have.value", existingPaymentAccountData.shortName)
@@ -62,7 +62,7 @@ function runUpdatePaymentAccountTest(options: { existingPaymentAccountRef: strin
             tagsSelectorId: "pymt-acc-tags",
             existingTagValues: existingPaymentAccountData.tags,
             addTagValues: updatingPaymentAccountData.tags,
-            removeTagValues: existingPaymentAccountData.tags.filter((tv) => !updatingPaymentAccountData.tags.includes(tv))
+            removeTagValues: []
           });
           cy.get('[data-test="account-desc-counter"]')
             .should("be.visible")
@@ -93,7 +93,7 @@ function runUpdatePaymentAccountTest(options: { existingPaymentAccountRef: strin
   cy.get('[data-test="update-payment-account-error-message"]').should("not.exist");
   cy.get('section[data-test="payment-account-section"]').should("be.visible");
 
-  verifyViewPaymentAccountCard(options.updatingPaymentAccountRef);
+  verifyViewPaymentAccountCard(paymentAccountoptions.updatingRef);
 }
 
 describe("Payment Account - Update Flow", () => {
@@ -113,12 +113,12 @@ describe("Payment Account - Update Flow", () => {
       context("update all fields", () => {
         it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
           cy.setViewport("pixel9-pro");
-          runUpdatePaymentAccountTest({ existingPaymentAccountRef: "travel-rewards-cc", updatingPaymentAccountRef: "travel-saving" });
+          runUpdatePaymentAccountTest({ existingRef: "travel-rewards-cc", updatingRef: "travel-saving" });
         });
 
         it("via large desktop view", { tags: ["desktop"] }, () => {
           cy.setViewport("desktop");
-          runUpdatePaymentAccountTest({ existingPaymentAccountRef: "travel-saving", updatingPaymentAccountRef: "travel-rewards-cc" });
+          runUpdatePaymentAccountTest({ existingRef: "travel-saving", updatingRef: "travel-rewards-cc" });
         });
       });
     }

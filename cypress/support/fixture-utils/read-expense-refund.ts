@@ -25,10 +25,10 @@ beforeEach(() => {
   cy.wrap({}).as(aliasName);
 });
 
-export const updateExpenseRefund = (key: string, expense: ExpenseRefundDetailType) => {
+export const updateExpenseRefund = (expense: ExpenseRefundDetailType) => {
   cy.get(`@${aliasName}`).then((data: any) => {
     const expenseRefundMap: Record<string, ExpenseRefundDetailType> = data;
-    expenseRefundMap[key] = expense;
+    expenseRefundMap[expense.ref] = expense;
     cy.wrap(expenseRefundMap).as(aliasName);
   });
 };
@@ -88,7 +88,8 @@ export const getExpenseRefundList = (expenseRefundRefs: string[]) => {
   });
   return cy.get(`@${aliasName}`).then((data: any) => {
     const expenseRefundMap: Record<string, ExpenseRefundDetailType> = data;
-    const results = expenseRefundRefs.map((ref) => findExpenseRefund(expenseRefundMap, ref));
+    const nonNullRefs = expenseRefundRefs.filter((r) => r !== null && r !== undefined).filter((r) => !!r);
+    const results = nonNullRefs.map((ref) => findExpenseRefund(expenseRefundMap, ref));
     return results;
   });
 };
