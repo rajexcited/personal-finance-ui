@@ -24,3 +24,4 @@ cypress/videos
 cypress/reports
 cypress/screenshots
 cypress/fixtures/idb-bundle.js.txt
+runner-results

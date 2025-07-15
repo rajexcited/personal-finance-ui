@@ -126,8 +126,8 @@ export const validateUploadReceiptSection = (receipts: Array<ReceiptDetailType>,
             .should("be.visible")
             .within(() => {
               cy.get('[data-test="receipt-title"]').should("be.visible").should("have.text", receipt.name);
-              cy.get('[data-test="receipt-delete-action"]').should("be.visible");
-              cy.get('[data-test="receipt-fullscreen"]').should("be.visible");
+              cy.get('[data-test="receipt-close-action"]').should("be.visible");
+              cy.get('[data-test="receipt-tile"]').should("be.visible").should("be.loaded");
               cy.get('[data-test="receipt-fullscreen-view-action"]').should("be.visible").should("have.text", "View").click();
             });
           cy.get(".fullscreen-image-container")

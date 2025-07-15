@@ -91,5 +91,17 @@
     "paymentAccountName": "primary 7823",
     "paymentAccountRef": "primary-checking",
     "purchaseDate": "2025-03-12"
+  },
+  "birthday-gift": {
+    "billName": "birthday gift for baby",
+    "description": "skirt for first year baby",
+    "tags": ["gift", "clothes"],
+    "receipts": [],
+    "amount": "14.99",
+    "purchaseTypeName": "gifting",
+    "purchaseTypeRef": "gifting",
+    "paymentAccountName": "cash",
+    "paymentAccountRef": "cash",
+    "purchaseDate": "2025-02-11"
   }
 }

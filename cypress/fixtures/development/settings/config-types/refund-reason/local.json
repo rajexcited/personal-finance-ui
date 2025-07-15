@@ -16,5 +16,11 @@
     "description": "Refund Reason is cancelled. Used to tag refund transactions.",
     "tags": [],
     "value": "cancelled"
+  },
+  "overprice": {
+    "name": "overprice",
+    "description": "Refund Reason is overprice. Used to tag refund transactions.",
+    "tags": [],
+    "value": "overprice"
   }
 }

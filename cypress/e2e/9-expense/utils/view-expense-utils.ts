@@ -1,12 +1,9 @@
-import { ExpenseBelongsTo } from "../../../support/api-resource-types";
+import { ExpenseBelongsTo, ReceiptContentType } from "../../../support/api-resource-types";
 import { dateFormatLabel, dateTimestampFormatApi, expenseDateFormatFixture, formatTimestamp, parseTimestamp } from "../../../support/date-utils";
 import { ExpenseIncomeDetailType, getExpenseIncome } from "../../../support/fixture-utils/read-expense-income";
-import { ExpensePurchaseDetailType, getExpensePurchase } from "../../../support/fixture-utils/read-expense-purchase";
+import { ExpensePurchaseDetailType, getExpensePurchase, ReceiptDetailType } from "../../../support/fixture-utils/read-expense-purchase";
 import { ExpenseRefundDetailType, getExpenseRefund } from "../../../support/fixture-utils/read-expense-refund";
 import { UnSupportedError } from "../../../support/resource-types";
-
-const SEC_60_IN_MILLIS = 60 * 1000;
-const SEC_30_IN_MILLIS = 30 * 1000;
 
 export type ValidateExpenseCallbackFn = (belongsTo: ExpenseBelongsTo, ref: string) => Cypress.Chainable<JQuery<HTMLElement>>;
 export type UnionExpenseDetailType = ExpensePurchaseDetailType | ExpenseIncomeDetailType | ExpenseRefundDetailType;
@@ -103,6 +100,18 @@ export const validateExpenseCardOnSmall = (belongsTo: ExpenseBelongsTo, ref: str
       .filter(`[data-billname="${expenseData.billName}"]`)
       .filter(`[data-verified-date="${verifiedTimestamp}"]`)
       .filter(`[data-expense-date="${expenseDateLabel}"]`)
+      .filter(($ind, $card) => {
+        const rowUpdatedOnTime = parseTimestamp($card.getAttribute("data-updated-on") || "", dateTimestampFormatApi);
+        // should have been updated in recent 30 seconds
+        const testStartTime = new Date(Cypress.env("testStartTime"));
+        // console.log("testStartTime =", testStartTime, ", rowUpdatedOnTime =", rowUpdatedOnTime);
+        if (rowUpdatedOnTime > testStartTime) {
+          // console.log("matching criteria");
+          return true;
+        }
+        // console.log("doesn't match criteria");
+        return false;
+      })
       .should("have.length", 1)
       .parents('[data-test="expense-card"]')
       .as("actionContainer")
@@ -149,12 +158,15 @@ export const validateExpenseCardOnSmall = (belongsTo: ExpenseBelongsTo, ref: str
           });
       });
   });
+  validateReceiptCarousel(belongsTo, ref);
   return cy.get("@actionContainer");
 };
 
 export const validateExpenseTableRowOnLarge = (belongsTo: ExpenseBelongsTo, ref: string) => {
   cy.get('[data-test="expense-list-view"]').should("be.visible");
   cy.get('[data-test="expense-list-error-message"]').should("not.be.visible");
+
+  cy.get('[data-test="load-more-expense-action"]').should("be.visible").should("be.enabled");
   // validate headers
   const headerLabels = [
     { label: "Type", isSortable: true },
@@ -191,21 +203,19 @@ export const validateExpenseTableRowOnLarge = (belongsTo: ExpenseBelongsTo, ref:
           .filter(`[data-billname="${expenseData.billName}"]`)
           .filter(`[data-expense-date="${expenseDateLabel}"]`)
           .filter(($ind, $tr) => {
-            // if (!isUpdated) {
-            //   console.log("skipping filter for updatedOn time");
-            //   // skip the filter
-            //   return true;
-            // }
-            const rowUpdatedOnTime = parseTimestamp($tr.getAttribute("data-updated-on") || "", dateTimestampFormatApi).getTime();
-            console.log("filtering for updatedOn time", $tr.getAttribute("data-updated-on"), "rowUpdatedOnTime=", rowUpdatedOnTime);
-            if (rowUpdatedOnTime > Date.now() - SEC_30_IN_MILLIS) {
-              console.log("matching criteria");
+            const rowUpdatedOnTime = parseTimestamp($tr.getAttribute("data-updated-on") || "", dateTimestampFormatApi);
+            // should have been updated in recent 30 seconds
+            const testStartTime = new Date(Cypress.env("testStartTime"));
+            // console.log("testStartTime =", testStartTime, ", rowUpdatedOnTime =", rowUpdatedOnTime);
+            if (rowUpdatedOnTime > testStartTime) {
+              // console.log("matching criteria");
               return true;
             }
-            console.log("doesn't match criteria");
+            // console.log("doesn't match criteria");
             return false;
           })
           .should("have.length.at.least", 1)
+          .first()
           .within(() => {
             const expenseDataList = [
               belongsToLabel,
@@ -247,5 +257,89 @@ export const validateExpenseTableRowOnLarge = (belongsTo: ExpenseBelongsTo, ref:
           });
       });
     });
+  validateReceiptCarousel(belongsTo, ref);
   return cy.get("@actionContainer");
+};
+
+const validateReceiptCarousel = (belongsTo: ExpenseBelongsTo, ref: string) => {
+  getExpense(belongsTo, ref).then((data) => {
+    const expenseData = data as UnionExpenseDetailType;
+    cy.get('[data-test="receipts-carousel"]')
+      .should("be.visible")
+      .within(() => {
+        cy.get('[data-test="dummy-item"').should("exist").should("not.be.visible");
+      });
+
+    cy.get("@actionContainer").then(($actionContainer) => {
+      cy.wrap($actionContainer).within(() => {
+        if (expenseData.receipts.length) {
+          cy.get('[data-test="expense-view-receipts-action"]').should("be.visible").click();
+        } else {
+          cy.get('[data-test="expense-view-receipts-action"]').should("not.exist");
+        }
+      });
+    });
+
+    if (expenseData.receipts.length) {
+      cy.get('[data-test="receipts-carousel"]')
+        .should("be.visible")
+        .within(() => {
+          cy.get('[data-test="dummy-item"').should("not.exist");
+          cy.get('[data-test="carousel-item"]').should("have.length", expenseData.receipts.length);
+
+          if (expenseData.receipts.length > 1) {
+            cy.get(".slider-navigation-next").should("be.visible");
+            cy.get(".slider-pagination")
+              .should("be.visible")
+              .find(".slider-page")
+              .should("have.length", expenseData.receipts.length)
+              .filter(".is-active")
+              .should("be.visible");
+          } else {
+            cy.get(".slider-pagination").should("exist").find(".slider-page").should("have.length", 0);
+            cy.get(".slider-navigation-next").should("not.be.visible");
+          }
+
+          for (let ind = 0; ind < expenseData.receipts.length; ind++) {
+            validateCarouselItem(ind, "next", expenseData.receipts);
+          }
+          for (let ind = expenseData.receipts.length - 1; ind >= 0; ind--) {
+            validateCarouselItem(ind, "previous", expenseData.receipts);
+          }
+
+          cy.get('[data-test="receipt-close-action"]').should("be.visible").click();
+        });
+    }
+  });
+};
+
+const validateCarouselItem = (ind: number, direction: "next" | "previous", expenseReceipts: ReceiptDetailType[]) => {
+  cy.get('[data-test="receipt-loading-wait"]').should("not.exist");
+
+  const receipt = expenseReceipts[ind];
+  cy.get(`[data-receipt-name="${receipt.name}"]`).should("be.visible");
+  if (receipt.contentType === ReceiptContentType.PDF) {
+    cy.get(`[data-receipt-type="${receipt.contentType}"]`).should("be.visible").should("have.attr", "data-test", "pdf").should("be.loaded");
+  } else {
+    cy.get(`[data-receipt-type="${receipt.contentType}"]`).should("be.visible").should("have.attr", "data-test", "image").should("be.loaded");
+    cy.get('[data-test="image-zoomout"]').should("be.visible").click();
+    cy.get('[data-test="image-zoomin"]').should("be.visible").click();
+  }
+
+  if (ind === 0) {
+    cy.get(".slider-navigation-previous").should("not.be.visible");
+  } else {
+    cy.get(".slider-navigation-previous").should("be.visible");
+    if (direction === "previous") {
+      cy.get(".slider-navigation-previous").click();
+    }
+  }
+  if (expenseReceipts.length - ind > 1) {
+    cy.get(".slider-navigation-next").should("be.visible");
+    if (direction === "next") {
+      cy.get(".slider-navigation-next").click();
+    }
+  } else {
+    cy.get(".slider-navigation-next").should("not.be.visible");
+  }
 };

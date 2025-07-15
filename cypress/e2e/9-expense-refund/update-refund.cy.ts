@@ -132,7 +132,9 @@ describe("Expense - Add Refund Flow", () => {
 
   context(
     "A logged in and active user can add refund with selecting purchase successfully",
-    { tags: ["expense", "refund", "regression", "positive", "add", "edit-refund-tc4"] },
+    {
+      tags: ["expense", "refund", "regression", "positive", "add", "edit-refund-tc4", "view", "view-expense-list-tc1", "view-receipts-expenses-tc2"]
+    },
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");

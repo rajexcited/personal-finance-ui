@@ -15,6 +15,7 @@
 
 // Import commands.js using ES2015 syntax:
 import "./commands";
+import "./chai";
 import registerCypressGrep from "@cypress/grep";
 import "cypress-mochawesome-reporter/register";
 import "../plugins/reporter-helper";
@@ -54,4 +55,8 @@ before(() => {
     // to re-initialize mock data for test
     cy.deleteIndexedDb(IndexedDbName.MockExpense);
   }
+});
+
+beforeEach(() => {
+  Cypress.env("testStartTime", new Date().toISOString());
 });

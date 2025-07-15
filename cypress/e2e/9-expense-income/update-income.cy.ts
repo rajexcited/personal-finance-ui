@@ -93,7 +93,19 @@ describe("Expense - Update Income Flow", () => {
 
   context(
     "A logged in and active user can update an existing income successfully",
-    { tags: ["expense", "income", "regression", "positive", "update", "edit-income-tc3"] },
+    {
+      tags: [
+        "expense",
+        "income",
+        "regression",
+        "positive",
+        "update",
+        "edit-income-tc3",
+        "view",
+        "view-expense-list-tc1",
+        "view-receipts-expenses-tc2"
+      ]
+    },
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");

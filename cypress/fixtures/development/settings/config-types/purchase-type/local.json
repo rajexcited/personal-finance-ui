@@ -34,5 +34,11 @@
     "description": "Purchase type is subscription. Used to tag purchase transactions.",
     "tags": [],
     "value": "subscription"
+  },
+  "gifting": {
+    "name": "gifting",
+    "description": "Purchase type is gifting. Used to tag purchase transactions.",
+    "tags": [],
+    "value": "gifting"
   }
 }

@@ -105,7 +105,19 @@ describe("Expense - Update Purchase Flow", () => {
 
   context(
     "A logged in and active user can update an existing purchase successfully",
-    { tags: ["expense", "purchase", "regression", "positive", "update", "edit-purchase-tc3"] },
+    {
+      tags: [
+        "expense",
+        "purchase",
+        "regression",
+        "positive",
+        "update",
+        "edit-purchase-tc3",
+        "view",
+        "view-expense-list-tc1",
+        "view-receipts-expenses-tc2"
+      ]
+    },
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");

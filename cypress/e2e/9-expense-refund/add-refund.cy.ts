@@ -171,7 +171,7 @@ describe("Expense - Add Refund Flow", () => {
 
   context(
     "A logged in and active user can add a new refund without selecting purchase successfully",
-    { tags: ["expense", "refund", "regression", "positive", "add", "add-refund-tc1"] },
+    { tags: ["expense", "refund", "regression", "positive", "add", "add-refund-tc1", "view-expense-list-tc1"] },
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");
@@ -187,7 +187,7 @@ describe("Expense - Add Refund Flow", () => {
 
   context(
     "A logged in and active user can add refund with selecting purchase successfully",
-    { tags: ["expense", "refund", "regression", "positive", "add", "add-refund-tc2"] },
+    { tags: ["expense", "refund", "regression", "positive", "add", "add-refund-tc2", "view", "view-expense-list-tc1", "view-receipts-expenses-tc2"] },
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");

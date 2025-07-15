@@ -83,7 +83,7 @@ describe("Expense - Add Income Flow", () => {
 
   context(
     "A logged in and active user can add a new income successfully",
-    { tags: ["expense", "income", "regression", "positive", "add", "add-income-tc1"] },
+    { tags: ["expense", "income", "regression", "positive", "add", "add-income-tc1", "view", "view-expense-list-tc1", "view-receipts-expenses-tc2"] },
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");

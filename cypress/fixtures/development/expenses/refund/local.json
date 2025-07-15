@@ -48,5 +48,17 @@
     "paymentAccountRef": "amazon-giftcard",
     "purchaseRef": "giftcard",
     "refundDate": "2025-06-28"
+  },
+  "birthday-gift-adjustment": {
+    "billName": "birthday gift overprice adjustment",
+    "tags": ["gift"],
+    "receipts": [],
+    "amount": "5.10",
+    "description": "Adjustment of over price of birthday",
+    "reasonName": "overprice",
+    "reasonRef": "overprice",
+    "paymentAccountName": "cash",
+    "paymentAccountRef": "cash",
+    "refundDate": "2025-02-21"
   }
 }

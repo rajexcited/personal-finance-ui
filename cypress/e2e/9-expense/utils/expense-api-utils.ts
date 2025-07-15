@@ -193,7 +193,7 @@ const createOrUpdateExpensePurchaseViaApi = (purchaseData: ExpensePurchaseDetail
 const createOrUpdateExpenseIncomeViaApi = (incomeData: ExpenseIncomeDetailType, status: ExpenseStatus) => {
   prepareExpenseData(ExpenseBelongsTo.Income, incomeData).then((incomeAddUpdateData) => {
     getIncomeType(incomeData.incomeTypeRef).then((incomeTypeData) => {
-      const incomeId = incomeAddUpdateData.expenseReceipts[0]?.relationId || incomeAddUpdateData.expenseApiData?.id || incomeData.id;
+      const incomeId = incomeAddUpdateData.expenseReceipts[0]?.relationId || incomeAddUpdateData.expenseApiData?.id || incomeData.id || uuidv4();
 
       const apiIncomeData: ApiResourceIncomeDetails = {
         id: incomeId,
@@ -230,7 +230,7 @@ const createOrUpdateExpenseRefundViaApi = (refundData: ExpenseRefundDetailType, 
 
       cy.get(`@createdExpense/${ExpenseBelongsTo.Purchase}/${refundData.purchaseRef}`).then((data: any) => {
         const createdPurchaseData = data as ExpensePurchaseDetailType;
-        const refundId = refundAddUpdateData.expenseReceipts[0]?.relationId || refundAddUpdateData.expenseApiData?.id || refundData.id;
+        const refundId = refundAddUpdateData.expenseReceipts[0]?.relationId || refundAddUpdateData.expenseApiData?.id || refundData.id || uuidv4();
         const purchaseId = refundData.purchaseRef ? refundData.purchaseId || createdPurchaseData.id : undefined;
 
         const apiRefundData: ApiResourceRefundDetails = {

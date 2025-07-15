@@ -46,5 +46,17 @@
     "paymentAccountName": "biz expenses 4321",
     "paymentAccountRef": "biz-exp-checking",
     "incomeDate": "2025-06-05"
+  },
+  "freelance-feb": {
+    "billName": "feb freelance payout - client XYZ",
+    "tags": ["freelance", "active", "project"],
+    "receipts": [],
+    "amount": "1150.00",
+    "description": "Payment received for UI/UX revamp project for Client XYZ",
+    "incomeTypeName": "passive income",
+    "incomeTypeRef": "passive-income",
+    "paymentAccountName": "biz expenses 4321",
+    "paymentAccountRef": "biz-exp-checking",
+    "incomeDate": "2025-02-10"
   }
 }
