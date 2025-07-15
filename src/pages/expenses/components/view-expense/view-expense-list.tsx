@@ -169,7 +169,8 @@ export const ExpenseList: FunctionComponent = () => {
             {
                 !!expenseList.length &&
                 <div className="buttons is-centered">
-                    <button className="button is-large is-focused" disabled={ loaderData.data?.expenseList.length === 0 || loadingExpenses } onClick={ onClickLoadMoreHandler } >Load More</button>
+                    <button className="button is-large is-focused" disabled={ loaderData.data?.expenseList.length === 0 || loadingExpenses }
+                        onClick={ onClickLoadMoreHandler } { ...testAttributes("load-more-expense-action") }>Load More</button>
                 </div>
             }
 

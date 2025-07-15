@@ -284,12 +284,14 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                 {
                     fullscreenReceipt && fullscreenReceipt.contentType !== ReceiptType.PDF &&
                     <div className="modal-card-header-actions">
-                        <button className="button is-white is-inverted image-zoomIn" type="button" onClick={ onClickZoomInHandler } { ...testAttributes("image-zoomin") }>
+                        <button className="button is-white is-inverted image-zoomIn" type="button"
+                            onClick={ onClickZoomInHandler } { ...testAttributes("image-zoomin") }>
                             <span className="icon tooltip is-tooltip-left" data-tooltip={ nextScaleTooltip + scaleTooltip } >
                                 <FontAwesomeIcon icon={ faMagnifyingGlassPlus } size="1x" />
                             </span>
                         </button>
-                        <button className="button is-white is-inverted image-zoomOut" type="button" onClick={ onClickZoomOutHandler } { ...testAttributes("image-zoomout") }>
+                        <button className="button is-white is-inverted image-zoomOut" type="button"
+                            onClick={ onClickZoomOutHandler } { ...testAttributes("image-zoomout") }>
                             <span className="icon tooltip is-tooltip-left" data-tooltip={ prevScaleTooltip + scaleTooltip }>
                                 <FontAwesomeIcon icon={ faMagnifyingGlassMinus } />
                             </span>
@@ -304,7 +306,8 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                 }
                 {
                     fullscreenReceipt && fullscreenReceipt.contentType === ReceiptType.PDF &&
-                    <embed src={ fullscreenReceipt.url } type={ fullscreenReceipt.contentType } height={ "99%" } width={ "93%" } { ...testAttributes("pdf", "receipt-type", fullscreenReceipt.contentType) } />
+                    <embed src={ fullscreenReceipt.url } type={ fullscreenReceipt.contentType } height={ "99%" } width={ "93%" }
+                        { ...testAttributes("pdf", "receipt-type", fullscreenReceipt.contentType) } />
                 }
             </div>
             <div className={ `modal ${isModalOpen ? "is-active" : ""}` }>
@@ -357,8 +360,8 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                                                     !rct.isLoading &&
                                                     <button className="button tooltip" type="button" onClick={ e => onClickShowFullscreenHandler(e, rct) } data-tooltip="View Fullscreen" { ...testAttributes("receipt-fullscreen-view-action") }>View</button>
                                                 }
-                                                <button className="delete" aria-label="delete" onClick={ e => onClickUploadFileRemoveHandler(e, rct) }
-                                                    { ...testAttributes("receipt-delete-action") }></button>
+                                                <button className="delete" aria-label="delete"
+                                                    onClick={ e => onClickUploadFileRemoveHandler(e, rct) }                                                    { ...testAttributes("receipt-close-action") }></button>
 
                                             </div>
                                             <div className="message-body">
@@ -382,8 +385,10 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                                                 }
                                                 {
                                                     !rct.isLoading && rct.contentType !== ReceiptType.PDF &&
-                                                    <figure className="image is-height-256" { ...testAttributes("receipt-fullscreen") }>
-                                                        <img src={ rct.url } alt={ rct.name } onClick={ onClickShowFullscreenImageHandler } />
+                                                    <figure className="image is-height-256">
+                                                        <img src={ rct.url } alt={ rct.name }
+                                                            onClick={ onClickShowFullscreenImageHandler }
+                                                            { ...testAttributes("receipt-tile") } />
                                                     </figure>
                                                 }
                                                 {
@@ -391,7 +396,7 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                                                     <embed height={ 256 }
                                                         src={ rct.url + "#toolbar=0" }
                                                         type={ rct.contentType }
-                                                        { ...testAttributes("receipt-fullscreen") }
+                                                        { ...testAttributes("receipt-tile") }
                                                     />
                                                 }
                                             </div>

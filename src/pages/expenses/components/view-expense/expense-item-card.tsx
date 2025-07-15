@@ -167,6 +167,13 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
         actions.push(viewReceiptsAction);
     }
 
+    let updatedOn = "";
+    if (props.details.auditDetails.updatedOn instanceof Date) {
+        updatedOn = formatTimestamp(props.details.auditDetails.updatedOn);
+    } else {
+        updatedOn = props.details.auditDetails.updatedOn;
+    }
+
     return (
         <section className="container mb-4">
             <div className="card" { ...testAttributes("expense-card") }>
@@ -176,7 +183,7 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
                             <div className="columns">
                                 <div className="column">
                                     <nav className="level"
-                                        { ...testAttributes("card-header", "belongs-to", belongsTo, "expense-category", expenseCategory, "billname", props.details.billName, "expense-date", expenseDate || "", "verified-date", verifiedDate) }
+                                        { ...testAttributes("card-header", "belongs-to", belongsTo, "expense-category", expenseCategory, "billname", props.details.billName, "expense-date", expenseDate || "", "verified-date", verifiedDate, "updated-on", updatedOn) }
                                     >
                                         <div className="level-item">
                                             { belongsToIconTip }
