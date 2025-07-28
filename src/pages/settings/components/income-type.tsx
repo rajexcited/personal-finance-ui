@@ -159,7 +159,7 @@ export const IncomeTypePage: FunctionComponent = () => {
     };
 
     const tags = loaderData.type === "success" ? loaderData.data.tags : [];
-    // const showEditableActionInMobile = !auth.readOnly && deviceMode === DeviceMode.Mobile && !(action?.type === ActionId.Add || action?.type === ActionId.Update);
+
 
     return (
         <section { ...testAttributes(ConfigTypeBelongsTo.IncomeType) }>
