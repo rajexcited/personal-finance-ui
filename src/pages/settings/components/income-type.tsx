@@ -11,7 +11,7 @@ import UpdateConfig, { ConfigInputProps } from "./update-config";
 import { getFullPath } from "../../root";
 import { IncomeTypeLoaderResource } from "../route-handlers/income-type-loader-action";
 import { useAuth } from "../../auth";
-import { ConfigAction } from "../../../shared";
+import { ConfigAction, testAttributes } from "../../../shared";
 import { DeviceMode, useOrientation } from "../../../hooks";
 
 
@@ -159,57 +159,58 @@ export const IncomeTypePage: FunctionComponent = () => {
     };
 
     const tags = loaderData.type === "success" ? loaderData.data.tags : [];
-    const hideListInMobile = deviceMode === DeviceMode.Mobile && (action?.type === ActionId.Add || action?.type === ActionId.Update);
+    // const showEditableActionInMobile = !auth.readOnly && deviceMode === DeviceMode.Mobile && !(action?.type === ActionId.Add || action?.type === ActionId.Update);
 
     return (
-        <>
+        <section { ...testAttributes(ConfigTypeBelongsTo.IncomeType) }>
             <div className="columns">
                 <div className="column has-text-centered">
-                    <h1 className="title">List of Income Type</h1>
+                    <h1 className="title" { ...testAttributes("title") }>List of Income Type</h1>
                 </div>
                 <div className="column">&nbsp;</div>
                 {
-                    deviceMode === DeviceMode.Mobile && !hideListInMobile &&
+                    !auth.readOnly && (deviceMode === DeviceMode.Mobile || (deviceMode === DeviceMode.Desktop && action?.type === ActionId.View)) &&
                     <div className="column">
                         <div className="buttons is-right">
-                            <button className="button is-link is-rounded" onClick={ onClickRequestAddIncomeTypeHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
+                            <button className="button is-link is-rounded"
+                                onClick={ onClickRequestAddIncomeTypeHandler }
+                                { ...testAttributes("add-action") }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
                         </div>
                     </div>
                 }
             </div>
             <div className="columns">
-                { !hideListInMobile &&
-                    <div className="column is-two-fifths">
-                        {
-                            incomeTypeItems.length > 0 &&
-                            <>
-                                <Switch
-                                    initialStatus={ enableFilter }
-                                    id="incomeTypeEnableFilter"
-                                    labelWhenOn="Filtered by enabled"
-                                    labelWhenOff="All Income Types"
-                                    tooltip="Toggle to filter by status enable or show all"
-                                    onChange={ setEnableFilter }
-                                />
-                                <List
-                                    items={ incomeTypeItems }
-                                    onControlRequest={ onRequestListControlIncomeTypeHandler }
-                                    controlsInEllipsis={ controlsInEllipsis }
-                                    controlsBeforeEllipsis={ controlsBeforeEllipsis }
-                                    viewActionContentInMobile={
-                                        action?.type === ActionId.View &&
-                                        <ViewConfig details={ action.item } />
-                                    }
-                                />
-                            </>
-                        }
+                <div className="column is-two-fifths">
+                    {
+                        incomeTypeItems.length > 0 &&
+                        <>
+                            <Switch
+                                initialStatus={ enableFilter }
+                                id="incomeTypeEnableFilter"
+                                labelWhenOn="Filtered by enabled"
+                                labelWhenOff="All Income Types"
+                                tooltip="Toggle to filter by status enable or show all"
+                                onChange={ setEnableFilter }
+                            />
+                            <List
+                                items={ incomeTypeItems }
+                                onControlRequest={ onRequestListControlIncomeTypeHandler }
+                                controlsInEllipsis={ controlsInEllipsis }
+                                controlsBeforeEllipsis={ controlsBeforeEllipsis }
+                                viewActionContentInMobile={
+                                    action?.type === ActionId.View &&
+                                    <ViewConfig details={ action.item } />
+                                }
+                            />
+                        </>
+                    }
 
-                        {
-                            incomeTypeItems.length === 0 &&
-                            <span>There are no Income Types configured.</span>
-                        }
-                    </div>
-                }
+                    {
+                        incomeTypeItems.length === 0 &&
+                        <span { ...testAttributes("no-income-type-message") }>There are no Income Types configured.</span>
+                    }
+                </div>
+
                 <div className="column">
                     { !auth.readOnly && deviceMode === DeviceMode.Desktop &&
                         <section>
@@ -217,11 +218,17 @@ export const IncomeTypePage: FunctionComponent = () => {
                                 {
                                     action && action.type === "view" &&
                                     <>
-                                        <button className="button is-link is-rounded" onClick={ onClickRequestDeleteIncomeTypeHandler }> &nbsp; &nbsp; Delete &nbsp; &nbsp; </button>
-                                        <button className="button is-link is-rounded" onClick={ onClickRequestUpdateIncomeTypeHandler }> &nbsp; &nbsp; Edit &nbsp; &nbsp; </button>
+                                        <button className="button is-link is-rounded"
+                                            onClick={ onClickRequestDeleteIncomeTypeHandler }
+                                            { ...testAttributes("delete-action") }> &nbsp; &nbsp; Delete &nbsp; &nbsp; </button>
+                                        <button className="button is-link is-rounded"
+                                            onClick={ onClickRequestUpdateIncomeTypeHandler }
+                                            { ...testAttributes("edit-action") }> &nbsp; &nbsp; Edit &nbsp; &nbsp; </button>
                                     </>
                                 }
-                                <button className="button is-link is-rounded" onClick={ onClickRequestAddIncomeTypeHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
+                                <button className="button is-link is-rounded"
+                                    onClick={ onClickRequestAddIncomeTypeHandler }
+                                    { ...testAttributes("add-action") }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
                             </div>
                         </section>
                     }
@@ -229,7 +236,7 @@ export const IncomeTypePage: FunctionComponent = () => {
                         {
                             errorMessage &&
                             <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
-                                <article className="message is-danger">
+                                <article className="message is-danger" { ...testAttributes("error-message") }>
                                     <div className="message-body">
                                         <ReactMarkdown children={ errorMessage } />
                                     </div>
@@ -285,7 +292,7 @@ export const IncomeTypePage: FunctionComponent = () => {
                 onCancel={ () => updateAction(undefined) }
                 yesButtonClassname="is-danger"
             />
-        </>
+        </section>
     );
 
 };

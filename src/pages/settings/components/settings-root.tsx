@@ -12,7 +12,7 @@ const fcLogger = getLogger("FC.SettingsRootPage", null, null, "DISABLED");
 
 export const TAB_HEADS = [
     { id: "root-stngs", title: "General Settings", url: getFullPath("settingsRoot"), icon: faGear },
-    { id: "xpns-ctgry-stngs", title: "Purchase Type", url: getFullPath("purchaseTypeSettings"), icon: faCoins },
+    { id: "purchase-type-stngs", title: "Purchase Type", url: getFullPath("purchaseTypeSettings"), icon: faCoins },
     { id: "pymt-acc-typ-stngs", title: "Payment Account Type", url: getFullPath("pymtAccountTypeSettings"), icon: faMoneyBills },
     { id: "refund-reason-stngs", title: "Refund Reason", url: getFullPath("refundReasonSettings"), icon: faPersonCircleQuestion },
     { id: "income-type-stngs", title: "Income Type", url: getFullPath("incomeTypeSettings"), icon: faPiggyBank },
@@ -33,9 +33,7 @@ export const SettingsRootPage: FunctionComponent = () => {
             }
             {
                 deviceMode === DeviceMode.Mobile &&
-                <section>
-                    <Outlet />
-                </section>
+                <Outlet />
             }
         </section>
     );
