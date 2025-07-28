@@ -1,6 +1,6 @@
 import { IndexedDbName } from "../../../plugins/indexedDb/resource";
 import { ApiConfigTypeResource, ConfigBelongsTo, ConfigStatus } from "../../../support/api-resource-types";
-import { formatTimestamp } from "../../../support/date-utils";
+import { dateTimestampFormatApi, formatTimestamp } from "../../../support/date-utils";
 import { ConfigDetailType, getConfigType, updateConfigType } from "../../../support/fixture-utils/read-config-type";
 import { v4 as uuidv4 } from "uuid";
 
@@ -41,8 +41,8 @@ const createOrUpdateConfigTypeViaApi = (configDetails: ConfigDetailType, status:
     description: configDetails.description,
     id: configDetails.id || uuidv4(),
     auditDetails: {
-      createdOn: formatTimestamp(new Date()),
-      updatedOn: formatTimestamp(new Date())
+      createdOn: formatTimestamp(new Date(), dateTimestampFormatApi),
+      updatedOn: formatTimestamp(new Date(), dateTimestampFormatApi)
     }
   };
 

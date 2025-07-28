@@ -20,6 +20,7 @@ import registerCypressGrep from "@cypress/grep";
 import "cypress-mochawesome-reporter/register";
 import "../plugins/reporter-helper";
 import { IndexedDbName } from "../plugins/indexedDb/resource";
+import "cypress-real-events";
 
 registerCypressGrep();
 

@@ -118,6 +118,11 @@ export const getPurchaseType = (purchaseTypeRef: string) => {
   return getConfigType(ConfigBelongsTo.PurchaseType, purchaseTypeRef);
 };
 
+export const getIncomeTypeList = (incomeTypeRefs: string[]) => {
+  const aliasName = getAliasName(ConfigBelongsTo.IncomeType);
+  return getConfigTypeList(ConfigBelongsTo.IncomeType, incomeTypeRefs);
+};
+
 export const getIncomeType = (incomeTypeRef: string) => {
   return getConfigType(ConfigBelongsTo.IncomeType, incomeTypeRef);
 };

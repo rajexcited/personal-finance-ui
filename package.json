@@ -7,12 +7,15 @@
     "prebuild": "ts-node cypress/helpers/build-idb-injector.ts",
     "build": "tsc",
     "postbuild": "npm run clean",
+    "tests:local": "cross-env NODE_ENV=local cypress run --env grepTags=add+income --browser chrome",
+    "tests:parallel:local": "cypress-parallel -t 2 -d 'cypress/e2e/**/*' -s tests:local",
     "pretests:regression:local": "npm run build",
-    "tests:regression:local": "cross-env NODE_ENV=local cypress run --env grepTags=regression",
+    "tests:regression:local": "cross-env NODE_ENV=local cypress run --browser chrome --env grepTags=regression",
+    "tests:parallel:regression:local": "cypress-parallel -s tests:regression:local -t 2 -d 'cypress/e2e/**/*'",
     "pretests:regression:dev": "npm run build",
-    "tests:regression:dev": "cross-env NODE_ENV=development cypress run --env grepTags=regression",
+    "tests:regression:dev": "cross-env NODE_ENV=development cypress run --browser chrome --env grepTags=regression",
     "pretests:regression:testplan": "npm run build",
-    "tests:regression:testplan": "cross-env NODE_ENV=testplan cypress run --env grepTags=regression",
+    "tests:regression:testplan": "cross-env NODE_ENV=testplan cypress run --browser chrome --env grepTags=regression",
     "pretests:developer": "npm run build",
     "tests:developer": "cross-env NODE_ENV=local cypress open"
   },
@@ -23,18 +26,19 @@
     "@types/node": "^22.15.21",
     "cross-env": "^7.0.3",
     "cypress": "^14.5.1",
+    "cypress-mochawesome-reporter": "^3.8.2",
     "dotenv": "^17.0.1",
+    "mochawesome": "^7.1.3",
+    "mochawesome-merge": "^5.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {
     "@cypress/grep": "^4.1.0",
-    "cypress-mochawesome-reporter": "^3.8.2",
+    "cypress-real-events": "^1.14.0",
     "date-and-time": "^3.6.0",
     "dotenv-flow": "^4.1.0",
     "idb": "^8.0.3",
-    "mochawesome": "^7.1.3",
-    "mochawesome-merge": "^5.0.0",
     "uuid": "^11.1.0"
   }
 }
