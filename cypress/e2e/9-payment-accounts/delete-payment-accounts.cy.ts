@@ -44,7 +44,7 @@ const verifyDeleteConfirmDialog = (
 
   if (waitForLoading) {
     cy.get('[data-test="loading-spinner"]').should("be.visible");
-    cy.get('[data-loading-spinner-id="page-route"]', { timeout: 60 * 1000 }).should("not.be.visible");
+    cy.waitForPageLoad();
     cy.wrap($filteredCard).should("not.exist");
   } else {
     cy.get('[data-test="loading-spinner"]').should("not.be.visible");

@@ -14,8 +14,7 @@ function runLoginTests(userRef: string, deviceWidth: DeviceWidth) {
   });
   cy.get('[data-test="signup-button"]').should(deviceWidth === DeviceWidth.Small ? "not.be.visible" : "be.visible");
   cy.get('[data-test="login-button"]').should("be.visible").click();
-  cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60000 }).should("not.be.visible");
+  cy.waitForPageLoad();
   cy.get('[data-test="login-error-message"]').should("not.exist");
   verifyPublicLinks(false);
   verifySecuredLinksFunctional();

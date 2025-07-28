@@ -32,9 +32,8 @@ function runAddRefundWithoutPurchaseTest(refundRef: string, validateExpense: Val
   cy.get('[data-test="add-income-button"]').should("be.visible");
   cy.get('[data-test="add-purchase-button"]').should("be.visible");
   cy.get('[data-test="add-refund-button"]').should("be.visible").click();
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.get('[data-test="loading-spinner"]').should("be.visible");
+  cy.waitForPageLoad();
   cy.url().should("include", "/refund/add");
   cy.get('[data-test="add-refund-not-allowed"]').should("not.exist");
   cy.get('[data-test="add-refund-error-message"]').should("not.exist");
@@ -70,10 +69,8 @@ function runAddRefundWithoutPurchaseTest(refundRef: string, validateExpense: Val
 
   cy.get('button[data-test="cancel-refund"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
   cy.get('button[data-test="submit-refund"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Add").click();
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.waitForPageLoad();
 
   cy.get('[data-test="add-refund-error-message"]').should("not.exist");
   cy.get('[data-test="add-refund-not-allowed"]').should("not.exist");
@@ -101,9 +98,8 @@ function runAddRefundWithPurchaseTest(refundRef: string, validateExpense: Valida
     });
   });
 
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.get('[data-test="loading-spinner"]').should("be.visible");
+  cy.waitForPageLoad();
   cy.url().should("include", "/refund/add");
   cy.get('[data-test="add-refund-not-allowed"]').should("not.exist");
   cy.get('[data-test="add-refund-error-message"]').should("not.exist");
@@ -149,10 +145,8 @@ function runAddRefundWithPurchaseTest(refundRef: string, validateExpense: Valida
 
   cy.get('button[data-test="cancel-refund"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
   cy.get('button[data-test="submit-refund"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Add").click();
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.waitForPageLoad();
 
   cy.get('[data-test="add-refund-error-message"]').should("not.exist");
   cy.get('[data-test="add-refund-not-allowed"]').should("not.exist");

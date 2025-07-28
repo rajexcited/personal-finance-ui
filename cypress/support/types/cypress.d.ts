@@ -12,6 +12,11 @@ declare namespace Cypress {
      */
     setViewport(device: CustomDevicePreset | ViewportPreset, orientation?: ViewportOrientation): Chainable<null>;
     /**
+     * wait for page load spinner
+     * @param waitOnSec Optional. if not provided default value is 60 sec
+     */
+    waitForPageLoad(waitOnSec?: number): Chainable<void>;
+    /**
      * in large or small responsive screen, navbar style and functioning slight varies.
      * if navbar is not visible, open nav bar
      */

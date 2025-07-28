@@ -82,10 +82,8 @@ function runUpdatePurchaseTest(purchaseOptions: UpdateRefOptions, validateExpens
     .should("be.visible")
     .should("have.text", "Update")
     .click();
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.waitForPageLoad();
 
   cy.get('[data-test="update-purchase-not-allowed"]').should("not.exist");
   cy.get('[data-test="update-purchase-error-message"]').should("not.exist");

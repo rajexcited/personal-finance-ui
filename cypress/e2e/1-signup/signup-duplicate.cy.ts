@@ -39,8 +39,7 @@ function runSignupTest(signupSelector: string, userRef: string) {
   cy.url().should("include", "/signup");
   enterSignupDetails(userRef);
   cy.get('[data-test="signup-button"]').should("be.visible").click();
-  cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60000 }).should("not.be.visible");
+  cy.waitForPageLoad();
   cy.get('[data-test="signup-error-message"]').should("be.visible").should("have.text", "emailId - the user with emailId already exists");
   verifyPublicLinks(true);
   verifySecuredLinks(false);

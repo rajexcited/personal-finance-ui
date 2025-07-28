@@ -29,9 +29,7 @@ function runAddIncomeTest(incomeRef: string, validateExpense: ValidateExpenseCal
   cy.get('[data-test="add-purchase-button"]').should("be.visible");
   cy.get('[data-test="add-refund-button"]').should("be.visible");
   cy.get('[data-test="add-income-button"]').should("be.visible").click();
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.waitForPageLoad();
   cy.url().should("include", "/income/add");
   cy.get('[data-test="add-income-not-allowed"]').should("not.exist");
   cy.get('[data-test="add-income-error-message"]').should("not.exist");
@@ -59,10 +57,8 @@ function runAddIncomeTest(incomeRef: string, validateExpense: ValidateExpenseCal
 
   cy.get('button[data-test="cancel-income"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
   cy.get('button[data-test="submit-income"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Add").click();
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.waitForPageLoad();
 
   cy.get('[data-test="add-income-error-message"]').should("not.exist");
   cy.get('[data-test="add-income-not-allowed"]').should("not.exist");

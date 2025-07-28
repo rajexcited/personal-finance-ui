@@ -70,10 +70,8 @@ function runUpdateIncomeTest(incomeOptions: UpdateRefOptions, validateExpense: V
 
   cy.get('button[data-test="cancel-income"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
   cy.get('button[data-test="submit-income"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Update").click();
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.waitForPageLoad();
 
   cy.get('[data-test="update-income-not-allowed"]').should("not.exist");
   cy.get('[data-test="update-income-error-message"]').should("not.exist");

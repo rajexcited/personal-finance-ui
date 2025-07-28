@@ -20,8 +20,7 @@ function runLoginTest(userRef: string, errorField: "emailId" | "password") {
       .type(user.password + passwordSuffix);
   });
   cy.get('[data-test="login-button"]').should("be.visible").click();
-  cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60000 }).should("not.be.visible");
+  cy.waitForPageLoad();
   cy.get('[data-test="login-error-message"]').should("be.visible").should("have.text", "emailId or password invalid");
   verifyPublicLinks(true);
   verifySecuredLinks(false);

@@ -41,6 +41,13 @@ Cypress.Commands.add("setViewport", (device: CustomDevicePreset | Cypress.Viewpo
   });
 });
 
+Cypress.Commands.add("waitForPageLoad", (waitOnSec?: number) => {
+  const timeoutInSec = waitOnSec || 60;
+  // console.log(new Date(), "LoadSpinner", timeoutInSec, "sec wait for page route");
+  cy.get('[data-test="loading-spinner"]', { timeout: timeoutInSec * 1000 }).should("not.be.visible");
+  cy.get('[data-loading-spinner-id="page-route"]', { timeout: timeoutInSec * 1000 }).should("not.be.visible");
+});
+
 Cypress.Commands.add("openNavMenu", () => {
   cy.get(".navbar-burger").then(($el) => {
     if ($el.is(":visible")) {
@@ -62,13 +69,12 @@ Cypress.Commands.add("openNavMenu", () => {
 Cypress.Commands.add("clickNavLinkAndWait", (navSelector: NavBarSelectors, timeoutInSec?: number) => {
   cy.openNavMenu();
   cy.get(navSelector).should("be.visible").click();
-  timeoutInSec = timeoutInSec || 60;
-  cy.get('[data-loading-spinner-id="page-route"]', { timeout: timeoutInSec * 1000 }).should("not.be.visible");
-  cy.get('[data-test="loading-spinner"]').should("not.be.visible");
+  cy.waitForPageLoad(timeoutInSec);
 });
 
 Cypress.Commands.add("logoutFromNav", () => {
   cy.get(NavBarSelectors.LogoutNavlink).then(($el) => {
+    // console.log(new Date(), "LoadSpinner logout link clicking from nav");
     if ($el.length) {
       cy.clickNavLinkAndWait(NavBarSelectors.LogoutNavlink);
     }
@@ -103,7 +109,7 @@ Cypress.Commands.add("loginThroughUI", (userRef) => {
   });
   cy.get('[data-test="login-button"]').should("be.visible").click();
   cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60000 }).should("not.be.visible");
+  cy.waitForPageLoad();
   cy.get('[data-test="login-error-message"]').should("not.exist");
   cy.get(NavBarSelectors.LoginNavlink).should("not.exist");
   cy.get(NavBarSelectors.LogoutNavlink).should("exist");

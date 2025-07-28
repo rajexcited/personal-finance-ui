@@ -15,8 +15,7 @@ function runSignupTest(signupSelector: string, userRef: string) {
   enterSignupDetails(userRef);
   cy.get('[data-test="login-button"]').should("be.visible");
   cy.get('[data-test="signup-button"]').should("be.visible").click();
-  cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60000 }).should("not.be.visible");
+  cy.waitForPageLoad();
   cy.get('[data-test="signup-error-message"]').should("not.exist");
   verifyPublicLinks(false);
   verifySecuredLinksFunctional();

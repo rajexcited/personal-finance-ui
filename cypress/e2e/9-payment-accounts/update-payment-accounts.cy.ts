@@ -30,10 +30,8 @@ function runUpdatePaymentAccountTest(paymentAccountoptions: UpdateRefOptions) {
         cy.wrap(filteredElement).within(() => {
           cy.get('[data-test="card-header-action-update"]').should("be.visible").click();
         });
-        cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
-
-        cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-        cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+        cy.get('[data-test="loading-spinner"]').should("be.visible");
+        cy.waitForPageLoad();
         cy.url().should("include", "/update");
 
         getPaymentAccount(paymentAccountoptions.updatingRef).then((updatingPaymentAccountData) => {
@@ -86,9 +84,7 @@ function runUpdatePaymentAccountTest(paymentAccountoptions: UpdateRefOptions) {
   cy.get('button[data-test="submit-payment-account"]').filter(":visible").should("be.visible").should("have.text", "Update").click();
 
   cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.waitForPageLoad();
 
   cy.get('[data-test="update-payment-account-error-message"]').should("not.exist");
   cy.get('section[data-test="payment-account-section"]').should("be.visible");

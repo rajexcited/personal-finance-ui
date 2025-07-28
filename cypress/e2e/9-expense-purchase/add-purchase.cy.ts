@@ -31,9 +31,8 @@ function runAddPurchaseTest(purchaseRef: string, validateExpense: ValidateExpens
   cy.get('[data-test="add-income-button"]').should("be.visible");
   cy.get('[data-test="add-refund-button"]').should("be.visible");
   cy.get('[data-test="add-purchase-button"]').should("be.visible").click();
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.get('[data-test="loading-spinner"]').should("be.visible");
+  cy.waitForPageLoad();
   cy.url().should("include", "/purchase/add");
   cy.get('[data-test="add-purchase-not-allowed"]').should("not.exist");
   cy.get('[data-test="add-purchase-error-message"]').should("not.exist");
@@ -64,10 +63,8 @@ function runAddPurchaseTest(purchaseRef: string, validateExpense: ValidateExpens
 
   cy.get('button[data-test="cancel-purchase"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
   cy.get('button[data-test="submit-purchase"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Add").click();
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.waitForPageLoad();
 
   cy.get('[data-test="add-purchase-error-message"]').should("not.exist");
   cy.get('[data-test="add-purchase-not-allowed"]').should("not.exist");

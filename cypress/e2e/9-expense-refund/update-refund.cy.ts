@@ -108,10 +108,8 @@ function runUpdateRefundTest(refundOptions: UpdateRefOptions, validateExpense: V
   cy.get('button[data-test="cancel-refund"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
   cy.get('button[data-test="submit-refund"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Update").click();
 
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.waitForPageLoad();
 
   cy.get('[data-test="update-refund-error-message"]').should("not.exist");
   cy.get('[data-test="update-refund-not-allowed"]').should("not.exist");

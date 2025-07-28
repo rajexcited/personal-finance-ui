@@ -8,10 +8,10 @@ function runAddPaymentAccountTest(paymentAccountRef: string) {
   cy.clickNavLinkAndWait(NavBarSelectors.PaymentAccountNavlink);
   cy.url().should("include", "/payment-accounts");
   cy.get('[data-test="add-payment-account-button"]').should("be.visible").click();
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
+  cy.get('[data-test="loading-spinner"]').should("be.visible");
+  cy.waitForPageLoad();
   cy.url().should("include", "/account/add");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+
   cy.get('[data-loading-spinner-id="add-payment-account-not-allowed"]').should("not.exist");
   cy.get('[data-loading-spinner-id="add-payment-account-error-message"]').should("not.exist");
 
@@ -31,10 +31,8 @@ function runAddPaymentAccountTest(paymentAccountRef: string) {
   cy.verifyCurrencySection();
   cy.get('button[data-test="cancel-payment-account"]').should("be.visible").should("have.text", "Cancel");
   cy.get('button[data-test="submit-payment-account"]').filter(":visible").should("be.visible").should("have.text", "Add").click();
-  cy.get('[data-loading-spinner-id="page-route"]').should("be.visible");
   cy.get('[data-test="loading-spinner"]').should("be.visible");
-  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.be.visible");
-  cy.get('[data-loading-spinner-id="page-route"]').should("not.be.visible");
+  cy.waitForPageLoad();
   cy.get('[data-test="add-payment-account-error-message"]').should("not.exist");
   cy.get('section[data-test="payment-account-section"]').should("be.visible");
 
