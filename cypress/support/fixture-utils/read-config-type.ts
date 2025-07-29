@@ -128,6 +128,11 @@ export const getRefundReasonList = (refundReasonRefs: string[]) => {
   return getConfigTypeList(ConfigBelongsTo.RefundReason, refundReasonRefs);
 };
 
+export const getPaymentAccountTypeList = (paymentAccountTypeRefs: string[]) => {
+  const aliasName = getAliasName(ConfigBelongsTo.PaymentAccountType);
+  return getConfigTypeList(ConfigBelongsTo.PaymentAccountType, paymentAccountTypeRefs);
+};
+
 export const getIncomeType = (incomeTypeRef: string) => {
   return getConfigType(ConfigBelongsTo.IncomeType, incomeTypeRef);
 };

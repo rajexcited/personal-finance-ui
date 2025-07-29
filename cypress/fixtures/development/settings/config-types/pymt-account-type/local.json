@@ -1,0 +1,26 @@
+{
+  "savings": {
+    "name": "savings",
+    "description": "Payment Account type is savings. Used to tag payment account.",
+    "tags": [],
+    "value": "savings"
+  },
+  "loan": {
+    "name": "loan",
+    "description": "Payment Account type is loan. Used to tag payment account.",
+    "tags": [],
+    "value": "loan"
+  },
+  "credit-card": {
+    "name": "credit card",
+    "description": "Payment Account type is credit card. Used to tag payment account.",
+    "tags": [],
+    "value": "credit card"
+  },
+  "gift-card": {
+    "name": "gift card",
+    "description": "Payment Account type is gift card. Used to tag payment account.",
+    "tags": [],
+    "value": "gift card"
+  }
+}

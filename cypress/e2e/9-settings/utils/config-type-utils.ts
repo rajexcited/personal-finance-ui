@@ -108,3 +108,6 @@ export const createOrUpdateIncomeType = (incomeTypeOptions: { ref: string; statu
 export const createOrUpdateRefundReason = (refundReasonOptions: { ref: string; status: ConfigStatus }) => {
   createOrUpdateConfigType(ConfigBelongsTo.RefundReason, refundReasonOptions);
 };
+export const createOrUpdatePaymentAccountType = (paymentAccountTypeOptions: { ref: string; status: ConfigStatus }) => {
+  createOrUpdateConfigType(ConfigBelongsTo.PaymentAccountType, paymentAccountTypeOptions);
+};

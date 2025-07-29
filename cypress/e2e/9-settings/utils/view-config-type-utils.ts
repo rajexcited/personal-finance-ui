@@ -181,7 +181,15 @@ export const validateSwitch = (belongsTo: ConfigBelongsTo, isOn: boolean, doTogg
     if (!isOn) {
       labelTextOff = "All Refund Reasons";
     }
+  } else if (belongsTo === ConfigBelongsTo.PaymentAccountType) {
+    containerId = "pymtAccTypEnableFilterswitchcheck";
+    if (!isOn) {
+      labelTextOff = "All Payment Account Types";
+    }
+  } else {
+    throw new Error(`switch validation is not supported for [${belongsTo}]`);
   }
+
   cy.get(`[data-switch-container-id="${containerId}"]`)
     .should("be.visible")
     .within(() => {

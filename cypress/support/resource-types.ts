@@ -7,6 +7,7 @@ export enum NavBarSelectors {
   IncomeTypeSettingsNavlink = "#income-type-stngs-navlink",
   PurchaseTypeSettingsNavlink = "#purchase-type-stngs-navlink",
   RefundReasonSettingsNavlink = "#refund-reason-stngs-navlink",
+  PaymentAccountTypeSettingsNavlink = "#payment-account-type-stngs-navlink",
   LogoutNavlink = "#logout-navlink"
 }
 
