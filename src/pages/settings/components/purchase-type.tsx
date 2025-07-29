@@ -80,6 +80,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
         };
         updateAction({ item: defaultAddConfig, type: ActionId.Add });
     };
+
     const onClickRequestUpdatePurchaseTypeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
         if (action?.item) {
@@ -87,6 +88,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
             setToggleUpdate(prev => !prev);
         }
     };
+
     const onClickRequestDeletePurchaseTypeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
         if (action?.item) updateAction({ item: action.item, type: ActionId.Delete });
