@@ -54,7 +54,7 @@ beforeEach(() => {
 before(() => {
   if (!Cypress.browser.isHeadless) {
     // to re-initialize mock data for test
-    cy.deleteIndexedDb(IndexedDbName.MockExpense);
+    cy.deleteIndexedDb();
   }
 });
 

@@ -4,22 +4,12 @@ import { ConfigDetailType } from "../../../support/fixture-utils/read-config-typ
 export type ValidateConfigTypeCallbackFn = (belongsTo: ConfigBelongsTo, ref: string) => Cypress.Chainable<JQuery<HTMLElement>>;
 export type ConfigTypeOptions = { ref: string; status: ConfigStatus };
 export type DeviceModeType = "large" | "small";
-type ConfigDataStatus = { data: ConfigDetailType; status: ConfigStatus };
+export type ConfigDataStatus = { data: ConfigDetailType; status: ConfigStatus };
 
-const validateViewSection = (dataStatus: ConfigDataStatus) => {
-  cy.get(".view-config-settings")
+export const validateViewSection2 = (viewSettingsSelector: string, viewDataList: Array<{ label: string; outValue: string | null }>) => {
+  cy.get(viewSettingsSelector)
     .should("be.visible")
     .within(() => {
-      const viewDataList = [
-        { label: "Name", outValue: dataStatus.data.name },
-        { label: "Status", outValue: dataStatus.status },
-        { label: "Color", outValue: "-" },
-        { label: "Description", outValue: dataStatus.data.description || "-" },
-        { label: "Tags", outValue: dataStatus.data.tags.join("") || "-" },
-        { label: "Created Date", outValue: null },
-        { label: "Last Updated Date", outValue: null }
-      ];
-
       cy.get(".column").each(($cel, ind) => {
         cy.wrap($cel.find(".label")).should("be.visible").should("contain.text", viewDataList[ind].label);
         if (viewDataList[ind].outValue === null) {
@@ -29,6 +19,19 @@ const validateViewSection = (dataStatus: ConfigDataStatus) => {
         }
       });
     });
+};
+
+const validateConfigViewSection = (data: ConfigDetailType, status: ConfigStatus) => {
+  const viewDataList = [
+    { label: "Name", outValue: data.name },
+    { label: "Status", outValue: status },
+    { label: "Color", outValue: "-" },
+    { label: "Description", outValue: data.description || "-" },
+    { label: "Tags", outValue: data.tags.join("") || "-" },
+    { label: "Created Date", outValue: null },
+    { label: "Last Updated Date", outValue: null }
+  ];
+  validateViewSection2(".view-config-settings", viewDataList);
 };
 
 const validateEllipsisActions = (status: ConfigStatus) => {
@@ -69,6 +72,18 @@ const validateEllipsisActions = (status: ConfigStatus) => {
   cy.get(".dropdown.is-hoverable").realMouseMove(10, 10, { position: "right" });
 };
 
+export const triggerEllipsisAction = (id: "update" | "delete" | "toggleDisable" | "toggleEnable") => {
+  cy.get('button[data-test="action-ellipsis"]').should("be.visible");
+  cy.get(".dropdown.is-hoverable").realHover();
+  cy.get('[data-test="ellipsis-dropdown-menu"]')
+    .should("be.visible")
+    .within(() => {
+      cy.get(`[data-test="actions-in-ellipsis"][data-action-id="${id}"]`).should("be.visible").click();
+    });
+  cy.get(".dropdown.is-hoverable").realMouseMove(10, 10, { position: "right" });
+  cy.get('[data-test="loading-spinner"]', { timeout: 60 * 1000 }).should("not.exist");
+};
+
 export const validateActions = (isAddOnly: boolean) => {
   cy.get('[data-test="add-action"]').should("be.visible");
   if (isAddOnly) {
@@ -99,9 +114,15 @@ const validateCardActions = (status: ConfigStatus) => {
     });
 };
 
-export const validateListItem = (dataStatus: ConfigDataStatus, expected: "all" | "enable") => {
-  const title = dataStatus.data.name + " - " + dataStatus.status;
-  if (expected === "enable" && dataStatus.status !== "enable") {
+export const validateListItem2 = <T extends { description: string }>(
+  data: T,
+  status: ConfigStatus,
+  expected: "all" | "enable",
+  titleExtractor: (data: T, status: ConfigStatus) => string,
+  validateViewSection: (data: T, status: ConfigStatus) => void
+) => {
+  const title = titleExtractor(data, status);
+  if (expected === "enable" && status !== "enable") {
     cy.get(`[data-test="list-section"]`).find(`[data-test="listitem"][data-title="${title}"]`).should("not.exist");
     return;
   }
@@ -111,26 +132,40 @@ export const validateListItem = (dataStatus: ConfigDataStatus, expected: "all" |
       .first()
       .should("be.visible")
       .within(() => {
-        cy.get(".list-item-title").should("contain.text", dataStatus.data.name).should("contain.text", dataStatus.status);
-        if (dataStatus.data.description) {
-          cy.get(".list-item-description").should("contain.text", dataStatus.data.description.substring(0, 40));
+        cy.get(".list-item-title").should("contain.text", title);
+        if (data.description) {
+          cy.get(".list-item-description").should("contain.text", data.description.substring(0, 40));
         } else {
           cy.get(".list-item-description").should("have.text", "-");
         }
 
-        validateEllipsisActions(dataStatus.status);
+        validateEllipsisActions(status);
       });
 
     cy.get(`[data-test="listitem"][data-title="${title}"] [data-action-id="view"]`).should("be.visible").click();
   });
   cy.get('[data-test="edit-action"]').should("be.visible");
   cy.get('[data-test="delete-action"]').should("be.visible");
-  validateViewSection(dataStatus);
+  validateViewSection(data, status);
 };
 
-export const validateListItemCard = (dataStatus: ConfigDataStatus, expected: "all" | "enable") => {
-  const title = dataStatus.data.name + " - " + dataStatus.status;
-  if (expected === "enable" && dataStatus.status !== "enable") {
+const configTypeTitleExtractor = (data: ConfigDetailType, status: ConfigStatus) => {
+  const title = data.name + " - " + status;
+  return title;
+};
+export const validateListItem = (dataStatus: ConfigDataStatus, expected: "all" | "enable") => {
+  validateListItem2(dataStatus.data, dataStatus.status, expected, configTypeTitleExtractor, validateConfigViewSection);
+};
+
+export const validateListItemCard2 = <T extends { description: string }>(
+  data: T,
+  status: ConfigStatus,
+  expected: "all" | "enable",
+  titleExtractor: (data: T, status: ConfigStatus) => string,
+  validateViewSection: (data: T, status: ConfigStatus) => void
+) => {
+  const title = titleExtractor(data, status);
+  if (expected === "enable" && status !== "enable") {
     cy.get(`[data-test="list-section"]`).find(`[data-test="listitem"][data-title="${title}"]`).should("not.exist");
     return;
   }
@@ -140,26 +175,26 @@ export const validateListItemCard = (dataStatus: ConfigDataStatus, expected: "al
       .first()
       .should("be.visible")
       .within(() => {
-        if (title.length < 25) {
-          cy.get(".list-item-title").should("contain.text", dataStatus.data.name).should("contain.text", dataStatus.status);
-        } else {
-          cy.get(".list-item-title").should("contain.text", title.substring(0, 25));
-        }
-        if (dataStatus.data.description) {
-          cy.get(".list-item-description").should("contain.text", dataStatus.data.description.substring(0, 37));
+        cy.get(".list-item-title").should("contain.text", title.substring(0, 22));
+        if (data.description) {
+          cy.get(".list-item-description").should("contain.text", data.description.substring(0, 37));
         } else {
           cy.get(".list-item-description").should("have.text", "-");
         }
 
-        validateCardActions(dataStatus.status);
+        validateCardActions(status);
 
         cy.get(`[data-test="card-header-actions"][data-action-id="view"]`).should("be.visible").click();
         cy.get(".card-content.is-active").should("be.visible");
-        validateViewSection(dataStatus);
+        validateViewSection(data, status);
         cy.get(`[data-test="card-header-actions"][data-action-id="view"]`).should("be.visible").click();
         cy.get(".card-content.is-active").should("not.exist");
       });
   });
+};
+
+export const validateListItemCard = (dataStatus: ConfigDataStatus, expected: "all" | "enable") => {
+  validateListItemCard2(dataStatus.data, dataStatus.status, expected, configTypeTitleExtractor, validateConfigViewSection);
 };
 
 export const validateSwitch = (belongsTo: ConfigBelongsTo, isOn: boolean, doToggle?: boolean) => {
@@ -185,6 +220,11 @@ export const validateSwitch = (belongsTo: ConfigBelongsTo, isOn: boolean, doTogg
     containerId = "pymtAccTypEnableFilterswitchcheck";
     if (!isOn) {
       labelTextOff = "All Payment Account Types";
+    }
+  } else if (belongsTo === ConfigBelongsTo.SharePerson) {
+    containerId = "sharePersonEnableFilterswitchcheck";
+    if (!isOn) {
+      labelTextOff = "All Share Persons";
     }
   } else {
     throw new Error(`switch validation is not supported for [${belongsTo}]`);
