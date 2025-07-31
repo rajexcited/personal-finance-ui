@@ -2,7 +2,7 @@ import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { FunctionComponent, useState } from "react";
 import { Input, InputValidators, Switch, TagsInput, TextArea } from "../../../../components";
 import { ConfigTypeStatus, SharePersonResource, UpdateSharePersonResource } from "../../services";
-import { ConfigAction } from "../../../../shared";
+import { ConfigAction, getLogger, testAttributes } from "../../../../shared";
 
 interface UpdateSharePersonProps {
     details: SharePersonResource;
@@ -10,6 +10,8 @@ interface UpdateSharePersonProps {
     onUpdate (details: UpdateSharePersonResource): void;
     onCancel (): void;
 }
+
+const fcLogger = getLogger("FC.settings.SharePersonPage", null, null, "DISABLED");
 
 export const UpdateSharePerson: FunctionComponent<UpdateSharePersonProps> = (props) => {
     const [emailId, setEmailId] = useState(props.details.emailId);
@@ -25,6 +27,7 @@ export const UpdateSharePerson: FunctionComponent<UpdateSharePersonProps> = (pro
     const validatePhoneNo = InputValidators.phoneNoValidator();
 
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
+        const logger = getLogger("onSubmitHandler", fcLogger);
         event.preventDefault();
         const configData: UpdateSharePersonResource = {
             ...props.details,
@@ -38,6 +41,8 @@ export const UpdateSharePerson: FunctionComponent<UpdateSharePersonProps> = (pro
             action: ConfigAction.AddUpdateDetails,
             tags: tags
         };
+
+        logger.debug("before onUpdate call, configData=", configData);
         props.onUpdate(configData);
     };
 
@@ -48,7 +53,7 @@ export const UpdateSharePerson: FunctionComponent<UpdateSharePersonProps> = (pro
 
     return (
         <section>
-            <form onSubmit={ onSubmitHandler } >
+            <form onSubmit={ onSubmitHandler } { ...testAttributes("update-form") }>
                 <div className="columns">
                     <div className="column">
                         <Input
@@ -167,12 +172,14 @@ export const UpdateSharePerson: FunctionComponent<UpdateSharePersonProps> = (pro
                     <div className="columns">
                         <div className="column">
                             <div className="buttons">
-                                <button className="button" type="button" onClick={ onCancelHandler }> Cancel </button>
+                                <button className="button" type="button" onClick={ onCancelHandler }
+                                    { ...testAttributes("cancel-action") }> Cancel </button>
                             </div>
                         </div>
                         <div className="column">
                             <div className="buttons has-addons is-centered">
-                                <button className="button is-dark" type="submit"> Save </button>
+                                <button className="button is-dark" type="submit"
+                                    { ...testAttributes("save-action") }> Save </button>
                             </div>
                         </div>
                     </div>

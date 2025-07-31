@@ -60,6 +60,7 @@ const sharePersonAddUpdateActionHandler = async (request: Request) => {
 
   try {
     if (data.action === "addUpdateDetails") {
+      logger.debug("before calling addUpdate, data=", data);
       await sharePersonService.addUpdateSharePerson(data);
       const response: RouteHandlerResponse<string, null> = {
         type: "success",
