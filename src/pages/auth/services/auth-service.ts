@@ -19,6 +19,7 @@ import {
   updateNameInDetails,
   updateUserDetails
 } from "./auth-storage";
+import { pMemoizeSyncClear } from "../../../shared/utils/cache-utils";
 
 const rootPath = "/user";
 const MARGIN_ERROR_TIME_IN_SEC = 1;
@@ -41,6 +42,7 @@ export const login = pMemoize(async (details: UserLoginResource, forceLogin: boo
     const response = await axios.post(`${rootPath}/login`, data);
     logger.debug("received token response from api call");
     updateAuthorizationToken(response);
+    pMemoizeSyncClear(getUserDetails);
     logger.debug("stored token session");
   } catch (e) {
     try {
@@ -159,6 +161,7 @@ export const signup = pMemoize(async (details: UserSignupResource) => {
     // default configs will be created with sign up
     const response = await axios.post(`${rootPath}/signup`, data);
     updateAuthorizationToken(response);
+    pMemoizeSyncClear(getUserDetails);
     logger.debug("stored token session data");
 
     updateUserDetails({
@@ -223,6 +226,7 @@ export const refreshToken = pMemoize(async () => {
   try {
     const response = await axios.post(`${rootPath}/refresh`);
     updateAuthorizationToken(response);
+    pMemoizeSyncClear(getUserDetails);
     logger.debug("stored refreshed token data to session");
   } catch (e) {
     const err = e as Error;
@@ -245,6 +249,7 @@ export const deleteUserAccount = pMemoize(async (details: UserLoginResource) => 
     const response = await axios.delete(`${rootPath}/details`, { headers: { ...data } });
     logger.debug("response =", response);
     deleteUser();
+    pMemoizeSyncClear(getUserDetails);
   } catch (e) {
     const err = e as Error;
     handleRestErrors(err, logger);
