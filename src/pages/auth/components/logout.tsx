@@ -20,11 +20,11 @@ const LogoutPage: FunctionComponent = () => {
         <section className="section">
             <div className="columns is-centered">
                 <div className="column is-two-thirds">
-                    <article className="message is-link" { ...testAttributes("logout-message") }>
-                        <div className="message-header">
+                    <article className="message is-link">
+                        <div className="message-header" { ...testAttributes("logout-message-header") }>
                             <p>Bye, { name }!</p>
                         </div>
-                        <div className="message-body">
+                        <div className="message-body" { ...testAttributes("logout-message") }>
                             {
                                 location.state?.from?.idleTimeout &&
                                 <p>Since there is no activity,</p>

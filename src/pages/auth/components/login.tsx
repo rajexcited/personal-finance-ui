@@ -16,7 +16,7 @@ enum LoginSubmitStatus {
     CompletedError = "error-response"
 }
 
-const fcLogger = getLogger("FC.LoginPage", null, null, "DISABLED");
+const fcLogger = getLogger("FC.LoginPage", null, null, "DEBUG");
 
 const LoginPage: FunctionComponent = () => {
     const [errorMessage, setErrorMessage] = useState('');

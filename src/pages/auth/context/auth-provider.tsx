@@ -4,7 +4,6 @@ import AuthContext, { dummyUserDetails } from "./auth-context";
 import { authService, UserDetailsResource, UserSignupResource } from "../services";
 import { Anchor, Animated } from "../../../components";
 import { ObjectDeepDifference, getLogger, testAttributes } from "../../../shared";
-import { useLocation } from "react-router-dom";
 
 
 
@@ -22,7 +21,7 @@ enum ExpireStatus {
 const ONE_SECOND_IN_MILLI = 1000;
 const NOTIFY_USER_REFRESH_LOGIN_SESSION = 60;
 
-const fcLogger = getLogger("FC.AuthContextProvider", null, null, "DISABLED");
+const fcLogger = getLogger("FC.AuthContextProvider", null, null, "DEBUG");
 
 const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ children }) => {
 

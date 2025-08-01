@@ -22,7 +22,7 @@ import {
 
 const rootPath = "/user";
 const MARGIN_ERROR_TIME_IN_SEC = 1;
-const _logger = getLogger("service.auth", null, null, "DISABLED");
+const _logger = getLogger("service.auth", null, null, "DEBUG");
 
 export const login = pMemoize(async (details: UserLoginResource, forceLogin: boolean) => {
   const logger = getLogger("login", _logger);
