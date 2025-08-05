@@ -91,9 +91,9 @@ export const logout = pMemoize(async () => {
   logger.debug("session is cleared. calling api");
   try {
     // to make user experience better, not waiting for response. actual api call may take  upto 3 sec
-    axios.post(`${rootPath}/logout`);
+    await axios.post(`${rootPath}/logout`);
     logger.debug("api successful");
-    await sleep("0.5 sec");
+    // await sleep("0.5 sec");
   } catch (e) {
     logger.debug("error logging out", e);
   } finally {
