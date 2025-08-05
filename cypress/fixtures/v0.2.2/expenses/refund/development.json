@@ -1,0 +1,64 @@
+{
+  "overcharge-reversal": {
+    "billName": "subscription overcharge reversal",
+    "tags": ["subscription", "adjustment"],
+    "receipts": [{ "name": "saas_refund_receipt.png", "contentType": "image/png" }],
+    "amount": "19.00",
+    "description": "Refund for incorrect double billing on July Figma Pro plan",
+    "reasonName": "billing error",
+    "reasonRef": "billing-error",
+    "paymentAccountName": "business pro 7788",
+    "paymentAccountRef": "business-cc",
+    "refundDate": "2025-07-04"
+  },
+  "headphone-return": {
+    "billName": "headphones return",
+    "tags": ["electronics", "return", "partial"],
+    "receipts": [{ "name": "headphones_refund.jpg", "contentType": "image/jpeg" }],
+    "amount": "89.99",
+    "description": "Refund issued for returned noise-canceling headphones",
+    "reasonName": "product defect",
+    "reasonRef": "product-defect",
+    "paymentAccountName": "travel rewards 2025",
+    "paymentAccountRef": "travel-rewards-cc",
+    "refundDate": "2025-07-01"
+  },
+  "headphone-return-v2": {
+    "billName": "return headphone",
+    "tags": ["electronics", "partial"],
+    "receipts": [{ "name": "headphones_refund.jpg", "contentType": "image/jpeg" }],
+    "amount": "109.99",
+    "description": "Refund issued for headphone",
+    "reasonName": "billing error",
+    "reasonRef": "billing-error",
+    "paymentAccountName": "daily spender 1010",
+    "paymentAccountRef": "daily-cc",
+    "purchaseRef": "office-supplies",
+    "refundDate": "2025-06-30"
+  },
+  "giftcard-return": {
+    "billName": "giftcard balance reversal",
+    "tags": ["gift card", "e-commerce", "partial"],
+    "receipts": [{ "name": "giftcard_refund.pdf", "contentType": "application/pdf" }],
+    "amount": "25.00",
+    "description": "Remaining balance refunded after canceled order",
+    "reasonName": "cancelled",
+    "reasonRef": "cancelled",
+    "paymentAccountName": "amazon gift 50",
+    "paymentAccountRef": "amazon-giftcard",
+    "purchaseRef": "giftcard",
+    "refundDate": "2025-06-28"
+  },
+  "birthday-gift-adjustment": {
+    "billName": "birthday gift overprice adjustment",
+    "tags": ["gift"],
+    "receipts": [],
+    "amount": "5.10",
+    "description": "Adjustment of over price of birthday",
+    "reasonName": "overprice",
+    "reasonRef": "overprice",
+    "paymentAccountName": "cash",
+    "paymentAccountRef": "cash",
+    "refundDate": "2025-02-21"
+  }
+}

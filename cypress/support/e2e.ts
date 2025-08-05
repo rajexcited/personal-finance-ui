@@ -19,15 +19,11 @@ import "./chai";
 import registerCypressGrep from "@cypress/grep";
 import "cypress-mochawesome-reporter/register";
 import "../plugins/reporter-helper";
-import { IndexedDbName } from "../plugins/indexedDb/resource";
 import "cypress-real-events";
 
 registerCypressGrep();
 
-/**
- * Set a secure short lived cookie to indicate the website to be ready for automation e2e test
- */
-beforeEach(() => {
+const registerAccessTokenExtractor = () => {
   const siteUrl = Cypress.config("baseUrl") || "";
   const domain = new URL(siteUrl).hostname;
   console.log("siteUrl=", siteUrl);
@@ -42,13 +38,17 @@ beforeEach(() => {
         const existingResponseCookies = res.headers["set-cookie"] || [];
         res.headers["set-cookie"] = [...existingResponseCookies, newResponseCookie];
         // console.log("response cookies=", res.headers["Cookie"]);
-        // console.log("body", typeof res.body, res.body);
-        // const body = res.body as string;
-        // const bodyParts = body.split("</body>");
-        // res.body = [bodyParts[0], '<script type="text/javascript">' + scriptContent + "</script>", bodyParts[1]].join("</body>");
       });
     });
   });
+};
+
+/**
+ * Set a secure short lived cookie to indicate the website to be ready for automation e2e test
+ */
+beforeEach(() => {
+  registerAccessTokenExtractor();
+  Cypress.env("testStartTime", new Date().toISOString());
 });
 
 before(() => {
@@ -58,6 +58,16 @@ before(() => {
   }
 });
 
-beforeEach(() => {
-  Cypress.env("testStartTime", new Date().toISOString());
+Cypress.on("fail", () => {
+  const accessToken = Cypress.env("accessToken");
+  const apiBaseUrl = Cypress.env("API_BASE_URL");
+  if (accessToken && apiBaseUrl) {
+    cy.request({
+      method: "POST",
+      url: apiBaseUrl + "/user/logout",
+      headers: {
+        Authorization: accessToken
+      }
+    });
+  }
 });

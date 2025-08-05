@@ -1,10 +1,19 @@
 import { IndexedDbName } from "../../plugins/indexedDb/resource";
 import { getPaymentAccount } from "../../support/fixture-utils/read-payment-account";
 import { NavBarSelectors } from "../../support/resource-types";
+import { createOrUpdatePaymentAccountType } from "../9-settings/utils/config-type-utils";
 import { validateCard } from "./utils/view-payment-account-utils";
 
 function runAddPaymentAccountTest(paymentAccountRef: string) {
   cy.loginThroughUI("user1-success");
+
+  getPaymentAccount(paymentAccountRef).then((paymentAccountData) => {
+    createOrUpdatePaymentAccountType({
+      ref: paymentAccountData.accountTypeRef,
+      status: "enable"
+    });
+  });
+
   cy.clickNavLinkAndWait(NavBarSelectors.PaymentAccountNavlink);
   cy.url().should("include", "/payment-accounts");
   cy.get('[data-test="add-payment-account-button"]').should("be.visible").click();

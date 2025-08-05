@@ -140,3 +140,7 @@ export const getPaymentAccountTypeList = (paymentAccountTypeRefs: string[]) => {
   const aliasName = getAliasName(ConfigBelongsTo.PaymentAccountType);
   return getConfigTypeList(ConfigBelongsTo.PaymentAccountType, paymentAccountTypeRefs);
 };
+
+export const getPaymentAccountType = (paymentAccountTypeRef: string) => {
+  return getConfigType(ConfigBelongsTo.PaymentAccountType, paymentAccountTypeRef);
+};

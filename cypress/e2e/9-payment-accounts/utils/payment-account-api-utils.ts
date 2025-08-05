@@ -7,31 +7,96 @@ import {
 } from "../../../support/api-resource-types";
 import { getPaymentAccountList, PaymentAccountDetailType, updatePaymentAccount } from "../../../support/fixture-utils/read-payment-account";
 import { v4 as uuidv4 } from "uuid";
-import { getPaymentAccountTypesFromApi } from "../../9-settings/utils/config-type-utils";
+import { createOrUpdatePaymentAccountType, getPaymentAccountTypesFromApi } from "../../9-settings/utils/config-type-utils";
+import { getPaymentAccountType } from "../../../support/fixture-utils/read-config-type";
 
 const paymentAccountStore = "pymt-account-store";
 
 const convertToApiResource = (
   paymentAccountData: PaymentAccountDetailType,
   status: PaymentAccountStatus,
-  currencyProfile: ApiCurrencyProfileResource
+  currencyProfile: ApiCurrencyProfileResource,
+  paymentAccountApiMap: Record<string, ApiPaymentAccountResource>
 ) => {
+  const paymentAccountApi: ApiPaymentAccountResource | null = paymentAccountApiMap[paymentAccountData.shortName];
+  const paymentAccountStatus = paymentAccountApi?.status === "immutable" ? paymentAccountApi.status : status;
   const apiBody: ApiPaymentAccountResource = {
-    id: paymentAccountData.id,
+    id: paymentAccountData.id || paymentAccountApi?.id || uuidv4(),
     shortName: paymentAccountData.shortName,
     institutionName: paymentAccountData.institutionName,
     accountIdNum: paymentAccountData.accountName,
     typeId: paymentAccountData.accountTypeId,
     description: paymentAccountData.description,
-    status: status,
+    status: paymentAccountStatus,
     tags: paymentAccountData.tags,
-    currencyProfileId: currencyProfile.id!,
+    currencyProfileId: currencyProfile.id,
     auditDetails: {
-      createdOn: "",
+      createdOn: paymentAccountApi?.auditDetails.createdOn || "",
       updatedOn: ""
     }
   };
   return apiBody;
+};
+
+const getPaymentAccountUrl = () => {
+  const apiBaseUrl = Cypress.env("API_BASE_URL");
+  if (apiBaseUrl) {
+    return apiBaseUrl + "/payment/accounts";
+  }
+  throw new Error("api baseUrl is not found");
+};
+
+const dispatchApiAddUpdate = (apiResource: ApiPaymentAccountResource) => {
+  const apiBaseUrl = Cypress.env("API_BASE_URL");
+  if (apiBaseUrl) {
+    return cy
+      .request({
+        method: "POST",
+        url: getPaymentAccountUrl(),
+        body: apiResource,
+        headers: {
+          Authorization: Cypress.env("accessToken")
+        }
+      })
+      .then((response) => {
+        console.log("response=", response);
+        expect(response.status).to.least(200);
+        expect(response.body).to.an("object");
+        return response.body as ApiPaymentAccountResource;
+      });
+  }
+  return cy
+    .indexedDb(IndexedDbName.MockExpense)
+    .updateItems([apiResource], { storeName: paymentAccountStore })
+    .then((updatedResources) => {
+      return updatedResources[0];
+    });
+};
+
+const dispatchApiGetList = () => {
+  const apiBaseUrl = Cypress.env("API_BASE_URL");
+  if (apiBaseUrl) {
+    return cy
+      .request({
+        method: "GET",
+        url: getPaymentAccountUrl(),
+        qs: {
+          status: "enable"
+        },
+        headers: {
+          Authorization: Cypress.env("accessToken")
+        }
+      })
+      .then((response) => {
+        console.log("response=", response);
+        expect(response.status).to.equals(200);
+        expect(response.body).to.an("array");
+        expect(response.body.length).to.least(1);
+        return response.body as ApiPaymentAccountResource[];
+      });
+  }
+  // local
+  return cy.indexedDb(IndexedDbName.MockExpense).getItems<ApiPaymentAccountResource>({ storeName: paymentAccountStore });
 };
 
 export const createOrUpdatePaymentAccount = (requests: Array<{ ref: string; status: PaymentAccountStatus }>) => {
@@ -41,81 +106,60 @@ export const createOrUpdatePaymentAccount = (requests: Array<{ ref: string; stat
     return obj;
   }, {} as Record<string, PaymentAccountStatus>);
   getPaymentAccountList(Object.keys(paymentAccountRequestMap)).then((paymentAccountDataList) => {
-    const apiBaseUrl = Cypress.env("API_BASE_URL");
+    for (const paymentAccountData of paymentAccountDataList) {
+      createOrUpdatePaymentAccountType({
+        ref: paymentAccountData.accountTypeRef,
+        status: "enable"
+      });
+    }
 
     cy.getCurrencyProfile().then((currencyProfile) => {
-      if (apiBaseUrl) {
-        // call post api and update
-        const pymtAccApiUrl = Cypress.env("API_BASE_URL") + "/payment/accounts";
-        const apiResources = paymentAccountDataList.map((paymentAccountData) =>
-          convertToApiResource(paymentAccountData, paymentAccountRequestMap[paymentAccountData.ref], currencyProfile)
-        );
+      dispatchApiGetList().then((paymentAccountApiList) => {
+        // api map to lookup to create addUpdate resource
+        const paymentAccountApiMap: Record<string, ApiPaymentAccountResource> = {};
+        paymentAccountApiList.forEach((paymentAccountApi) => {
+          if (!paymentAccountApiMap[paymentAccountApi.shortName]) {
+            paymentAccountApiMap[paymentAccountApi.shortName] = paymentAccountApi;
+          } else if (paymentAccountApiMap[paymentAccountApi.shortName].status === "deleted" && paymentAccountApi.status !== "deleted") {
+            paymentAccountApiMap[paymentAccountApi.shortName] = paymentAccountApi;
+          }
+        });
 
-        for (const apiBody of apiResources) {
-          cy.request({
-            method: "POST",
-            url: pymtAccApiUrl,
-            body: apiBody,
-            headers: {
-              Authorization: Cypress.env("accessToken")
-            }
-          }).then((response) => {
-            console.log("response=", response);
-          });
-        }
-      } else {
-        // update mock indexDb
-        return cy
-          .indexedDb(IndexedDbName.MockExpense)
-          .getItems<ApiPaymentAccountResource>({ storeName: paymentAccountStore })
-          .then((pymtAccList) => {
-            console.log("results", pymtAccList);
-            getPaymentAccountTypesFromApi(paymentAccountDataList.map((pymtAcc) => pymtAcc.accountTypeName)).then((paymentAccountTypes) => {
-              const paymentAccountTypeMap = paymentAccountTypes.reduce((acc, curr) => {
-                acc[curr.name] = curr;
-                return acc;
-              }, {} as Record<string, ApiConfigTypeResource>);
-              const paymentAccountMap: Record<string, ApiPaymentAccountResource> = {};
-              pymtAccList.forEach((paymentAccount) => {
-                if (!paymentAccountMap[paymentAccount.shortName]) {
-                  paymentAccountMap[paymentAccount.shortName] = paymentAccount;
-                } else if (paymentAccountMap[paymentAccount.shortName].status === "deleted" && paymentAccount.status !== "deleted") {
-                  paymentAccountMap[paymentAccount.shortName] = paymentAccount;
-                }
-              });
+        console.log("paymentAccountApiMap=", paymentAccountApiMap);
 
-              const apiResources = paymentAccountDataList.map((paymentAccountData) => {
-                const apiRes = convertToApiResource(paymentAccountData, paymentAccountRequestMap[paymentAccountData.ref], currencyProfile);
-                if (!apiRes.id) {
-                  if (paymentAccountMap[apiRes.shortName]) {
-                    apiRes.id = paymentAccountMap[apiRes.shortName].id;
-                  } else {
-                    apiRes.id = uuidv4();
-                  }
-                }
-                paymentAccountData.id = apiRes.id;
-                paymentAccountData.accountTypeId = apiRes.typeId;
-                apiRes.typeId = paymentAccountTypeMap[paymentAccountData.accountTypeName].id || "NA";
-                // special case for local
-                console.log(paymentAccountMap, apiRes);
-                if (paymentAccountMap[apiRes.shortName]?.status === "immutable") {
-                  apiRes.status = "immutable";
-                }
-                return apiRes;
-              });
-
-              for (let paymentAccountData of paymentAccountDataList) {
-                updatePaymentAccount(paymentAccountData.ref, paymentAccountData);
+        for (const paymentAccountData of paymentAccountDataList) {
+          const apiResource = convertToApiResource(
+            paymentAccountData,
+            paymentAccountRequestMap[paymentAccountData.ref],
+            currencyProfile,
+            paymentAccountApiMap
+          );
+          if (!apiResource.typeId) {
+            getPaymentAccountType(paymentAccountData.accountTypeRef).then((paymentAccTypeData) => {
+              if (!paymentAccTypeData) {
+                throw new Error("missing payment account type data");
               }
-
-              // update
-              console.log("updating api resource ", apiResources);
-              cy.indexedDb(IndexedDbName.MockExpense).updateItems(apiResources, { storeName: paymentAccountStore });
+              if (paymentAccountApiMap[paymentAccountData.shortName]) {
+                updatePaymentAccount(paymentAccountData.ref, {
+                  ...paymentAccountData,
+                  id: paymentAccountApiMap[paymentAccountData.shortName].id,
+                  accountTypeId: paymentAccTypeData.id
+                });
+              }
+              dispatchApiAddUpdate({ ...apiResource, typeId: paymentAccTypeData.id });
+              // reset the indexDb cache to ensure api hit
               cy.indexedDb(IndexedDbName.Expense).clearStore({ storeName: paymentAccountStore });
             });
-          });
-      }
-      // reset the indexDb cache to ensure api hit
+          } else {
+            if (paymentAccountApiMap[paymentAccountData.shortName]) {
+              updatePaymentAccount(paymentAccountData.ref, { ...paymentAccountData, id: paymentAccountApiMap[paymentAccountData.shortName].id });
+            }
+            dispatchApiAddUpdate(apiResource);
+            // reset the indexDb cache to ensure api hit
+            cy.indexedDb(IndexedDbName.Expense).clearStore({ storeName: paymentAccountStore });
+          }
+        }
+      });
     });
   });
 };

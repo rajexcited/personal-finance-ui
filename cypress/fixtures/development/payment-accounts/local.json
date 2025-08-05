@@ -4,14 +4,16 @@
     "accountName": "cash",
     "institutionName": "",
     "accountTypeName": "savings",
+    "accountTypeRef": "savings",
     "tags": ["cash"],
     "description": "my cash, notes or coins"
   },
   "view-checking1": {
     "shortName": "bofa demo checking",
     "accountName": "checking 1",
-    "institutionName": "bank of america",
+    "institutionName": "United Bank",
     "accountTypeName": "checking",
+    "accountTypeRef": "checking",
     "tags": ["bank", "primary"],
     "description": "Primary checking dummy account"
   },

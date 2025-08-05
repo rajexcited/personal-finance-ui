@@ -17,7 +17,7 @@
     "pretests:regression:testplan": "npm run build",
     "tests:regression:testplan": "cross-env NODE_ENV=testplan cypress run --browser chrome --env grepTags=regression",
     "pretests:developer": "npm run build",
-    "tests:developer": "cross-env NODE_ENV=local cypress open"
+    "tests:developer": "cross-env NODE_ENV=development cypress open"
   },
   "license": "ISC",
   "homepage": "https://github.com/rajexcited/personal-finance-ui#readme",

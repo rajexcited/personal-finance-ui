@@ -55,6 +55,7 @@ const verifyDeleteConfirmDialog = (
 function runDeletePaymentAccountTest(paymentAccountRef: string) {
   cy.loginThroughUI("user1-success");
   createOrUpdatePaymentAccount([{ ref: paymentAccountRef, status: "enable" }]);
+
   cy.clickNavLinkAndWait(NavBarSelectors.PaymentAccountNavlink);
   verifyViewPaymentAccountCard(paymentAccountRef);
 

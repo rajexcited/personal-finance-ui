@@ -23,40 +23,17 @@ function injectIdb() {
         return cy.get("head").then(($head) => {
           const script = document.createElement("script");
           script.type = "text/javascript";
-          // script.src = "cypress/fixures/idb-bundle.js.txt";
           script.text = scriptContent;
-          // const scriptLoadedPromise = new Cypress.Promise((resolve) => {
-          //   script.onload = resolve;
-          // });
           $head.append(script);
-          // $body.append("<span>aksdhjaksda</span>");
-          // console.log($body);
-          // console.log(script);
-          // console.log($body.find("script"));
-          // console.log((win as IdbWindow).__idb__);
-          // return scriptLoadedPromise.then((ev) => {
           console.log("Script loaded and executed");
           console.log(new Date(), "inside head after idb load", wind.__idb__);
           if (!wind.__idb__) {
             throw new Error("idb is not initialized");
           }
-          //   return ev;
-          // });
           cy.wait(100);
         });
-        // console.log("delete database", (win as IdbWindow).__idb__);
-        // let promise;
-        // if (databaseName) {
-        //   promise = deleteDatabase(win, databaseName);
-        // } else {
-        //   deleteDatabase(win, "expenseDb").then(() => {
-        //     promise = deleteDatabase(win, "mock-expenseDb");
-        //   });
-        // }
-        // return promise;
       });
     }
-
     // console.log(new Date(), "script is loaded and idb is initialized already");
   });
 }

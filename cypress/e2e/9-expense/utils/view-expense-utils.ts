@@ -144,7 +144,7 @@ export const validateExpenseCardOnSmall = (belongsTo: ExpenseBelongsTo, ref: str
               expenseDataList.push({ label: "", outValue: verifiedTimestamp === "-" ? "Purchase un-verified" : verifiedTimestamp });
             }
             expenseDataList.push(
-              { label: "Tags", outValue: expenseData.tags.join("") },
+              { label: "Tags", outValue: expenseData.tags.join("").replace(" ", "-") },
               { label: "Share with Persons", outValue: "-" },
               { label: "Description", outValue: expenseData.description }
             );
@@ -225,7 +225,7 @@ export const validateExpenseTableRowOnLarge = (belongsTo: ExpenseBelongsTo, ref:
               `$ ${expenseData.amount}`,
               expenseCategoryName
             ];
-            const tags = expenseData.tags.join(",");
+            const tags = expenseData.tags.join(",").replace(" ", "-");
             if (tags.length > 15) {
               expenseDataList.push(tags.substring(0, 12) + "...");
             } else {

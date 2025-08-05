@@ -1,8 +1,8 @@
 import { getUserDetails } from "../../support/fixture-utils/read-user";
-import { DeviceWidth, NavBarSelectors } from "../../support/resource-types";
+import { DeviceModeType, NavBarSelectors } from "../../support/resource-types";
 import { verifyPublicLinks, verifySecuredLinks, verifySecuredLinksFunctional } from "../utils/auth-utils";
 
-function runLoginTests(userRef: string, deviceWidth: DeviceWidth) {
+function runLoginTests(userRef: string, deviceMode: DeviceModeType) {
   verifyPublicLinks(true);
   verifySecuredLinks(false);
   cy.clickNavLinkAndWait(NavBarSelectors.LoginNavlink);
@@ -12,7 +12,11 @@ function runLoginTests(userRef: string, deviceWidth: DeviceWidth) {
     cy.get("#emailId").should("be.visible").type(user.emailId);
     cy.get("#password").should("be.visible").type(user.password);
   });
-  cy.get('[data-test="signup-button"]').should(deviceWidth === DeviceWidth.Small ? "not.be.visible" : "be.visible");
+  if (deviceMode === "large") {
+    cy.get('[data-test="signup-button"]').should("be.visible");
+  } else {
+    cy.get('[data-test="signup-button"]').should("not.be.visible");
+  }
   cy.get('[data-test="login-button"]').should("be.visible").click();
   cy.waitForPageLoad();
   cy.get('[data-test="login-error-message"]').should("not.exist");
@@ -29,11 +33,11 @@ function runLogoutTest() {
   verifySecuredLinks(false);
 }
 
-function runLoginLogoutTest(userRef: string, deviceWidth: DeviceWidth) {
-  runLoginTests(userRef, deviceWidth);
+function runLoginLogoutTest(userRef: string, deviceMode: DeviceModeType) {
+  runLoginTests(userRef, deviceMode);
   runLogoutTest();
   cy.wait(5000);
-  runLoginTests(userRef, deviceWidth);
+  runLoginTests(userRef, deviceMode);
 }
 
 describe("User Login Logout Success Flow", () => {
@@ -54,13 +58,13 @@ describe("User Login Logout Success Flow", () => {
         cy.get("#brandfinance-navlink").should("be.visible").click();
         cy.url().should("not.include", "/login").should("include", "/");
         // run test using login nav link
-        runLoginLogoutTest("user1-success", DeviceWidth.Small);
+        runLoginLogoutTest("user1-success", "small");
       });
 
       it("via large desktop", { tags: ["desktop"] }, () => {
         cy.setViewport("desktop");
         cy.visit("/");
-        runLoginLogoutTest("user1-success", DeviceWidth.Large);
+        runLoginLogoutTest("user1-success", "large");
       });
     }
   );

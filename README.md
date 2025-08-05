@@ -91,12 +91,16 @@ For a detailed analysis of framework selection, refer to [Library and Tool Selec
 
 Before running any tests or development tasks, ensure the `.env` file is correctly configured with necessary properties.
 
+- **CYPRESS_E2E_TEST_COOKIE_VALUE:** according to environment, set the value. make sure to have same value as in deployed stack.
+- **SITE_BASE_URL:** this is cf domain url
+- **CYPRESS_API_BASE_URL:** this cf api url
+
 ##### Example: local Configuration `.env.local`
 
 ```properties .env.local
 CYPRESS_ENV_ID=local
 SITE_BASE_URL=http://localhost:3000/personal-finance-ui
-# the value to generated for each environment and release. can find id through deployed stack 
+# the value to generated for each environment and release. can find id through deployed stack
 CYPRESS_E2E_TEST_COOKIE_VALUE=local-e2e
 ```
 
@@ -106,7 +110,7 @@ CYPRESS_E2E_TEST_COOKIE_VALUE=local-e2e
 CYPRESS_ENV_ID=development
 SITE_BASE_URL=https://d5n3v07w6tibn.cloudfront.net/personal-finance
 CYPRESS_API_BASE_URL=https://d5n3v07w6tibn.cloudfront.net/api
-# the value to generated for each environment and release. can find id through deployed stack 
+# the value to generated for each environment and release. can find id through deployed stack
 CYPRESS_E2E_TEST_COOKIE_VALUE=local-e2e
 CYPRESS_UI_VERSION=v0.2.2
 ```
@@ -117,17 +121,18 @@ CYPRESS_UI_VERSION=v0.2.2
 CYPRESS_ENV_ID=testplan
 SITE_BASE_URL=https://d2wfayzoko7f48.cloudfront.net/personal-finance
 CYPRESS_API_BASE_URL=https://d5n3v07w6tibn.cloudfront.net/api
-# the value to generated for each environment and release. can find id through deployed stack 
+# the value to generated for each environment and release. can find id through deployed stack
 CYPRESS_E2E_TEST_COOKIE_VALUE=local-e2e
 CYPRESS_UI_VERSION=v0.2.2
 ```
+
 ##### Example: Production Configuration `.env.production.local`
 
 ```properties .env.production.local
 CYPRESS_ENV_ID=production
 SITE_BASE_URL=https://d380yt1dhnt8n.cloudfront.net/personal-finance
 CYPRESS_API_BASE_URL=https://d380yt1dhnt8n.cloudfront.net/api
-# the value to generated for each environment and release. can find id through deployed stack 
+# the value to generated for each environment and release. can find id through deployed stack
 CYPRESS_E2E_TEST_COOKIE_VALUE=local-e2e
 CYPRESS_UI_VERSION=v0.2.2
 ```

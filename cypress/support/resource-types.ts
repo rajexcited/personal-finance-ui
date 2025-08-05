@@ -16,11 +16,7 @@ export enum EnvId {
   Local = "local"
 }
 
-export enum DeviceWidth {
-  Large = "large",
-  Medium = "medium",
-  Small = "small"
-}
+export type DeviceModeType = "large" | "small";
 
 export class UnSupportedError extends Error {
   public name = "UnSupportedError";

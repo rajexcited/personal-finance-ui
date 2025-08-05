@@ -86,7 +86,7 @@ describe("Expense - Update Income Flow", () => {
   });
 
   afterEach(() => {
-    // cy.logoutFromNav();
+    cy.logoutFromNav();
   });
 
   context(

@@ -1,11 +1,10 @@
 import { ConfigBelongsTo } from "../../support/api-resource-types";
 import { getPaymentAccountTypeList } from "../../support/fixture-utils/read-config-type";
-import { NavBarSelectors } from "../../support/resource-types";
+import { DeviceModeType, NavBarSelectors } from "../../support/resource-types";
 import { createOrUpdatePaymentAccountType } from "./utils/config-type-utils";
 import {
   buildConfigDataListWithStatus,
   ConfigTypeOptions,
-  DeviceModeType,
   validateActions,
   validateListItem,
   validateListItemCard,

@@ -8,6 +8,7 @@ function runPaymentAccountsTest() {
     { ref: "cash", status: "enable" },
     { ref: "view-checking1", status: "enable" }
   ]);
+
   cy.clickNavLinkAndWait(NavBarSelectors.PaymentAccountNavlink);
   cy.url().should("include", "/payment-accounts");
   cy.get('[data-test="add-payment-account-button"]').should("be.visible");

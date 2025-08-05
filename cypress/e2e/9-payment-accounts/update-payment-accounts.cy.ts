@@ -21,6 +21,7 @@ const verifyViewPaymentAccountCard = (existingPaymentAccountRef: string) => {
 function runUpdatePaymentAccountTest(paymentAccountoptions: UpdateRefOptions) {
   cy.loginThroughUI("user1-success");
   createOrUpdatePaymentAccount([{ ref: paymentAccountoptions.existingRef, status: "enable" }]);
+
   cy.clickNavLinkAndWait(NavBarSelectors.PaymentAccountNavlink);
   verifyViewPaymentAccountCard(paymentAccountoptions.existingRef);
 

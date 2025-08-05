@@ -3,7 +3,6 @@ import { ConfigDetailType } from "../../../support/fixture-utils/read-config-typ
 
 export type ValidateConfigTypeCallbackFn = (belongsTo: ConfigBelongsTo, ref: string) => Cypress.Chainable<JQuery<HTMLElement>>;
 export type ConfigTypeOptions = { ref: string; status: ConfigStatus };
-export type DeviceModeType = "large" | "small";
 export type ConfigDataStatus = { data: ConfigDetailType; status: ConfigStatus };
 
 export const validateViewSection2 = (viewSettingsSelector: string, viewDataList: Array<{ label: string; outValue: string | null }>) => {

@@ -6,7 +6,8 @@ import {
   ApiResourceReceipt,
   ApiResourceRefundDetails,
   ExpenseBelongsTo,
-  ExpenseStatus
+  ExpenseStatus,
+  ReceiptContentType
 } from "../../../support/api-resource-types";
 import { dateTimestampFormatApi, expenseDateFormatFixture, formatTimestamp, parseTimestamp } from "../../../support/date-utils";
 import { getIncomeType, getPurchaseType, getRefundReason } from "../../../support/fixture-utils/read-config-type";
@@ -42,11 +43,40 @@ type ExpenseDetailTypeMap = {
   [ExpenseBelongsTo.Refund]: ExpenseRefundDetailType;
 };
 
-const dispatchApiExpenseReceiptAdd = (dbItem: DbReceiptFileResource) => {
+const getExpenseUrl = (belongsTo: ExpenseBelongsTo) => {
   const apiBaseUrl = Cypress.env("API_BASE_URL");
-  if (!apiBaseUrl) {
-    cy.indexedDb(IndexedDbName.MockExpense).updateItems([dbItem], { storeName: receiptStoreName });
+  if (apiBaseUrl) {
+    return `${apiBaseUrl}/expenses/${belongsTo}`;
   }
+  throw new Error("expense api baseUrl is not found for " + belongsTo);
+};
+
+const dispatchApiReceiptAdd = (dbItem: DbReceiptFileResource, contentType: ReceiptContentType, binaryString: string) => {
+  const apiBaseUrl = Cypress.env("API_BASE_URL");
+  const fileArrayBuffer = Cypress.Blob.binaryStringToArrayBuffer(binaryString);
+  console.log("file array buffer: ", fileArrayBuffer.byteLength, fileArrayBuffer);
+  if (!apiBaseUrl) {
+    return cy.indexedDb(IndexedDbName.MockExpense).updateItems([{ ...dbItem, filedata: fileArrayBuffer }], { storeName: receiptStoreName });
+  }
+
+  const blobdata = Cypress.Blob.binaryStringToBlob(binaryString, contentType);
+  // console.log("blobData: ", blobdata, "setting to formData");
+
+  return cy
+    .request({
+      method: "POST",
+      url: `${getExpenseUrl(dbItem.belongsTo)}/id/${dbItem.relationId}/receipts/id/${dbItem.id}`,
+      body: blobdata,
+      headers: {
+        Authorization: Cypress.env("accessToken"),
+        "Content-Type": contentType
+      },
+      encoding: "binary"
+    })
+    .then((response) => {
+      console.log("receipt upload response=", response);
+      expect(response.status).to.equals(200);
+    });
 };
 
 const prepareExpenseReceipts = <T extends keyof ExpenseDetailTypeMap>(options: {
@@ -68,23 +98,24 @@ const prepareExpenseReceipts = <T extends keyof ExpenseDetailTypeMap>(options: {
     if (apiReceiptMap[rct.name]) {
       dataReceipts.push(apiReceiptMap[rct.name]);
     } else {
-      cy.fixture(`expenses/${options.testExpenseData.belongsTo}/${rct.name}`, "binary").then((binaryfile) => {
+      cy.fixture(`expenses/${options.testExpenseData.belongsTo}/${rct.name}`, "binary").then((binarystring) => {
         //upload receipt
         let receiptId = rct.id || rct.name;
         if (!validate(receiptId)) {
           receiptId = uuidv4();
         }
 
-        const filearrabuffer = Cypress.Blob.binaryStringToArrayBuffer(binaryfile);
+        // console.log("binary string", binarystring);
         const dbItem: DbReceiptFileResource = {
-          filedata: filearrabuffer,
+          // filedata: filearrabuffer,
+          filedata: new ArrayBuffer(),
           id: receiptId,
           name: rct.name,
           createdOn: new Date(),
           relationId: purchaseId,
           belongsTo: options.testExpenseData.belongsTo
         };
-        dispatchApiExpenseReceiptAdd(dbItem);
+        dispatchApiReceiptAdd(dbItem, rct.contentType, binarystring);
 
         dataReceipts.push({
           id: dbItem.id,
@@ -100,32 +131,65 @@ const prepareExpenseReceipts = <T extends keyof ExpenseDetailTypeMap>(options: {
 };
 
 const dispatchApiExpenseGetById = <T extends keyof ApiResourceExpenseDetailsMap>(belongsTo: T, id?: string | null) => {
+  // using workaround to prevent typescript ambiguity compilation error because of null
+  const defaultResponse = {} as ApiResourceExpenseDetailsMap[T];
   if (!id) {
-    return cy.wrap(null);
+    return cy.wrap(defaultResponse);
   }
   const apiBaseUrl = Cypress.env("API_BASE_URL");
   if (!apiBaseUrl) {
     return cy
       .indexedDb(IndexedDbName.MockExpense)
       .getItem<ApiResourceExpenseDetailsMap[T]>(id, { storeName: expenseStoreName })
-      .then((data) => {
-        if (data?.belongsTo === belongsTo) {
-          return data;
+      .then((apiData) => {
+        if (apiData) {
+          return apiData;
         }
-        return null;
+        return defaultResponse;
       });
   }
   // call api
-  return cy.wrap(null);
+  return cy
+    .request<ApiResourceExpenseDetailsMap[T]>({
+      method: "GET",
+      url: getExpenseUrl(belongsTo) + "/id/" + id,
+      headers: {
+        Authorization: Cypress.env("accessToken")
+      },
+      failOnStatusCode: false
+    })
+    .then((response) => {
+      console.log("expense by id, response=", response);
+      expect(response.status === 200 || response.status === 404).to.true;
+      // expect(response.body).to.an("object");
+      if (response.status === 200) {
+        return response.body;
+      }
+      return defaultResponse;
+    });
 };
 
 const dispatchApiExpenseAddUpdate = (apiExpenseData: UnionApiResourceExpenseDetails, expenseRef: string) => {
   const apiBaseUrl = Cypress.env("API_BASE_URL");
   if (!apiBaseUrl) {
     cy.indexedDb(IndexedDbName.MockExpense).updateItems([apiExpenseData], { storeName: expenseStoreName });
-    cy.indexedDb(IndexedDbName.Expense).clearStore({ storeName: expenseStoreName });
-    cy.wrap(apiExpenseData).as(`createdExpense/${apiExpenseData.belongsTo}/${expenseRef}`);
+  } else {
+    cy.request({
+      method: "POST",
+      url: getExpenseUrl(apiExpenseData.belongsTo),
+      body: apiExpenseData,
+      headers: {
+        Authorization: Cypress.env("accessToken")
+      }
+    }).then((response) => {
+      console.log("response=", response);
+      expect(response.status).to.least(200);
+      expect(response.status).to.most(201);
+      expect(response.body).to.an("object");
+    });
   }
+  cy.indexedDb(IndexedDbName.Expense).clearStore({ storeName: expenseStoreName });
+  cy.wrap(apiExpenseData).as(`createdExpense/${apiExpenseData.belongsTo}/${expenseRef}`);
 };
 
 interface ExpenseAddUpdatePrepareType<T extends keyof ApiResourceExpenseDetailsMap> {
@@ -135,7 +199,8 @@ interface ExpenseAddUpdatePrepareType<T extends keyof ApiResourceExpenseDetailsM
   currencyProfileData: ApiCurrencyProfileResource;
 }
 const prepareExpenseData = <T extends keyof ExpenseDetailTypeMap>(belongsTo: T, expenseData: ExpenseDetailTypeMap[T]) => {
-  dispatchApiExpenseGetById(belongsTo, expenseData.id).then((expenseApiData) => {
+  dispatchApiExpenseGetById(belongsTo, expenseData.id).then((expenseApiDataOrDefault) => {
+    const expenseApiData = expenseApiDataOrDefault.belongsTo === belongsTo ? expenseApiDataOrDefault : null;
     prepareExpenseReceipts({ apiExpenseData: expenseApiData, testExpenseData: expenseData }).then((expenseReceipts) => {
       getPaymentAccount(expenseData.paymentAccountRef).then((paymentAccountData) => {
         cy.getCurrencyProfile().then((currencyProfileData) => {

@@ -28,5 +28,11 @@
     "description": "Payment Account type is gift card. Used to tag payment account.",
     "tags": [],
     "value": "gift card"
+  },
+  "investment": {
+    "name": "investment",
+    "description": "Payment Account type is investment. Used to tag payment account.",
+    "tags": [],
+    "value": "investment"
   }
 }

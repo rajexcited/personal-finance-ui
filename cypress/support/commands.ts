@@ -82,6 +82,8 @@ Cypress.Commands.add("logoutFromNav", () => {
   cy.get(NavBarSelectors.LogoutNavlink).should("not.exist");
   cy.get(NavBarSelectors.SignupNavlink).should("exist");
   cy.get(NavBarSelectors.LoginNavlink).should("exist");
+  cy.get('[data-test="logout-message"]').should("be.visible").should("contain.text", "You have been logged out. See you soon");
+  cy.get('[data-test="expire-status-msg"]').should("be.visible").should("have.text", "You are logged out");
 });
 
 Cypress.Commands.add("loginThroughUI", (userRef) => {
@@ -96,7 +98,11 @@ Cypress.Commands.add("loginThroughUI", (userRef) => {
   if (apiBaseUrl) {
     cy.intercept("POST", apiBaseUrl + "/user/login", (req) => {
       req.continue((res) => {
-        const accessToken = res.headers["x-amzn-remapped-Authorization"] as string | null;
+        // console.log("response: ", res);
+        // console.log("response headers: ", res.headers);
+        // console.log("response body: ", res.body);
+        const accessToken = res.headers["x-amzn-remapped-authorization"] as string | null;
+        console.log("accessToken=", accessToken);
         Cypress.env("accessToken", accessToken);
       });
     });
@@ -116,28 +122,48 @@ Cypress.Commands.add("loginThroughUI", (userRef) => {
 });
 
 Cypress.Commands.add("getCurrencyProfile", () => {
-  const apiBaseUrl = Cypress.env("API_BASE_URL");
-  if (apiBaseUrl) {
+  return cy.wrap((Cypress as any).state("aliases")["currency-profile-config-data"] || null).then((data: any) => {
+    // cy.get("@currency-profile-config-data").then((data: any) => {
+    if (data) {
+      return data as ApiCurrencyProfileResource;
+    }
+
     return cy
-      .request({
-        method: "GET",
-        url: apiBaseUrl,
-        headers: {
-          Authorization: Cypress.env("accessToken")
+      .indexedDb(IndexedDbName.Expense)
+      .getItem<ApiCurrencyProfileResource>("currency-profile", { storeName: "config-store", indexName: "belongsTo-index" })
+      .then((results) => {
+        if (results) {
+          return results;
         }
-      })
-      .then((response) => {
-        return response.body as ApiCurrencyProfileResource;
+        const apiBaseUrl = Cypress.env("API_BASE_URL");
+        if (apiBaseUrl) {
+          return cy
+            .request({
+              method: "GET",
+              url: `${apiBaseUrl}/config/types/belongs-to/currency-profile?status=enable`,
+              headers: {
+                Authorization: Cypress.env("accessToken")
+              }
+            })
+            .then((response) => {
+              expect(response.status).to.equals(200);
+              expect(response.body).to.be.an("array");
+              expect(response.body.length).to.least(1);
+              const currencyProfile = response.body[0] as ApiCurrencyProfileResource;
+              return cy.wrap(currencyProfile).as("currency-profile-config-data");
+            });
+        }
+        // read from mock db
+        return cy
+          .indexedDb(IndexedDbName.MockExpense)
+          .getItem<ApiCurrencyProfileResource>("currency-profile", { storeName: "config-store", indexName: "belongsTo-index" })
+          .then((results) => {
+            // console.log("results", results);
+            if (results) return results;
+            throw new Error("currency profile from mockDb not found");
+          });
       });
-  }
-  // read from mock db
-  return cy
-    .indexedDb(IndexedDbName.MockExpense)
-    .getItem<ApiCurrencyProfileResource>("currency-profile", { storeName: "config-store", indexName: "belongsTo-index" })
-    .then((results) => {
-      // console.log("results", results);
-      return results;
-    });
+  });
 });
 
 type ValidateDropdownSelectedItemOptions = { dropdownSelectorId: string; selectedItemText?: string; requiredError: boolean };

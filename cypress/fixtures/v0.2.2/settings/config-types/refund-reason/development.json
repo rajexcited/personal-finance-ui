@@ -1,0 +1,26 @@
+{
+  "billing-error": {
+    "name": "billing error",
+    "description": "Refund Reason is billing error. Used to tag refund transactions.",
+    "tags": [],
+    "value": "billing error"
+  },
+  "product-defect": {
+    "name": "product defect",
+    "description": "Refund Reason is product defect. Used to tag refund transactions.",
+    "tags": [],
+    "value": "product defect"
+  },
+  "cancelled": {
+    "name": "cancelled",
+    "description": "Refund Reason is cancelled. Used to tag refund transactions.",
+    "tags": [],
+    "value": "cancelled"
+  },
+  "overprice": {
+    "name": "overprice",
+    "description": "Refund Reason is overprice. Used to tag refund transactions.",
+    "tags": [],
+    "value": "overprice"
+  }
+}

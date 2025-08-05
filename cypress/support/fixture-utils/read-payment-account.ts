@@ -8,6 +8,7 @@ export interface PaymentAccountDetailType {
   institutionName: string;
   accountTypeName: string;
   accountTypeId: string;
+  accountTypeRef: string;
   tags: string[];
   description: string;
 }
@@ -38,6 +39,7 @@ const populatePaymentAccountMap = () => {
         institutionName: val?.institutionName || "",
         accountTypeName: val?.accountTypeName || "",
         accountTypeId: val?.accountTypeId || "",
+        accountTypeRef: val?.accountTypeRef || "",
         tags: val?.tags || [],
         description: val?.description || ""
       };
