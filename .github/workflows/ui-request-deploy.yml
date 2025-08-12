@@ -800,9 +800,11 @@ jobs:
               core.setFailed(error.message);
             }
       - id: verify-deploy-version
+        name: Verify Deploy Version
+        if: needs.run_eligible.outputs.request-type == 'provision'
         uses: actions/github-script@v7
         env:
-          BRANCH_NAME: ${{ steps.get-milestone-development.outputs.branchName || steps.get-milestone-testplan.outputs.branch-name }}
+          BRANCH_NAME: ${{ steps.get-milestone-development.outputs.branchName || steps.get-milestone-testplan-prov.outputs.milestoneBranchName }}
           TAG_NAME: ${{ steps.get-milestone-prod.outputs.tagRefName }}
         with:
           script: |
@@ -1443,7 +1445,7 @@ jobs:
           node-version: "latest"
           cache: "npm"
       - id: test-attr-condition
-        run: echo "::set-output name=uuid::$(uuidgen)"
+        run: echo "uuid=$(uuidgen)" >> $GITHUB_OUTPUT
       - id: run-build
         name: Build Code
         run: |
