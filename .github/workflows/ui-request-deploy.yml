@@ -398,7 +398,7 @@ jobs:
               const milestoneDueOn = new Date(context.payload.issue.milestone.due_on);
               const endOfToday = getEndOfDayCentral(new Date());
               if(milestoneDueOn.toDateString() < endOfToday.toDateString()) {
-                throw new Error("Milestone due date is already passed");
+                throw new Error(`Milestone due date[${milestoneDueOn.toDateString()}] is already passed ${endOfToday.toDateString()}`);
               }
               // verify milestone branch exists
               const milestoneBranch = `milestone/${context.payload.issue.milestone.title}`;
