@@ -19,6 +19,7 @@ import {
   updateNameInDetails,
   updateUserDetails
 } from "./auth-storage";
+import { pMemoizeSyncClear } from "../../../shared/utils/cache-utils";
 
 const rootPath = "/user";
 const MARGIN_ERROR_TIME_IN_SEC = 1;
@@ -93,10 +94,10 @@ export const logout = pMemoize(async () => {
     // to make user experience better, not waiting for response. actual api call may take  upto 3 sec
     await axios.post(`${rootPath}/logout`);
     logger.debug("api successful");
-    // await sleep("0.5 sec");
   } catch (e) {
     logger.debug("error logging out", e);
   } finally {
+    pMemoizeSyncClear(cleanupSession);
     cleanupSession();
   }
 }, getCacheOption("3 sec"));
