@@ -24,7 +24,7 @@ type ExpenseQueryParams = Record<"pageNo" | "status" | "pageMonths" | "belongsTo
 const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
 
 const rootPath = "/expenses";
-const _logger = getLogger("service.expense", null, null, "DISABLED");
+const _logger = getLogger("service.expense", null, null, "DEBUG");
 
 const getExpenseCount = pMemoize(async (queryParams: ExpenseQueryParams) => {
   const countResponse = await axios.get(`${rootPath}/count`, { params: queryParams });
@@ -37,6 +37,7 @@ const isExpenseWithinRange = (expense: ExpenseFields, rangeStartDate: Date, rang
     logger.debug("expense date not found");
     return false;
   }
+  logger.debug("expenseDate =", expenseDate, ", is within range? ", expenseDate >= rangeStartDate && expenseDate <= rangeEndDate);
 
   return expenseDate >= rangeStartDate && expenseDate <= rangeEndDate;
 };
@@ -69,6 +70,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
 
       const rangeStartDate = datetime.addMonths(new Date(), queryPageMonths * -1 * pageNo);
       const rangeEndDate = datetime.addMonths(new Date(), queryPageMonths * -1 * (pageNo - 1));
+      logger.debug("rangeStartDate =", rangeStartDate, ", rangeEndDate =", rangeEndDate, ", dbExpenses =", dbExpenses);
       const filteredExpenses = dbExpenses
         .filter((xpns) => isExpenseWithinRange(xpns, rangeStartDate, rangeEndDate, logger))
         .filter((xpns) => !belongsTo || belongsTo === xpns.belongsTo);
