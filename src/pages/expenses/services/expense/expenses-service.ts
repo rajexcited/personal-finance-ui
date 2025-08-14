@@ -55,7 +55,11 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
       belongsTo: belongsTo ? [String(belongsTo)] : []
     };
 
-    let expenses: ExpenseFields[] = [];
+    // initialize with null to handle add or remove calls. cache is updating properly and getting values.
+    // but since api count is giving cached value due to evantual consistency, we are ending up discarding correct value
+    // and responding wrong data list. this is temporary fix.
+    // for permanent proper fix, need to work on expense count api and usage of it here
+    let expenses: ExpenseFields[] | null = null;
     let expenseCount: number | null = null;
     if (status !== ExpenseStatus.Deleted) {
       const dbExpensePromise = expenseDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, queryParams.status[0]);
@@ -90,7 +94,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
       }
     }
 
-    if (expenseCount !== null && expenses.length !== expenseCount) {
+    if (expenses === null || (expenseCount !== null && expenses.length !== expenseCount)) {
       // call api to refresh the list
       let apiStartTime = new Date();
 
@@ -107,7 +111,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
       logger.info("api execution time =", subtractDatesDefaultToZero(null, apiStartTime).toSeconds(), " sec");
 
       apiStartTime = new Date();
-      expenses = response.data;
+      expenses = response.data as ExpenseFields[];
       const expenseYears = expenses.map((xpns) => getExpenseDateInstance(xpns, logger)?.getFullYear() as number).filter((yr) => yr !== undefined);
 
       const years = [...new Set(expenseYears)];
