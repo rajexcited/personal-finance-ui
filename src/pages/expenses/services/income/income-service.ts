@@ -18,7 +18,8 @@ import {
   getDateString,
   subtractDatesDefaultToZero,
   getDateInstanceDefaultNewDate,
-  apiUtils
+  apiUtils,
+  sleep
 } from "../../../../shared";
 import { pymtAccountService } from "../../../pymt-accounts";
 import { ExpenseBelongsTo, ExpenseFields } from "../expense/field-types";
@@ -206,6 +207,8 @@ export const addUpdateDetails = pMemoize(async (incomeDetails: IncomeFields) => 
 
     await addUpdateDbIncome(incomeResponse, logger);
     clearCache(incomeResponse);
+    // temporary patching until expenseCount api is fixed
+    await sleep("1 sec");
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
@@ -225,6 +228,8 @@ export const removeDetails = pMemoize(async (incomeId: string) => {
     });
     await Promise.all(deletingReceiptPromises);
     clearCache(incomeResponse);
+    // temporary patching until expenseCount api is fixed
+    await sleep("1 sec");
   } catch (e) {
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
