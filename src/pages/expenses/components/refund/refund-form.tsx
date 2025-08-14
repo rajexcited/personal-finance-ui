@@ -13,12 +13,13 @@ import {
     TagsInputSharePerson,
     CurrencySymbol,
     ViewDialog,
-    Animated
+    Animated,
+    ScrollReset
 } from "../../../../components";
 import { ExpenseBelongsTo, expenseService, ExpenseStatus, formatTimestamp, getLogger, PurchaseFields, PurchaseRefundFields, receiptService } from "../../services";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../components/receipt";
 import { PymtAccountFields } from "../../../pymt-accounts/services";
-import { ConfigResource, getDateInstance, isNotBlank } from "../../../../shared";
+import { ConfigResource, getDateInstance, isNotBlank, testAttributes } from "../../../../shared";
 import { CurrencyProfileResource, SharePersonResource } from "../../../settings/services";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { createSharePersonTagSourceList, filterSharePersons } from "../common";
@@ -80,6 +81,7 @@ const getPurchaseDropdownContent = (purchaseDetails: PurchaseFields) => {
 
     return ddContent;
 };
+const debouncedTimeout = 300;
 
 export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (props) => {
     const [billName, setBillName] = useState("");
@@ -130,36 +132,39 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                 purchaseItemId: null,
                 taggingPersons: props.purchaseDetails.personIds.map(pid => spObj[pid]).filter(sp => sp)
             });
-            logger.debug("refund amount =", props.refundDetails?.amount, ", and amount =", amount, " purchase amount =", props.purchaseDetails.amount);
-            setAmount(prev => {
-                if (props.refundDetails?.amount) {
-                    return props.refundDetails.amount;
-                } else if (props.purchaseDetails?.amount && amount === "" && props.refundDetails?.amount === undefined) {
-                    logger.debug("setting refund amount same as purchase amount");
-                    return props.purchaseDetails.amount;
-                }
-                return prev;
-            });
-            logger.debug("refund billname =", props.refundDetails?.billName, ", and billname =", billName, " purchase billname =", props.purchaseDetails.billName);
-            setBillName(prev => {
-                if (props.refundDetails?.billName) {
-                    logger.debug("setting refund billname as Refund for ", props.refundDetails.billName);
-                    return props.refundDetails.billName;
-                } else if (props.purchaseDetails && billName === "") {
-                    logger.debug("setting refund billname as Refund for ", props.purchaseDetails.billName);
-                    return "Refund for " + props.purchaseDetails.billName;
-                }
-                logger.debug("not changing refund billname ", prev);
-                return prev;
-            });
+
             logger.debug("refund pymtAccId =", props.refundDetails?.paymentAccountId, " purchase pymtAccId =", props.purchaseDetails.paymentAccountId, "will configure selected pymtAcc if possible.");
             purchasePymtAccId = props.purchaseDetails.paymentAccountId;
 
         } else {
             setTimeout(() => {
                 loadMorePurchaseList();
-            }, 300);
+            }, debouncedTimeout);
         }
+
+        logger.debug("refund amount =", props.refundDetails?.amount, ", and amount =", amount, " purchase amount =", props.purchaseDetails?.amount);
+        setAmount(prev => {
+            if (!isNaN(Number(props.refundDetails?.amount)) && props.refundDetails?.amount) {
+                return props.refundDetails.amount;
+            }
+            if (!isNaN(Number(props.purchaseDetails?.amount)) && props.purchaseDetails?.amount && amount === "") {
+                logger.debug("setting refund amount same as purchase amount");
+                return props.purchaseDetails.amount;
+            }
+            return prev;
+        });
+        logger.debug("refund billname =", props.refundDetails?.billName, ", and billname =", billName, " purchase billname =", props.purchaseDetails?.billName);
+        setBillName(prev => {
+            if (props.refundDetails?.billName) {
+                // logger.debug("setting refund billname as Refund for ", props.refundDetails.billName);
+                return props.refundDetails.billName;
+            } else if (props.purchaseDetails?.billName && billName === "") {
+                // logger.debug("setting refund billname as Refund for ", props.purchaseDetails.billName);
+                return "Refund for " + props.purchaseDetails.billName;
+            }
+            // logger.debug("not changing refund billname ", prev);
+            return prev;
+        });
 
         setRefundDate(prev => {
             const dateInstance = getDateInstance(props.refundDetails?.refundDate);
@@ -409,22 +414,25 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             <form onSubmit={ onSubmitHandler }>
                 <div className="columns">
                     <div className="column is-narrow">
-                        <DropDown
-                            id="purchase-dd"
-                            label="Purchase: "
-                            items={ dropdownPurchaseDetailList }
-                            key={ "purchase-dd" }
-                            onSelect={ onSelectPurchaseHandler }
-                            direction="down"
-                            selectedItem={ selectedDropdownPurchaseDetail }
-                            defaultItem={ selectedDropdownPurchaseDetail }
-                            loadMore={ loadMorePurchaseList }
-                            allowSearch={ true }
-                        />
+                        <ScrollReset once={ true } key={ selectedDropdownPurchaseDetail?.id }>
+                            <DropDown
+                                id="purchase-dd"
+                                label="Purchase: "
+                                items={ dropdownPurchaseDetailList }
+                                key="purchase-dd"
+                                onSelect={ onSelectPurchaseHandler }
+                                direction="down"
+                                selectedItem={ selectedDropdownPurchaseDetail }
+                                defaultItem={ selectedDropdownPurchaseDetail }
+                                loadMore={ loadMorePurchaseList }
+                                allowSearch={ true }
+                            />
+                        </ScrollReset>
                     </div>
                     <div className="column">
                         <div className="block"></div>
                         <ViewDialog
+                            id="purchase-quickview"
                             linkText="quickview"
                             openDefault={ false }
                             loading={ !selectedPurchaseReference }
@@ -433,16 +441,27 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                             isLinkPlayIn={ !!selectedPurchaseReference }
                         >
                             <div className="block">
-                                <label>BillName: </label> <span>{ selectedPurchaseReference?.billName }</span>
+                                <label>BillName: </label> <span { ...testAttributes("outvalue") }>{ selectedPurchaseReference?.billName }</span>
                             </div>
                             <div className="block">
-                                <label>Amount: </label> <span>{ selectedPurchaseReference?.amount }</span>
+                                <label>Amount: </label> <span { ...testAttributes("outvalue") }>{ selectedPurchaseReference?.amount }</span>
                             </div>
                             <div className="block">
-                                <label>Payment Account: </label> <span>{ selectedPurchaseReference?.paymentAccountName }</span>
+                                <label>Payment Account: </label> <span { ...testAttributes("outvalue") }>{ selectedPurchaseReference?.paymentAccountName }</span>
                             </div>
                             <div className="block">
-                                <label>Tag Persons: </label> <ul>{ selectedPurchaseReference?.taggingPersons.map(sp => (<li>{ sp }</li>)) }</ul>
+                                <label>Tag Persons: </label>
+                                {
+                                    !!selectedPurchaseReference?.taggingPersons.length &&
+                                    <ul { ...testAttributes("outvalue") }>
+                                        { selectedPurchaseReference.taggingPersons.map(sp => (<li>{ sp }</li>)) }
+                                    </ul>
+                                }
+                                {
+                                    !selectedPurchaseReference?.taggingPersons.length &&
+                                    <span { ...testAttributes("outvalue") }>-</span>
+
+                                }
                             </div>
                         </ViewDialog>
                     </div>
@@ -473,7 +492,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                     billName &&
                                     <Input
                                         id="refund-bill-name"
-                                        key={ "refund-bill-name" }
+                                        key="refund-bill-name"
                                         label="Bill Name: "
                                         type="text"
                                         placeholder="Enter Refund billName"
@@ -487,8 +506,9 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                         minlength={ 2 }
                                     />
                                 }
-                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
-                                    <pre>
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference }
+                                    animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                    <pre { ...testAttributes("selected-purchase-billname-info") }>
                                         <span className="icon-text">
                                             <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
                                             <span> selected purchase's billName: { selectedPurchaseReference?.billName } </span>
@@ -511,7 +531,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                     amount &&
                                     <Input
                                         id="refund-amount"
-                                        key={ "refund-amount" }
+                                        key="refund-amount"
                                         label="Refund Amount: "
                                         type="number"
                                         placeholder="0.00"
@@ -541,8 +561,9 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                         step={ 0.01 }
                                     />
                                 }
-                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
-                                    <pre>
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference }
+                                    animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                    <pre { ...testAttributes("selected-purchase-amount-info") }>
                                         <span className="icon-text">
                                             <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
                                             <span>selected purchase's amount { selectedPurchaseReference?.amount }</span>
@@ -555,7 +576,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                             <div className="column">
                                 <DropDown
                                     id="refund-pymt-acc"
-                                    key={ "refund-pymt-acc" }
+                                    key="refund-pymt-acc"
                                     label="Payment Account: "
                                     items={ dropdownPymtAccountItems }
                                     onSelect={ (selected: DropDownItemType) => setSelectedDropdownPymtAccount(selected) }
@@ -567,7 +588,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                             <div className="column">
                                 <DropDown
                                     id="refund-reason"
-                                    key={ "refund-reason" }
+                                    key="refund-reason"
                                     label="Refund Reason: "
                                     items={ dropdownRefundReasons }
                                     onSelect={ (selected: DropDownItemType) => setSelectedDropdownReason(selected) }
@@ -579,8 +600,9 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                         </div>
                         <div className="columns">
                             <div className="column">
-                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
-                                    <pre>
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference }
+                                    animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                    <pre { ...testAttributes("selected-purchase-payment-account-info") }>
                                         <span className="icon-text">
                                             <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
                                             <span>selected purchase's payment account { selectedPurchaseReference?.paymentAccountName || "-" }</span>
@@ -597,7 +619,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                     defaultValue={ selectedSharePersonTagItems }
                                     placeholder="Tag Person by Name"
                                     onChange={ setSelectedSharePersonTagItems }
-                                    key={ "person-tags" }
+                                    key="person-tags"
                                     sourceValues={ sourceSharePersonTagItems }
                                     maxTags={ 10 }
                                 />
@@ -605,8 +627,9 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                         </div>
                         <div className="columns">
                             <div className="column">
-                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
-                                    <pre>
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference }
+                                    animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                    <pre { ...testAttributes("selected-purchase-share-person-info") }>
                                         <span className="icon-text">
                                             <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
                                             <span> selected purchase's tagged persons { selectedPurchaseReference?.taggingPersons.join(" , ") } </span>
@@ -623,7 +646,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                     rows={ 2 }
                                     value={ description }
                                     onChange={ setDescription }
-                                    key={ "refund-desc" }
+                                    key="refund-desc"
                                     maxlength={ 150 }
                                 />
                             </div>
@@ -636,12 +659,13 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                     defaultValue={ tags }
                                     placeholder="Add Tags"
                                     onChange={ setTags }
-                                    key={ "refund-tags" }
+                                    key="refund-tags"
                                     sourceValues={ props.sourceTags }
                                     maxTags={ 10 }
                                 />
-                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference } animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
-                                    <pre>
+                                <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ !!selectedPurchaseReference }
+                                    animateOnMount={ true } isVisibleAfterAnimateOut={ false } >
+                                    <pre { ...testAttributes("selected-purchase-tags-info") }>
                                         <span className="icon-text">
                                             <span className="icon"> <FontAwesomeIcon icon={ faInfoCircle } /> </span>
                                             <span> the selected purchase's tags will auto apply in dashboard total. No need to add same tags here. </span>
@@ -661,6 +685,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                     cacheReceiptFile={ cacheReceiptFileHandler }
                                     downloadReceipts={ downloadReceiptsHandler }
                                     belongsTo={ ExpenseBelongsTo.PurchaseRefund }
+                                    belongsToLabel="Refund"
                                 />
                             </div>
                         </div>
@@ -668,7 +693,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                             <div className="column">
                                 <div className="my-1 py-1">
                                     <Calendar
-                                        key={ "refund-date" }
+                                        key="refund-date"
                                         id="refund-date"
                                         label="Refund Date: "
                                         startDate={ refundDate }
@@ -682,7 +707,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                 <div className="columns is-hidden-mobile">
                     <div className="column">
                         <div className="buttons">
-                            <button className="button is-light" type="button" onClick={ onCancelHandler }>
+                            <button className="button is-light" type="button" onClick={ onCancelHandler } { ...testAttributes("cancel-refund") }>
                                 <span className="px-2-label">
                                     Cancel
                                 </span>
@@ -691,7 +716,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                     </div>
                     <div className="column">
                         <div className="buttons is-centered">
-                            <button className="button is-dark is-medium" type="submit">
+                            <button className="button is-dark is-medium" type="submit" { ...testAttributes("submit-refund") }>
                                 <span className="px-2-label">
                                     { props.submitLabel }
                                 </span>
@@ -702,7 +727,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                 <div className="columns is-hidden-desktop">
                     <div className="column">
                         <div className="buttons is-right">
-                            <button className="button is-dark" type="submit">
+                            <button className="button is-dark" type="submit" { ...testAttributes("submit-refund") }>
                                 <span className="px-2-label">
                                     { props.submitLabel }
                                 </span>
@@ -711,7 +736,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                     </div>
                     <div className="column">
                         <div className="buttons">
-                            <button className="button is-light" type="button" onClick={ onCancelHandler }>
+                            <button className="button is-light" type="button" onClick={ onCancelHandler } { ...testAttributes("cancel-refund") }>
                                 <span className="px-2-label">
                                     Cancel
                                 </span>

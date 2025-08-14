@@ -1,4 +1,5 @@
 import { FunctionComponent, useState, useEffect } from "react";
+import { testAttributes } from "../shared";
 
 export interface TextAreaProps {
     id: string;
@@ -48,7 +49,7 @@ const TextArea: FunctionComponent<TextAreaProps> = (props) => {
                 />
             </div>
 
-            <p className="help is-info has-text-right">
+            <p className="help is-info has-text-right" { ...testAttributes(props.id + "-counter") }>
                 { "counter: " + inputValue.length + (props.maxlength ? "/" + props.maxlength : "") }
             </p>
         </div>

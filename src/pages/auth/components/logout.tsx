@@ -1,6 +1,7 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import useAuth from "../hooks/use-auth";
 import { useLocation } from "react-router-dom";
+import { testAttributes } from "../../../shared";
 
 
 const LogoutPage: FunctionComponent = () => {
@@ -20,10 +21,10 @@ const LogoutPage: FunctionComponent = () => {
             <div className="columns is-centered">
                 <div className="column is-two-thirds">
                     <article className="message is-link">
-                        <div className="message-header">
+                        <div className="message-header" { ...testAttributes("logout-message-header") }>
                             <p>Bye, { name }!</p>
                         </div>
-                        <div className="message-body">
+                        <div className="message-body" { ...testAttributes("logout-message") }>
                             {
                                 location.state?.from?.idleTimeout &&
                                 <p>Since there is no activity,</p>

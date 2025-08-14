@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { getFullPath } from "../../../root";
 import { useAuth } from "../../../auth";
 import { getExpenseDateInstance } from "../../services/expense";
-import { getShortForm } from "../../../../shared";
+import { getShortForm, testAttributes } from "../../../../shared";
 import { Anchor } from "../../../../components";
 
 
@@ -97,14 +97,14 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
     };
 
     let belongsTo = "NA";
-    let expenseCategory = undefined;
+    let expenseCategory = "";
 
     if (props.details.belongsTo === ExpenseBelongsTo.Income) {
         belongsTo = "Income";
         expenseCategory = props.details.incomeTypeName;
     } else if (props.details.belongsTo === ExpenseBelongsTo.Purchase) {
         belongsTo = "Purchase";
-        expenseCategory = props.details.purchaseTypeName;
+        expenseCategory = props.details.purchaseTypeName || "";
     } else if (props.details.belongsTo === ExpenseBelongsTo.PurchaseRefund) {
         belongsTo = "Refund";
         expenseCategory = props.details.reasonValue;
@@ -117,20 +117,26 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
     //     </span>
     // </a>);
 
-    const updateExpenseAction = (<Anchor className="is-link" onClick={ onClickEditExpenseHandler } key={ "updt-purchase-action" + props.id }>
+    const updateExpenseAction = (<Anchor className="is-link" onClick={ onClickEditExpenseHandler }
+        key={ "updt-purchase-action" + props.id }
+        { ...testAttributes("expense-update-action") }>
         <span className="icon tooltip" data-tooltip={ "Update " + belongsTo }>
             <FontAwesomeIcon icon={ faEdit } />
         </span>
     </Anchor>);
 
-    const removeExpenseAction = (<Anchor className="is-link" onClick={ onClickTrashExpenseHandler } key={ "rmve-purchase-action" + props.id }>
+    const removeExpenseAction = (<Anchor className="is-link" onClick={ onClickTrashExpenseHandler }
+        key={ "rmve-purchase-action" + props.id }
+        { ...testAttributes("expense-remove-action") }>
         <span className="icon tooltip" data-tooltip={ "Remove " + belongsTo }>
             <FontAwesomeIcon icon={ faTrash } />
         </span>
     </Anchor>);
 
     const viewReceiptsAction = (
-        <Anchor className="is-link" onClick={ onClickShowReceiptsHandler } key={ "view-receipts-action" + props.id }>
+        <Anchor className="is-link" onClick={ onClickShowReceiptsHandler }
+            key={ "view-receipts-action" + props.id }
+            { ...testAttributes("expense-view-receipts-action") }>
             <span className="icon tooltip" data-tooltip="View Receipts">
                 <FontAwesomeIcon icon={ faReceipt } />
             </span>
@@ -138,7 +144,9 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
     );
 
     const addRefundAction = (
-        <Anchor className="is-link" onClick={ onClickAddRefundHandler } key={ "add-refund-action" + props.id }>
+        <Anchor className="is-link" onClick={ onClickAddRefundHandler }
+            key={ "add-refund-action" + props.id }
+            { ...testAttributes("expense-add-refund-action") }>
             <span className="icon tooltip" data-tooltip="Add Refund">
                 <FontAwesomeIcon icon={ faCircleDollarToSlot } />
             </span>
@@ -156,10 +164,20 @@ export const ExpenseItemTableRow: FunctionComponent<ExpenseItemTableRowProps> = 
         actions.push(viewReceiptsAction);
     }
 
+    let updatedOn = "";
+    if (props.details.auditDetails.updatedOn instanceof Date) {
+        updatedOn = formatTimestamp(props.details.auditDetails.updatedOn);
+    } else {
+        updatedOn = props.details.auditDetails.updatedOn;
+    }
+
     fcLogger.debug("render updates");
 
     return (
-        <tr onClick={ onClickToggleRowSelectionHandler } className={ props.isSelected ? "is-selected" : "" }>
+        <tr onClick={ onClickToggleRowSelectionHandler }
+            className={ props.isSelected ? "is-selected" : "" }
+            { ...testAttributes("expense-row", "belongs-to", belongsTo, "expense-category", expenseCategory, "billname", props.details.billName, "expense-date", expenseDate || "", "updated-on", updatedOn) }
+        >
             <td>{ belongsTo }</td>
             { <td>{ expenseDate || "-" }</td> }
             <td>{ props.details.paymentAccountName || "-" }</td>

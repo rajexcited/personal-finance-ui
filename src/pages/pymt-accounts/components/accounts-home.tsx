@@ -2,6 +2,7 @@ import { FunctionComponent } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { getFullPath } from "../../root";
 import { useAuth } from "../../auth";
+import { testAttributes } from "../../../shared";
 
 
 const AccountsHome: FunctionComponent = () => {
@@ -20,7 +21,7 @@ const AccountsHome: FunctionComponent = () => {
             <div className="columns">
                 <div className="column">
                     <div className="buttons">
-                        <button className="button is-link" onClick={ onClickNavigateAddPymtAccountHandler } disabled={ auth.readOnly } >Add Account</button>
+                        <button className="button is-link" onClick={ onClickNavigateAddPymtAccountHandler } disabled={ auth.readOnly } { ...testAttributes("add-payment-account-button") } >Add Account</button>
                     </div>
                 </div>
             </div>

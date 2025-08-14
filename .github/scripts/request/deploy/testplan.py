@@ -56,7 +56,7 @@ def validate_deployment_schedule(section_contents: List, request_form_issue_deta
             if "Preferred Date and Time" in listitem.title:
                 preferred_date_obj = get_preferred_datetime(listitem.content)
             if "Deployment Scope" in listitem.title:
-                deploy_scope = listitem.content
+                deploy_scope = listitem.content.strip() if listitem.content is not None else ""
             if "Schedule to delete after" in listitem.title and listitem.content is not None:
                 if "Preserve previous schedule" in listitem.content:
                     export_to_env({"delete_schedule": "PreservePreviousSchedule"})

@@ -1,10 +1,11 @@
 import { FunctionComponent, useState } from "react";
-import { getLogger } from "../shared";
+import { getLogger, testAttributes } from "../shared";
 import { LoadSpinner } from "./loading";
-import Animated, { AnimatedProps } from "./animated";
+import Animated from "./animated";
 
 
 interface ViewDialogProps {
+    id: string;
     /** when open dialog upon initialized  */
     openDefault: boolean;
     /** if content is not present, default loading indicator will be displayed */
@@ -46,23 +47,27 @@ export const ViewDialog: FunctionComponent<ViewDialogProps> = (props) => {
 
 
     return (
-        <>
+        <section className="view-dialog" { ...testAttributes("view-dialog", "dialog-id", props.id) }>
             {
                 props.animateLink &&
                 <Animated animatedIn="flipInX" animatedOut="flipOutX" isPlayIn={ props.isLinkPlayIn } animateOnMount={ true }  >
-                    <button className="button is-text view-dialog-button" onClick={ onClickOpenHandler }> { props.linkText } </button>
+                    <button className="button is-text view-dialog-button" onClick={ onClickOpenHandler }
+                        { ...testAttributes("open-dialog-action") }> { props.linkText } </button>
                 </Animated>
             }
             {
                 !props.animateLink &&
-                <button className="button is-text view-dialog-button" onClick={ onClickOpenHandler }> { props.linkText } </button>
+                <button className="button is-text view-dialog-button" onClick={ onClickOpenHandler }
+                    { ...testAttributes("open-dialog-action") }> { props.linkText } </button>
             }
             <div className={ `modal view-dialog-model ${isOpen ? "is-active" : ""}` }>
                 <div className="modal-background"></div>
                 <div className="modal-card">
                     <header className="modal-card-head is-small">
                         <p className="modal-card-title">{ props.title || <>&nbsp;</> }</p>
-                        <button className="delete" aria-label="close" onClick={ onClickCloseHandler }></button>
+                        <button className="delete" aria-label="close" onClick={ onClickCloseHandler }
+                            { ...testAttributes("close-dialog-action") }
+                        ></button>
                     </header>
                     <section className="modal-card-body">
                         {
@@ -72,11 +77,12 @@ export const ViewDialog: FunctionComponent<ViewDialogProps> = (props) => {
                         <LoadSpinner
                             loading={ !!props.loading }
                             insideModal={ true }
+                            id="dialog-content"
                         />
                     </section>
                 </div>
             </div>
-        </>
+        </section>
     );
 };
 

@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ActionId } from "../pages/settings/services";
 import { DeviceMode, useOrientation } from "../hooks";
 import Animated from "./animated";
-import { getShortForm } from "../shared";
+import { getShortForm, testAttributes } from "../shared";
 
 
 export type ListItem = {
@@ -72,10 +72,11 @@ const List: FunctionComponent<ListProps> = (props) => {
 
     if (deviceMode === DeviceMode.Mobile) {
         return (
-            <section className="mb-3 list-cards is-mobile">
+            <section className="mb-3 list-cards is-mobile"
+                { ...testAttributes("list-section", "size", props.items.length.toString()) }>
                 {
                     props.items.map(item =>
-                        <section className="container mb-4 list-item-card" key={ "list-item-card-" + item.id }>
+                        <section className="container mb-4 list-item-card" key={ "list-item-card-" + item.id } { ...testAttributes("listitem", "title", item.title) }>
                             <div className="card">
                                 <header className="card-header">
                                     <div className="card-header-title">
@@ -91,7 +92,10 @@ const List: FunctionComponent<ListProps> = (props) => {
                                                             nonViewControls
                                                                 .filter(nvc => nvc.isActive(item))
                                                                 .map(nvc =>
-                                                                    <button className="list-item-control button is-text is-active" onClick={ e => onClickControlHandler(e, item, nvc) } key={ "listcontrol" + nvc.id }>
+                                                                    <button className="list-item-control button is-text is-active"
+                                                                        onClick={ e => onClickControlHandler(e, item, nvc) }
+                                                                        key={ "listcontrol" + nvc.id }
+                                                                        { ...testAttributes("card-header-actions", "action-id", nvc.id) }>
                                                                         {
                                                                             nvc.icon &&
                                                                             <span className="icon has tooltip" data-tooltip={ nvc.content }>
@@ -107,7 +111,9 @@ const List: FunctionComponent<ListProps> = (props) => {
                                             </div>
                                         </div>
                                     </div>
-                                    <button className="card-header-icon" aria-label="expand breakdown" onClick={ e => onClickCardBodyToggleHandler(e, item) }>
+                                    <button className="card-header-icon" aria-label="expand breakdown"
+                                        onClick={ e => onClickCardBodyToggleHandler(e, item) }
+                                        { ...testAttributes("card-header-actions", "action-id", ActionId.View) }>
                                         <span className="icon is-large">
                                             <FontAwesomeIcon icon={ itemCardBodyOpen === item.id ? faAngleUp : faAngleDown } />
                                         </span>
@@ -128,14 +134,16 @@ const List: FunctionComponent<ListProps> = (props) => {
             </section>
         );
     }
+    // large screen size
     return (
-        <div className="list has-visible-pointer-controls has-hoverable-list-items has-overflow-ellipsis">
+        <section className="list has-visible-pointer-controls has-hoverable-list-items has-overflow-ellipsis"
+            { ...testAttributes("list-section") }>
             {
                 props.items.map(item =>
-                    <div className="list-item" key={ item.id + "listitem" } id={ item.id + "listitem" } >
+                    <div className="list-item" key={ item.id + "listitem" } id={ item.id + "listitem" } { ...testAttributes("listitem", "title", item.title) }>
                         <div className="list-item-content">
                             <div className="list-item-title">{ item.title }</div>
-                            <div className="list-item-description">{ item.description }</div>
+                            <div className="list-item-description">{ item.description || "-" }</div>
                         </div>
 
                         <div className="list-item-controls">
@@ -144,7 +152,10 @@ const List: FunctionComponent<ListProps> = (props) => {
                                     props.controlsBeforeEllipsis
                                         .filter(control => control.isActive(item))
                                         .map(control =>
-                                            <button className="button" onClick={ e => onClickControlHandler(e, item, control) } key={ control.id + item.id } >
+                                            <button className="button" onClick={ e => onClickControlHandler(e, item, control) }
+                                                key={ control.id + item.id }
+                                                { ...testAttributes("actions-before-ellipsis", "action-id", control.id) }
+                                            >
                                                 {
                                                     control.icon &&
                                                     <span className="icon">
@@ -159,19 +170,23 @@ const List: FunctionComponent<ListProps> = (props) => {
                                     !!props.controlsInEllipsis.length &&
                                     <div className="dropdown is-hoverable">
                                         <div className="dropdown-trigger">
-                                            <button className="button" aria-haspopup="true" aria-controls={ item.id + "dropdown-menu" }>
+                                            <button className="button" aria-haspopup="true" aria-controls={ item.id + "dropdown-menu" }
+                                                { ...testAttributes("action-ellipsis") }>
                                                 <span className="icon">
                                                     <FontAwesomeIcon icon={ faEllipsisH } size="sm" />
                                                 </span>
                                             </button>
                                         </div>
-                                        <div className="dropdown-menu" id={ item.id + "dropdown-menu" } role="menu">
+                                        <div className="dropdown-menu" id={ item.id + "dropdown-menu" } role="menu"
+                                            { ...testAttributes("ellipsis-dropdown-menu") }>
                                             <div className="dropdown-content">
                                                 {
                                                     props.controlsInEllipsis
                                                         .filter(control => control.isActive(item))
                                                         .map(control =>
-                                                            <div className="dropdown-item" key={ control.id + item.id } onClick={ e => onClickEllipsisHandler(e, item, control) } >
+                                                            <div className="dropdown-item" key={ control.id + item.id }
+                                                                onClick={ e => onClickEllipsisHandler(e, item, control) }
+                                                                { ...testAttributes("actions-in-ellipsis", "action-id", control.id) }>
                                                                 {
                                                                     control.icon &&
                                                                     <span className="icon">
@@ -191,7 +206,7 @@ const List: FunctionComponent<ListProps> = (props) => {
                     </div>
                 )
             }
-        </div>
+        </section>
     );
 
 };

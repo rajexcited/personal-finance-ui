@@ -6,7 +6,7 @@ import useAuth from "../hooks/use-auth";
 import { getFullPath } from "../../root";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faLock, faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
-import { ConflictError, getLogger } from "../../../shared";
+import { ConflictError, getLogger, testAttributes } from "../../../shared";
 
 
 enum LoginSubmitStatus {
@@ -16,7 +16,7 @@ enum LoginSubmitStatus {
     CompletedError = "error-response"
 }
 
-const fcLogger = getLogger("FC.LoginPage", null, null, "DISABLED");
+const fcLogger = getLogger("FC.LoginPage", null, null, "DEBUG");
 
 const LoginPage: FunctionComponent = () => {
     const [errorMessage, setErrorMessage] = useState('');
@@ -86,10 +86,10 @@ const LoginPage: FunctionComponent = () => {
 
     return (
         <section className="login-section section is-px-0-mobile">
-            <LoadSpinner loading={ submitStatus === LoginSubmitStatus.InProgress } />
+            <LoadSpinner loading={ submitStatus === LoginSubmitStatus.InProgress } id="login-inprogress" />
 
             <Animated animateOnMount={ true } isPlayIn={ submitStatus === LoginSubmitStatus.CompletedError } animatedIn="fadeInDown" animatedOut="fadeOutUp" isVisibleAfterAnimateOut={ false } scrollBeforePlayIn={ true }>
-                <div className="columns is-centered">
+                <div className="columns is-centered" { ...testAttributes("login-error-message") }>
                     <div className="column is-half">
                         <article className="message is-danger mb-3">
                             <div className="message-body">
@@ -135,7 +135,8 @@ const LoginPage: FunctionComponent = () => {
                 <div className="columns">
                     <div className="column">
                         <div className="buttons is-centered is-hidden-mobile">
-                            <button className="button is-link is-medium" type="button" onClick={ onClickSignupHandler }>
+                            <button className="button is-link is-medium" type="button" onClick={ onClickSignupHandler }
+                                { ...testAttributes("signup-button") }>
                                 <span className="icon">
                                     <FontAwesomeIcon icon={ faUserPlus } />
                                 </span>
@@ -145,7 +146,7 @@ const LoginPage: FunctionComponent = () => {
                     </div>
                     <div className="column">
                         <div className="buttons has-addons is-centered">
-                            <button className="button is-dark is-medium" type="submit">
+                            <button className="button is-dark is-medium" type="submit" { ...testAttributes("login-button") }>
                                 <span className="icon">
                                     <FontAwesomeIcon icon={ faSignIn } />
                                 </span>

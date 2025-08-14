@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useEffect, useState } from "react";
 import ConfirmDialog from "./confirm-dialog";
 import "./verify-indicator.css";
-import { formatTimestamp, getDateInstance, getLogger } from "../shared";
+import { formatTimestamp, getDateInstance, getLogger, testAttributes } from "../shared";
 
 interface VerifyIndicatorProps {
     id: string;
@@ -63,10 +63,10 @@ const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
     fcLogger.debug("openModal? ", openModal);
 
     return (
-        <div className="field verify-indicator">
+        <div className="field verify-indicator" { ...testAttributes(props.id) }>
             {
-                !props.disabled &&
-                <label htmlFor={ props.id } className="label is-invisible">{ props.labelPrefix || props.id }</label>
+                !props.disabled && props.labelPrefix &&
+                <label className="label is-invisible">{ props.labelPrefix }</label>
             }
             <div className="control">
                 { verifiedDate &&
@@ -75,7 +75,7 @@ const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
                             <FontAwesomeIcon icon={ faCheckCircle } />
                         </span>
                         { !props.disabled &&
-                            <button className="button is-success is-inverted is-medium" onClick={ onClickModalOpenHandler }> { props.labelPrefix } verified </button>
+                            <button className="button is-success is-inverted is-medium" onClick={ onClickModalOpenHandler } { ...testAttributes("verified-button", "verified-date", verifiedDate) }> { props.labelPrefix } verified </button>
                         }
                     </span>
                 }
@@ -85,7 +85,7 @@ const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
                             <FontAwesomeIcon icon={ faTimesCircle } />
                         </span>
                         { !props.disabled &&
-                            <button className="button is-danger is-inverted is-medium" onClick={ onClickModalOpenHandler }> { props.labelPrefix } un-verified </button>
+                            <button className="button is-danger is-inverted is-medium" onClick={ onClickModalOpenHandler } { ...testAttributes("unverified-button") }> { props.labelPrefix } un-verified </button>
                         }
                     </span>
                 }

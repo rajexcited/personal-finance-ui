@@ -1,7 +1,7 @@
 import { AxiosResponse } from "axios";
 import { LocalDBStore, MyLocalDatabase } from "../db";
 import { getLogger, subtractDatesDefaultToZero } from "../utils";
-import ms from "ms";
+import ms, { StringValue } from "ms";
 
 interface ApiResponseCacheResource {
   id: string;
@@ -45,7 +45,7 @@ const getApiResponse = async (url: string, queryParams?: Record<string, string[]
 
 interface CriteriaResource {
   /** time represents supported units by ms lib. sec, min, hour, week */
-  withinTime?: string;
+  withinTime?: StringValue;
   listSize?: number;
   minSize?: number;
 }

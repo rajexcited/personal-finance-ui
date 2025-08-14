@@ -3,14 +3,14 @@ import { formatTimestamp, getLogger } from "../../shared";
 
 const rootLogger = getLogger("mock.service.userDetails", null, null, "DISABLED");
 
-type UserDataType = Record<"firstName" | "lastName" | "emailId" | "password" | "countryCode" | "status", string>;
+export type UserDataType = Record<"firstName" | "lastName" | "emailId" | "password" | "countryCode" | "status", string>;
 const UserSessionDetails: UserDataType = {
   firstName: "",
   lastName: "",
   emailId: "",
   password: "",
   countryCode: "",
-  status: UserStatus.ACTIVE_USER,
+  status: UserStatus.ACTIVE_USER
 };
 
 export const userSessionDetails = (setter?: Partial<UserDataType>) => {
@@ -36,7 +36,7 @@ export const auditData = (createdBy?: string, createdOn?: Date | string) => {
     createdBy: createdBy || fullName(),
     updatedBy: fullName(),
     createdOn: typeof createdOn === "string" ? createdOn : formatTimestamp(createdOn || new Date()),
-    updatedOn: formatTimestamp(new Date()),
+    updatedOn: formatTimestamp(new Date())
   };
 };
 
@@ -85,7 +85,7 @@ const reloadHandlerWhileLoggedIn = () => {
       tokenSessionData({
         accessToken: authTknSession.accessToken,
         expiresIn: authTknSession.expiresIn,
-        expiryTime: authTknSession.expiryTime,
+        expiryTime: authTknSession.expiryTime
       });
     }
   }

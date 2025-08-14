@@ -6,6 +6,7 @@ import { getFullPath } from "../../../root";
 import { useAuth } from "../../../auth";
 import ReactMarkdown from "react-markdown";
 import { PymtAccountDetailLoaderResource } from "../../route-handlers/account-loader";
+import { testAttributes } from "../../../../shared";
 
 
 const UpdateAccount: FunctionComponent = () => {
@@ -41,7 +42,7 @@ const UpdateAccount: FunctionComponent = () => {
         <>
             {
                 errorMessage &&
-                <article className="message is-danger">
+                <article className="message is-danger" { ...testAttributes("update-payment-account-error-message") }>
                     <div className="message-body">
                         <ReactMarkdown children={ errorMessage } />
                     </div>

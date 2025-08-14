@@ -1,7 +1,7 @@
 import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
 import { missingValidation, validateAuthorization, validateDataType } from "./common-validators";
-import { addUpdatePymtAccount, deletePymtAccount, getPymtAccountList } from "../mock-db/pymt-acc-db";
+import { addUpdatePymtAccount, deletePymtAccount, getPymtAccountList, isDuplicateShortName } from "../mock-db/pymt-acc-db";
 import { PymtAccStatus, PymtAccountFields } from "../../pages/pymt-accounts/services";
 import { getLogger } from "../../shared";
 
@@ -43,8 +43,15 @@ export const MockPaymentAccounts = (demoMock: MockAdapter) => {
     if (validationErrors.length > 0) {
       return responseCreator.toValidationError(validationErrors);
     }
+    const isDuplicate = await isDuplicateShortName(data);
+    if (isDuplicate) {
+      return responseCreator.toValidationError([{ path: "shortName", message: "duplicate value is not allowed" }]);
+    }
 
     const result = await addUpdatePymtAccount(data);
+    if (result.error) {
+      return responseCreator.toUnknownError(result.error);
+    }
 
     if (result.updated) return responseCreator.toSuccessResponse(result.updated);
     // add

@@ -8,7 +8,7 @@ import { LoadSpinner } from "../../../../../components";
 import { ReceiptProps, ReceiptType } from "../../../../../components/receipt";
 import "bulma-carousel/dist/css/bulma-carousel.min.css";
 import "./view-receipts.css";
-import { subtractDatesDefaultToZero } from "../../../../../shared";
+import { subtractDatesDefaultToZero, testAttributes } from "../../../../../shared";
 
 
 interface ViewReceiptsProps {
@@ -180,31 +180,34 @@ export const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
     const prevScaleTooltip = !!previousScaleValue ? "previous zoom out: " + previousScaleValue + ". " : "cannot zoom out anymore.";
 
     return (
-        <section className="section view-receipts-carousel">
+        <section className="section view-receipts-carousel" { ...testAttributes("receipts-carousel") }>
             <div className={ `modal ${isModalOpen ? "is-active" : ""}` }>
                 <div className="modal-background"></div>
                 <div className="modal-card is-fullscreen">
                     <section className="modal-card-body">
                         <div className="modal-close">
-                            <button className="delete" type="button" onClick={ onClickModalCloseHandler } />
+                            <button className="delete" type="button"
+                                onClick={ onClickModalCloseHandler } { ...testAttributes("receipt-close-action") }></button>
                         </div>
                         { isActiveItemImage &&
                             <div className="modal-card-header-actions">
-                                <button className="button is-white is-inverted image-zoomIn" type="button" onClick={ onClickZoomInHandler }>
+                                <button className="button is-white is-inverted image-zoomIn" type="button"
+                                    onClick={ onClickZoomInHandler } { ...testAttributes("image-zoomin") }>
                                     <span className="icon tooltip is-tooltip-left" data-tooltip={ nextScaleTooltip + scaleTooltip }>
                                         <FontAwesomeIcon icon={ faMagnifyingGlassPlus } size="1x" />
                                     </span>
                                 </button>
-                                <button className="button is-white is-inverted image-zoomOut" type="button" onClick={ onClickZoomOutHandler }>
+                                <button className="button is-white is-inverted image-zoomOut" type="button"
+                                    onClick={ onClickZoomOutHandler } { ...testAttributes("image-zoomout") }>
                                     <span className="icon tooltip is-tooltip-left" data-tooltip={ prevScaleTooltip + scaleTooltip }>
                                         <FontAwesomeIcon icon={ faMagnifyingGlassMinus } />
                                     </span>
                                 </button>
                             </div>
                         }
-                        <LoadSpinner loading={ isReceiptLoading } insideModal={ true } />
+                        <LoadSpinner loading={ isReceiptLoading } insideModal={ true } id="carousel-download-receipt" />
                         { !isReceiptLoading && !!errorMessage &&
-                            <article className="message is-danger error">
+                            <article className="message is-danger error" { ...testAttributes("download-error") }>
                                 <div className="message-body">
                                     <ReactMarkdown children={ errorMessage } />
                                 </div>
@@ -212,7 +215,7 @@ export const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
                         }
                         {
                             isReceiptLoading &&
-                            <article className="message is-warning">
+                            <article className="message is-warning" { ...testAttributes("receipt-loading-wait") }>
                                 <div className="message-body">
                                     Please wait receipt is loading.
                                 </div>
@@ -221,16 +224,19 @@ export const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
                         <div className="carousel" ref={ carouselRef }>
                             {
                                 receipts.map((rct: ReceiptProps, ind: number) =>
-                                    <div className={ `item-${ind + 1}` } key={ rct.id }>
+                                    <div className={ `item-${ind + 1}` } key={ rct.id }
+                                        { ...testAttributes("carousel-item", "receipt-name", rct.name) }>
                                         <div className="fullscreen-image-container">
                                             { (rct.contentType === ReceiptType.JPEG || rct.contentType === ReceiptType.PNG) &&
                                                 <figure className="image">
-                                                    <img src={ rct.url } alt={ rct.name } style={ { transform: "scale(" + scaleValue + ")" } } />
+                                                    <img src={ rct.url } alt={ rct.name } style={ { transform: "scale(" + scaleValue + ")" } }
+                                                        { ...testAttributes("image", "receipt-type", rct.contentType) } />
                                                 </figure>
                                             }
                                             {
                                                 rct.contentType === ReceiptType.PDF &&
-                                                <embed src={ rct.url } type={ rct.contentType } height={ "99%" } width={ "93%" } />
+                                                <embed src={ rct.url } type={ rct.contentType } height={ "99%" } width={ "93%" }
+                                                    { ...testAttributes("pdf", "receipt-type", rct.contentType) } />
                                             }
                                         </div>
                                     </div>
@@ -238,7 +244,7 @@ export const ViewReceipts: FunctionComponent<ViewReceiptsProps> = props => {
                             }
                             {
                                 receipts.length === 0 &&
-                                <div className="item-1">  <span>  Dummy item One </span>   </div>
+                                <div className="item-1" { ...testAttributes("dummy-item") }>  <span>  Dummy item One </span>   </div>
                             }
                         </div>
                     </section>

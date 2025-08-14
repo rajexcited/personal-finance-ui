@@ -3,9 +3,9 @@ import { AxiosResponseCreator } from "./mock-response-create";
 import { ValidationErrorResource, missingValidation, validateAuthorization, validateDataType } from "./common-validators";
 import { ExpenseFilter, getExpenses } from "../mock-db/expense-db";
 import { LoggerBase, getLogger } from "../../shared";
-import { ExpenseStatus } from "../../pages/expenses/services/expense/field-types";
+import { ExpenseBelongsTo, ExpenseStatus } from "../../pages/expenses/services/expense/field-types";
 
-type ExpenseParam = Partial<Pick<Record<string, string[]>, "status" | "pageNo" | "pageMonths" | "purchasedYear">>;
+type ExpenseParam = Partial<Pick<Record<string, string[]>, "status" | "pageNo" | "pageMonths" | "belongsTo">>;
 const _rootLogger = getLogger("mock.api.expenses", null, null, "DISABLED");
 const rootPath = "/expenses";
 
@@ -39,15 +39,26 @@ export const MockExpenses = (demoMock: MockAdapter) => {
       return { errors: pageMonthsErrors };
     }
 
+    const belongsToParams = params?.belongsTo ? [params.belongsTo].flat().filter((bt) => bt) : [];
+    const invalidBelongsTo = belongsToParams.find(
+      (bt) => ExpenseBelongsTo.Purchase !== bt && ExpenseBelongsTo.Income !== bt && ExpenseBelongsTo.PurchaseRefund !== bt
+    );
+    logger.debug("found invalid belongsTo param =", invalidBelongsTo);
+    if (invalidBelongsTo) {
+      const validationError: ValidationErrorResource<ExpenseParam> = { path: "belongsTo", message: "incorrect format" };
+      return { errors: [validationError] };
+    }
+
     const pageNo = params.pageNo ? params.pageNo[0] : "1";
     const convertedParams: ExpenseFilter = {
       pageNo: Number(pageNo),
       status: statusParams.length > 0 ? (statusParams as ExpenseStatus[]) : undefined,
       pageMonths: params.pageMonths ? Number(params.pageMonths[0]) : undefined,
+      belongsTo: params.belongsTo ? (params.belongsTo[0] as ExpenseBelongsTo) : undefined
     };
     logger.debug("convertedParams =", convertedParams);
     return {
-      params: convertedParams,
+      params: convertedParams
     };
   };
 

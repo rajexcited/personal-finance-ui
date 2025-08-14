@@ -3,7 +3,7 @@ import { rowHeaders, ExpenseSortStateType, getLogger, ExpenseFields, ExpenseBelo
 import { ExpenseItemTableRow } from "./view-expense-item-tablerow";
 import { ExpenseTableHead, ExpenseTableHeadRefType } from "./expense-table-head";
 import { SelectedExpense } from "./common";
-import { sleep } from "../../../../shared";
+import { sleep, testAttributes } from "../../../../shared";
 
 
 interface ExpenseListTableProps {
@@ -108,7 +108,7 @@ export const ExpenseListTable: FunctionComponent<ExpenseListTableProps> = props 
     };
 
     return (
-        <section className="mb-5">
+        <section className="mb-5" { ...testAttributes("expense-table") }>
 
             <table className="table is-fullwidth is-hoverable">
                 <ExpenseTableHead

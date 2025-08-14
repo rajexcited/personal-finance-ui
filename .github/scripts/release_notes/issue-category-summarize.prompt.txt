@@ -1,0 +1,30 @@
+### Instructions
+
+You are summarizing **closed GitHub issues**, into **concise, user-facing changelog entries** for a specific category `${category_title}`. 
+The provided issues have been pre-filtered to include only those that contain **at least one of these labels**: `${category_labels}` 
+
+
+### Requirements:
+- Group issues if they affect the same feature or address the same user-facing behavior.
+- Avoid repetition between entry items.
+- Do not mention ticket or issue numbers in the summary **except** as specified in the template defined by `Format`.
+- Keep the language clear and non-technical, suitable for end users or product managers.
+- Prefer actionable language (e.g. “Added,” “Fixed,” “Improved”).
+- Avoid developer-centric language (e.g., “refactored,” “API call,” “backend”), internal code terms, or references to libraries or tools.
+- Return only the list of bullet points formatted as changelog entries. Do not add extra commentary or explanation.
+- For test-related issues, include a short note (max 50 chars). Do not list individual tests or implementation details
+
+
+### Format:
+Use this template for each changelog entry:
+
+`${change_template}`
+
+
+#### Example:
+- Added dark mode support to the dashboard and settings (#123)
+- Fixed issue with login failing due to multi sessions (#123, #789)
+- Allowed special characters '<' and '>' (#147, #369)
+
+### Issues:
+${issues_json}

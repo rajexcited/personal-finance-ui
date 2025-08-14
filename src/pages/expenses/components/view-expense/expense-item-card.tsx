@@ -7,7 +7,7 @@ import { Animated, VerifyIndicator } from "../../../../components";
 import { useAuth } from "../../../auth";
 import { ExpenseBelongsTo, ExpenseFields, formatTimestamp, getLogger } from "../../services";
 import { getExpenseDateInstance } from "../../services/expense";
-import { getDateInstance, getShortForm } from "../../../../shared";
+import { getDateInstance, getShortForm, testAttributes } from "../../../../shared";
 import { createSharePersonTagSourceMap } from "../common";
 import { SharePersonResource } from "../../../settings/services";
 
@@ -92,19 +92,19 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
     };
 
     let belongsTo = "NA";
-    let expenseCategory = undefined;
+    let expenseCategory = "";
     let belongsToIconTip = <span></span>;
-    let verifiedDate = "";
+    let verifiedDate = "-";
 
     if (props.details.belongsTo === ExpenseBelongsTo.Income) {
         belongsTo = "Income";
         expenseCategory = props.details.incomeTypeName;
-        belongsToIconTip = <span className="icon has-text-info tooltip is-tooltip-multiline is-tooltip-top" data-tooltip={ belongsTo }> <FontAwesomeIcon icon={ faDollarSign } /> </span>;
+        belongsToIconTip = <span className="icon has-text-info tooltip is-tooltip-top" data-tooltip={ belongsTo }> <FontAwesomeIcon icon={ faDollarSign } /> </span>;
     } else if (props.details.belongsTo === ExpenseBelongsTo.Purchase) {
         belongsTo = "Purchase";
-        expenseCategory = props.details.purchaseTypeName;
-        belongsToIconTip = <span className="icon has-text-info tooltip is-tooltip-multiline is-tooltip-top" data-tooltip={ belongsTo }> <FontAwesomeIcon icon={ faShoppingCart } /> </span>;
-        verifiedDate = "-";
+        expenseCategory = props.details.purchaseTypeName || "";
+        belongsToIconTip = <span className="icon has-text-info tooltip is-tooltip-top" data-tooltip={ belongsTo }> <FontAwesomeIcon icon={ faShoppingCart } /> </span>;
+
         if (props.details.verifiedTimestamp) {
             const verifiedDateInstance = getDateInstance(props.details.verifiedTimestamp);
             if (verifiedDateInstance) {
@@ -115,24 +115,31 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
     } else if (props.details.belongsTo === ExpenseBelongsTo.PurchaseRefund) {
         belongsTo = "Refund";
         expenseCategory = props.details.reasonValue;
-        belongsToIconTip = <span className="icon has-text-info tooltip is-tooltip-multiline is-tooltip-top" data-tooltip={ belongsTo }> <FontAwesomeIcon icon={ faUndo } /> </span>;
+        belongsToIconTip = <span className="icon has-text-info tooltip is-tooltip-top" data-tooltip={ belongsTo }> <FontAwesomeIcon icon={ faUndo } /> </span>;
     }
 
     const updateExpenseAction =
-        (<button className="button is-link is-active" onClick={ onClickEditExpenseHandler } key={ "updt-purchase-action" + props.id }>
+        (<button className="button is-link is-active" onClick={ onClickEditExpenseHandler }
+            key={ "updt-xpns-action" + props.id }
+            { ...testAttributes("expense-update-action") }>
             <span className="icon tooltip" data-tooltip={ "Update " + belongsTo }>
                 <FontAwesomeIcon icon={ faEdit } />
             </span>
         </button>);
 
-    const removeExpenseAction = (<button className="button is-link is-active" onClick={ onClickTrashExpenseHandler } key={ "rmve-purchase-action" + props.id }>
-        <span className="icon tooltip" data-tooltip={ "Remove " + belongsTo }>
-            <FontAwesomeIcon icon={ faTrash } />
-        </span>
-    </button>);
+    const removeExpenseAction =
+        (<button className="button is-link is-active" onClick={ onClickTrashExpenseHandler }
+            key={ "rmve-xpns-action" + props.id }
+            { ...testAttributes("expense-remove-action") }>
+            <span className="icon tooltip" data-tooltip={ "Remove " + belongsTo }>
+                <FontAwesomeIcon icon={ faTrash } />
+            </span>
+        </button>);
 
     const viewReceiptsAction = (
-        <button className="button is-link is-active" onClick={ onClickShowReceiptsHandler } key={ "view-receipts-action" + props.id }>
+        <button className="button is-link is-active" onClick={ onClickShowReceiptsHandler }
+            key={ "view-receipts-action" + props.id }
+            { ...testAttributes("expense-view-receipts-action") }        >
             <span className="icon tooltip" data-tooltip="View Receipts">
                 <FontAwesomeIcon icon={ faReceipt } />
             </span>
@@ -140,7 +147,9 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
     );
 
     const addRefundAction = (
-        <button className="button is-link is-active" onClick={ onClickAddRefundHandler } key={ "add-refund-action" + props.id }>
+        <button className="button is-link is-active" onClick={ onClickAddRefundHandler }
+            key={ "add-refund-action" + props.id }
+            { ...testAttributes("expense-add-refund-action") }        >
             <span className="icon tooltip" data-tooltip="Add Refund">
                 <FontAwesomeIcon icon={ faCircleDollarToSlot } />
             </span>
@@ -158,22 +167,31 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
         actions.push(viewReceiptsAction);
     }
 
+    let updatedOn = "";
+    if (props.details.auditDetails.updatedOn instanceof Date) {
+        updatedOn = formatTimestamp(props.details.auditDetails.updatedOn);
+    } else {
+        updatedOn = props.details.auditDetails.updatedOn;
+    }
+
     return (
         <section className="container mb-4">
-            <div className="card">
+            <div className="card" { ...testAttributes("expense-card") }>
                 <header className="card-header">
                     <div className="card-header-title">
                         <div className="card-header-icon" onClick={ onClickBodyToggleHandler }>
                             <div className="columns">
                                 <div className="column">
-                                    <nav className="level">
+                                    <nav className="level"
+                                        { ...testAttributes("card-header", "belongs-to", belongsTo, "expense-category", expenseCategory, "billname", props.details.billName, "expense-date", expenseDate || "", "verified-date", verifiedDate, "updated-on", updatedOn) }
+                                    >
                                         <div className="level-item">
                                             { belongsToIconTip }
                                             <span>{ getShortForm(props.details.billName, 18, "-") }</span>
                                         </div>
                                         <div className="level-item">
                                             { expenseDate }
-                                            { verifiedDate.length > 0 &&
+                                            { verifiedDate.length > 1 &&
                                                 <VerifyIndicator
                                                     id={ "purchase-verify-indicator-title" + props.details.id }
                                                     verifiedDateTime={ verifiedDate }
@@ -195,7 +213,9 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
                             </div>
                         </div>
                     </div>
-                    <button className="card-header-icon" aria-label="expand breakdown" onClick={ onClickBodyToggleHandler }>
+                    <button className="card-header-icon" aria-label="expand breakdown"
+                        onClick={ onClickBodyToggleHandler }
+                        { ...testAttributes("expense-expand-collapse-action") }>
                         <span className="icon is-large">
                             <FontAwesomeIcon icon={ isBodyOpen ? faAngleUp : faAngleDown } />
                         </span>
@@ -206,29 +226,33 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
                         <div className="content">
                             <div className="columns is-variable">
                                 <div className="column">
-                                    <label className="label">ExpenseBelongsTo: </label>
-                                    <span>{ belongsTo }</span>
+                                    <label className="label">Expense Belongs To: </label>
+                                    <span { ...testAttributes("outvalue") }>{ belongsTo }</span>
                                 </div>
                                 <div className="column">
-                                    <label className="label">BillName: </label>
-                                    <span>{ props.details.billName }</span>
+                                    <label className="label">Bill Name: </label>
+                                    <span { ...testAttributes("outvalue") }>{ props.details.billName }</span>
+                                </div>
+                                <div className="column">
+                                    <label className="label">Expense Date: </label>
+                                    <span { ...testAttributes("outvalue") }>{ expenseDate || "-" }</span>
                                 </div>
                             </div>
                             <div className="columns is-variable">
                                 <div className="column">
                                     <label className="label">Expense Category: </label>
-                                    <span>{ expenseCategory }</span>
+                                    <span { ...testAttributes("outvalue") }>{ expenseCategory || "-" }</span>
                                 </div>
                                 <div className="column">
                                     <label className="label">Payment Account: </label>
-                                    <span>{ props.details.paymentAccountName || "-" }</span>
+                                    <span { ...testAttributes("outvalue") }>{ props.details.paymentAccountName || "-" }</span>
                                 </div>
                                 {
                                     verifiedDate.length > 1 &&
                                     <div className="column">
                                         <label className="label">Verified Date: </label>
                                         <div className="level is-mobile">
-                                            <span className="level-item is-narrow">{ verifiedDate }</span>
+                                            <span className="level-item is-narrow" { ...testAttributes("outvalue") }>{ verifiedDate }</span>
                                             <span className="level-item">
                                                 <VerifyIndicator
                                                     id={ "purchase-verify-indicator-body" + props.details.id }
@@ -242,10 +266,10 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
                                     </div>
                                 }
                                 {
-                                    verifiedDate.length === 1 &&
+                                    props.details.belongsTo === ExpenseBelongsTo.Purchase && verifiedDate.length === 1 &&
                                     <div className="column">
                                         <div className="level is-mobile">
-                                            <span className="level-item is-narrow">{ belongsTo } un-verified</span>
+                                            <span className="level-item is-narrow" { ...testAttributes("outvalue") }>{ belongsTo } un-verified</span>
                                             <span className="level-item">
                                                 <VerifyIndicator
                                                     id={ "purchase-verify-indicator-body" + props.details.id }
@@ -262,7 +286,7 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
                             <div className="columns is-variable">
                                 <div className="column">
                                     <label className="label">Tags: </label>
-                                    <div className="tags">
+                                    <div className="tags" { ...testAttributes("outvalue") }>
                                         {
                                             props.details.tags.map(tag =>
                                                 <span
@@ -280,8 +304,8 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
                                     </div>
                                 </div>
                                 <div className="column">
-                                    <label className="label">Tags: </label>
-                                    <div className="tags">
+                                    <label className="label">Share with Persons: </label>
+                                    <div className="tags" { ...testAttributes("outvalue") }>
                                         {
                                             props.details.personIds.map(pid =>
                                                 <span
@@ -300,7 +324,7 @@ export const ExpenseItemCard: FunctionComponent<ExpenseItemCardProps> = props =>
                                 </div>
                                 <div className="column">
                                     <label className="label">Description: </label>
-                                    <span>{ props.details.description }</span>
+                                    <span { ...testAttributes("outvalue") }>{ props.details.description }</span>
                                 </div>
                             </div>
                         </div>

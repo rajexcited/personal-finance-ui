@@ -2,10 +2,29 @@ from argparse import Namespace
 from enum import Enum
 import json
 from pathlib import Path
-from typing import Any, Callable, Dict, List, TypeVar, Optional
+import traceback
+from typing import Any, Callable, Dict, List, TypeVar, Optional, Union
+import yaml
+from .base import rootpath
 
 
-def get_valid_dict(arg: Any) -> Optional[Dict]:
+def get_valid_list(arg: Any):
+    res_list = get_valid_list_dict(arg)
+    if isinstance(res_list, List):
+        return res_list
+
+    return None
+
+
+def get_valid_dict(arg: Any):
+    res_dict = get_valid_list_dict(arg)
+    if isinstance(res_dict, Dict):
+        return res_dict
+
+    return None
+
+
+def get_valid_list_dict(arg: Any) -> Optional[Union[Dict, List]]:
     """
     Parses and returns a valid dictionary from a file path, JSON string, or dictionary input.
 
@@ -26,23 +45,20 @@ def get_valid_dict(arg: Any) -> Optional[Dict]:
         - If `arg` is a string, attempts to parse it as JSON.
         - Validates that the parsed value is a dictionary before returning.
     """
-    ret_dict = arg
+    ret_dict_list = arg
     if Path(arg).exists():
         try:
             with open(arg, "r") as f:
-                ret_dict = json.load(f)
+                ret_dict_list = json.load(f)
         except:
             print("the file in arg is not json convertible")
     elif isinstance(arg, str):
         try:
-            ret_dict = json.loads(arg)
+            ret_dict_list = json.loads(arg)
         except json.JSONDecodeError as e:
             print("arg is not json convertable")
 
-    if isinstance(ret_dict, Dict):
-        return ret_dict
-
-    return None
+    return ret_dict_list
 
 
 def get_converted_enum(enum_type: type[Enum], val: str):
@@ -96,3 +112,20 @@ def get_parsed_arg_value(args: Namespace, key: str, arg_type_converter: Callable
         converted_key = key.replace("_", " ")
         raise ValueError(f"arg value,{converted_key}, is not provided")
     return val
+
+
+def get_yaml_to_dict(arg: Any):
+    yaml_dict = None
+    template_path = Path(rootpath/arg)
+    # print("template path: ", template_path)
+    if template_path.exists():
+        # print("yaml file found. now parsing")
+        try:
+            with template_path.open('r', encoding='utf-8') as file:
+                yaml_dict = yaml.load(file, Loader=yaml.FullLoader)
+                # print("template yaml dict", yaml_dict)
+        except:
+            print("Error: the file in arg is not yaml convertible")
+            traceback.print_exc()
+
+    return yaml_dict

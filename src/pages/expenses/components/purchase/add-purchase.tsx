@@ -9,6 +9,7 @@ import { useAuth } from "../../../auth";
 import { Animated } from "../../../../components";
 import { PurchaseDetailLoaderResource } from "../../route-handlers";
 import { PurchaseForm } from "./modify-form/purchase-form";
+import { testAttributes } from "../../../../shared";
 
 
 
@@ -49,7 +50,8 @@ export const AddPurchase: FunctionComponent = () => {
         <>
             {
                 errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
+                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp"
+                    scrollBeforePlayIn={ true } { ...testAttributes("add-purchase-error-message") }>
                     <article className="message is-danger">
                         <div className="message-body">
                             <ReactMarkdown children={ errorMessage } />
@@ -77,7 +79,7 @@ export const AddPurchase: FunctionComponent = () => {
             { auth.readOnly &&
                 <div className="columns">
                     <div className="column">
-                        <span>Not Allowed to add Purchase</span>
+                        <span { ...testAttributes("add-purchase-not-allowed") }>Not Allowed to add Purchase</span>
                     </div></div>
             }
         </>

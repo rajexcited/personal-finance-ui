@@ -9,7 +9,7 @@ import { getFullPath } from "../../../root";
 import { useAuth } from "../../../auth";
 import { ActionId, ConfigTypeStatus, DeleteSharePersonResource, getLogger, RouteHandlerResponse, SharePersonResource, UpdateSharePersonResource, UpdateSharePersonStatusResource } from "../../services";
 import { SharePersonLoaderResource } from "../../route-handlers/share-person-loader-action";
-import { ConfigAction } from "../../../../shared";
+import { ConfigAction, ConfigTypeBelongsTo, testAttributes } from "../../../../shared";
 import { ViewSharePerson } from "./view-share-person";
 import { UpdateSharePerson } from "./update-share-person";
 import { DeviceMode, useOrientation } from "../../../../hooks";
@@ -158,61 +158,56 @@ export const SharePersonPage: FunctionComponent = () => {
         controlsInEllipsis.push({ id: ActionId.ToggleEnable, content: "Change to Enable", icon: faToggleOn, isActive: item => (item as unknown as SharePersonResource).status === ConfigTypeStatus.Disable });
         controlsInEllipsis.push({ id: ActionId.ToggleDisable, content: "Change to Disable", icon: faToggleOff, isActive: item => (item as unknown as SharePersonResource).status === ConfigTypeStatus.Enable });
     }
-    const hideListInMobile = deviceMode === DeviceMode.Mobile && (action?.type === ActionId.Add || action?.type === ActionId.Update);
+
     const tags = loaderData.type === "success" ? loaderData.data.tags : [];
 
     return (
-        <>
+        <section { ...testAttributes(ConfigTypeBelongsTo.SharePerson) }>
             <div className="columns">
                 <div className="column has-text-centered">
-                    <h1 className="title">List of Persons Sharing</h1>
+                    <h1 className="title" { ...testAttributes("title") }>List of Persons Sharing</h1>
                 </div>
                 <div className="column">&nbsp;</div>
                 {
-                    deviceMode === DeviceMode.Mobile && !hideListInMobile &&
+                    !auth.readOnly && (deviceMode === DeviceMode.Mobile || (deviceMode === DeviceMode.Desktop && action?.type === ActionId.View)) &&
                     <div className="column">
                         <div className="buttons is-right">
-                            <button className="button is-link is-rounded" onClick={ onClickRequestAddSharePersonHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
+                            <button className="button is-link is-rounded"
+                                onClick={ onClickRequestAddSharePersonHandler }
+                                { ...testAttributes("add-action") }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
                         </div>
                     </div>
                 }
             </div>
             <div className="columns">
-                {
-                    !hideListInMobile &&
-                    <div className="column is-two-fifths">
-                        {
-                            sharePersonItems.length > 0 &&
-                            <>
+                <div className="column is-two-fifths">
+                    <Switch
+                        initialStatus={ enableFilter }
+                        id="sharePersonEnableFilter"
+                        labelWhenOn="Filtered by enabled"
+                        labelWhenOff="All Share Persons"
+                        tooltip="Toggle to filter by status enable or show all"
+                        onChange={ setEnableFilter }
+                    />
+                    {
+                        sharePersonItems.length > 0 &&
+                        <List
+                            items={ sharePersonItems }
+                            onControlRequest={ onRequestListControlSharePersonHandler }
+                            controlsInEllipsis={ controlsInEllipsis }
+                            controlsBeforeEllipsis={ controlsBeforeEllipsis }
+                            viewActionContentInMobile={
+                                action?.type === ActionId.View &&
+                                <ViewSharePerson details={ action.item } />
+                            }
+                        />
+                    }
 
-                                <Switch
-                                    initialStatus={ enableFilter }
-                                    id="sharePersonEnableFilter"
-                                    labelWhenOn="Filtered by enabled"
-                                    labelWhenOff="All Share Persons"
-                                    tooltip="Toggle to filter by status enable or show all"
-                                    onChange={ setEnableFilter }
-                                />
-
-                                <List
-                                    items={ sharePersonItems }
-                                    onControlRequest={ onRequestListControlSharePersonHandler }
-                                    controlsInEllipsis={ controlsInEllipsis }
-                                    controlsBeforeEllipsis={ controlsBeforeEllipsis }
-                                    viewActionContentInMobile={
-                                        action?.type === ActionId.View &&
-                                        <ViewSharePerson details={ action.item } />
-                                    }
-                                />
-                            </>
-                        }
-
-                        {
-                            sharePersonItems.length === 0 &&
-                            <span>There are no Share Persons configured.</span>
-                        }
-                    </div>
-                }
+                    {
+                        sharePersonItems.length === 0 &&
+                        <span { ...testAttributes("no-share-person-message") }>There are no Share Persons configured.</span>
+                    }
+                </div>
                 <div className="column">
                     {
                         !auth.readOnly && deviceMode === DeviceMode.Desktop &&
@@ -221,11 +216,17 @@ export const SharePersonPage: FunctionComponent = () => {
                                 {
                                     action && action.type === "view" &&
                                     <>
-                                        <button className="button is-link is-rounded" onClick={ onClickRequestDeleteSharePersonHandler }> &nbsp; &nbsp; Delete &nbsp; &nbsp; </button>
-                                        <button className="button is-link is-rounded" onClick={ onClickRequestUpdateSharePersonHandler }> &nbsp; &nbsp; Edit &nbsp; &nbsp; </button>
+                                        <button className="button is-link is-rounded"
+                                            onClick={ onClickRequestDeleteSharePersonHandler }
+                                            { ...testAttributes("delete-action") }> &nbsp; &nbsp; Delete &nbsp; &nbsp; </button>
+                                        <button className="button is-link is-rounded"
+                                            onClick={ onClickRequestUpdateSharePersonHandler }
+                                            { ...testAttributes("edit-action") }> &nbsp; &nbsp; Edit &nbsp; &nbsp; </button>
                                     </>
                                 }
-                                <button className="button is-link is-rounded" onClick={ onClickRequestAddSharePersonHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
+                                <button className="button is-link is-rounded"
+                                    onClick={ onClickRequestAddSharePersonHandler }
+                                    { ...testAttributes("add-action") }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
                             </div>
                         </section>
                     }
@@ -233,7 +234,7 @@ export const SharePersonPage: FunctionComponent = () => {
                         {
                             errorMessage &&
                             <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
-                                <article className="message is-danger">
+                                <article className="message is-danger" { ...testAttributes("error-message") }>
                                     <div className="message-body">
                                         <ReactMarkdown children={ errorMessage } />
                                     </div>
@@ -286,7 +287,7 @@ export const SharePersonPage: FunctionComponent = () => {
                 onCancel={ () => updateAction(undefined) }
                 yesButtonClassname="is-danger"
             />
-        </>
+        </section>
     );
 
 };

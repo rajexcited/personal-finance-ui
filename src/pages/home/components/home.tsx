@@ -5,6 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import { getFullPath } from "../../root";
 import { useNavigate } from "react-router-dom";
+import { testAttributes } from "../../../shared";
 
 
 
@@ -49,7 +50,8 @@ export const HomePage: FunctionComponent = () => {
                     <div className="columns is-display-mobile">
                         <div className="column">
                             <div className="buttons">
-                                <button className="button is-dark is-large" type="button" onClick={ onClickSignupHandler }>
+                                <button className="button is-dark is-large" type="button"
+                                    onClick={ onClickSignupHandler } { ...testAttributes("signup-button-home") }>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={ faUserPlus } />
                                     </span>
@@ -59,7 +61,8 @@ export const HomePage: FunctionComponent = () => {
                         </div>
                         <div className="column">
                             <div className="buttons">
-                                <button className="button is-dark is-large" type="button" onClick={ onClickLoginHandler }>
+                                <button className="button is-dark is-large" type="button"
+                                    onClick={ onClickLoginHandler } { ...testAttributes("login-button-home") }>
                                     <span className="icon">
                                         <FontAwesomeIcon icon={ faSignIn } />
                                     </span>

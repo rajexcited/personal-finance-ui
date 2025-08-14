@@ -1,0 +1,60 @@
+name-template: "$MILESTONE_TITLE"
+tag-template: "$MILESTONE_TITLE"
+categories:
+  - title: "🚀 Enhancements"
+    labels:
+      include:
+        - feature
+        - enhancement
+  - title: "🐛 Bug Fixes"
+    labels:
+      include:
+        - fix
+        - bugfix
+        - bug
+  - title: "🧰 Maintenance"
+    labels:
+      include:
+        - chore
+        - security
+        - security alert
+        - javascript
+        - dependencies
+        - test plan
+        - technical
+      exclude:
+        - deployment
+  - title: "📝 Document Updates"
+    labels:
+      include:
+        - documentation
+        - help wanted
+        - question
+        - instruction
+  - title: "📌 References"
+    labels:
+      include:
+        - regression
+      exclude:
+        - deployment
+    template: |
+      ### $TITLE:
+
+      $CATEGORY_ITEM_CHANGES
+      - **Milestone:** [$MILESTONE_TITLE](https://github.com/$GITHUB_REPOSITORY/milestone/$MILESTONE_NUMBER?closed=1)
+
+category-labels:
+  exclude:
+    - wontfix
+    - invalid
+    - duplicate
+category-template: |
+  ### $TITLE:
+
+  $CATEGORY_ITEM_CHANGES
+
+category-item-change-template: "- $TITLE (#$ISSUE_NUMBER)"
+template: |
+  ## Changes
+
+  $CATEGORY_CHANGES

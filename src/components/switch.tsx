@@ -1,6 +1,7 @@
 import "bulma-extensions/bulma-switch/dist/css/bulma-switch.min.css";
 import "./switch.css";
 import { FunctionComponent, useState } from "react";
+import { testAttributes } from "../shared";
 
 
 interface SwitchProps {
@@ -33,7 +34,8 @@ const Switch: FunctionComponent<SwitchProps> = (props) => {
     };
 
     return (
-        <div className={ `switch-container field ${!tooltipContent ? "" : "tooltip"}` } data-tooltip={ tooltipContent }>
+        <div className={ `switch-container field ${!tooltipContent ? "" : "tooltip"}` } data-tooltip={ tooltipContent }
+            { ...testAttributes("switch", "switch-container-id", id) }>
             <input id={ id } type="checkbox" className="switch is-rounded is-info" defaultChecked={ status } onChange={ onChangeHandler } disabled={ props.disable } />
             <label htmlFor={ id }>{ label }</label>
         </div>

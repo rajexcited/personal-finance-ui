@@ -8,6 +8,7 @@ import { getFullPath } from "../../../root";
 import { Animated } from "../../../../components";
 import { PurchaseRefundForm } from "./refund-form";
 import { RefundDetailLoaderResource } from "../../route-handlers";
+import { testAttributes } from "../../../../shared";
 
 
 const fcLogger = getLogger("FC.UpdateRefund", null, null, "DISABLED");
@@ -62,7 +63,8 @@ export const UpdateRefund: FunctionComponent = () => {
         <>
             {
                 errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
+                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp"
+                    scrollBeforePlayIn={ true } { ...testAttributes("update-refund-error-message") }>
                     <article className="message is-danger">
                         <div className="message-body">
                             <ReactMarkdown children={ errorMessage } />
@@ -95,7 +97,7 @@ export const UpdateRefund: FunctionComponent = () => {
             { auth.readOnly &&
                 <div className="columns">
                     <div className="column">
-                        <span>Not Allowed to update Refund</span>
+                        <span { ...testAttributes("update-refund-not-allowed") }>Not Allowed to update Refund</span>
                     </div></div>
             }
         </>

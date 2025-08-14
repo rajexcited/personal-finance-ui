@@ -12,7 +12,7 @@ const App = () => {
             {/* <p>{ window.navigator.userAgent }</p> */ }
 
             <AuthContextProvider>
-                <RouterProvider router={ router } fallbackElement={ <LoadSpinner loading={ true } /> } />
+                <RouterProvider router={ router } fallbackElement={ <LoadSpinner loading={ true } id="routing" /> } />
             </AuthContextProvider>
             <p style={ { padding: "1rem" } }>&nbsp;</p>
         </section>

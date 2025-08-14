@@ -6,6 +6,7 @@ import { Animated, ConfirmDialog } from "../../../../components";
 import { getFullPath } from "../../../root";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "../../../auth";
+import { testAttributes } from "../../../../shared";
 
 
 const AccountList: FunctionComponent = () => {
@@ -30,11 +31,11 @@ const AccountList: FunctionComponent = () => {
     const errorMessage = loaderData.type === "error" ? loaderData.errorMessage : actionData?.type === "error" ? actionData.errorMessage : null;
 
     return (
-        <section className="container">
+        <section className="container" { ...testAttributes("payment-account-section") } >
             {
                 errorMessage &&
                 <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
-                    <div className="columns is-centered">
+                    <div className="columns is-centered" { ...testAttributes("payment-account-list-error-message") }>
                         <div className="column is-four-fifths">
                             <article className="message is-danger mb-3">
                                 <div className="message-body">
@@ -47,7 +48,7 @@ const AccountList: FunctionComponent = () => {
             }
             {
                 !errorMessage && !pymtAccList.length &&
-                <p className="title">There are no accounts</p>
+                <p className="title" { ...testAttributes("no-payment-account-message") } >There are no accounts</p>
             }
             {
                 pymtAccList.map(acc =>
