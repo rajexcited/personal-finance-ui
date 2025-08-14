@@ -395,10 +395,11 @@ jobs:
               if(!context.payload.issue.milestone.due_on) {
                 throw new Error("Milestone due date is not set");
               }
-              const milestoneDueOn = new Date(context.payload.issue.milestone.due_on);
+              const milestoneDueOn = getEndOfDayCentral(context.payload.issue.milestone.due_on);
               const endOfToday = getEndOfDayCentral(new Date());
-              if(milestoneDueOn.toDateString() < endOfToday.toDateString()) {
-                throw new Error("Milestone due date is already passed");
+              const toDateString = (dateInstance) => dateInstance.toJSON().substring(0,10);
+              if(milestoneDueOn < endOfToday) {
+                throw new Error(`Milestone due date[${toDateString(milestoneDueOn)}] is already passed ${toDateString(endOfToday)}`);
               }
               // verify milestone branch exists
               const milestoneBranch = `milestone/${context.payload.issue.milestone.title}`;
