@@ -25,6 +25,7 @@ def summarize_category(category_title: str, category_labels: List[str], change_t
                                                     category_labels=category_labels,
                                                     change_template=change_template,
                                                     issues=chunk_issues)
+            print("prompt=", prompt)
             response = llm.generate_content(prompt)
 
             print("response: ", response)
@@ -74,4 +75,6 @@ def get_llm():
         if model_name is None:
             raise ValueError("model name is not provided")
         llm_model = GenerativeModel(model_name=model_name)
+        print("model_name=", model_name, ", llm_model=", llm_model)
+
     return llm_model
