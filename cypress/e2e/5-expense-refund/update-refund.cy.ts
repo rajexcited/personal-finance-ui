@@ -1,21 +1,21 @@
 import { getExpenseRefund, getExpenseRefundList } from "../../support/fixture-utils/read-expense-refund";
 import { NavBarSelectors, UpdateRefOptions } from "../../support/resource-types";
-import { createOrUpdatePaymentAccount } from "../9-payment-accounts/utils/payment-account-api-utils";
-import { createOrUpdateRefundReason } from "../9-settings/utils/config-type-utils";
+import { createOrUpdatePaymentAccount } from "../5-payment-accounts/utils/payment-account-api-utils";
+import { createOrUpdateRefundReason } from "../5-settings/utils/config-type-utils";
 import {
   navigateToEditExpense,
   selectExpenseDate,
   validateExpenseDateInForm,
   validateUploadReceiptSection
-} from "../9-expense/utils/expense-form-utils";
+} from "../5-expense/utils/expense-form-utils";
 import { ExpenseBelongsTo, ExpenseStatus } from "../../support/api-resource-types";
 import {
   getBelongsToLabel,
   ValidateExpenseCallbackFn,
   validateExpenseCardOnSmall,
   validateExpenseTableRowOnLarge
-} from "../9-expense/utils/view-expense-utils";
-import { createOrUpdateExpensePurchase, createOrUpdateExpenseRefund } from "../9-expense/utils/expense-api-utils";
+} from "../5-expense/utils/view-expense-utils";
+import { createOrUpdateExpensePurchase, createOrUpdateExpenseRefund } from "../5-expense/utils/expense-api-utils";
 import { getExpensePurchaseList } from "../../support/fixture-utils/read-expense-purchase";
 import { selectPurchase } from "./utils/refund-form-utils";
 import { IndexedDbName } from "../../plugins/indexedDb/resource";
@@ -38,7 +38,7 @@ function runUpdateRefundTest(refundOptions: UpdateRefOptions, validateExpense: V
 
   cy.get('[data-test="update-refund-not-allowed"]').should("not.exist");
   cy.get('[data-test="update-refund-error-message"]').should("not.exist");
-  cy.pause();
+  // cy.pause();
 
   getExpenseRefundList([refundOptions.existingRef, refundOptions.updatingRef]).then(([existingRefundData, updatingRefundData]) => {
     getExpensePurchaseList([existingRefundData.purchaseRef, updatingRefundData.purchaseRef]).then((purchaseDataList) => {
@@ -118,7 +118,7 @@ function runUpdateRefundTest(refundOptions: UpdateRefOptions, validateExpense: V
   validateExpense(ExpenseBelongsTo.Refund, refundOptions.updatingRef);
 }
 
-describe("Expense - Add Refund Flow", () => {
+describe("Expense - Update Refund Flow", () => {
   beforeEach(() => {
     // to force call api instead of testing on cache data
     cy.deleteIndexedDb(IndexedDbName.Expense);
@@ -129,7 +129,7 @@ describe("Expense - Add Refund Flow", () => {
   });
 
   context(
-    "A logged in and active user can add refund with selecting purchase successfully",
+    "A logged in and active user can update an existing refund successfully",
     {
       tags: ["expense", "refund", "regression", "positive", "add", "edit-refund-tc4", "view", "view-expense-list-tc1", "view-receipts-expenses-tc2"]
     },

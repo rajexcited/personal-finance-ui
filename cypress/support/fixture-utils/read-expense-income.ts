@@ -23,10 +23,10 @@ beforeEach(() => {
   cy.wrap({}).as(aliasName);
 });
 
-export const updateExpenseIncome = (key: string, expense: ExpenseIncomeDetailType) => {
+export const updateExpenseIncome = (expense: ExpenseIncomeDetailType) => {
   cy.get(`@${aliasName}`).then((data: any) => {
     const expenseIncomeMap: Record<string, ExpenseIncomeDetailType> = data;
-    expenseIncomeMap[key] = expense;
+    expenseIncomeMap[expense.ref] = expense;
     cy.wrap(expenseIncomeMap).as(aliasName);
   });
 };

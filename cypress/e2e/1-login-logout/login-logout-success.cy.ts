@@ -1,5 +1,6 @@
 import { getUserDetails } from "../../support/fixture-utils/read-user";
 import { DeviceModeType, NavBarSelectors } from "../../support/resource-types";
+import { createUser } from "../1-signup/utils/signup-utils";
 import { verifyPublicLinks, verifySecuredLinks, verifySecuredLinksFunctional } from "../utils/auth-utils";
 
 function runLoginTests(userRef: string, deviceMode: DeviceModeType) {
@@ -34,6 +35,7 @@ function runLogoutTest() {
 }
 
 function runLoginLogoutTest(userRef: string, deviceMode: DeviceModeType) {
+  createUser(userRef);
   runLoginTests(userRef, deviceMode);
   runLogoutTest();
   cy.wait(5000);

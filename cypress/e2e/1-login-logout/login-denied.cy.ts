@@ -1,8 +1,11 @@
 import { getUserDetails } from "../../support/fixture-utils/read-user";
 import { NavBarSelectors } from "../../support/resource-types";
+import { createUser } from "../1-signup/utils/signup-utils";
 import { verifyPublicLinks, verifySecuredLinks } from "../utils/auth-utils";
 
 function runLoginTest(userRef: string, errorField: "emailId" | "password") {
+  createUser(userRef);
+
   cy.visit("/");
   verifyPublicLinks(true);
   verifySecuredLinks(false);
@@ -33,12 +36,12 @@ describe("User Login - Denied Flow", () => {
     () => {
       it("Fails login via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");
-        runLoginTest("user1-success", "password");
+        runLoginTest("user3-duplicate", "password");
       });
 
       it("Fails login via large desktop view", { tags: ["desktop"] }, () => {
         cy.setViewport("desktop");
-        runLoginTest("user1-success", "password");
+        runLoginTest("user3-duplicate", "password");
       });
     }
   );
@@ -48,12 +51,12 @@ describe("User Login - Denied Flow", () => {
     () => {
       it("Fails login via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");
-        runLoginTest("user1-success", "emailId");
+        runLoginTest("user3-duplicate", "emailId");
       });
 
       it("Fails login via large desktop view", { tags: ["desktop"] }, () => {
         cy.setViewport("desktop");
-        runLoginTest("user1-success", "emailId");
+        runLoginTest("user3-duplicate", "emailId");
       });
     }
   );

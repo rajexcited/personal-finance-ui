@@ -32,12 +32,12 @@ describe("User Signup Success Flow", () => {
 
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
         cy.setViewport("pixel9-pro");
-        runSignupTest('[data-test="signup-button-home"]', "user2-success");
+        runSignupTest('[data-test="signup-button-home"]', "user2-signup-success");
       });
 
       it("via large desktop", { tags: ["desktop"] }, () => {
         cy.setViewport("desktop");
-        runSignupTest(NavBarSelectors.SignupNavlink, "user1-success");
+        runSignupTest(NavBarSelectors.SignupNavlink, "user4-signup-success");
       });
     }
   );

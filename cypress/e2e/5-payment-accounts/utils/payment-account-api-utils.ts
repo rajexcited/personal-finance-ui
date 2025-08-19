@@ -7,7 +7,7 @@ import {
 } from "../../../support/api-resource-types";
 import { getPaymentAccountList, PaymentAccountDetailType, updatePaymentAccount } from "../../../support/fixture-utils/read-payment-account";
 import { v4 as uuidv4 } from "uuid";
-import { createOrUpdatePaymentAccountType, getPaymentAccountTypesFromApi } from "../../9-settings/utils/config-type-utils";
+import { configStoreName, createOrUpdatePaymentAccountType, getPaymentAccountTypesFromApi } from "../../5-settings/utils/config-type-utils";
 import { getPaymentAccountType } from "../../../support/fixture-utils/read-config-type";
 
 const paymentAccountStore = "pymt-account-store";
@@ -20,8 +20,13 @@ const convertToApiResource = (
 ) => {
   const paymentAccountApi: ApiPaymentAccountResource | null = paymentAccountApiMap[paymentAccountData.shortName];
   const paymentAccountStatus = paymentAccountApi?.status === "immutable" ? paymentAccountApi.status : status;
+  if (paymentAccountApi?.id || paymentAccountData.id) {
+    cy.log(`updating existing payment account [id=${paymentAccountApi?.id || paymentAccountData.id}]`);
+  } else {
+    cy.log(`adding new payment account`);
+  }
   const apiBody: ApiPaymentAccountResource = {
-    id: paymentAccountData.id || paymentAccountApi?.id || uuidv4(),
+    id: paymentAccountApi?.id || paymentAccountData.id || uuidv4(),
     shortName: paymentAccountData.shortName,
     institutionName: paymentAccountData.institutionName,
     accountIdNum: paymentAccountData.accountName,
@@ -99,6 +104,34 @@ const dispatchApiGetList = () => {
   return cy.indexedDb(IndexedDbName.MockExpense).getItems<ApiPaymentAccountResource>({ storeName: paymentAccountStore });
 };
 
+const dispatchApiDelete = (paymentAccountApiData: ApiPaymentAccountResource) => {
+  const apiBaseUrl = Cypress.env("API_BASE_URL");
+  if (apiBaseUrl) {
+    cy.request({
+      method: "DELETE",
+      url: getPaymentAccountUrl() + "/id/" + paymentAccountApiData.id,
+      headers: {
+        Authorization: Cypress.env("accessToken")
+      }
+    }).then((response) => {
+      console.log("response=", response);
+      expect(response.status).to.least(200);
+    });
+  } else {
+    cy.indexedDb(IndexedDbName.MockExpense).deleteItem(paymentAccountApiData.id, { storeName: paymentAccountStore });
+  }
+};
+
+const resetPaymentAccountStoreCache = (shouldClearTags: boolean) => {
+  // reset the indexDb cache to ensure api hit
+  cy.indexedDb(IndexedDbName.Expense).clearStore({ storeName: paymentAccountStore });
+  const itemKeys = ['/payment/accounts_{"status":["enable"]}', '/payment/accounts_{"status":["deleted"]}'];
+  if (shouldClearTags) {
+    itemKeys.push("/payment/accounts/tags_{}");
+  }
+  cy.indexedDb(IndexedDbName.Expense).deleteItems(itemKeys, { storeName: configStoreName });
+};
+
 export const createOrUpdatePaymentAccount = (requests: Array<{ ref: string; status: PaymentAccountStatus }>) => {
   console.log("createOrUpdatePaymentAccount, requests=", requests);
   const paymentAccountRequestMap = requests.reduce((obj, req) => {
@@ -126,6 +159,7 @@ export const createOrUpdatePaymentAccount = (requests: Array<{ ref: string; stat
         });
 
         console.log("paymentAccountApiMap=", paymentAccountApiMap);
+        cy.log(`The shortnames for retrieved payment accounts from getList api: ${paymentAccountApiList.map((apiData) => apiData.shortName)}`);
 
         for (const paymentAccountData of paymentAccountDataList) {
           const apiResource = convertToApiResource(
@@ -139,27 +173,32 @@ export const createOrUpdatePaymentAccount = (requests: Array<{ ref: string; stat
               if (!paymentAccTypeData) {
                 throw new Error("missing payment account type data");
               }
-              if (paymentAccountApiMap[paymentAccountData.shortName]) {
-                updatePaymentAccount(paymentAccountData.ref, {
-                  ...paymentAccountData,
-                  id: paymentAccountApiMap[paymentAccountData.shortName].id,
-                  accountTypeId: paymentAccTypeData.id
-                });
-              }
-              dispatchApiAddUpdate({ ...apiResource, typeId: paymentAccTypeData.id });
-              // reset the indexDb cache to ensure api hit
-              cy.indexedDb(IndexedDbName.Expense).clearStore({ storeName: paymentAccountStore });
+              dispatchApiAddUpdate({ ...apiResource, typeId: paymentAccTypeData.id }).then((paymentAccountApiResponse) => {
+                const paymentAccFixtureData = { ...paymentAccountData, id: paymentAccountApiResponse.id, accountTypeId: paymentAccTypeData.id };
+                updatePaymentAccount(paymentAccFixtureData);
+                resetPaymentAccountStoreCache(false);
+              });
             });
           } else {
-            if (paymentAccountApiMap[paymentAccountData.shortName]) {
-              updatePaymentAccount(paymentAccountData.ref, { ...paymentAccountData, id: paymentAccountApiMap[paymentAccountData.shortName].id });
-            }
-            dispatchApiAddUpdate(apiResource);
-            // reset the indexDb cache to ensure api hit
-            cy.indexedDb(IndexedDbName.Expense).clearStore({ storeName: paymentAccountStore });
+            dispatchApiAddUpdate(apiResource).then((paymentAccountApiResponse) => {
+              const paymentAccFixtureData = { ...paymentAccountData, id: paymentAccountApiResponse.id };
+              updatePaymentAccount(paymentAccFixtureData);
+              resetPaymentAccountStoreCache(false);
+            });
           }
         }
       });
     });
+  });
+};
+
+export const deletePaymentAccount = (paymentAccountData: PaymentAccountDetailType) => {
+  dispatchApiGetList().then((paymentAccountApiList) => {
+    const matchedApiData = paymentAccountApiList.find((apiData) => apiData.shortName === paymentAccountData.shortName);
+    if (matchedApiData) {
+      cy.log(`payment account api data [shortName=${matchedApiData.shortName}, id=${matchedApiData.id}] exists, so it can be deleted.`);
+      dispatchApiDelete(matchedApiData);
+      resetPaymentAccountStoreCache(true);
+    }
   });
 };

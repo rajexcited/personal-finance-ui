@@ -93,6 +93,7 @@ export const validateExpenseCardOnSmall = (belongsTo: ExpenseBelongsTo, ref: str
     const expenseCategoryName = getExpenseCategoryName(expenseData);
     const belongsToLabel = getBelongsToLabel(expenseData.belongsTo);
 
+    // cy.pause();
     cy.get('[data-test="expense-card"]')
       .find('[data-test="card-header"]')
       .filter(`[data-belongs-to="${belongsToLabel}"]`)

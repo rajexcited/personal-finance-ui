@@ -1,0 +1,107 @@
+{
+  "local-grocery1": {
+    "billName": "weekly groceries",
+    "description": "Grocery run at FreshMart",
+    "tags": ["food", "grocery", "weekly"],
+    "verifiedTimestamp": "2025-06-21 14:22:00Z",
+    "receipts": [{ "name": "grocery-receipt1.png", "contentType": "image/png" }],
+    "amount": "87.45",
+    "purchaseTypeName": "food shopping",
+    "purchaseTypeRef": "food-shopping",
+    "paymentAccountName": "daily spender 1010",
+    "paymentAccountRef": "daily-cc",
+    "purchaseDate": "2025-06-19"
+  },
+  "local-grocery2": {
+    "billName": "weekly snacks",
+    "description": "Grocery run at H-E-B",
+    "tags": ["grocery", "weekly", "snacks"],
+    "verifiedTimestamp": "2025-06-21 14:22:00Z",
+    "receipts": [{ "name": "grocery-receipt2.jpeg", "contentType": "image/jpeg" }],
+    "amount": "12.67",
+    "purchaseTypeName": "food shopping",
+    "purchaseTypeRef": "food-shopping",
+    "paymentAccountName": "daily spender 1010",
+    "paymentAccountRef": "daily-cc",
+    "purchaseDate": "2025-06-19"
+  },
+  "energy-utility": {
+    "billName": "may electricity",
+    "description": "Monthly electricity bill for apartment",
+    "tags": ["utilities", "electricity", "monthly"],
+    "receipts": [{ "name": "powerbill.pdf", "contentType": "application/pdf" }],
+    "amount": "62.10",
+    "purchaseTypeName": "maintenance",
+    "purchaseTypeRef": "maintenance",
+    "paymentAccountName": "biz expenses 4321",
+    "paymentAccountRef": "biz-exp-checking",
+    "purchaseDate": "2025-05-28"
+  },
+  "energy-utility-v2": {
+    "billName": "june electricity",
+    "description": "Monthly electricity bill for apartment",
+    "tags": ["utilities", "electricity"],
+    "receipts": [{ "name": "powerbill.pdf", "contentType": "application/pdf" }],
+    "amount": "74.32",
+    "purchaseTypeName": "home stuffs",
+    "purchaseTypeRef": "home-stuffs",
+    "paymentAccountName": "bofa demo checking",
+    "paymentAccountRef": "view-checking1",
+    "purchaseDate": "2025-06-28"
+  },
+  "giftcard": {
+    "billName": "amazon giftcard 50",
+    "description": "E-commerce order paid via Amazon gift card",
+    "tags": ["gift card", "online", "canceled"],
+    "verifiedTimestamp": "2025-06-27 10:30:00Z",
+    "receipts": [{ "name": "amazon_giftcard.pdf", "contentType": "application/pdf" }],
+    "amount": "50.00",
+    "purchaseTypeName": "shopping",
+    "purchaseTypeRef": "shopping",
+    "paymentAccountName": "amazon gift 50",
+    "paymentAccountRef": "amazon-giftcard",
+    "purchaseDate": "2025-06-27"
+  },
+  "office-supplies": {
+    "billName": "office stationary and headphone",
+    "description": "Mixed purchase for office work, including wireless headphones and office stationery",
+    "tags": ["electronics", "office", "bundle", "shopping"],
+    "verifiedTimestamp": "2025-06-30 08:00:00Z",
+    "receipts": [],
+    "amount": "172.89",
+    "purchaseTypeName": "office supplies",
+    "purchaseTypeRef": "office-supplies",
+    "paymentAccountName": "business pro 7788",
+    "paymentAccountRef": "business-cc",
+    "purchaseDate": "2025-06-29",
+    "items": [
+      { "billName": "Wireless Headphones", "sku": "WH-NC-500", "quantity": 1, "amount": "89.99", "purchaseTypeRef": "office-supplies" },
+      { "billName": "Laser Printer Paper 500 sheets", "sku": "LPP-500", "quantity": 2, "amount": "29.95", "purchaseTypeRef": "office-supplies" },
+      { "billName": "Notebook - Grid Ruled", "sku": "NB-GR-02", "quantity": 1, "amount": "22.00", "purchaseTypeRef": "office-supplies" }
+    ]
+  },
+  "software-subscription": {
+    "billName": "figma pro annual",
+    "description": "Annual subscription to Figma Pro",
+    "tags": ["tools", "design", "saas", "subscription"],
+    "receipts": [{ "name": "figma_invoice.jpg", "contentType": "image/jpeg" }],
+    "amount": "143.88",
+    "purchaseTypeName": "subscription",
+    "purchaseTypeRef": "subscription",
+    "paymentAccountName": "primary 7823",
+    "paymentAccountRef": "primary-checking",
+    "purchaseDate": "2025-03-12"
+  },
+  "birthday-gift": {
+    "billName": "birthday gift for baby",
+    "description": "skirt for first year baby",
+    "tags": ["gift", "clothes"],
+    "receipts": [],
+    "amount": "14.99",
+    "purchaseTypeName": "gifting",
+    "purchaseTypeRef": "gifting",
+    "paymentAccountName": "cash",
+    "paymentAccountRef": "cash",
+    "purchaseDate": "2025-02-11"
+  }
+}

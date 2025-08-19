@@ -18,10 +18,10 @@ beforeEach(() => {
   cy.wrap({}).as(aliasName);
 });
 
-export const updatePaymentAccount = (key: string, paymentAccount: PaymentAccountDetailType) => {
+export const updatePaymentAccount = (paymentAccount: PaymentAccountDetailType) => {
   cy.get(`@${aliasName}`).then((data: any) => {
     const paymentAccountMap: Record<string, PaymentAccountDetailType> = data;
-    paymentAccountMap[key] = paymentAccount;
+    paymentAccountMap[paymentAccount.ref] = paymentAccount;
     cy.wrap(paymentAccountMap).as(aliasName);
   });
 };

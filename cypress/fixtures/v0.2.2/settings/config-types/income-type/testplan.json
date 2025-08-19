@@ -1,0 +1,26 @@
+{
+  "salary": {
+    "name": "salary",
+    "description": "Income type is salary. Used to tag income transactions.",
+    "tags": [],
+    "value": "salary"
+  },
+  "dividend": {
+    "name": "dividend",
+    "description": "Income type is dividend. Used to tag income transactions.",
+    "tags": [],
+    "value": "dividend"
+  },
+  "passive-income": {
+    "name": "passive income",
+    "description": "Income type is passive income. Used to tag income transactions.",
+    "tags": [],
+    "value": "passive income"
+  },
+  "rental-income": {
+    "name": "rental income",
+    "description": "Income type is rental income. Used to tag income transactions.",
+    "tags": [],
+    "value": "rental income"
+  }
+}

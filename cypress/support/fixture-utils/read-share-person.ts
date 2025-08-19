@@ -19,10 +19,10 @@ beforeEach(() => {
   cy.wrap({}).as(aliasName);
 });
 
-export const updateSharePerson = (key: string, sharePersonData: SharePersonType) => {
+export const updateSharePerson = (sharePersonData: SharePersonType) => {
   cy.get(`@${aliasName}`).then((data: any) => {
     const sharePersonMap: Record<string, SharePersonType> = data;
-    sharePersonMap[key] = sharePersonData;
+    sharePersonMap[sharePersonData.ref] = sharePersonData;
     cy.wrap(sharePersonMap).as(aliasName);
   });
 };

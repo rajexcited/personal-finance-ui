@@ -1,13 +1,15 @@
 import { IndexedDbName } from "../../plugins/indexedDb/resource";
 import { getPaymentAccount } from "../../support/fixture-utils/read-payment-account";
 import { NavBarSelectors } from "../../support/resource-types";
-import { createOrUpdatePaymentAccountType } from "../9-settings/utils/config-type-utils";
+import { createOrUpdatePaymentAccountType } from "../5-settings/utils/config-type-utils";
+import { deletePaymentAccount } from "./utils/payment-account-api-utils";
 import { validateCard } from "./utils/view-payment-account-utils";
 
 function runAddPaymentAccountTest(paymentAccountRef: string) {
   cy.loginThroughUI("user1-success");
 
   getPaymentAccount(paymentAccountRef).then((paymentAccountData) => {
+    deletePaymentAccount(paymentAccountData);
     createOrUpdatePaymentAccountType({
       ref: paymentAccountData.accountTypeRef,
       status: "enable"

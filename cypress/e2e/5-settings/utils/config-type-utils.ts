@@ -127,12 +127,12 @@ const createOrUpdateConfigType = (belongsTo: ConfigBelongsTo, configTypeOptions:
         // update
         const data = { ...configTypeData, id: datalist[0].id };
         dispatchApiAddUpdate(data, configTypeOptions.status).then((updatedData) => {
-          updateConfigType(belongsTo, configTypeOptions.ref, data);
+          updateConfigType(belongsTo, data);
         });
       } else {
         // create
         dispatchApiAddUpdate({ ...configTypeData, id: "" }, configTypeOptions.status).then((updatedData) => {
-          updateConfigType(belongsTo, configTypeOptions.ref, { ...configTypeData, id: updatedData.id });
+          updateConfigType(belongsTo, { ...configTypeData, id: updatedData.id });
         });
       }
     });

@@ -30,6 +30,7 @@ const populateUserMap = () => {
         countryCode: val?.countryCode || ""
       };
     });
+    // console.log("user fixture data: ", data, "; userMap: ", userMap);
     const refKeys = Object.keys(data);
     cy.log(`total ${refKeys.length} users are populated. ref keys: ${refKeys}`);
     console.log(`total ${refKeys.length} users are populated. ref keys: ${refKeys}`);

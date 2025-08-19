@@ -22,7 +22,7 @@ export interface ExpensePurchaseDetailType {
   paymentAccountRef: string;
   purchaseDate: string;
   belongsTo: ExpenseBelongsTo.Purchase;
-  items: [];
+  items: any[];
 }
 
 const aliasName = "expensePurchaseMap";
@@ -30,10 +30,10 @@ beforeEach(() => {
   cy.wrap({}).as(aliasName);
 });
 
-export const updateExpensePurchase = (key: string, expense: ExpensePurchaseDetailType) => {
+export const updateExpensePurchase = (expense: ExpensePurchaseDetailType) => {
   cy.get(`@${aliasName}`).then((data: any) => {
     const expensePurchaseMap: Record<string, ExpensePurchaseDetailType> = data;
-    expensePurchaseMap[key] = expense;
+    expensePurchaseMap[expense.ref] = expense;
     cy.wrap(expensePurchaseMap).as(aliasName);
   });
 };

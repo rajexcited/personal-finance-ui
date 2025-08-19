@@ -7,15 +7,15 @@ import {
   selectUploadReceipts,
   validateExpenseDateInForm,
   validateUploadReceiptSection
-} from "../9-expense/utils/expense-form-utils";
+} from "../5-expense/utils/expense-form-utils";
 import {
   getBelongsToLabel,
   ValidateExpenseCallbackFn,
   validateExpenseCardOnSmall,
   validateExpenseTableRowOnLarge
-} from "../9-expense/utils/view-expense-utils";
-import { createOrUpdatePaymentAccount } from "../9-payment-accounts/utils/payment-account-api-utils";
-import { createOrUpdateIncomeType } from "../9-settings/utils/config-type-utils";
+} from "../5-expense/utils/view-expense-utils";
+import { createOrUpdatePaymentAccount } from "../5-payment-accounts/utils/payment-account-api-utils";
+import { createOrUpdateIncomeType } from "../5-settings/utils/config-type-utils";
 
 function runAddIncomeTest(incomeRef: string, validateExpense: ValidateExpenseCallbackFn) {
   cy.loginThroughUI("user1-success");

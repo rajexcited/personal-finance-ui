@@ -1,14 +1,35 @@
 import { ExpenseBelongsTo, ExpenseStatus } from "../../../support/api-resource-types";
+import { expenseDateFormatFixture, formatTimestamp, parseTimestamp, subtractDates } from "../../../support/date-utils";
+import { getExpenseIncome, updateExpenseIncome } from "../../../support/fixture-utils/read-expense-income";
+import { getExpensePurchase, updateExpensePurchase } from "../../../support/fixture-utils/read-expense-purchase";
+import { getExpenseRefund, updateExpenseRefund } from "../../../support/fixture-utils/read-expense-refund";
 import { NavBarSelectors } from "../../../support/resource-types";
 import { createOrUpdateExpenseIncome, createOrUpdateExpensePurchase, createOrUpdateExpenseRefund } from "./expense-api-utils";
 import { ValidateExpenseCallbackFn, validateExpenseCardOnSmall, validateExpenseTableRowOnLarge } from "./view-expense-utils";
 
+const changeMonths = (expenseDate: string, subtractMonthToCurrent: number) => {
+  const today = new Date();
+  const dateInstance = parseTimestamp(expenseDate, expenseDateFormatFixture);
+  dateInstance.setMonth(today.getMonth() - subtractMonthToCurrent);
+
+  return formatTimestamp(dateInstance, expenseDateFormatFixture);
+};
+
 function runNoReceiptsTest(options: { purchaseRef: string; refundRef: string; incomeRef: string }, validateExpense: ValidateExpenseCallbackFn) {
   cy.loginThroughUI("user1-success");
 
-  // TBD: backdate to 1 year to test loadmore functionality as well
+  getExpensePurchase(options.purchaseRef).then((purchaseData) => {
+    // TBD: backdate to 1 year to test loadmore functionality as well
+    updateExpensePurchase({ ...purchaseData, purchaseDate: changeMonths(purchaseData.purchaseDate, 1) });
+  });
   createOrUpdateExpensePurchase(options.purchaseRef, ExpenseStatus.ENABLE);
+  getExpenseIncome(options.incomeRef).then((incomeData) => {
+    updateExpenseIncome({ ...incomeData, incomeDate: changeMonths(incomeData.incomeDate, 2) });
+  });
   createOrUpdateExpenseIncome(options.incomeRef, ExpenseStatus.ENABLE);
+  getExpenseRefund(options.refundRef).then((refundData) => {
+    updateExpenseRefund({ ...refundData, refundDate: changeMonths(refundData.refundDate, 3) });
+  });
   createOrUpdateExpenseRefund(options.refundRef, ExpenseStatus.ENABLE);
 
   cy.clickNavLinkAndWait(NavBarSelectors.ExpenseNavlink);

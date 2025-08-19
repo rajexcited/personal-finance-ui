@@ -1,21 +1,21 @@
 import { getExpenseRefund } from "../../support/fixture-utils/read-expense-refund";
 import { NavBarSelectors } from "../../support/resource-types";
-import { createOrUpdatePaymentAccount } from "../9-payment-accounts/utils/payment-account-api-utils";
-import { createOrUpdateRefundReason } from "../9-settings/utils/config-type-utils";
+import { createOrUpdatePaymentAccount } from "../5-payment-accounts/utils/payment-account-api-utils";
+import { createOrUpdateRefundReason } from "../5-settings/utils/config-type-utils";
 import {
   selectExpenseDate,
   selectUploadReceipts,
   validateExpenseDateInForm,
   validateUploadReceiptSection
-} from "../9-expense/utils/expense-form-utils";
+} from "../5-expense/utils/expense-form-utils";
 import { ExpenseBelongsTo, ExpenseStatus } from "../../support/api-resource-types";
 import {
   getBelongsToLabel,
   ValidateExpenseCallbackFn,
   validateExpenseCardOnSmall,
   validateExpenseTableRowOnLarge
-} from "../9-expense/utils/view-expense-utils";
-import { createOrUpdateExpensePurchase } from "../9-expense/utils/expense-api-utils";
+} from "../5-expense/utils/view-expense-utils";
+import { createOrUpdateExpensePurchase } from "../5-expense/utils/expense-api-utils";
 import { getExpensePurchase } from "../../support/fixture-utils/read-expense-purchase";
 import { validatePurchaseInfo, validatePurchaseQuickView, validateSelectedPurchaseDropdown } from "./utils/refund-form-utils";
 import { IndexedDbName } from "../../plugins/indexedDb/resource";
@@ -46,7 +46,7 @@ function runAddRefundWithoutPurchaseTest(refundRef: string, validateExpense: Val
     cy.get("#refund-bill-name-empty").should("be.visible").should("have.value", "").type(refundData.billName).should("not.exist");
     cy.get("#refund-bill-name").should("be.visible").should("have.value", refundData.billName);
     cy.get("#refund-amount-empty").should("be.visible").should("have.value", "").type(refundData.amount.substring(0, 1)).should("not.exist");
-    cy.get("#refund-amount").should("be.visible").should("have.value", refundData.amount.substring(1));
+    cy.get("#refund-amount").should("be.visible").should("have.value", refundData.amount.substring(0, 1)).type(refundData.amount.substring(1));
     cy.selectDropdownItem({ dropdownSelectorId: "refund-pymt-acc", selectNewItemText: refundData.paymentAccountName, requiredError: true });
     cy.selectDropdownItem({ dropdownSelectorId: "refund-reason", selectNewItemText: refundData.reasonName, requiredError: true });
     cy.get('[data-test="refund-desc-counter"]').should("be.visible").should("have.text", `counter: 0/150`);

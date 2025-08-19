@@ -2,21 +2,21 @@ import { getExpensePurchase, getExpensePurchaseList } from "../../support/fixtur
 import { NavBarSelectors, UpdateRefOptions } from "../../support/resource-types";
 import { validateAndToggleVerifyIndicator } from "./utils/purchase-form-utils";
 import { ExpenseBelongsTo, ExpenseStatus } from "../../support/api-resource-types";
-import { createOrUpdateExpensePurchase } from "../9-expense/utils/expense-api-utils";
+import { createOrUpdateExpensePurchase } from "../5-expense/utils/expense-api-utils";
 import {
   navigateToEditExpense,
   selectExpenseDate,
   validateExpenseDateInForm,
   validateUploadReceiptSection
-} from "../9-expense/utils/expense-form-utils";
+} from "../5-expense/utils/expense-form-utils";
 import {
   getBelongsToLabel,
   ValidateExpenseCallbackFn,
   validateExpenseCardOnSmall,
   validateExpenseTableRowOnLarge
-} from "../9-expense/utils/view-expense-utils";
-import { createOrUpdatePaymentAccount } from "../9-payment-accounts/utils/payment-account-api-utils";
-import { createOrUpdatePurchaseType } from "../9-settings/utils/config-type-utils";
+} from "../5-expense/utils/view-expense-utils";
+import { createOrUpdatePaymentAccount } from "../5-payment-accounts/utils/payment-account-api-utils";
+import { createOrUpdatePurchaseType } from "../5-settings/utils/config-type-utils";
 import { IndexedDbName } from "../../plugins/indexedDb/resource";
 
 function runUpdatePurchaseTest(purchaseOptions: UpdateRefOptions, validateExpense: ValidateExpenseCallbackFn) {

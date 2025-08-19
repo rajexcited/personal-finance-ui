@@ -61,6 +61,28 @@ export const validatePurchaseInfo = (purchaseData: ExpensePurchaseDetailType | u
   }
 };
 
+const loadMoreItemsInDropdown = (itemText: string, remainingRetries: number): Cypress.Chainable<number> => {
+  if (remainingRetries < 0) {
+    return cy.wrap(0);
+  }
+  return cy
+    .get(".dropdown-menu")
+    .should("be.visible")
+    .then(($menu) => {
+      const $list = $menu.find(".dropdown-item");
+      const filtered = $list.filter(':contains("' + itemText + '")');
+      cy.log(`found ${filtered.length} dropdown items, remaining retries: ${remainingRetries}`);
+      if (filtered.length) {
+        return cy.wrap(filtered.length);
+      }
+      cy.get('[data-test="load-more-action"]').should("be.visible").click();
+      cy.get('[data-test="load-more-action"]').should("not.be.visible");
+      cy.get('button[data-test="toggle-dropdown-action"]').click();
+      cy.get('[data-test="dropdown-item-wait"]').should("not.exist");
+      return loadMoreItemsInDropdown(itemText, remainingRetries - 1);
+    });
+};
+
 export const selectPurchase = (options: { existingPurchaseData?: ExpensePurchaseDetailType; newPurchaseData?: ExpensePurchaseDetailType }) => {
   validatePurchaseQuickView(options.existingPurchaseData);
   validateSelectedPurchaseDropdown(options.existingPurchaseData);
@@ -73,19 +95,24 @@ export const selectPurchase = (options: { existingPurchaseData?: ExpensePurchase
       .should("be.visible")
       .within(() => {
         cy.get('button[data-test="toggle-dropdown-action"]').click();
-        cy.get(`#${dropdownSelectorId}search-items`).should("be.visible").should("be.enabled").type(newPurchaseData.amount);
+        cy.get('[data-test="load-more-action"]').should("be.visible").click().should("not.be.visible");
+        cy.get('button[data-test="toggle-dropdown-action"]').click();
         cy.get('[data-test="dropdown-item-wait"]').should("not.exist");
-        cy.get(".dropdown-menu")
-          .should("be.visible")
-          .find(".dropdown-item")
-          .then(($list) => {
-            const filtered = $list.filter(':contains("' + getPurchaseText(newPurchaseData) + '")');
-            if (!filtered.length) {
-              cy.get('[data-test="load-more-action"]').should("be.visible").click();
-              cy.get('button[data-test="toggle-dropdown-action"]').click();
-              cy.get('[data-test="dropdown-item-wait"]').should("be.visible").should("not.exist");
-            }
-          });
+        cy.get(`#${dropdownSelectorId}search-items`).should("be.visible").should("be.enabled").type(newPurchaseData.amount);
+        loadMoreItemsInDropdown(getPurchaseText(newPurchaseData), 2);
+        cy.pause();
+        // cy.get(".dropdown-menu")
+        //   .should("be.visible")
+        //   .find(".dropdown-item")
+        //   .then(($list) => {
+        //     const filtered = $list.filter(':contains("' + getPurchaseText(newPurchaseData) + '")');
+        //     cy.pause();
+        //     if (!filtered.length) {
+        //       cy.get('[data-test="load-more-action"]').should("be.visible").click().should("not.be.visible");
+        //       cy.get('button[data-test="toggle-dropdown-action"]').click();
+        //       cy.get('[data-test="dropdown-item-wait"]').should("not.exist");
+        //     }
+        //   });
 
         cy.get(".dropdown-menu")
           .should("be.visible")

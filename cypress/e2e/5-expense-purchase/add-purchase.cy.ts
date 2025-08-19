@@ -1,22 +1,22 @@
 import { formatTimestamp } from "../../support/date-utils";
 import { getExpensePurchase, updateExpensePurchase } from "../../support/fixture-utils/read-expense-purchase";
 import { NavBarSelectors } from "../../support/resource-types";
-import { createOrUpdatePaymentAccount } from "../9-payment-accounts/utils/payment-account-api-utils";
+import { createOrUpdatePaymentAccount } from "../5-payment-accounts/utils/payment-account-api-utils";
 import { validateAndToggleVerifyIndicator } from "./utils/purchase-form-utils";
-import { createOrUpdatePurchaseType } from "../9-settings/utils/config-type-utils";
+import { createOrUpdatePurchaseType } from "../5-settings/utils/config-type-utils";
 import {
   selectExpenseDate,
   selectUploadReceipts,
   validateExpenseDateInForm,
   validateUploadReceiptSection
-} from "../9-expense/utils/expense-form-utils";
+} from "../5-expense/utils/expense-form-utils";
 import { ExpenseBelongsTo } from "../../support/api-resource-types";
 import {
   getBelongsToLabel,
   ValidateExpenseCallbackFn,
   validateExpenseCardOnSmall,
   validateExpenseTableRowOnLarge
-} from "../9-expense/utils/view-expense-utils";
+} from "../5-expense/utils/view-expense-utils";
 import { IndexedDbName } from "../../plugins/indexedDb/resource";
 
 function runAddPurchaseTest(purchaseRef: string, validateExpense: ValidateExpenseCallbackFn) {
@@ -48,7 +48,7 @@ function runAddPurchaseTest(purchaseRef: string, validateExpense: ValidateExpens
     cy.selectTags({ tagsSelectorId: "purchase-tags", addTagValues: purchaseData.tags, existingTagValues: [], removeTagValues: [] });
     cy.selectSharePersonTags({ selectorId: "person-tags", addValues: [], existingValues: [], removeValues: [] });
     validateAndToggleVerifyIndicator("", true);
-    updateExpensePurchase(purchaseRef, { ...purchaseData, verifiedTimestamp: formatTimestamp(new Date()) });
+    updateExpensePurchase({ ...purchaseData, verifiedTimestamp: formatTimestamp(new Date()) });
 
     selectExpenseDate({ newExpenseDate: purchaseData.purchaseDate, existingExpenseDate: new Date() });
     validateExpenseDateInForm(purchaseData.purchaseDate);

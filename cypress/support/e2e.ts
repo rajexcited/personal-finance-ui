@@ -58,7 +58,7 @@ before(() => {
   }
 });
 
-Cypress.on("fail", () => {
+Cypress.on("fail", (err) => {
   const accessToken = Cypress.env("accessToken");
   const apiBaseUrl = Cypress.env("API_BASE_URL");
   if (accessToken && apiBaseUrl) {
@@ -70,4 +70,5 @@ Cypress.on("fail", () => {
       }
     });
   }
+  throw err;
 });

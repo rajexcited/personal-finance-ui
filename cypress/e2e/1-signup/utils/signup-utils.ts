@@ -15,3 +15,40 @@ export const enterSignupDetails = (userRef: string) => {
     cy.log("all input fields are typed");
   });
 };
+
+export const createUser = (userRef: string) => {
+  const apiBaseUrl = Cypress.env("API_BASE_URL");
+  if (!apiBaseUrl) {
+    return;
+  }
+  getUserDetails(userRef).then((userData) => {
+    const apiBody = {
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      emailId: userData.emailId,
+      password: btoa(userData.password),
+      countryCode: userData.countryCode
+    };
+    console.log("api user data to signup: ", apiBody);
+    cy.request({
+      method: "POST",
+      url: apiBaseUrl + "/user/signup",
+      body: apiBody,
+      failOnStatusCode: false
+    }).then((response) => {
+      console.log("response=", response);
+      expect([201, 400]).to.contains(response.status);
+      // logout if user is created
+      const accessToken = response.headers["x-amzn-remapped-authorization"] as string | null;
+      if (accessToken) {
+        cy.request({
+          method: "POST",
+          url: apiBaseUrl + "/user/logout",
+          headers: {
+            Authorization: accessToken
+          }
+        });
+      }
+    });
+  });
+};

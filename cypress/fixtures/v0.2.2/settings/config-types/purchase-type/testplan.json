@@ -1,0 +1,44 @@
+{
+  "maintenance": {
+    "name": "maintenance",
+    "description": "Purchase type is maintenance. Used to tag purchase transactions.",
+    "tags": [],
+    "value": "maintenance"
+  },
+  "home-stuffs": {
+    "name": "home stuffs",
+    "description": "Purchase type is home stuffs. Used to tag purchase transactions.",
+    "tags": [],
+    "value": "home stuffs"
+  },
+  "food-shopping": {
+    "name": "food shopping",
+    "description": "Purchase type is food shopping. Used to tag purchase transactions.",
+    "tags": [],
+    "value": "food shopping"
+  },
+  "shopping": {
+    "name": "shopping",
+    "description": "Purchase type is shopping. Used to tag purchase transactions.",
+    "tags": [],
+    "value": "shopping"
+  },
+  "office-supplies": {
+    "name": "office supplies",
+    "description": "Purchase type is office supplies. Used to tag purchase transactions.",
+    "tags": [],
+    "value": "office supplies"
+  },
+  "subscription": {
+    "name": "subscription",
+    "description": "Purchase type is subscription. Used to tag purchase transactions.",
+    "tags": [],
+    "value": "subscription"
+  },
+  "gifting": {
+    "name": "gifting",
+    "description": "Purchase type is gifting. Used to tag purchase transactions.",
+    "tags": [],
+    "value": "gifting"
+  }
+}

@@ -32,17 +32,13 @@ const getAliasName = (belongsTo: ConfigBelongsTo) => {
   return aliasName;
 };
 
-export const updateConfigType = (belongsTo: ConfigBelongsTo, key: string, configDetails: ConfigDetailType) => {
+export const updateConfigType = (belongsTo: ConfigBelongsTo, configDetails: ConfigDetailType) => {
   const aliasName = getAliasName(belongsTo);
   cy.get(`@${aliasName}`).then((data: any) => {
     const configPurchaseTypeMap: Record<string, ConfigDetailType> = data;
-    configPurchaseTypeMap[key] = configDetails;
+    configPurchaseTypeMap[configDetails.ref] = configDetails;
     cy.wrap(configPurchaseTypeMap).as(aliasName);
   });
-};
-
-export const updatePurchaseType = (refKey: string, purchaseTypeDetail: ConfigDetailType) => {
-  updateConfigType(ConfigBelongsTo.PurchaseType, refKey, purchaseTypeDetail);
 };
 
 const populateConfigTypeMap = (belongsTo: ConfigBelongsTo) => {

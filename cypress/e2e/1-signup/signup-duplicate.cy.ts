@@ -1,32 +1,6 @@
-import { getUserDetails } from "../../support/fixture-utils/read-user";
 import { NavBarSelectors } from "../../support/resource-types";
 import { verifyPublicLinks, verifySecuredLinks } from "../utils/auth-utils";
-import { enterSignupDetails } from "./utils/signup-utils";
-
-const createUser = (userRef: string) => {
-  const apiBaseUrl = Cypress.env("API_BASE_URL");
-  if (!apiBaseUrl) {
-    return;
-  }
-  getUserDetails(userRef).then((userData) => {
-    const apiBody = {
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      emailId: userData.emailId,
-      password: btoa(userData.password),
-      countryCode: userData.countryCode
-    };
-    cy.request({
-      method: "POST",
-      url: apiBaseUrl + "/user/signup",
-      body: apiBody,
-      failOnStatusCode: false
-    }).then((response) => {
-      console.log("response=", response);
-      return cy.wrap(userData);
-    });
-  });
-};
+import { createUser, enterSignupDetails } from "./utils/signup-utils";
 
 function runSignupTest(signupSelector: string, userRef: string) {
   createUser(userRef);
