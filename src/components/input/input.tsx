@@ -4,7 +4,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faInfoCircle, faCheck, faEdit, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import "./input.css";
 import { InputValidateResponse } from "./input-validators";
-import { getLogger } from "../../shared";
+import { getLogger, testAttributes } from "../../shared";
 
 
 interface BaseInputProps {
@@ -315,7 +315,11 @@ const Input = forwardRef((props: InputProps, ref) => {
                     </span>
                 }
                 { props.onSubmit &&
-                    <button className="button is-small tooltip" onClick={ submitHandler } data-tooltip={ isDisabled ? "Edit" : "Ok" }>
+                    <button className="button is-small tooltip"
+                        onClick={ submitHandler }
+                        data-tooltip={ isDisabled ? "Edit" : "Ok" }
+                        { ...testAttributes(props.id + "-submit") }
+                    >
                         <span className="icon is-small">
                             <FontAwesomeIcon icon={ isDisabled ? faEdit : faCheck } size={ "sm" } />
                         </span>

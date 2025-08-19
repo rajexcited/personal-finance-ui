@@ -3,7 +3,7 @@ import "./dropdown.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleUp, faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import DropDownItem from "./dropdown-item";
-import { getLogger } from "../../shared";
+import { getLogger, testAttributes } from "../../shared";
 import { Input } from "../input";
 
 
@@ -153,13 +153,15 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
 
 
     return (
-        <div className="field">
+        <div className="field" { ...testAttributes("dropdown-field", "dropdown-id", props.id) }>
             <label htmlFor={ props.id } className="label">{ props.label }</label>
             <div className="control">
                 <div className={ `dropdown is-${props.direction === "down" ? "down" : "up"} ${isOpen ? "is-active" : ""}` } id={ props.id }>
                     <div className="dropdown-trigger">
-                        <button type="button" className={ `button ${props.size ? "is-" + props.size : ""}` } onClick={ toggleDropdownHandler }>
-                            <span>{ triggerItemPaddingBefore.map(pad => pad) }{ selectedTriggerContent }{ triggerItemPaddingAfter.map(pad => pad) }</span>
+                        <button type="button" className={ `button ${props.size ? "is-" + props.size : ""}` }
+                            onClick={ toggleDropdownHandler }
+                            { ...testAttributes("toggle-dropdown-action") }>
+                            <span> { triggerItemPaddingBefore.map(pad => pad) }{ selectedTriggerContent }{ triggerItemPaddingAfter.map(pad => pad) } </span>
                             <span className="icon is-small">
                                 <FontAwesomeIcon icon={ props.direction !== "down" && isOpen ? faAngleUp : faAngleDown } size={ "sm" } />
                             </span>
@@ -202,7 +204,8 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
                             }
                             {
                                 (filteredItems.length === 0 || !isLoadingDropdownItems) && props.loadMore &&
-                                <button className="button" onClick={ loadMoreItemsHandler }>Load More</button>
+                                <button className="button" onClick={ loadMoreItemsHandler }
+                                    { ...testAttributes("load-more-action") }>Load More</button>
                             }
                         </div>
                         <div className={ props.direction === "down" && isOpen ? "my-5 py-5" : "is-hidden" }>&nbsp;</div>
@@ -223,7 +226,7 @@ const DropDown: FunctionComponent<DropDownProps> = (props) => {
             </div>
             {
                 props.required && !selectedItem?.id &&
-                <p className="help is-danger"> Please select an item from dropdown. </p>
+                <p className="help is-danger" { ...testAttributes("dropdown-error") }> Please select an item from dropdown. </p>
             }
         </div>
     );

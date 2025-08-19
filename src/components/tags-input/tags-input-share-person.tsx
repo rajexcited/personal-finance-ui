@@ -2,7 +2,7 @@ import "./tags-input.css";
 import { FunctionComponent, useRef, useEffect, useState, useMemo, useCallback } from "react";
 import BulmaTagsInput, { BulmaTagsInputOptions } from '@creativebulma/bulma-tagsinput';
 import "@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css";
-import { getLogger, sleep } from "../../shared";
+import { getLogger, sleep, testAttributes } from "../../shared";
 import { DeviceMode, useOrientation } from "../../hooks";
 import { buildDropdown, initializeEventHandler, TagObject } from "./events";
 
@@ -178,7 +178,7 @@ export const TagsInputSharePerson: FunctionComponent<TagsInputSharePersonProps> 
 
 
   return (
-    <div className="field">
+    <div className="field" { ...testAttributes("tags-share-person-field", "id", props.id) }>
       <label className="label">{ props.label }</label>
       {
         deviceMode === DeviceMode.Mobile &&
@@ -195,7 +195,7 @@ export const TagsInputSharePerson: FunctionComponent<TagsInputSharePersonProps> 
           autoCapitalize="off"
         />
       </div>
-      <p className="help is-info has-text-right">
+      <p className="help is-info has-text-right" { ...testAttributes(props.id + "-tags-counter") }>
         { "counter: " + tagCount + (props.maxTags ? "/" + props.maxTags : "") }
       </p>
     </div>

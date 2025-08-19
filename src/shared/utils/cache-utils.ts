@@ -1,12 +1,12 @@
 import ExpiryMap from "expiry-map";
 import { memoize } from "lodash";
-import ms from "ms";
+import ms, { StringValue } from "ms";
 
-export const getCacheOption = (expiryAge: string) => {
+export const getCacheOption = (expiryAge: StringValue) => {
   return { cache: new ExpiryMap(ms(expiryAge)), cacheKey: JSON.stringify };
 };
 
-export const getCacheOptionWithKey = (expiryAge: string, cachekey: string) => {
+export const getCacheOptionWithKey = (expiryAge: StringValue, cachekey: string) => {
   return { cache: new ExpiryMap(ms(expiryAge)), cacheKey: () => cachekey };
 };
 

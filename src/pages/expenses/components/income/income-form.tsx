@@ -16,7 +16,7 @@ import {
 import { ExpenseBelongsTo, ExpenseStatus, formatTimestamp, getLogger, IncomeFields, receiptService } from "../../services";
 import { CacheAction, DownloadReceiptResource, ReceiptProps, UploadReceiptsModal } from "../../../../components/receipt";
 import { PymtAccountFields } from "../../../pymt-accounts/services";
-import { ConfigResource, getDateInstance } from "../../../../shared";
+import { ConfigResource, getDateInstance, testAttributes } from "../../../../shared";
 import { CurrencyProfileResource, SharePersonResource } from "../../../settings/services";
 import { createSharePersonTagSourceList, filterSharePersons } from "../common";
 
@@ -324,6 +324,7 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
                                 cacheReceiptFile={ cacheReceiptFileHandler }
                                 downloadReceipts={ downloadReceiptsHandler }
                                 belongsTo={ ExpenseBelongsTo.Income }
+                                belongsToLabel="Income"
                             />
                         </div>
                     </div>
@@ -345,7 +346,7 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
             <div className="columns">
                 <div className="column">
                     <div className="buttons is-centered is-display-mobile">
-                        <button className="button is-dark is-medium" type="submit">
+                        <button className="button is-dark is-medium" type="submit" { ...testAttributes("submit-income") }>
                             <span className="px-2-label">
                                 { props.submitLabel }
                             </span>
@@ -354,7 +355,7 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
                 </div>
                 <div className="column">
                     <div className="buttons">
-                        <button className="button is-light" type="button" onClick={ onCancelHandler }>
+                        <button className="button is-light" type="button" onClick={ onCancelHandler } { ...testAttributes("cancel-income") }>
                             <span className="px-2-label">
                                 Cancel
                             </span>
@@ -363,7 +364,7 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
                 </div>
                 <div className="column">
                     <div className="buttons is-centered is-hidden-mobile">
-                        <button className="button is-dark is-medium" type="submit">
+                        <button className="button is-dark is-medium" type="submit" { ...testAttributes("submit-income") }>
                             <span className="px-2-label">
                                 { props.submitLabel }
                             </span>

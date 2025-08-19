@@ -18,8 +18,9 @@ export const cacheReceiptFile = async (
   fileData?: ArrayBuffer,
   newReceipt?: ReceiptProps
 ): Promise<DownloadReceiptResource | undefined> => {
+  const logger = getLogger("cacheReceiptFile", _logger);
   const resp = await receiptFileDb.getItem(receipt.id);
-
+  logger.debug("resp=", resp);
   if (newReceipt && newReceipt.belongsTo !== receipt.belongsTo) {
     throw new InvalidError("cannot change the receipt belongs to from [" + receipt.belongsTo + "] to [" + newReceipt.belongsTo + "]");
   }
@@ -31,19 +32,21 @@ export const cacheReceiptFile = async (
     }
   } else {
     // action is AddUpdateGet, must return some value
-
+    logger.debug("action", action);
     if (resp?.status === "success" && receipt.url && resp.url !== receipt.url) {
       // precaution to avoid memory leak
+      logger.debug("revoking object url");
       URL.revokeObjectURL(receipt.url);
     }
 
     if (resp?.status === "success") {
+      logger.debug("resp status is success");
       if (newReceipt) {
         // action is update
         const updatingRes: DownloadReceiptResource = {
           ...resp,
           relationId: newReceipt.relationId,
-          id: newReceipt.id,
+          id: newReceipt.id
         };
         await receiptFileDb.addUpdateItem(updatingRes);
         return { ...updatingRes };
@@ -62,15 +65,17 @@ export const cacheReceiptFile = async (
       receipturl = URL.createObjectURL(blobData);
     }
 
+    logger.debug("receipt url=", receipturl);
     if (receipturl) {
       const result: DownloadReceiptResource = {
         id: newReceipt?.id || receipt.id,
         status: "success",
         relationId: newReceipt?.relationId || receipt.relationId,
         url: receipturl,
-        belongsTo: newReceipt?.belongsTo || receipt.belongsTo,
+        belongsTo: newReceipt?.belongsTo || receipt.belongsTo
       };
       await receiptFileDb.addItem(result);
+      logger.debug("updated cache db", result);
       return { ...result };
     }
   }
@@ -98,7 +103,7 @@ export const uploadReceipts = async (receipts: ReceiptProps[]) => {
 
       logger.info("uploading receipt file, id =", rct.id, ", name =", rct.name, ", contenttype =", rct.contentType);
       await axios.post(`${rootPath}/${rct.belongsTo}/id/${rct.relationId}/receipts/id/${rct.id}`, rct.file, {
-        headers: { "Content-Type": rct.contentType },
+        headers: { "Content-Type": rct.contentType }
       });
 
       const result: ReceiptProps = {
@@ -106,7 +111,7 @@ export const uploadReceipts = async (receipts: ReceiptProps[]) => {
         contentType: rct.contentType,
         id: rct.id,
         relationId: rct.relationId,
-        belongsTo: rct.belongsTo,
+        belongsTo: rct.belongsTo
       };
       return result;
     } catch (e) {
@@ -157,7 +162,7 @@ export const downloadReceipts = async (receipts: ReceiptProps[]) => {
         id: rct.id,
         error: err.name + " - " + err.message,
         relationId: rct.relationId,
-        belongsTo: rct.belongsTo,
+        belongsTo: rct.belongsTo
       };
       return errorResponse;
     }

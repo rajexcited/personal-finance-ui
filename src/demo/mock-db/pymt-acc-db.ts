@@ -30,7 +30,7 @@ const init = async () => {
     auditDetails: auditData(),
     status: PymtAccStatus.Immutable,
     dropdownTooltip: "",
-    currencyProfileId: currencyProfileId,
+    currencyProfileId: currencyProfileId
   });
 
   await pymtAccDb.addItem({
@@ -45,7 +45,7 @@ const init = async () => {
     auditDetails: auditData(),
     status: PymtAccStatus.Enable,
     dropdownTooltip: "",
-    currencyProfileId: currencyProfileId,
+    currencyProfileId: currencyProfileId
   });
 };
 
@@ -71,25 +71,43 @@ export const getPymtAccountList = async (statuses?: PymtAccStatus[], baseLogger?
   return { list: pymtAccList };
 };
 
-export const addUpdatePymtAccount = async (data: PymtAccountFields) => {
-  const existingPymtAcc = await pymtAccDb.getItem(data.id);
-  if (existingPymtAcc) {
-    const updatingPymtAcc: PymtAccountFields = {
-      ...data,
-      status: existingPymtAcc.status,
-      auditDetails: auditData(existingPymtAcc.auditDetails.createdBy, existingPymtAcc.auditDetails.createdOn),
-    };
-    await pymtAccDb.addUpdateItem(updatingPymtAcc);
-    return { updated: updatingPymtAcc };
+export const isDuplicateShortName = async (data: PymtAccountFields) => {
+  const allPaymentAccounts = await pymtAccDb.getAll();
+  let isValid = true;
+  for (let dbPymtAcc of allPaymentAccounts) {
+    if (dbPymtAcc.shortName === data.shortName && dbPymtAcc.status !== PymtAccStatus.Deleted) {
+      if (dbPymtAcc.id !== data.id) {
+        isValid = false;
+      }
+      break;
+    }
   }
-  const addedPymtAcc: PymtAccountFields = {
-    ...data,
-    id: uuidv4(),
-    auditDetails: auditData(),
-    status: PymtAccStatus.Enable,
-  };
-  await pymtAccDb.addItem(addedPymtAcc);
-  return { added: addedPymtAcc };
+  return !isValid;
+};
+
+export const addUpdatePymtAccount = async (data: PymtAccountFields) => {
+  try {
+    const existingPymtAcc = await pymtAccDb.getItem(data.id);
+    if (existingPymtAcc) {
+      const updatingPymtAcc: PymtAccountFields = {
+        ...data,
+        status: existingPymtAcc.status,
+        auditDetails: auditData(existingPymtAcc.auditDetails.createdBy, existingPymtAcc.auditDetails.createdOn)
+      };
+      await pymtAccDb.addUpdateItem(updatingPymtAcc);
+      return { updated: updatingPymtAcc };
+    }
+    const addedPymtAcc: PymtAccountFields = {
+      ...data,
+      id: uuidv4(),
+      auditDetails: auditData(),
+      status: PymtAccStatus.Enable
+    };
+    await pymtAccDb.addItem(addedPymtAcc);
+    return { added: addedPymtAcc };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
 };
 
 export const deletePymtAccount = async (pymtAccountId: string) => {
@@ -99,7 +117,7 @@ export const deletePymtAccount = async (pymtAccountId: string) => {
     const deletingPymtAcc: PymtAccountFields = {
       ...existingPymtAcc,
       status: PymtAccStatus.Deleted,
-      auditDetails: auditData(existingPymtAcc.auditDetails.createdBy, existingPymtAcc.auditDetails.createdOn),
+      auditDetails: auditData(existingPymtAcc.auditDetails.createdBy, existingPymtAcc.auditDetails.createdOn)
     };
     await pymtAccDb.addUpdateItem(deletingPymtAcc);
     return { deleted: { ...deletingPymtAcc } };

@@ -1,4 +1,8 @@
 import { useState, useEffect } from "react";
+import _ from "lodash";
+import { getLogger } from "../shared";
+
+const isDesktopAgent = () => !/Mobi|Android/i.test(navigator.userAgent);
 
 export enum DeviceMode {
   Mobile = "mobile",
@@ -70,6 +74,27 @@ const deviceModeScreenMap: Record<DeviceMode, Record<OrientationType, DeviceDime
   }
 };
 
+const hookLogger = getLogger("Hook.orientation", null, null, "DISABLED");
+
+const observeAndUpdateOrientation = (argMethod: () => void) => {
+  let prevWinHeight = window.innerHeight;
+  let prevWinWidth = window.innerWidth;
+  const debouncedMethod = _.debounce(argMethod, 200);
+  if (isDesktopAgent()) {
+    const observer = new ResizeObserver(() => {
+      if (prevWinHeight !== window.innerHeight || prevWinWidth !== window.innerWidth) {
+        prevWinHeight = window.innerHeight;
+        prevWinWidth = window.innerWidth;
+        debouncedMethod();
+      }
+    });
+
+    observer.observe(document.body);
+    return observer;
+  }
+  return null;
+};
+
 /**
  *
  * @param requestedDevice if not provided, desktop is assumed
@@ -77,18 +102,32 @@ const deviceModeScreenMap: Record<DeviceMode, Record<OrientationType, DeviceDime
  */
 const getScreenOrientaionOutput = (requestedDevice: DeviceMode): OrientationOutput => {
   const device = requestedDevice || DeviceMode.Desktop;
+  let orientationType = window.screen.orientation.type as OrientationType;
+  if (isDesktopAgent()) {
+    orientationType = window.innerWidth > window.innerHeight ? OrientationType.Landscape : OrientationType.Potrait;
+  }
   return {
-    type: window.screen.orientation.type as OrientationType,
-    height: window.screen.height,
-    width: window.screen.width,
+    type: orientationType,
+    height: window.innerHeight,
+    width: window.innerWidth,
     requestedDevice: device,
     resultedDevice: device
   };
 };
 
+/**
+ * based on given device and orientation type, validates given orientation type needs to be differ or not.
+ *
+ * @param deviceMode
+ * @param givenOrientation
+ * @param orientationType
+ * @returns
+ */
 const validateOrientaionDevice = (deviceMode: DeviceMode, givenOrientation: OrientationOutput, orientationType: OrientationType) => {
+  const logger = getLogger("validateOrientaionDevice", hookLogger);
   let myOrientaionType = null;
   const dimension = deviceModeScreenMap[deviceMode][orientationType];
+  logger.debug("dimension=", dimension, " and givenOrientation=", { width: givenOrientation.width, height: givenOrientation.height });
   if (givenOrientation.width >= dimension.minWidth) {
     if (dimension.maxWidth === -1 || givenOrientation.width <= dimension.maxWidth) {
       if (givenOrientation.height >= dimension.minHeight) {
@@ -123,14 +162,16 @@ export const useOrientation = (deviceMode: DeviceMode) => {
   const [orientation, setOrientation] = useState(getDefaultOrientaionOutput(deviceMode));
 
   useEffect(() => {
+    const logger = getLogger("useEffect.dep[]", hookLogger);
     const orientationChangeHandler = () => {
       const screenOrientation = getScreenOrientaionOutput(deviceMode);
       let validatedType = validateOrientaionDevice(deviceMode, screenOrientation, screenOrientation.type);
+      logger.debug("initial screenOrientation.type=", screenOrientation.type, "; and validatedType=", validatedType);
       if (validatedType === null) {
         if (screenOrientation.type === OrientationType.Potrait) {
-          const validatedType = validateOrientaionDevice(deviceMode, screenOrientation, OrientationType.Landscape);
+          validatedType = validateOrientaionDevice(deviceMode, screenOrientation, OrientationType.Landscape);
         } else if (screenOrientation.type === OrientationType.Landscape) {
-          const validatedType = validateOrientaionDevice(deviceMode, screenOrientation, OrientationType.Potrait);
+          validatedType = validateOrientaionDevice(deviceMode, screenOrientation, OrientationType.Potrait);
         }
       }
       let resultDevice = screenOrientation.resultedDevice;
@@ -143,14 +184,19 @@ export const useOrientation = (deviceMode: DeviceMode) => {
           resultDevice = DeviceMode.Desktop;
         }
       }
+      logger.debug("final screenOrientation.type=", screenOrientation.type, "; and validatedType=", validatedType);
       setOrientation({ ...screenOrientation, type: validatedType, resultedDevice: resultDevice });
       updateDefaultOrientationOutput({ ...screenOrientation, resultedDevice: resultDevice });
     };
 
     window.screen.orientation.addEventListener("change", orientationChangeHandler);
+    const observer = observeAndUpdateOrientation(orientationChangeHandler);
     orientationChangeHandler();
 
-    return () => window.screen.orientation.removeEventListener("change", orientationChangeHandler);
+    return () => {
+      window.screen.orientation.removeEventListener("change", orientationChangeHandler);
+      observer?.disconnect();
+    };
   }, []);
 
   return orientation;

@@ -11,7 +11,7 @@ import UpdateConfig, { ConfigInputProps } from "./update-config";
 import { getFullPath } from "../../root";
 import { PurchaseTypeLoaderResource } from "../route-handlers/purchase-type-loader-action";
 import { useAuth } from "../../auth";
-import { ConfigAction } from "../../../shared";
+import { ConfigAction, testAttributes } from "../../../shared";
 import { DeviceMode, useOrientation } from "../../../hooks";
 
 
@@ -80,6 +80,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
         };
         updateAction({ item: defaultAddConfig, type: ActionId.Add });
     };
+
     const onClickRequestUpdatePurchaseTypeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
         if (action?.item) {
@@ -87,6 +88,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
             setToggleUpdate(prev => !prev);
         }
     };
+
     const onClickRequestDeletePurchaseTypeHandler: React.MouseEventHandler<HTMLButtonElement> = (event) => {
         event.preventDefault();
         if (action?.item) updateAction({ item: action.item, type: ActionId.Delete });
@@ -160,58 +162,57 @@ export const PurchaseTypePage: FunctionComponent = () => {
     };
 
     const purchaseTags = loaderData.type === "success" ? loaderData.data.purchaseTags : [];
-    const hideListInMobile = deviceMode === DeviceMode.Mobile && (action?.type === ActionId.Add || action?.type === ActionId.Update);
 
     return (
-        <>
+        <section { ...testAttributes(ConfigTypeBelongsTo.PurchaseType) }>
             <div className="columns">
                 <div className="column has-text-centered">
-                    <h1 className="title">List of Purchase Type</h1>
+                    <h1 className="title" { ...testAttributes("title") }>List of Purchase Type</h1>
                 </div>
                 <div className="column">&nbsp;</div>
                 {
-                    deviceMode === DeviceMode.Mobile && !hideListInMobile &&
+                    !auth.readOnly && (deviceMode === DeviceMode.Mobile || (deviceMode === DeviceMode.Desktop && action?.type === ActionId.View)) &&
                     <div className="column">
                         <div className="buttons is-right">
-                            <button className="button is-link is-rounded" onClick={ onClickRequestAddPurchaseTypeHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
+                            <button className="button is-link is-rounded"
+                                onClick={ onClickRequestAddPurchaseTypeHandler }
+                                { ...testAttributes("add-action") }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
                         </div>
                     </div>
                 }
             </div>
             <div className="columns">
-                {
-                    !hideListInMobile &&
-                    <div className="column is-two-fifths">
-                        {
-                            purchaseTypeItems.length > 0 &&
-                            <>
-                                <Switch
-                                    initialStatus={ enableFilter }
-                                    id="purchaseTypeEnableFilter"
-                                    labelWhenOn="Filtered by enabled"
-                                    labelWhenOff="All Purchase Types"
-                                    tooltip="Toggle to filter by status enable or show all"
-                                    onChange={ setEnableFilter }
-                                />
-                                <List
-                                    items={ purchaseTypeItems }
-                                    onControlRequest={ onRequestListControlPurchaseTypeHandler }
-                                    controlsInEllipsis={ controlsInEllipsis }
-                                    controlsBeforeEllipsis={ controlsBeforeEllipsis }
-                                    viewActionContentInMobile={
-                                        action?.type === ActionId.View &&
-                                        <ViewConfig details={ action.item } />
-                                    }
-                                />
-                            </>
-                        }
+                <div className="column is-two-fifths">
+                    {
+                        purchaseTypeItems.length > 0 &&
+                        <>
+                            <Switch
+                                initialStatus={ enableFilter }
+                                id="purchaseTypeEnableFilter"
+                                labelWhenOn="Filtered by enabled"
+                                labelWhenOff="All Purchase Types"
+                                tooltip="Toggle to filter by status enable or show all"
+                                onChange={ setEnableFilter }
+                            />
+                            <List
+                                items={ purchaseTypeItems }
+                                onControlRequest={ onRequestListControlPurchaseTypeHandler }
+                                controlsInEllipsis={ controlsInEllipsis }
+                                controlsBeforeEllipsis={ controlsBeforeEllipsis }
+                                viewActionContentInMobile={
+                                    action?.type === ActionId.View &&
+                                    <ViewConfig details={ action.item } />
+                                }
+                            />
+                        </>
+                    }
 
-                        {
-                            purchaseTypeItems.length === 0 &&
-                            <span>There are no Purchase Types configured.</span>
-                        }
-                    </div>
-                }
+                    {
+                        purchaseTypeItems.length === 0 &&
+                        <span { ...testAttributes("no-purchase-type-message") }>There are no Purchase Types configured.</span>
+                    }
+                </div>
+
                 <div className="column">
                     {
                         !auth.readOnly && deviceMode === DeviceMode.Desktop &&
@@ -220,11 +221,17 @@ export const PurchaseTypePage: FunctionComponent = () => {
                                 {
                                     action && action.type === "view" &&
                                     <>
-                                        <button className="button is-link is-rounded" onClick={ onClickRequestDeletePurchaseTypeHandler }> &nbsp; &nbsp; Delete &nbsp; &nbsp; </button>
-                                        <button className="button is-link is-rounded" onClick={ onClickRequestUpdatePurchaseTypeHandler }> &nbsp; &nbsp; Edit &nbsp; &nbsp; </button>
+                                        <button className="button is-link is-rounded"
+                                            onClick={ onClickRequestDeletePurchaseTypeHandler }
+                                            { ...testAttributes("delete-action") }> &nbsp; &nbsp; Delete &nbsp; &nbsp; </button>
+                                        <button className="button is-link is-rounded"
+                                            onClick={ onClickRequestUpdatePurchaseTypeHandler }
+                                            { ...testAttributes("edit-action") }> &nbsp; &nbsp; Edit &nbsp; &nbsp; </button>
                                     </>
                                 }
-                                <button className="button is-link is-rounded" onClick={ onClickRequestAddPurchaseTypeHandler }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
+                                <button className="button is-link is-rounded"
+                                    onClick={ onClickRequestAddPurchaseTypeHandler }
+                                    { ...testAttributes("add-action") }> &nbsp; &nbsp; Add &nbsp; &nbsp; </button>
                             </div>
                         </section>
                     }
@@ -232,7 +239,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
                         {
                             errorMessage &&
                             <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp" scrollBeforePlayIn={ true }>
-                                <article className="message is-danger">
+                                <article className="message is-danger" { ...testAttributes("error-message") }>
                                     <div className="message-body">
                                         <ReactMarkdown children={ errorMessage } />
                                     </div>
@@ -288,7 +295,7 @@ export const PurchaseTypePage: FunctionComponent = () => {
                 onCancel={ () => updateAction(undefined) }
                 yesButtonClassname="is-danger"
             />
-        </>
+        </section>
     );
 
 };

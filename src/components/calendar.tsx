@@ -3,7 +3,7 @@ import 'bulma-calendar/dist/css/bulma-calendar.min.css';
 import './calendar.css';
 import bulmaCalendar from "bulma-calendar";
 import dateutils from "date-and-time";
-import { formatTimestamp, getLogger } from '../shared';
+import { formatTimestamp, getLogger, testAttributes } from '../shared';
 
 export interface CalendarProps extends bulmaCalendar.Options {
     id: string;
@@ -12,14 +12,19 @@ export interface CalendarProps extends bulmaCalendar.Options {
     onSelect (value: { start?: Date, end?: Date; }): void;
 }
 
-const defaultOptions: bulmaCalendar.Options = {
+interface BulmaCalendarOptions extends bulmaCalendar.Options {
+    displayYearsCount: number;
+}
+
+const defaultOptions: BulmaCalendarOptions = {
     type: "date",
     color: "link",
     isRange: false,
     allowSameDayRange: false,
     showClearButton: false,
     showButtons: false,
-    displayMode: "inline"
+    displayMode: "inline",
+    displayYearsCount: 3
 };
 
 const fcLogger = getLogger("FC.calendar", null, null, "DISABLED");
@@ -38,8 +43,10 @@ const Calendar: FunctionComponent<CalendarProps> = (props) => {
             ...defaultOptions,
             ...props
         };
-        if (options.startDate)
+        if (options.startDate) {
             options.maxDate = dateutils.addMonths(options.startDate, 1);
+            options.minDate = dateutils.addYears(options.startDate, -5);
+        }
 
         options.onReady = () => {
             setCalState('ready');
@@ -78,7 +85,7 @@ const Calendar: FunctionComponent<CalendarProps> = (props) => {
     }
 
     return (
-        <div className="field px-5 mx-2">
+        <div className="field px-5 mx-2" { ...testAttributes("calendar-field") }>
             <label htmlFor={ props.id } className="label">{ props.label }</label>
             <div className="control" ref={ calendarRef }>
                 <input type="date" key={ `${props.id}-inputDate` } id={ props.id } />

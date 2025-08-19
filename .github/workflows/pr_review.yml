@@ -283,7 +283,7 @@ jobs:
               if(testplanIssueDetailList.length === 0) {
                 throw new Error("regression testplan issue link is not found in PR comments");
               }
-              const isCommentStatusAllGood = comment => comment.body.includes("There are no critical issues") && comment.body.includes("Status-All%20Good");
+              const isCommentStatusAllGood = comment => (comment.body.includes("There are no critical issues") || comment.body.includes("There are no issues")) && comment.body.includes("Status-All%20Good");
               const foundCompletedTestplanDetail = testplanIssueDetailList.find(testplanIssue=>!!testplanIssue.issueComments.find(isCommentStatusAllGood));
               if(!foundCompletedTestplanDetail) {
                 throw new Error("Regression issue is closed but all critical issues are not resolved");

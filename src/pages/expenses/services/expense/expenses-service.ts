@@ -24,7 +24,7 @@ type ExpenseQueryParams = Record<"pageNo" | "status" | "pageMonths" | "belongsTo
 const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
 
 const rootPath = "/expenses";
-const _logger = getLogger("service.expense", null, null, "DISABLED");
+const _logger = getLogger("service.expense", null, null, "DEBUG");
 
 const getExpenseCount = pMemoize(async (queryParams: ExpenseQueryParams) => {
   const countResponse = await axios.get(`${rootPath}/count`, { params: queryParams });
@@ -37,6 +37,7 @@ const isExpenseWithinRange = (expense: ExpenseFields, rangeStartDate: Date, rang
     logger.debug("expense date not found");
     return false;
   }
+  logger.debug("expenseDate =", expenseDate, ", is within range? ", expenseDate >= rangeStartDate && expenseDate <= rangeEndDate);
 
   return expenseDate >= rangeStartDate && expenseDate <= rangeEndDate;
 };
@@ -54,20 +55,31 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
       belongsTo: belongsTo ? [String(belongsTo)] : []
     };
 
-    let expenses: ExpenseFields[] = [];
+    // initialize with null to handle add or remove calls. cache is updating properly and getting values.
+    // but since api count is giving cached value due to evantual consistency, we are ending up discarding correct value
+    // and responding wrong data list. this is temporary fix.
+    // for permanent proper fix, need to work on expense count api and usage of it here
+    let expenses: ExpenseFields[] | null = null;
     let expenseCount: number | null = null;
     if (status !== ExpenseStatus.Deleted) {
       const dbExpensePromise = expenseDb.getAllFromIndex(LocalDBStoreIndex.ItemStatus, queryParams.status[0]);
       const expenseCountPromise = getExpenseCount(queryParams);
       await Promise.all([dbExpensePromise, expenseCountPromise]);
       const dbExpenses = await dbExpensePromise;
-      logger.info("expenseDb.getAllFromIndex and expenseCount.api execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec.");
+      logger.debug(
+        "expenseDb.getAllFromIndex and expenseCount.api execution time =",
+        subtractDatesDefaultToZero(null, startTime).toSeconds(),
+        " sec."
+      );
 
       const rangeStartDate = datetime.addMonths(new Date(), queryPageMonths * -1 * pageNo);
       const rangeEndDate = datetime.addMonths(new Date(), queryPageMonths * -1 * (pageNo - 1));
-      const filteredExpenses = dbExpenses.filter((xpns) => isExpenseWithinRange(xpns, rangeStartDate, rangeEndDate, logger));
-      logger.info("db expenses =", [...filteredExpenses]);
+      logger.debug("rangeStartDate =", rangeStartDate, ", rangeEndDate =", rangeEndDate, ", dbExpenses =", dbExpenses);
+      const filteredExpenses = dbExpenses
+        .filter((xpns) => isExpenseWithinRange(xpns, rangeStartDate, rangeEndDate, logger))
+        .filter((xpns) => !belongsTo || belongsTo === xpns.belongsTo);
       expenseCount = await expenseCountPromise;
+      logger.debug(filteredExpenses.length, "db expenses =", [...filteredExpenses], "and expense count from api is", expenseCount);
       if (filteredExpenses.length === expenseCount) {
         logger.info(
           "filteredExpenses from DB, queryParams =",
@@ -82,7 +94,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
       }
     }
 
-    if (expenseCount !== null && expenses.length !== expenseCount) {
+    if (expenses === null || (expenseCount !== null && expenses.length !== expenseCount)) {
       // call api to refresh the list
       let apiStartTime = new Date();
 
@@ -99,10 +111,11 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
       logger.info("api execution time =", subtractDatesDefaultToZero(null, apiStartTime).toSeconds(), " sec");
 
       apiStartTime = new Date();
-      expenses = response.data;
+      expenses = response.data as ExpenseFields[];
       const expenseYears = expenses.map((xpns) => getExpenseDateInstance(xpns, logger)?.getFullYear() as number).filter((yr) => yr !== undefined);
 
       const years = [...new Set(expenseYears)];
+      logger.debug("expenses=", expenses, "expenseYears=", expenseYears, "years=", years, "belongsTo=", belongsTo);
 
       if (!belongsTo) {
         const statCacheClearPromiseList = [StatBelongsTo.Purchase, StatBelongsTo.Income, StatBelongsTo.Refund].map((statBelongsTo) =>

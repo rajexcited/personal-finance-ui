@@ -9,7 +9,7 @@ import {
   UserSignupResource,
   UserStatus
 } from "./field-types";
-import pMemoize from "p-memoize";
+import pMemoize, { pMemoizeClear } from "p-memoize";
 import {
   cleanupSession,
   deleteUser,
@@ -19,10 +19,11 @@ import {
   updateNameInDetails,
   updateUserDetails
 } from "./auth-storage";
+import { pMemoizeSyncClear } from "../../../shared/utils/cache-utils";
 
 const rootPath = "/user";
 const MARGIN_ERROR_TIME_IN_SEC = 1;
-const _logger = getLogger("service.auth", null, null, "DISABLED");
+const _logger = getLogger("service.auth", null, null, "DEBUG");
 
 export const login = pMemoize(async (details: UserLoginResource, forceLogin: boolean) => {
   const logger = getLogger("login", _logger);
@@ -41,6 +42,8 @@ export const login = pMemoize(async (details: UserLoginResource, forceLogin: boo
     const response = await axios.post(`${rootPath}/login`, data);
     logger.debug("received token response from api call");
     updateAuthorizationToken(response);
+    pMemoizeClear(getUserDetails);
+    getUserDetails();
     logger.debug("stored token session");
   } catch (e) {
     try {
@@ -89,12 +92,12 @@ export const logout = pMemoize(async () => {
   logger.debug("session is cleared. calling api");
   try {
     // to make user experience better, not waiting for response. actual api call may take  upto 3 sec
-    axios.post(`${rootPath}/logout`);
+    await axios.post(`${rootPath}/logout`);
     logger.debug("api successful");
-    await sleep("0.5 sec");
   } catch (e) {
     logger.debug("error logging out", e);
   } finally {
+    pMemoizeSyncClear(cleanupSession);
     cleanupSession();
   }
 }, getCacheOption("3 sec"));
@@ -159,6 +162,7 @@ export const signup = pMemoize(async (details: UserSignupResource) => {
     // default configs will be created with sign up
     const response = await axios.post(`${rootPath}/signup`, data);
     updateAuthorizationToken(response);
+    pMemoizeClear(getUserDetails);
     logger.debug("stored token session data");
 
     updateUserDetails({
@@ -223,6 +227,7 @@ export const refreshToken = pMemoize(async () => {
   try {
     const response = await axios.post(`${rootPath}/refresh`);
     updateAuthorizationToken(response);
+    pMemoizeClear(getUserDetails);
     logger.debug("stored refreshed token data to session");
   } catch (e) {
     const err = e as Error;
@@ -245,6 +250,7 @@ export const deleteUserAccount = pMemoize(async (details: UserLoginResource) => 
     const response = await axios.delete(`${rootPath}/details`, { headers: { ...data } });
     logger.debug("response =", response);
     deleteUser();
+    pMemoizeClear(getUserDetails);
   } catch (e) {
     const err = e as Error;
     handleRestErrors(err, logger);

@@ -27,3 +27,5 @@ export { ViewDialog } from "./view-dialog";
 export { Radio } from "./radio";
 
 export { Anchor } from "./anchor";
+
+export { ScrollReset } from "./scroll-reset";

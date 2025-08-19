@@ -18,7 +18,8 @@ import {
   getDateString,
   subtractDatesDefaultToZero,
   getDateInstanceDefaultNewDate,
-  apiUtils
+  apiUtils,
+  sleep
 } from "../../../../shared";
 import { PurchaseTypeService } from "./purchase-type-service";
 import { pymtAccountService } from "../../../pymt-accounts";
@@ -272,6 +273,8 @@ export const addUpdatePurchase = pMemoize(async (purchase: PurchaseFields) => {
 
     await addUpdateDbPurchase(purchaseResponse, logger);
     clearCache(purchaseResponse);
+    // temporary patching until expenseCount api is fixed
+    await sleep("1 sec");
   } catch (e) {
     const err = e as Error;
     handleRestErrors(err, logger);
@@ -293,6 +296,8 @@ export const removePurchase = pMemoize(async (purchaseId: string) => {
     });
     await Promise.all(deletingReceiptPromises);
     clearCache(purchaseResponse);
+    // temporary patching until expenseCount api is fixed
+    await sleep("1 sec");
   } catch (e) {
     const err = e as Error;
     handleRestErrors(err, logger);

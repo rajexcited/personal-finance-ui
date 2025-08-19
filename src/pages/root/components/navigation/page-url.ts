@@ -36,92 +36,92 @@ type RouteId =
 const PAGE_URL: Record<RouteId, PageRouteResource> = {
   rootPath: {
     shortUrl: "/",
-    baseRouteId: null,
+    baseRouteId: null
   },
   loginPage: {
     shortUrl: "login",
-    baseRouteId: "rootPath",
+    baseRouteId: "rootPath"
   },
   signupPage: {
     shortUrl: "signup",
-    baseRouteId: "rootPath",
+    baseRouteId: "rootPath"
   },
   logoutPage: {
     shortUrl: "logout",
-    baseRouteId: "rootPath",
+    baseRouteId: "rootPath"
   },
   expenseJournalRoot: {
     shortUrl: "expense-journal",
-    baseRouteId: "rootPath",
+    baseRouteId: "rootPath"
   },
   addPurchase: {
     shortUrl: "purchase/add",
-    baseRouteId: "expenseJournalRoot",
+    baseRouteId: "expenseJournalRoot"
   },
   updatePurchase: {
     shortUrl: "purchase/:purchaseId/update",
-    baseRouteId: "expenseJournalRoot",
+    baseRouteId: "expenseJournalRoot"
   },
   addPurchaseRefund: {
     shortUrl: "purchase/:purchaseId/refund/add",
-    baseRouteId: "expenseJournalRoot",
+    baseRouteId: "expenseJournalRoot"
   },
   updatePurchaseRefund: {
     shortUrl: "purchase/refund/:refundId/update",
-    baseRouteId: "expenseJournalRoot",
+    baseRouteId: "expenseJournalRoot"
   },
   addIncome: {
     shortUrl: "income/add",
-    baseRouteId: "expenseJournalRoot",
+    baseRouteId: "expenseJournalRoot"
   },
   updateIncome: {
     shortUrl: "income/:incomeId/update",
-    baseRouteId: "expenseJournalRoot",
+    baseRouteId: "expenseJournalRoot"
   },
   pymtAccountsRoot: {
     shortUrl: "payment-accounts",
-    baseRouteId: "rootPath",
+    baseRouteId: "rootPath"
   },
   addPymAccount: {
     shortUrl: "account/add",
-    baseRouteId: "pymtAccountsRoot",
+    baseRouteId: "pymtAccountsRoot"
   },
   updatePymAccount: {
     shortUrl: "account/:accountId/update",
-    baseRouteId: "pymtAccountsRoot",
+    baseRouteId: "pymtAccountsRoot"
   },
   settingsRoot: {
     shortUrl: "settings",
-    baseRouteId: "rootPath",
+    baseRouteId: "rootPath"
   },
   purchaseTypeSettings: {
     shortUrl: "purchase-type",
-    baseRouteId: "settingsRoot",
+    baseRouteId: "settingsRoot"
   },
   pymtAccountTypeSettings: {
-    shortUrl: "pymt-account-type",
-    baseRouteId: "settingsRoot",
+    shortUrl: "payment-account-type",
+    baseRouteId: "settingsRoot"
   },
   refundReasonSettings: {
     shortUrl: "refund-reason",
-    baseRouteId: "settingsRoot",
+    baseRouteId: "settingsRoot"
   },
   incomeTypeSettings: {
     shortUrl: "income-type",
-    baseRouteId: "settingsRoot",
+    baseRouteId: "settingsRoot"
   },
   sharePersonSettings: {
     shortUrl: "share-person",
-    baseRouteId: "settingsRoot",
+    baseRouteId: "settingsRoot"
   },
   profileSettings: {
     shortUrl: "profile",
-    baseRouteId: "settingsRoot",
+    baseRouteId: "settingsRoot"
   },
   securitySettings: {
     shortUrl: "security",
-    baseRouteId: "settingsRoot",
-  },
+    baseRouteId: "settingsRoot"
+  }
 };
 
 const getParamKey = (routeResource: PageRouteResource) => {
