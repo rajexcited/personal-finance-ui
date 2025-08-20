@@ -120,7 +120,7 @@ jobs:
           pip install -r scripts/requirements.txt
           # capture error code +-e
           set +e
-          python -m scripts.request.release.draft --generate --template-path .github/release-draft.template.yml > generate_change_output.log 2>&1
+          python -m scripts.request.release.draft --generate --template-path .github/release-notes.template.yml > generate_change_output.log 2>&1
           RETURN_CODE=$?
           set -e
           if [ $RETURN_CODE -ne 0 ]; then

@@ -1,5 +1,5 @@
-name-template: "$MILESTONE_TITLE"
-tag-template: "$MILESTONE_TITLE"
+name-template: $MILESTONE_TITLE
+tag-template: $MILESTONE_TITLE
 categories:
   - title: "🚀 Enhancements"
     labels:
@@ -16,6 +16,7 @@ categories:
     labels:
       include:
         - chore
+        - task
         - security
         - security alert
         - javascript
