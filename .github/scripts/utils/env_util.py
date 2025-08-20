@@ -26,7 +26,7 @@ def export_to_env(env_to_export: Dict[str, str]):
 
 def get_env_value(env_key: str):
     env_value = os.getenv(env_key)
-    if env_value is None:
+    if env_value is None or len(env_value) == 0:
         raise ValueError(f"{env_key} env is not provided")
 
     return env_value

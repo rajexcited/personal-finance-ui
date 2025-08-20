@@ -4,7 +4,7 @@ from google.genai import types
 from google.genai import Client
 
 # Init Vertex AI
-get_env_value("GCP_PROJECT_ID")
+get_env_value("GCP_PROJECT")
 get_env_value("GCP_LOCATION")
 get_env_value("GCP_MODEL_NAME")
 
@@ -16,7 +16,7 @@ def get_llm(debug_log: bool = False):
     if llm_client is None:
         llm_client = Client(
             vertexai=True,
-            project=get_env_value("GCP_PROJECT_ID"),
+            project=get_env_value("GCP_PROJECT"),
             location=get_env_value("GCP_LOCATION")
         )
 
