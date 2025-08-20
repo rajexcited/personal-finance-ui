@@ -29,15 +29,15 @@ def get_validated_template(template_dict: Dict):
     for category in template_model.categories:
         if category.labels.include is None:
             raise ValueError("include is required to 'category.labels'")
-        print("category title =", category.title)
+        # print("category title =", category.title)
         # decoded_text = category.title.encode('utf-8').decode('unicode-escape')
         decoded_text = category.title
-        print("decoded title text =", decoded_text)
+        # print("decoded title text =", decoded_text)
         cleaned_text_alphanum = "".join(c for c in decoded_text if c.isalnum() or c.isspace())
-        print("cleaned text =", cleaned_text_alphanum)
+        # print("cleaned text =", cleaned_text_alphanum)
         if len(cleaned_text_alphanum) == 0:
             raise ValueError("title has no text")
-        category.safe_title = cleaned_text_alphanum
+        category.safe_title = cleaned_text_alphanum.strip()
 
     return template_model
 

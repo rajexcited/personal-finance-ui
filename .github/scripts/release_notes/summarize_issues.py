@@ -27,10 +27,10 @@ def summarize_category(category_title: str, category_labels: List[str], change_t
                                                     change_template=change_template,
                                                     issues=chunk_issues)
 
-            response = llm.generate_content(prompt)
+            # response = llm.generate_content(prompt)
 
-            print("response: ", response)
-            summarized_responses.append(response.text.strip())
+            # print("response: ", response)
+            # summarized_responses.append(response.text.strip())
 
     return "\n".join(summarized_responses)
 
@@ -55,9 +55,16 @@ def get_category_summarizer_prompt(category_title: str, category_labels: List[st
 
         issue_list_adapter = TypeAdapter(List[IssueModel])
         json_issues = issue_list_adapter.dump_json(issues).decode()
-        print("json issues=", json_issues)
+        print("json issues=", len(json_issues))
+        print(json_issues)
         print("-" * 80)
-        print("model dump issues=", json.dumps([iss.model_dump() for iss in issues]))
+        iss_model_list = [iss.model_dump() for iss in issues]
+        print("list of issue model dict =", len(iss_model_list))
+        print(iss_model_list)
+        print("-" * 80)
+        iss_model_list_json = json.dumps(iss_model_list)
+        print("model dump issues=", len(iss_model_list_json))
+        print(iss_model_list_json)
         print("-" * 80)
 
         substituted_prompt = prompt_template.substitute(category_title=category_title,
