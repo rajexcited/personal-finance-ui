@@ -93,21 +93,4 @@ if __name__ == "__main__":
         parser.print_help()
         exit(1)
 
-    llm = get_llm()
-    prompt = """ 
-    Summarize the key findings of the attached research paper on renewable energy sources, focusing on the feasibility of solar power in urban environments. 
-    Present the summary as a bulleted list of 5-7 points.
-    """
-    print("prompt=")
-    print(prompt)
-    response = llm.generate_content(prompt)
-
-    print("response: ", response)
-    print("response text: ", response.text)
-    print("response dict: ")
-    print(response.to_dict())
-
-    if response.text:
-        raise ValueError("found response text")
-
     create_release_change(template_dict)

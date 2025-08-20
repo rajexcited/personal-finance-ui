@@ -58,14 +58,14 @@ def get_category_summarizer_prompt(category_title: str, category_labels: List[st
         print("json issues=", len(json_issues))
         print(json_issues)
         print("-" * 80)
-        iss_model_list = [iss.model_dump() for iss in issues]
-        print("list of issue model dict =", len(iss_model_list))
-        print(iss_model_list)
-        print("-" * 80)
-        iss_model_list_json = json.dumps(iss_model_list)
-        print("model dump issues=", len(iss_model_list_json))
-        print(iss_model_list_json)
-        print("-" * 80)
+        # iss_model_list = [iss.model_dump() for iss in issues]
+        # print("list of issue model dict =", len(iss_model_list))
+        # print(iss_model_list)
+        # print("-" * 80)
+        # iss_model_list_json = json.dumps(iss_model_list)
+        # print("model dump issues=", len(iss_model_list_json))
+        # print(iss_model_list_json)
+        # print("-" * 80)
 
         substituted_prompt = prompt_template.substitute(category_title=category_title,
                                                         category_labels=json_category_labels,
@@ -87,6 +87,6 @@ def get_llm():
         if model_name is None:
             raise ValueError("model name is not provided")
         llm_model = GenerativeModel(model_name=model_name)
-        print("model_name=", model_name, ", llm_model=", llm_model)
+        # print("model_name=", model_name, ", llm_model=", llm_model)
 
     return llm_model

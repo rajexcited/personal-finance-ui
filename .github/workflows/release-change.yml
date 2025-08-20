@@ -79,8 +79,8 @@ jobs:
           GCP_PROJECT_ID: ${{ env.GCP_PROJECT_ID }}
           GCP_LOCATION: ${{ env.GCP_LOCATION }}
           GCP_MODEL_NAME: ${{ env.GCP_MODEL_NAME }}
-          GRPC_VERBOSITY: "DEBUG"
-          GRPC_TRACE: "all"
+          # GRPC_VERBOSITY: "DEBUG"
+          # GRPC_TRACE: "all"
         run: |
           cd .github
           python --version
