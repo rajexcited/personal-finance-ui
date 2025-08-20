@@ -27,10 +27,10 @@ def summarize_category(category_title: str, category_labels: List[str], change_t
                                                     change_template=change_template,
                                                     issues=chunk_issues)
 
-            # response = llm.generate_content(prompt)
+            response = llm.generate_content(prompt)
 
-            # print("response: ", response)
-            # summarized_responses.append(response.text.strip())
+            print("response: ", response)
+            summarized_responses.append(response.text.strip())
 
     return "\n".join(summarized_responses)
 
