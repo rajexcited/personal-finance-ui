@@ -76,7 +76,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MILESTONE_TITLE: ${{ github.event.inputs.milestone_version }}
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_PROJECT_ID: ${{ env.GCP_PROJECT_ID }}
           GCP_LOCATION: ${{ env.GCP_LOCATION }}
           GCP_MODEL_NAME: ${{ env.GCP_MODEL_NAME }}
           GRPC_VERBOSITY: "DEBUG"
