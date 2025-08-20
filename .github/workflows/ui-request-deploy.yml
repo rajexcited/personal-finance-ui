@@ -305,7 +305,7 @@ jobs:
           if [[ "$ELIGIBLE" == "false" ]]; then
             echo "failed request form criteria"
             echo "Criteria-1, allow production release provision request only for open milestone. found values, prod provision? $IS_PRODUCTION_PROVISION, milestone open? $IS_MILESTONE_OPEN"
-            echo "Criteria-2, allow prod rollback only for closed milestone (indicates that already deployed). found values, prod rollback provision? $IS_PROD_ROLLBACK_PROVISION", milestone open? $IS_MILESTONE_OPEN"
+            echo "Criteria-2, allow prod rollback only for closed milestone (indicates that already deployed). found values, prod rollback provision? $IS_PROD_ROLLBACK_PROVISION, milestone open? $IS_MILESTONE_OPEN"
             echo "failedReason=for prod request form, milestone or label assignments are incorrect" >> $GITHUB_OUTPUT
             exit 1
           fi

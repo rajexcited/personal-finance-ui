@@ -9,50 +9,8 @@ on:
         type: string
 
 jobs:
-  generate_release_draft:
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    if: github.event_name == 'neel'
-    steps:
-      - name: Experiment release draft with cli
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create "${{ github.ref_name }}" \
-              --draft --latest \
-              --repo="${{ github.repository }}" \
-              --title="v0.2.0" \
-              --generate-notes
-
-  update_release_draft:
-    permissions:
-      # write permission is required to create a github release
-      contents: write
-      # write permission is required for autolabeler
-      # otherwise, read permission is required at least
-      pull-requests: write
-    runs-on: ubuntu-latest
-    if: github.event_name == 'neel'
-    steps:
-      # (Optional) GitHub Enterprise requires GHE_HOST variable set
-      #- name: Set GHE_HOST
-      #  run: |
-      #    echo "GHE_HOST=${GITHUB_SERVER_URL##https:\/\/}" >> $GITHUB_ENV
-
-      # Drafts your next Release notes as Pull Requests are merged into "master"
-      - uses: release-drafter/release-drafter@v6
-        # (Optional) specify config name to use, relative to .github/. Default: release-drafter.yml
-        with:
-          publish: ${{ github.event.inputs.publish == 'Yes' }}
-          latest: true
-          version: ${{ github.event.inputs.milestone_version || github.event.pull_request.milestone.title }}
-        #   disable-autolabeler: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MILESTONE_TITLE: ${{ github.event.inputs.milestone_version || github.event.pull_request.milestone.title }}
-
-  summarize:
+  summarize_create:
+    name: Summarize and Draft Release Notes
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -88,6 +46,7 @@ jobs:
           GCP_MODEL_NAME: ${{ vars.GCP_MODEL_NAME }}
           GRPC_VERBOSITY: "DEBUG"
           GRPC_TRACE: "all"
+        if: github.event_name == 'experiment'
         run: |
           cd .github
           # capture error code +-e
@@ -110,8 +69,8 @@ jobs:
           MILESTONE_TITLE: ${{ github.event.inputs.milestone_version }}
           GCP_LOCATION: ${{ vars.GCP_LOCATION }}
           GCP_MODEL_NAME: ${{ vars.GCP_MODEL_NAME }}
-          GRPC_VERBOSITY: "DEBUG"
-          GRPC_TRACE: "all"
+          # GRPC_VERBOSITY: "DEBUG"
+          # GRPC_TRACE: "all"
         run: |
           cd .github
           python --version
@@ -137,9 +96,21 @@ jobs:
           RELEASE_NOTES: ${{ steps.generate-change.outputs.release_change }}
           TARGET_REF: ${{ github.ref_name }}
         run: |
-          gh release create "$MILESTONE_TITLE" \
-              --draft --latest \
-              --repo="$REPO_FULLNAME" \
-              --title="$MILESTONE_TITLE" \
-              --notes "$RELEASE_NOTES" \
-              --target "$TARGET_REF"
+          # Check if the release already exists
+          if gh release view "$TAG" --repo="$REPO" > /dev/null 2>&1; then
+            echo "Updating existing release with Tag $MILESTONE_TITLE"
+            gh release edit "$MILESTONE_TITLE" \
+                --draft --latest \
+                --repo="$REPO_FULLNAME" \
+                --title="$MILESTONE_TITLE" \
+                --notes "$RELEASE_NOTES" \
+                --target "$TARGET_REF"
+          else
+            echo "Creating release with Tag $MILESTONE_TITLE"
+            gh release create "$MILESTONE_TITLE" \
+                --draft --latest \
+                --repo="$REPO_FULLNAME" \
+                --title="$MILESTONE_TITLE" \
+                --notes "$RELEASE_NOTES" \
+                --target "$TARGET_REF"
+          fi
