@@ -3,7 +3,7 @@ from string import Template
 from typing import List
 from pydantic import TypeAdapter
 from .models import IssueModel
-from . import llm
+from ..genai import llm
 
 
 def summarize_category(category_title: str, category_labels: List[str], change_template: str, issues: List[IssueModel]):

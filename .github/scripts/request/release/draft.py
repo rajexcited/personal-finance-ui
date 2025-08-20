@@ -3,9 +3,10 @@ from string import Template
 import traceback
 from typing import Callable, Dict, List
 from pydantic import TypeAdapter
-from ...utils import export_to_env, get_parsed_arg_value, get_yaml_to_dict, rootpath
-from ...release_notes import CategoryModel, LabelsModel, ReleaseTemplateModel, get_issues, llm, summarize_category, IssueModel
 import os
+from ...utils import export_to_env, get_parsed_arg_value, get_yaml_to_dict, rootpath
+from ...release_notes import CategoryModel, LabelsModel, ReleaseTemplateModel, get_issues, summarize_category, IssueModel
+from ...genai import llm
 
 
 def get_summarized_category_changes(template_model: ReleaseTemplateModel, category: CategoryModel):
