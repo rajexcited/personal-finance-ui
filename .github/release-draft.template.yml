@@ -53,7 +53,7 @@ category-template: |
 
   $CATEGORY_ITEM_CHANGES
 
-category-item-change-template: "- $TITLE (#$ISSUE_NUMBER)"
+category-item-change-template: "- $TITLE (#$ISSUE_NUMBERS)"
 template: |
   ## Changes
 

@@ -10,7 +10,8 @@ def get_issues(category: CategoryModel, generic_exclude_labels: Optional[List[st
     exclude_labels2 = generic_exclude_labels if generic_exclude_labels is not None else []
     unique_exclude_labels = [el for el in set(exclude_labels1+exclude_labels2)]
     print("exclude labels: ", unique_exclude_labels)
-    gql_issues = fetch_issues_by_labels(category.labels.include, unique_exclude_labels)
+    include_labels = category.labels.include if category.labels.include is not None else []
+    gql_issues = fetch_issues_by_labels(include_labels, unique_exclude_labels)
     if not isinstance(gql_issues, List):
         raise ValueError("graphql response is not list")
 
@@ -32,8 +33,9 @@ def get_issues(category: CategoryModel, generic_exclude_labels: Optional[List[st
 
 def fetch_issues_by_labels(include_labels: List[str], exclude_labels: List[str]):
     include_labels_joined = ""
-    if len(include_labels) > 0:
-        include_labels_joined = '\\"'+'\\",\\"'.join(include_labels)+'\\"'
+    unique_include_labels = set(include_labels)-set(exclude_labels)
+    if len(unique_include_labels) > 0:
+        include_labels_joined = '\\"'+'\\",\\"'.join(unique_include_labels)+'\\"'
 
     exclude_labels_query_part = ""
     if len(exclude_labels) > 0:

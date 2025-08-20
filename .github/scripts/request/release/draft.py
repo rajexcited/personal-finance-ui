@@ -7,9 +7,9 @@ import os
 
 
 def get_summarized_category_changes(template_model: ReleaseTemplateModel, category: CategoryModel):
-    issues = get_issues(category, template_model.category_labels.exclude)
+    issues = get_issues(category, template_model.category_labels.exclude if template_model.category_labels is not None else [])
     category_summarization = summarize_category(category_title=category.safe_title,
-                                                category_labels=category.labels,
+                                                category_labels=category.labels.include if category.labels.include is not None else [],
                                                 change_template=template_model.category_item_change_template,
                                                 issues=issues)
     return category_summarization
@@ -29,8 +29,12 @@ def get_validated_template(template_dict: Dict):
     for category in template_model.categories:
         if category.labels.include is None:
             raise ValueError("include is required to 'category.labels'")
-        decoded_text = category.title.encode('utf-8').decode('unicode-escape')
+        print("category title =", category.title)
+        # decoded_text = category.title.encode('utf-8').decode('unicode-escape')
+        decoded_text = category.title
+        print("decoded title text =", decoded_text)
         cleaned_text_alphanum = "".join(c for c in decoded_text if c.isalnum() or c.isspace())
+        print("cleaned text =", cleaned_text_alphanum)
         if len(cleaned_text_alphanum) == 0:
             raise ValueError("title has no text")
         category.safe_title = cleaned_text_alphanum
@@ -70,6 +74,7 @@ if __name__ == "__main__":
     """
     example,
     python -m scripts.request.release.draft --generate --template-path .github/release-draft.template.yml
+    dotenv -e ..\\.env.releaseNotes.gemini.local -- python -m scripts.request.release.draft --generate --template-path .github/release-draft.template.yml
     """
     parser = ArgumentParser(
         description="Generate Release Change entries")

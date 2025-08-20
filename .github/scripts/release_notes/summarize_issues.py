@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from string import Template
 from typing import List, Optional
@@ -25,7 +26,7 @@ def summarize_category(category_title: str, category_labels: List[str], change_t
                                                     category_labels=category_labels,
                                                     change_template=change_template,
                                                     issues=chunk_issues)
-            print("prompt=", prompt)
+
             response = llm.generate_content(prompt)
 
             print("response: ", response)
@@ -54,6 +55,10 @@ def get_category_summarizer_prompt(category_title: str, category_labels: List[st
 
         issue_list_adapter = TypeAdapter(List[IssueModel])
         json_issues = issue_list_adapter.dump_json(issues).decode()
+        print("json issues=", json_issues)
+        print("-" * 80)
+        print("model dump issues=", json.dumps([iss.model_dump() for iss in issues]))
+        print("-" * 80)
 
         substituted_prompt = prompt_template.substitute(category_title=category_title,
                                                         category_labels=json_category_labels,
