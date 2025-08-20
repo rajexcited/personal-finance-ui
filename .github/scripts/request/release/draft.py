@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from string import Template
 from typing import Dict, List, Optional
 from ...utils import export_to_env, get_parsed_arg_value, get_yaml_to_dict
-from ...release_notes import CategoryModel, LabelsModel, ReleaseTemplateModel, get_issues, summarize_category
+from ...release_notes import CategoryModel, LabelsModel, ReleaseTemplateModel, get_issues, get_llm, summarize_category
 import os
 
 
@@ -92,5 +92,22 @@ if __name__ == "__main__":
         print("error: ", e)
         parser.print_help()
         exit(1)
+
+    llm = get_llm()
+    prompt = """ 
+    Summarize the key findings of the attached research paper on renewable energy sources, focusing on the feasibility of solar power in urban environments. 
+    Present the summary as a bulleted list of 5-7 points.
+    """
+    print("prompt=")
+    print(prompt)
+    response = llm.generate_content(prompt)
+
+    print("response: ", response)
+    print("response text: ", response.text)
+    print("response dict: ")
+    print(response.to_dict())
+
+    if response.text:
+        raise ValueError("found response text")
 
     create_release_change(template_dict)

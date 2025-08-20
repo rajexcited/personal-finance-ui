@@ -1,3 +1,3 @@
 from .models import ReleaseTemplateModel, CategoryModel, LabelsModel
 from .issues import get_issues
-from .summarize_issues import summarize_category
+from .summarize_issues import summarize_category, get_llm
