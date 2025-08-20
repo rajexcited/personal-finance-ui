@@ -1,8 +1,10 @@
-from argparse import ArgumentParser
+from argparse import ArgumentError, ArgumentParser
 from string import Template
-from typing import Dict, List, Optional
-from ...utils import export_to_env, get_parsed_arg_value, get_yaml_to_dict
-from ...release_notes import CategoryModel, LabelsModel, ReleaseTemplateModel, get_issues, get_llm, summarize_category
+import traceback
+from typing import Callable, Dict, List
+from pydantic import TypeAdapter
+from ...utils import export_to_env, get_parsed_arg_value, get_yaml_to_dict, rootpath
+from ...release_notes import CategoryModel, LabelsModel, ReleaseTemplateModel, get_issues, llm, summarize_category, IssueModel
 import os
 
 
@@ -70,6 +72,81 @@ def create_release_change(template_dict: Dict):
     export_to_env({"release_change": summarized_release_change})
 
 
+def run_example(example_id: int, run_examples_dict: Dict[int, Callable[[], None]]):
+    print("-"*80)
+    print("-"*30, f"Starting Example-{example_id}")
+    print("-"*80)
+    print("-"*80)
+
+    try:
+        example_call = run_examples_dict.get(example_id)
+        if not example_call:
+            raise ValueError(f"incorrect id [{example_id}]")
+
+        example_call()
+
+    except:
+        print(f"found error in example {example_id}")
+        traceback.print_exc()
+
+    print("-"*80)
+    print("-"*30, f"Ending Example-{example_id}")
+    print("-"*80)
+
+
+def run_examples():
+    examples = {
+        1: run_example1,
+        2: run_example2,
+        3: run_example3,
+    }
+
+    run_example(1, examples)
+    run_example(2, examples)
+    run_example(3, examples)
+
+
+def run_example1():
+    prompt = """ 
+    Summarize the key findings of the attached research paper on renewable energy sources, focusing on the feasibility of solar power in urban environments. 
+    Present the summary as a bulleted list of 5-7 points.
+    """
+    response = llm.generate_content(prompt, debug_log=True)
+    print("Example-1: retrieved generated contents: ", response)
+
+
+def run_example2():
+    prompt_file_path = rootpath/".github/scripts/release_notes/issue-category-summarize.prompt.txt"
+    print("Example-2: prompt_file_path=", prompt_file_path)
+    with open(prompt_file_path, mode="r", encoding="utf-8") as f:
+        prompt = f.read()
+        response = llm.generate_content(prompt, debug_log=True)
+        print("Example-2: retrieved generated contents: ", response)
+
+
+def run_example3():
+    category = CategoryModel(
+        title="title",
+        labels=LabelsModel(
+            include=['chore', 'security', 'security alert', 'javascript', 'dependencies', 'test plan', 'technical']
+        )
+    )
+    issues = get_issues(category, [])
+    print("Example-3: fetched issues=", issues)
+    issue_list_adapter = TypeAdapter(List[IssueModel])
+    json_issues = issue_list_adapter.dump_json(issues).decode()
+    print("json issues=", len(json_issues))
+    print(json_issues)
+    print("-" * 40)
+    prompt = f"""
+    Summarize below issues.
+    
+    {json_issues}
+    """
+    response = llm.generate_content(prompt, debug_log=True)
+    print("Example-3: retrieved generated contents: ", response)
+
+
 if __name__ == "__main__":
     """
     example,
@@ -78,19 +155,34 @@ if __name__ == "__main__":
     """
     parser = ArgumentParser(
         description="Generate Release Change entries")
-    parser.add_argument("--generate", action="store_true",
-                        help="[Required] Generate request")
+    parser.add_argument("--generate", action="store_true", default=False,
+                        help="[Required] Generate request. Required if not example")
     parser.add_argument("--template-path",
-                        help="[Required] Provide path to release draft template")
+                        help="[Required] Provide path to release draft template. Required if not example")
+    parser.add_argument("--example", action="store_true", default=False,
+                        help="[Optional] to run example and experiments. If provided, generate is not allowed")
     args = parser.parse_args()
 
     try:
-        get_parsed_arg_value(args, key="generate", arg_type_converter=bool)
-        template_dict = get_parsed_arg_value(args, key="template_path", arg_type_converter=get_yaml_to_dict)
+        is_generate = get_parsed_arg_value(args, key="generate", arg_type_converter=bool)
+        is_example = get_parsed_arg_value(args, key="example", arg_type_converter=bool)
+        if is_generate and is_example:
+            raise ArgumentError(None, "both generate and example options are not allowed. provide either one.")
+
+        if not is_generate and not is_example:
+            raise ArgumentError(None, "Provide either generate and example option.")
+
+        template_dict = {}
+        if is_generate:
+            template_dict = get_parsed_arg_value(args, key="template_path", arg_type_converter=get_yaml_to_dict)
 
     except Exception as e:
         print("error: ", e)
         parser.print_help()
         exit(1)
 
-    create_release_change(template_dict)
+    if is_generate:
+        create_release_change(template_dict)
+
+    if is_example:
+        run_examples()

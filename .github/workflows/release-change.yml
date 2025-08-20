@@ -71,6 +71,39 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
+      - name: Pip Install
+        run: |
+          cd .github
+          echo "Python Version: " $(python --version)
+          echo "Pip Version: " $(pip --version)
+          pip install -r scripts/requirements.txt
+          cd ..
+          pip list
+
+      - name: Experiment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MILESTONE_TITLE: ${{ github.event.inputs.milestone_version }}
+          GCP_PROJECT_ID: ${{ env.GCP_PROJECT_ID }}
+          GCP_LOCATION: ${{ env.GCP_LOCATION }}
+          GCP_MODEL_NAME: ${{ env.GCP_MODEL_NAME }}
+          GRPC_VERBOSITY: "DEBUG"
+          GRPC_TRACE: "all"
+        run: |
+          cd .github
+          # capture error code +-e
+          set +e
+          python -m scripts.request.release.draft --example > example_output.log 2>&1
+          RETURN_CODE=$?
+          set -e
+          cat example_output.log
+          if [ $RETURN_CODE -ne 0 ]; then
+            echo "failedReason<<EOF" >> $GITHUB_OUTPUT
+            cat example_output.log >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+          exit $RETURN_CODE
+
       - name: generate release change
         id: generate-change
         env:
@@ -79,8 +112,8 @@ jobs:
           GCP_PROJECT_ID: ${{ env.GCP_PROJECT_ID }}
           GCP_LOCATION: ${{ env.GCP_LOCATION }}
           GCP_MODEL_NAME: ${{ env.GCP_MODEL_NAME }}
-          # GRPC_VERBOSITY: "DEBUG"
-          # GRPC_TRACE: "all"
+          GRPC_VERBOSITY: "DEBUG"
+          GRPC_TRACE: "all"
         run: |
           cd .github
           python --version
