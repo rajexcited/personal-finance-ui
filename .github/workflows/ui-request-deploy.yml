@@ -363,24 +363,24 @@ jobs:
         with:
           script: |
             try {
+              // Convert UTC to Central Time (America/Chicago) using timeZone offset
+              const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
+                timeZone: "America/Chicago",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                timeZoneName: "short"
+              });
+
               const getEndOfDayCentral = (datetime) => {
                 const date = new Date(datetime);
                 if (isNaN(date.getTime())) {
                   return null; // Invalid Date
                 }
                 
-                // Convert UTC to Central Time (America/Chicago) using timeZone offset
-                const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
-                  timeZone: "America/Chicago",
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                  timeZoneName: "short"
-                });
-
                 // Format and extract adjusted time
                 const centralTimeString = centralTimeFormat.format(date);
                 // Ensure time is set to 23:59:59 (end of the day)
@@ -397,7 +397,7 @@ jobs:
               }
               const milestoneDueOn = getEndOfDayCentral(context.payload.issue.milestone.due_on);
               const endOfToday = getEndOfDayCentral(new Date());
-              const toDateString = (dateInstance) => dateInstance.toJSON().substring(0,10);
+              const toDateString = (dateInstance) => centralTimeFormat.format(dateInstance).substring(0,10);
               if(milestoneDueOn < endOfToday) {
                 throw new Error(`Milestone due date[${toDateString(milestoneDueOn)}] is already passed ${toDateString(endOfToday)}`);
               }
@@ -592,24 +592,24 @@ jobs:
         with:
           script: |
             try {
+              // Convert UTC to Central Time (America/Chicago) using timeZone offset
+              const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
+                timeZone: "America/Chicago",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                timeZoneName: "short"
+              });
+
               const getEndOfDayCentral = (datetime) => {
                 const date = new Date(datetime);
                 if (isNaN(date.getTime())) {
                   return null; // Invalid Date
                 }
                 
-                // Convert UTC to Central Time (America/Chicago) using timeZone offset
-                const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
-                  timeZone: "America/Chicago",
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                  timeZoneName: "short"
-                });
-
                 // Format and extract adjusted time
                 const centralTimeString = centralTimeFormat.format(date);
                 // Ensure time is set to 23:59:59 (end of the day)
@@ -654,9 +654,10 @@ jobs:
                 // for prod deployment, date has to be today
                 const milestoneDueOn = getEndOfDayCentral(context.payload.issue.milestone.due_on);
                 const endOfToday = getEndOfDayCentral(new Date());
-                console.log("milestoneDueOn=", milestoneDueOn, ", endOfToday=", endOfToday, ". are same?", (milestoneDueOn != endOfToday));
-                if(milestoneDueOn != endOfToday) {
-                  throw new Error(`Milestone due date[${milestoneDueOn.toJSON().substring(0,10)}] is not today`);
+                // console.log("milestoneDueOn=", milestoneDueOn, ", endOfToday=", endOfToday, ". are same?", (milestoneDueOn != endOfToday));
+                if(milestoneDueOn.getTime() !== endOfToday.getTime()) {
+                  const milestoneDueDate = centralTimeFormat.format(milestoneDueOn).substring(0,10);
+                  throw new Error(`Milestone due date[${milestoneDueDate}] is not today`);
                 }
                 // verify milestone branch not exists
                 const milestoneBranch = await getBranch(`milestone/${context.payload.issue.milestone.title}`);
