@@ -654,7 +654,7 @@ jobs:
                 // for prod deployment, date has to be today
                 const milestoneDueOn = getEndOfDayCentral(context.payload.issue.milestone.due_on);
                 const endOfToday = getEndOfDayCentral(new Date());
-                const toDateString = (dateInstance) => dateInstance.toJSON().substring(0,10);
+                console.log("milestoneDueOn=", milestoneDueOn, ", endOfToday=", endOfToday, ". are same?", (milestoneDueOn != endOfToday));
                 if(milestoneDueOn != endOfToday) {
                   throw new Error(`Milestone due date[${milestoneDueOn.toJSON().substring(0,10)}] is not today`);
                 }
