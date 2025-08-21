@@ -1924,8 +1924,22 @@ jobs:
               issueBody += `- Request [Issue-${context.payload.issue.number}](${context.payload.issue.html_url})\n\n`;
               issueBody += process.env.POST_DEPLOY_REQ_SECTION;
               issueBody += "\n\n  ";
-              issueBody += "> [!IMPORTANT]  \n";
-              issueBody += "> Please checked tasks if verified successfully. When post deployment verification is completed, close the issue regardless the status to mark the deployment attempt complete.  ";
+              issueBody += "\n> [!IMPORTANT]  ";
+              issueBody += "\n> Please checked tasks if verified successfully.  ";
+              issueBody += "\n> When post deployment verification is completed, close the issue regardless the status to mark the deployment attempt complete.  ";
+              issueBody += "\n> Add Comment with screenshots of spec executions and Smoke Test Report.  ";
+              issueBody += "\n> Verify video of smoke tests to ensure the tests are executed successfully and no errors are missed.  ";
+
+              issueBody += "\n\n  "
+              issueBody += "\n### Complete Post Deployment Activities\n"
+              issueBody += "\n  "
+              issueBody += "\n- [ ] Run Smoke Test  "
+              issueBody += "\n- [ ] Verify Smoke Test Video Report  "
+              issueBody += "\n- [ ] Verify Tag created  "
+              issueBody += "\n- [ ] Close Milestone and ensure no issues are open  "
+              issueBody += "\n- [ ] Verify Release Notes and publish  "
+              issueBody += "\n"
+
               const createIssueResponse = await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
