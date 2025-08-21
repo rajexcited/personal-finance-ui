@@ -188,9 +188,11 @@ def validate_deployment_schedule(deployment_schedule_list: List, deployment_type
 
     if deployment_type == DeploymentType.Release:
         if preferred_date_obj > milestone_due_date_obj:
-            raise ValueError("Preferred Date and Time is after milestone due date")
+            raise ValueError(f"Preferred Date and Time [{preferred_date_obj}] is after milestone due date[{milestone_due_date_obj}]")
         if preferred_date_obj.strftime("%Y%m%d") != milestone_due_date_obj.strftime("%Y%m%d"):
-            raise ValueError("Release date is not same as milestone dueon date")
+            preferred_date_str = preferred_date_obj.strftime("%Y%m%d")
+            milestone_dueon_str = milestone_due_date_obj.strftime("%Y%m%d")
+            raise ValueError(f"Release date [{preferred_date_str}] is not same as milestone dueon date [{milestone_dueon_str}]")
 
 
 def get_deployment_type(form_contents: List):

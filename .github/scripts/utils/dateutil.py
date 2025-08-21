@@ -42,9 +42,10 @@ def parse_milestone_dueon(milestone_dueon: str):
     """
     try:
         milestone_dueon_obj = datetime.strptime(milestone_dueon, "%Y-%m-%dT%H:%M:%SZ")
-        milestone_dueon_obj = milestone_dueon_obj.astimezone(centraltz)
         endofday_milestone_dueon_obj = milestone_dueon_obj.replace(hour=23, minute=59, second=59)
-        return endofday_milestone_dueon_obj
+        endofday_milestone_dueon_localized = centraltz.localize(endofday_milestone_dueon_obj)
+        endofday_milestone_dueon_datetime = endofday_milestone_dueon_localized.astimezone()
+        return endofday_milestone_dueon_datetime
     except Exception as e:
         print(e)
 
