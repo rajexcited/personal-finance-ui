@@ -652,11 +652,11 @@ jobs:
               }
               if(process.env.IS_ROLLBACK != "true") {
                 // for prod deployment, date has to be today
-                const milestoneDueOnDate = getEndOfDayCentral(context.payload.issue.milestone.due_on);
+                const milestoneDueOn = getEndOfDayCentral(context.payload.issue.milestone.due_on);
                 const endOfToday = getEndOfDayCentral(new Date());
                 const toDateString = (dateInstance) => dateInstance.toJSON().substring(0,10);
                 if(milestoneDueOn != endOfToday) {
-                  throw new Error(`Milestone due date[${toDateString(milestoneDueOn)}] is not today`);
+                  throw new Error(`Milestone due date[${milestoneDueOn.toJSON().substring(0,10)}] is not today`);
                 }
                 // verify milestone branch not exists
                 const milestoneBranch = await getBranch(`milestone/${context.payload.issue.milestone.title}`);
