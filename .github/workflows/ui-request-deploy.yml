@@ -368,8 +368,7 @@ jobs:
                 if (isNaN(date.getTime())) {
                   return null; // Invalid Date
                 }
-                date.setHours(23);
-
+                
                 // Convert UTC to Central Time (America/Chicago) using timeZone offset
                 const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
                   timeZone: "America/Chicago",
@@ -384,10 +383,11 @@ jobs:
 
                 // Format and extract adjusted time
                 const centralTimeString = centralTimeFormat.format(date);
-                const centralDate = new Date(centralTimeString);
-
                 // Ensure time is set to 23:59:59 (end of the day)
-                centralDate.setHours(23, 59, 59, 999);
+                const dateTimeParts = centralTimeString.split(" ");
+                dateTimeParts[1] = "11:59:59.999"
+                dateTimeParts[2] = "PM"
+                const centralDate = new Date(dateTimeParts.join(" "));
 
                 return centralDate;
               };
@@ -597,8 +597,7 @@ jobs:
                 if (isNaN(date.getTime())) {
                   return null; // Invalid Date
                 }
-                date.setHours(23);
-
+                
                 // Convert UTC to Central Time (America/Chicago) using timeZone offset
                 const centralTimeFormat = new Intl.DateTimeFormat("en-US", {
                   timeZone: "America/Chicago",
@@ -613,10 +612,11 @@ jobs:
 
                 // Format and extract adjusted time
                 const centralTimeString = centralTimeFormat.format(date);
-                const centralDate = new Date(centralTimeString);
-
                 // Ensure time is set to 23:59:59 (end of the day)
-                centralDate.setHours(23, 59, 59, 999);
+                const dateTimeParts = centralTimeString.split(" ");
+                dateTimeParts[1] = "11:59:59.999"
+                dateTimeParts[2] = "PM"
+                const centralDate = new Date(dateTimeParts.join(" "));
 
                 return centralDate;
               };
