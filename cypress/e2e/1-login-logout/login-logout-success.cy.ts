@@ -45,7 +45,7 @@ function runLoginLogoutTest(userRef: string, deviceMode: DeviceModeType) {
 describe("User Login Logout Success Flow", () => {
   context(
     "Verifies user can successfully login and logout",
-    { tags: ["login", "logout", "regression", "positive", "login-tc1", "logout-tc1", "login-tc5"] },
+    { tags: ["login", "logout", "regression", "positive", "login-tc1", "logout-tc1", "login-tc5", "smoke"] },
     () => {
       afterEach(() => {
         cy.logoutFromNav();
