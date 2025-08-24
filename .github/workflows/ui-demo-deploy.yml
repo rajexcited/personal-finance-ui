@@ -69,7 +69,7 @@ jobs:
               if(!matchedMilestone) {
                 throw Error(`The requested milestone[${context.payload.inputs.milestone_version}] is not found.`);
               }
-              const matchingBranchOrTagName = "";
+              let matchingBranchOrTagName = "";
               if(matchedMilestone.state === "open" ) {
                 // either master or milestone branch are supported
                 const listBranchesResponse = await github.rest.repos.listBranches({
