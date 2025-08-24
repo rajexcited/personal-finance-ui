@@ -24,6 +24,9 @@ permissions:
   contents: read
   issues: read
 
+env:
+  DISPLAY_TROUBLESHOOT_OUTPUT: false
+
 jobs:
   workflow_eligible:
     name: Workflow Run eligibility
@@ -97,17 +100,18 @@ jobs:
           fi
           echo "is-milestone-merged-and-closed=$JUST_MERGED" >> $GITHUB_OUTPUT
 
-  # troubleshoot_eligible_outputs:
-  #   name: Troubleshoot Outputs
-  #   runs-on: ubuntu-latest
-  #   needs:
-  #     - workflow_eligible
-  #   steps:
-  #     - name: Display Needs
-  #       env:
-  #         NEEDS_WRKFLW_ELGBL: ${{ toJson(needs.workflow_eligible) }}
-  #       run: |
-  #         echo "Workflow Eligible Needs: $NEEDS_WRKFLW_ELGBL"
+  display_output:
+    name: Display Output
+    runs-on: ubuntu-latest
+    needs:
+      - workflow_eligible
+    if: env.DISPLAY_TROUBLESHOOT_OUTPUT == 'true'
+    steps:
+      - name: Display Needs
+        env:
+          NEEDS_WRKFLW_ELGBL: ${{ toJson(needs.workflow_eligible) }}
+        run: |
+          echo "Workflow Eligible Needs: $NEEDS_WRKFLW_ELGBL"
 
   delete_after_merge:
     name: Delete After Merge
@@ -138,20 +142,8 @@ jobs:
             echo "Merged timestamp does not fall within the allowed range. Automatic deletion is not supported."
             exit 1
           fi
-      # - name: Compare Milestone branch to master
-      #   uses: actions/github-script@v7
-      #   with:
-      #     script: |
-      #       const compareResponse = await github.rest.repos.compareCommits({
-      #         owner: context.repo.owner,
-      #         repo: context.repo.repo,
-      #         head: "master",
-      #         base: context.payload.pull_request.head.ref
-      #       });
-      #       console.log("milestone branch as base and master branch as head, compareResponse: ", compareResponse);
-      #       if (compareResponse.data.behind_by > 0) {
-      #         throw new Error(`Milestone branch [${context.payload.pull_request.head.ref}] is not fully merged to master. and master is behind by ${compareResponse.data.behind_by} commits.`);
-      #       }
+      # cannot verify master is behind by PR merged branch because of squash and merge.
+      # The triggered job after PR merged, doesnot need to verify commit behind, so skipping
       - name: Checkout
         uses: actions/checkout@v4
       - name: Delete Milestone Branch

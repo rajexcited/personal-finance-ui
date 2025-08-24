@@ -7,6 +7,14 @@ on:
         description: Enter milestone title
         required: true
         type: string
+      run_experiment:
+        description: Should run experiment?
+        required: true
+        type: choice
+        default: no
+        options:
+          - yes
+          - no
 
 jobs:
   summarize_create:
@@ -44,9 +52,9 @@ jobs:
           MILESTONE_TITLE: ${{ github.event.inputs.milestone_version }}
           GCP_LOCATION: ${{ vars.GCP_LOCATION }}
           GCP_MODEL_NAME: ${{ vars.GCP_MODEL_NAME }}
-          GRPC_VERBOSITY: "DEBUG"
-          GRPC_TRACE: "all"
-        if: github.event_name == 'experiment'
+          # GRPC_VERBOSITY: "DEBUG"
+          # GRPC_TRACE: "all"
+        if: github.event.inputs.run_experiment == 'yes'
         run: |
           cd .github
           # capture error code +-e
@@ -97,7 +105,7 @@ jobs:
           TARGET_REF: ${{ github.ref_name }}
         run: |
           # Check if the release already exists
-          if gh release view "$TAG" --repo="$REPO" > /dev/null 2>&1; then
+          if gh release view "$MILESTONE_TITLE" --repo="$REPO_FULLNAME" > /dev/null 2>&1; then
             echo "Updating existing release with Tag $MILESTONE_TITLE"
             gh release edit "$MILESTONE_TITLE" \
                 --draft --latest \
@@ -114,3 +122,5 @@ jobs:
                 --notes "$RELEASE_NOTES" \
                 --target "$TARGET_REF"
           fi
+          RELEASE_URL=$(gh release view "$MILESTONE_TITLE" --json url -q .url)
+          echo "::notice:: The Release draft is created. $RELEASE_URL"

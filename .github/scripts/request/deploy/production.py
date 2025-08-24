@@ -89,14 +89,20 @@ def validate_rollback_plan(rollback_list: List):
 
 def validate_pre_deployment_tasks(pre_deploy_task_list: List):
     verification_task_count = 0
+    unverified_task_count = 0
 
     vrfy_task_list = get_list_items(pre_deploy_task_list)
     for vrfy_task in vrfy_task_list:
-        if isinstance(vrfy_task, MdListItemTodo) and vrfy_task.is_checked:
-            verification_task_count += 1
+        if isinstance(vrfy_task, MdListItemTodo):
+            if vrfy_task.is_checked:
+                verification_task_count += 1
+            else:
+                unverified_task_count += 1
 
+    if unverified_task_count > 0:
+        raise ValueError("Pre Deployment Tasks section does not have all tasks checked. Please make to verify all tasks before deployment.")
     if verification_task_count == 0:
-        raise ValueError("Pre Deployment Tasks section is missing verification tasks. All tasks should be checked.")
+        raise ValueError("Pre Deployment Tasks section is missing verification tasks. and all tasks should be checked.")
 
 
 def validate_post_deployment_tasks(post_deploy_task_list: List):
@@ -189,7 +195,7 @@ def validate_deployment_schedule(deployment_schedule_list: List, deployment_type
     if deployment_type == DeploymentType.Release:
         if preferred_date_obj > milestone_due_date_obj:
             raise ValueError(f"Preferred Date and Time [{preferred_date_obj}] is after milestone due date[{milestone_due_date_obj}]")
-        if preferred_date_obj.strftime("%Y%m%d") != milestone_due_date_obj.strftime("%Y%m%d"):
+        if preferred_date_obj < milestone_due_date_obj-timedelta(days=1) or preferred_date_obj > milestone_due_date_obj:
             preferred_date_str = preferred_date_obj.strftime("%Y%m%d")
             milestone_dueon_str = milestone_due_date_obj.strftime("%Y%m%d")
             raise ValueError(f"Release date [{preferred_date_str}] is not same as milestone dueon date [{milestone_dueon_str}]")
