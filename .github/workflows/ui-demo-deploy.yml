@@ -111,7 +111,7 @@ jobs:
                 throw new Error(`The requested milestone version [${context.payload.inputs.milestone_version}] is not found in package.json [v${packageJsonObj.version}] in [${matchingBranchOrTagName}]`);
               }
               core.setOutput("branchOrTagName", matchingBranchOrTagName);
-            } catch(e) {
+            } catch(error) {
               console.error("failed reason: ", error);
               core.setFailed(error.message);
             }
