@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "https://rajexcited.github.io/personal-finance-ui/static/css/main.d3868465.css",
-    "main.js": "https://rajexcited.github.io/personal-finance-ui/static/js/main.6dc4cb4d.js",
-    "static/media/axios.cjs": "https://rajexcited.github.io/personal-finance-ui/static/media/axios.f50781e842ef05922fb7.cjs",
+    "main.css": "https://rajexcited.github.io/personal-finance-ui/static/css/main.71041888.css",
+    "main.js": "https://rajexcited.github.io/personal-finance-ui/static/js/main.078f8d03.js",
+    "static/media/axios.cjs": "https://rajexcited.github.io/personal-finance-ui/static/media/axios.ff3fb7d8645a1bce8597.cjs",
     "static/media/demo-logo.png": "https://rajexcited.github.io/personal-finance-ui/static/media/demo-logo.579bb2984be118d51e89.png",
     "index.html": "https://rajexcited.github.io/personal-finance-ui/index.html",
-    "main.d3868465.css.map": "https://rajexcited.github.io/personal-finance-ui/static/css/main.d3868465.css.map",
-    "main.6dc4cb4d.js.map": "https://rajexcited.github.io/personal-finance-ui/static/js/main.6dc4cb4d.js.map"
+    "main.71041888.css.map": "https://rajexcited.github.io/personal-finance-ui/static/css/main.71041888.css.map",
+    "main.078f8d03.js.map": "https://rajexcited.github.io/personal-finance-ui/static/js/main.078f8d03.js.map"
   },
   "entrypoints": [
-    "static/css/main.d3868465.css",
-    "static/js/main.6dc4cb4d.js"
+    "static/css/main.71041888.css",
+    "static/js/main.078f8d03.js"
   ]
 }
