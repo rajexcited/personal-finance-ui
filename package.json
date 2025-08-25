@@ -5,26 +5,11 @@
   "private": true,
   "homepage": "https://rajexcited.github.io/personal-finance-ui/",
   "scripts": {
-    "prestart": "npm run clean >dist/null 2>&1 && copy envlocal .env.local && copy src\\demo\\demo.ts src\\demo\\index.ts",
+    "prestart": "copy src\\demo\\demo.ts src\\demo\\index.ts",
     "start": "react-scripts start",
-    "clean": "del .env.local .env.production.local",
     "env-learn-link": "https://create-react-app.dev/docs/adding-custom-environment-variables/#what-other-env-files-can-be-used",
-    "prebuildlocalaws": "npm run build && copy envaws .env.local",
-    "buildlocalaws": "npm run buildwithoutmock",
-    "postbuildlocalaws": "npm run clean >dist/null 2>&1",
-    "prebuildwithoutmock": "copy src\\demo\\dummy.ts src\\demo\\index.ts",
-    "buildwithoutmock": "react-scripts build",
-    "postbuildwithoutmock": "copy src\\demo\\demo.ts src\\demo\\index.ts",
-    "precopytoinfra": "rmdir /S /Q ..\\personal-finance-backend-aws\\dist\\ui",
-    "copytoinfra": "xcopy /E build ..\\personal-finance-backend-aws\\dist\\ui\\",
     "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "prebuilddemo": "npm run clean >dist/null 2>&1 && copy envdemo .env.production.local && copy src\\demo\\demo.ts src\\demo\\index.ts",
-    "builddemo": "react-scripts build",
-    "predeploydemo": "npm run builddemo",
-    "deploydemo": "gh-pages -d build",
-    "postdeploydemo": "npm run clean >dist/null 2>&1"
+    "test": "react-scripts test"
   },
   "eslintConfig": {
     "extends": [
