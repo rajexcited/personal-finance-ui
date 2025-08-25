@@ -14,6 +14,7 @@ concurrency:
 
 env:
   ARTIFACT_NAME_PREFIX: personal-finance-ui-${{ github.event.issue.milestone.title }}
+  DISPLAY_TROUBLESHOOT_OUTPUT: false
 
 permissions:
   contents: write
@@ -25,11 +26,14 @@ jobs:
   display_output:
     name: Display Output
     runs-on: ubuntu-latest
+    if: env.DISPLAY_TROUBLESHOOT_OUTPUT == 'true'
     steps:
       # https://docs.github.com/en/webhooks/webhook-events-and-payloads#issues
-      - run: |
+      - env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
           echo "Issue number: ${{ github.event.issue.number }}"
-          echo "Issue title: ${{ github.event.issue.title }}"
+          echo "Issue title: $ISSUE_TITLE"
       - env:
           ISS_BODY: ${{ github.event.issue.body }}
         run: |
@@ -46,10 +50,14 @@ jobs:
           echo "Issue draft: ${{ github.event.issue.draft }}"
           echo "Issue locked: ${{ github.event.issue.locked }}"
           echo "Issue active lock reason: ${{ github.event.issue.active_lock_reason }}"
-      - run: |
-          echo "Issue labels name: ${{ toJson(github.event.issue.labels.*.name) }}"
-      - run: |
-          echo "Issue total comments: ${{ github.event.issue.comments }}"
+      - env:
+          ISSUE_LABELS: ${{ toJson(github.event.issue.labels.*.name) }}
+        run: |
+          echo "Issue labels name: $ISSUE_LABELS"
+      - env:
+          ISSUE_COMMENTS: ${{ github.event.issue.comments }}
+        run: |
+          echo "Issue total comments: $ISSUE_COMMENTS"
       - run: |
           echo "Issue updated at: ${{ github.event.issue.updated_at }}"
           echo "Issue closed at: ${{ github.event.issue.closed_at }}"

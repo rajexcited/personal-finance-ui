@@ -114,34 +114,33 @@ export class LoggerBase {
 type ConsoleLogType = "trace" | "debug" | "log" | "error" | "warn" | "info";
 const consoleprint = (ctype: ConsoleLogType, ...args: any[]) => {
   const p = args.flatMap((a) => a);
+  const fn = console[ctype];
 
   if (p.length === 0) return;
-  if (p.length === 1) console[ctype](p[0]);
-  else if (p.length === 2) console[ctype](p[0], p[1]);
-  else if (p.length === 3) console[ctype](p[0], p[1], p[2]);
-  else if (p.length === 4) console[ctype](p[0], p[1], p[2], p[3]);
-  else if (p.length === 5) console[ctype](p[0], p[1], p[2], p[3], p[4]);
-  else if (p.length === 6) console[ctype](p[0], p[1], p[2], p[3], p[4], p[5]);
-  else if (p.length === 7) console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6]);
-  else if (p.length === 8) console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
-  else if (p.length === 9) console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8]);
-  else if (p.length === 10) console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9]);
-  else if (p.length === 11) console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10]);
-  else if (p.length === 12) console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11]);
-  else if (p.length === 13) console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12]);
-  else if (p.length === 14) console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13]);
-  else if (p.length === 15) console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14]);
-  else if (p.length === 16) console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
-  else if (p.length === 17)
-    console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15], p[16]);
-  else if (p.length === 18)
-    console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15], p[16], p[17]);
+  if (p.length === 1) fn(p[0]);
+  else if (p.length === 2) fn(p[0], p[1]);
+  else if (p.length === 3) fn(p[0], p[1], p[2]);
+  else if (p.length === 4) fn(p[0], p[1], p[2], p[3]);
+  else if (p.length === 5) fn(p[0], p[1], p[2], p[3], p[4]);
+  else if (p.length === 6) fn(p[0], p[1], p[2], p[3], p[4], p[5]);
+  else if (p.length === 7) fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6]);
+  else if (p.length === 8) fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
+  else if (p.length === 9) fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8]);
+  else if (p.length === 10) fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9]);
+  else if (p.length === 11) fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10]);
+  else if (p.length === 12) fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11]);
+  else if (p.length === 13) fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12]);
+  else if (p.length === 14) fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13]);
+  else if (p.length === 15) fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14]);
+  else if (p.length === 16) fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
+  else if (p.length === 17) fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15], p[16]);
+  else if (p.length === 18) fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15], p[16], p[17]);
   else if (p.length === 19)
-    console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15], p[16], p[17], p[18]);
+    fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15], p[16], p[17], p[18]);
   else if (p.length === 20)
-    console[ctype](p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15], p[16], p[17], p[18], p[19]);
+    fn(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15], p[16], p[17], p[18], p[19]);
   else
-    console[ctype](
+    fn(
       p[0],
       p[1],
       p[2],
