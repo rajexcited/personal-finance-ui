@@ -192,7 +192,8 @@ export const addUpdateRefund = async (data: PurchaseRefundFields) => {
       status: ExpenseStatus.Enable,
       receipts: receiptResult.list || [],
       auditDetails: auditData(existingRefund.auditDetails.createdBy, existingRefund.auditDetails.createdOn),
-      currencyProfileId: await getDefaultCurrencyProfileId()
+      currencyProfileId: await getDefaultCurrencyProfileId(),
+      tags: data.tags.map((tg) => tg.replace(" ", "-"))
     };
 
     // delete updatedRefund.paymentAccountName;
@@ -211,7 +212,8 @@ export const addUpdateRefund = async (data: PurchaseRefundFields) => {
     status: ExpenseStatus.Enable,
     receipts: data.receipts.map((r) => ({ ...r, id: uuidv4(), relationId: "", url: "" })),
     auditDetails: auditData(),
-    currencyProfileId: await getDefaultCurrencyProfileId()
+    currencyProfileId: await getDefaultCurrencyProfileId(),
+    tags: data.tags.map((tg) => tg.replace(" ", "-"))
   };
 
   await refundDb.addUpdateItem(addedRefund);

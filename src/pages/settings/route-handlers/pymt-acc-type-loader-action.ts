@@ -1,6 +1,7 @@
-import { ActionFunctionArgs, json } from "react-router-dom";
+import { ActionFunctionArgs } from "react-router";
 import { pymtAccountTypeService } from "../../pymt-accounts";
 import { ConfigResource, HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../services";
+import { responseJson } from "../../../shared";
 
 export interface PymtAccTypeLoaderResource {
   pymtAccTypes: ConfigResource[];
@@ -17,8 +18,8 @@ export const paymentAccountTypeListLoaderHandler = async () => {
       type: "success",
       data: {
         pymtAccTypes: pymtAccTypeList,
-        pymtAccTags: pymtAccTags,
-      },
+        pymtAccTags: pymtAccTags
+      }
     };
 
     return response;
@@ -39,11 +40,11 @@ export const pymtAccTypeListActionHandler = async ({ request }: ActionFunctionAr
     errorMessage: "action not supported",
     data: {
       request: {
-        method: request.method,
-      },
-    },
+        method: request.method
+      }
+    }
   };
-  return json(error, { status: HttpStatusCode.InternalServerError });
+  return responseJson(error, HttpStatusCode.InternalServerError);
 };
 
 const pymtAccTypeAddUpdateActionHandler = async (request: Request) => {
@@ -55,7 +56,7 @@ const pymtAccTypeAddUpdateActionHandler = async (request: Request) => {
       await pymtAccountTypeService.addUpdateAccountType(data);
       const response: RouteHandlerResponse<string, null> = {
         type: "success",
-        data: "payment account updated",
+        data: "payment account updated"
       };
       return response;
     }
@@ -63,7 +64,7 @@ const pymtAccTypeAddUpdateActionHandler = async (request: Request) => {
       await pymtAccountTypeService.updateAccountTypeStatus(data);
       const response: RouteHandlerResponse<string, null> = {
         type: "success",
-        data: `payment account status is updated to ${data.status}`,
+        data: `payment account status is updated to ${data.status}`
       };
       return response;
     }
@@ -73,11 +74,11 @@ const pymtAccTypeAddUpdateActionHandler = async (request: Request) => {
       data: {
         request: {
           method: request.method,
-          data: data,
-        },
-      },
+          data: data
+        }
+      }
     };
-    return json(error, { status: HttpStatusCode.InternalServerError });
+    return responseJson(error, HttpStatusCode.InternalServerError);
   } catch (e) {
     logger.error("in action handler", e);
     return handleRouteActionError(e);
@@ -92,7 +93,7 @@ const pymtAccTypeDeleteActionHandler = async (request: Request) => {
     await pymtAccountTypeService.deleteAccountType(data.id);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: `payment account is deleted`,
+      data: `payment account is deleted`
     };
     return response;
   } catch (e) {

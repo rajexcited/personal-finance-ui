@@ -1,5 +1,5 @@
 import { FunctionComponent } from "react";
-import { useLocation, Navigate } from "react-router-dom";
+import { useLocation, Navigate } from "react-router";
 import useAuth from "../hooks/use-auth";
 
 

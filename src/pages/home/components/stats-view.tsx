@@ -1,5 +1,5 @@
 import { FunctionComponent, useEffect, useState } from "react";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData } from "react-router";
 import { getLogger, RouteHandlerResponse, StatBelongsTo } from "../services";
 import { Animated, Th } from "../../../components";
 import ReactMarkdown from "react-markdown";

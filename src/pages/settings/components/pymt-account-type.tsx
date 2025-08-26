@@ -1,6 +1,6 @@
 import { FunctionComponent, useEffect, useMemo, useState } from "react";
 import { Animated, ConfirmDialog, List, Switch } from "../../../components";
-import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
+import { useActionData, useLoaderData, useSubmit } from "react-router";
 import { Control, ListItem } from "../../../components/list";
 import { ActionId, ConfigResource, ConfigTypeBelongsTo, ConfigTypeStatus, DeleteConfigDetailsResource, getLogger, RouteHandlerResponse, TypeCategoryAction, UpdateConfigDetailsResource, UpdateConfigStatusResource } from "../services";
 import ViewConfig from "./view-config";

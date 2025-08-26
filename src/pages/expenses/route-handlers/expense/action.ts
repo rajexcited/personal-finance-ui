@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, json } from "react-router-dom";
+import { ActionFunctionArgs } from "react-router";
 import {
   purchaseService,
   HttpStatusCode,
@@ -11,6 +11,7 @@ import {
   incomeService
 } from "../../services";
 import { incrementPageNoToLoadMoreMonths } from "./share-list";
+import { responseJson } from "../../../../shared";
 
 const rhLogger = getLogger("route.handler.expense.action", null, null, "DISABLED");
 
@@ -34,7 +35,7 @@ export const expenseActionHandler = async ({ request }: ActionFunctionArgs) => {
       }
     }
   };
-  return json(error, { status: HttpStatusCode.InternalServerError });
+  return responseJson(error, HttpStatusCode.InternalServerError);
 };
 
 type ExpenseResourceKey = keyof ExpenseFields;

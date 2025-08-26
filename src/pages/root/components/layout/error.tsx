@@ -2,7 +2,7 @@ import { FunctionComponent } from "react";
 import { faBan } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { NavBar } from "../navigation";
-import { useRouteError, isRouteErrorResponse } from "react-router-dom";
+import { useRouteError, isRouteErrorResponse } from "react-router";
 import { getLogger } from "../../services";
 
 

@@ -1,6 +1,7 @@
-import { ActionFunctionArgs, json, redirect } from "react-router-dom";
+import { ActionFunctionArgs, redirect } from "react-router";
 import { getFullPath } from "../../root";
 import { getLogger, handleRouteActionError, HttpStatusCode, PymtAccountFields, pymtAccountService, RouteHandlerResponse } from "../services";
+import { responseJson } from "../../../shared";
 
 export const pymtAccountActionHandler = async ({ request }: ActionFunctionArgs) => {
   if (request.method === "POST") {
@@ -13,11 +14,11 @@ export const pymtAccountActionHandler = async ({ request }: ActionFunctionArgs) 
     errorMessage: "action not supported",
     data: {
       request: {
-        method: request.method,
-      },
-    },
+        method: request.method
+      }
+    }
   };
-  return json(error, { status: HttpStatusCode.InternalServerError });
+  return responseJson(error, HttpStatusCode.InternalServerError);
 };
 
 const pymtAccountAddUpdateActionHandler = async (request: Request) => {
@@ -42,7 +43,7 @@ const pymtAccountDeleteActionHandler = async (request: Request) => {
 
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: "payment account is deleted",
+      data: "payment account is deleted"
     };
     return response;
   } catch (e) {

@@ -3,7 +3,7 @@ import { faEdit, faTrash, faReceipt, faCircleDollarToSlot } from "@fortawesome/f
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ExpenseBelongsTo, ExpenseFields, formatTimestamp, getLogger } from "../../services";
 import { formatAmount } from "../../../../formatters";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { getFullPath } from "../../../root";
 import { useAuth } from "../../../auth";
 import { getExpenseDateInstance } from "../../services/expense";

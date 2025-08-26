@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, json } from "react-router-dom";
+import { ActionFunctionArgs } from "react-router";
 import { PurchaseTypeService } from "../../expenses";
 import {
   ConfigResource,
@@ -8,8 +8,9 @@ import {
   UpdateConfigDetailsResource,
   UpdateConfigStatusResource,
   getLogger,
-  handleRouteActionError,
+  handleRouteActionError
 } from "../services";
+import { responseJson } from "../../../shared";
 
 const purchaseTypeService = PurchaseTypeService();
 const rhLogger = getLogger("route.handler.settings.purchaseType.loader", null, null, "DISABLED");
@@ -29,8 +30,8 @@ export const purchaseTypeListLoaderHandler = async () => {
       type: "success",
       data: {
         purchaseTypes: purchaseTypeList,
-        purchaseTags: purchaseTypeTags,
-      },
+        purchaseTags: purchaseTypeTags
+      }
     };
 
     return response;
@@ -51,11 +52,11 @@ export const purchaseTypeListActionHandler = async ({ request }: ActionFunctionA
     errorMessage: "action not supported",
     data: {
       request: {
-        method: request.method,
-      },
-    },
+        method: request.method
+      }
+    }
   };
-  return json(error, { status: HttpStatusCode.InternalServerError });
+  return responseJson(error, HttpStatusCode.InternalServerError);
 };
 
 const purchaseTypeAddUpdateActionHandler = async (request: Request) => {
@@ -67,7 +68,7 @@ const purchaseTypeAddUpdateActionHandler = async (request: Request) => {
       await purchaseTypeService.addUpdateType(data);
       const response: RouteHandlerResponse<string, null> = {
         type: "success",
-        data: "purchase type updated",
+        data: "purchase type updated"
       };
       return response;
     }
@@ -75,7 +76,7 @@ const purchaseTypeAddUpdateActionHandler = async (request: Request) => {
       await purchaseTypeService.updateTypeStatus(data);
       const response: RouteHandlerResponse<string, null> = {
         type: "success",
-        data: `purchase type status is updated to ${data.status}`,
+        data: `purchase type status is updated to ${data.status}`
       };
       return response;
     }
@@ -85,11 +86,11 @@ const purchaseTypeAddUpdateActionHandler = async (request: Request) => {
       data: {
         request: {
           method: request.method,
-          data: data,
-        },
-      },
+          data: data
+        }
+      }
     };
-    return json(error, { status: HttpStatusCode.InternalServerError });
+    return responseJson(error, HttpStatusCode.InternalServerError);
   } catch (e) {
     logger.error("in action handler", e);
     return handleRouteActionError(e);
@@ -104,7 +105,7 @@ const purchaseTypeDeleteActionHandler = async (request: Request) => {
     await purchaseTypeService.deleteType(data);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: `purchase type is deleted`,
+      data: `purchase type is deleted`
     };
     return response;
   } catch (e) {

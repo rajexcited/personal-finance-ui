@@ -1,6 +1,6 @@
 import "./root.css";
 import { FunctionComponent } from "react";
-import { Outlet, useLocation, useNavigation } from "react-router-dom";
+import { Outlet, useLocation, useNavigation } from "react-router";
 import { faBank, faDashboard, faGears, faMoneyBills, faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getFullPath, NavBar } from "../navigation";

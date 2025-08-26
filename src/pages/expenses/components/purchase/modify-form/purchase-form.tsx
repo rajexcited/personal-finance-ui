@@ -1,5 +1,5 @@
 import { FunctionComponent, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { getFullPath } from "../../../../root";
 import { faStore, faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import {

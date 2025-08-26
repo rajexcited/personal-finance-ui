@@ -4,7 +4,7 @@ import { faCalculator, faMoneyBill, faBank, faGears, faUserPlus, faSignInAlt, fa
 import NavBarItem, { NavbarItemProp } from "./navbar-item";
 import { getFullPath } from "./page-url";
 import { useAuth } from "../../../auth";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { DeviceMode, useOrientation } from "../../../../hooks";
 import { TAB_HEADS as SettingsTabs } from "../../../settings/components/settings-root";
 import { getLogger } from "../../services";

@@ -49,7 +49,8 @@ export {
   isUuid,
   getShortForm,
   sleep,
-  testAttributes
+  testAttributes,
+  responseJson
 } from "./utils";
 
 export type { RouteHandlerResponse } from "./utils";

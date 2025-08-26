@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, json } from "react-router-dom";
+import { ActionFunctionArgs } from "react-router";
 import {
   ConfigResource,
   DeleteConfigDetailsResource,
@@ -7,9 +7,10 @@ import {
   UpdateConfigDetailsResource,
   UpdateConfigStatusResource,
   getLogger,
-  handleRouteActionError,
+  handleRouteActionError
 } from "../services";
 import { incomeTypeService } from "../../expenses/services";
+import { responseJson } from "../../../shared";
 
 const rhLogger = getLogger("route.handler.settings.incomeType.loader", null, null, "DISABLED");
 
@@ -28,8 +29,8 @@ export const incomeTypeListLoaderHandler = async () => {
       type: "success",
       data: {
         incomeTypes: incomeTypeList,
-        tags: tags,
-      },
+        tags: tags
+      }
     };
 
     return response;
@@ -50,11 +51,11 @@ export const incomeTypeListActionHandler = async ({ request }: ActionFunctionArg
     errorMessage: "action not supported",
     data: {
       request: {
-        method: request.method,
-      },
-    },
+        method: request.method
+      }
+    }
   };
-  return json(error, { status: HttpStatusCode.InternalServerError });
+  return responseJson(error, HttpStatusCode.InternalServerError);
 };
 
 const incomeTypeAddUpdateActionHandler = async (request: Request) => {
@@ -66,7 +67,7 @@ const incomeTypeAddUpdateActionHandler = async (request: Request) => {
       await incomeTypeService.addUpdateDetails(data);
       const response: RouteHandlerResponse<string, null> = {
         type: "success",
-        data: "income type updated",
+        data: "income type updated"
       };
       return response;
     }
@@ -74,7 +75,7 @@ const incomeTypeAddUpdateActionHandler = async (request: Request) => {
       await incomeTypeService.updateStatus(data);
       const response: RouteHandlerResponse<string, null> = {
         type: "success",
-        data: `income type status is updated to ${data.status}`,
+        data: `income type status is updated to ${data.status}`
       };
       return response;
     }
@@ -84,11 +85,11 @@ const incomeTypeAddUpdateActionHandler = async (request: Request) => {
       data: {
         request: {
           method: request.method,
-          data: data,
-        },
-      },
+          data: data
+        }
+      }
     };
-    return json(error, { status: HttpStatusCode.InternalServerError });
+    return responseJson(error, HttpStatusCode.InternalServerError);
   } catch (e) {
     logger.error("in action handler", e);
     return handleRouteActionError(e);
@@ -103,7 +104,7 @@ const incomeTypeDeleteActionHandler = async (request: Request) => {
     await incomeTypeService.deleteIncomeType(data);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: `income type is deleted`,
+      data: `income type is deleted`
     };
     return response;
   } catch (e) {

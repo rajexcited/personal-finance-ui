@@ -4,7 +4,7 @@ import { StatsViewPage } from "./stats-view";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSignIn, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import { getFullPath } from "../../root";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { testAttributes } from "../../../shared";
 
 

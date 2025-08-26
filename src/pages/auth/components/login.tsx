@@ -1,5 +1,5 @@
 import { FunctionComponent, useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router";
 import { Input, LoadSpinner, Animated, InputValidators, InputRef, ConfirmDialog } from "../../../components";
 import ReactMarkdown from "react-markdown";
 import useAuth from "../hooks/use-auth";

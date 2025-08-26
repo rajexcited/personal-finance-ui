@@ -2,7 +2,7 @@ import { faAngleUp, faAngleDown } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useState } from "react";
 import { PymtAccountFields, PymtAccStatus } from "../../services";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { getFullPath } from "../../../root";
 import { Animated } from "../../../../components";
 import { useAuth } from "../../../auth";

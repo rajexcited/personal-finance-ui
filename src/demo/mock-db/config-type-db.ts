@@ -275,7 +275,8 @@ export const addUpdateConfigType = async (data: ConfigResource) => {
     const updatingConfigType: ConfigResource = {
       ...data,
       auditDetails: auditData(existingConfigType.auditDetails.createdBy, existingConfigType.auditDetails.createdOn),
-      status: ConfigTypeStatus.Enable
+      status: ConfigTypeStatus.Enable,
+      tags: data.tags.map((tg) => tg.replace(" ", "-"))
     };
     await configTypeDb.addUpdateItem(updatingConfigType);
     return { updated: updatingConfigType };
@@ -284,7 +285,8 @@ export const addUpdateConfigType = async (data: ConfigResource) => {
   const addingConfigType: ConfigResource = {
     ...data,
     auditDetails: auditData(),
-    status: ConfigTypeStatus.Enable
+    status: ConfigTypeStatus.Enable,
+    tags: data.tags.map((tg) => tg.replace(" ", "-"))
   };
   await configTypeDb.addUpdateItem(addingConfigType);
 

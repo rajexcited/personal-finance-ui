@@ -1,9 +1,9 @@
 import "bulma/css/bulma.min.css";
 import "./index.css";
 import { createRoot } from "react-dom/client";
-import { RouterProvider } from 'react-router-dom';
+import { RouterProvider } from 'react-router';
 import { AuthContextProvider, router } from './pages';
-import { LoadSpinner } from './components';
+
 
 
 const App = () => {
@@ -12,7 +12,7 @@ const App = () => {
             {/* <p>{ window.navigator.userAgent }</p> */ }
 
             <AuthContextProvider>
-                <RouterProvider router={ router } fallbackElement={ <LoadSpinner loading={ true } id="routing" /> } />
+                <RouterProvider router={ router } />
             </AuthContextProvider>
             <p style={ { padding: "1rem" } }>&nbsp;</p>
         </section>

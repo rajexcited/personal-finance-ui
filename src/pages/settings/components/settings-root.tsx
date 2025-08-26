@@ -1,6 +1,6 @@
 import "./settings-root.css";
 import { FunctionComponent } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 import { faCoins, faGear, faMoneyBills, faPersonCircleQuestion, faPiggyBank, faUserAlt, faUserSecret } from "@fortawesome/free-solid-svg-icons";
 // importing from file to prevent circular dependency error.
 import { getFullPath } from "../../root/components/navigation/page-url";

@@ -1,5 +1,4 @@
-import { json } from "react-router-dom";
-import { HttpStatusCode, RouteHandlerResponse, handleRouteActionError } from "../../shared";
+import { HttpStatusCode, RouteHandlerResponse, handleRouteActionError, responseJson } from "../../shared";
 import { ErrorReceiptProps } from "./field-types";
 
 export class ReceiptUploadError extends Error {
@@ -63,6 +62,6 @@ export class ReceiptUploadError extends Error {
     });
     const messages = (await Promise.all(messagePromises)).filter((m) => m);
     const response: RouteHandlerResponse<null, null> = { type: "error", errorMessage: messages.join("\n"), data: null };
-    return json(response, { status: httpStatus });
+    return responseJson(response, httpStatus);
   }
 }

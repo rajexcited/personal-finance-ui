@@ -1,6 +1,14 @@
-import { ActionFunctionArgs, json } from "react-router-dom";
+import { ActionFunctionArgs } from "react-router";
 import { authService, UpdateUserDetailsResource } from "../../auth";
-import { HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError, CurrencyProfileResource, currencyProfileService } from "../services";
+import {
+  HttpStatusCode,
+  RouteHandlerResponse,
+  getLogger,
+  handleRouteActionError,
+  CurrencyProfileResource,
+  currencyProfileService
+} from "../services";
+import { responseJson } from "../../../shared";
 
 export interface ProfileDetailsLoaderResource {
   nameDetails: UpdateUserDetailsResource;
@@ -45,7 +53,7 @@ export const profileDetailsActionHandler = async ({ request }: ActionFunctionArg
       }
     }
   };
-  return json(error, { status: HttpStatusCode.InternalServerError });
+  return responseJson(error, HttpStatusCode.InternalServerError);
 };
 
 const nameChangedActionHandler = async (request: Request, data: UpdateUserDetailsResource) => {
