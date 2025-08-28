@@ -27,7 +27,7 @@ interface ListProps {
     items: ListItem[];
     controlsInEllipsis: Control[];
     controlsBeforeEllipsis: Control[];
-    viewActionContentInMobile: JSX.Element | JSX.Element[] | React.ReactNode;
+    viewActionContentInMobile: React.JSX.Element | React.JSX.Element[] | React.ReactNode;
 }
 
 /**

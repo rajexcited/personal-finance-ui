@@ -3,7 +3,7 @@ import { getLogger } from "../shared";
 
 interface ScrollResetProps {
     once: boolean;
-    children: JSX.Element;
+    children: React.JSX.Element;
 }
 
 const fcLogger = getLogger("FC.ScrollReset", null, null, "DISABLED");

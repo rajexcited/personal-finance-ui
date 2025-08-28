@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter } from "react-router";
 import RootLayout from "./root";
 import ErrorPage from "./error";
 import { getShortPath, pathBaseName } from "../navigation";

@@ -8,7 +8,7 @@ import { ObjectDeepDifference, getLogger, testAttributes } from "../../../shared
 
 
 interface AuthContextProviderProps {
-    children: JSX.Element;
+    children: React.JSX.Element;
 }
 
 enum ExpireStatus {

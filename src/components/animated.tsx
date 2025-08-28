@@ -1,11 +1,11 @@
-import { FunctionComponent, useState, useRef, useEffect } from "react";
+import React, { FunctionComponent, useState, useRef, useEffect } from "react";
 import "./animated.css";
 import "animate.css/animate.min.css";
 import { getLogger, sleep } from "../shared";
 
 
 export interface AnimatedProps {
-    children: JSX.Element | JSX.Element[] | React.ReactNode;
+    children: React.JSX.Element | React.JSX.Element[] | React.ReactNode;
     animatedIn?: string;
     animatedOut?: string;
     isPlayIn: boolean;

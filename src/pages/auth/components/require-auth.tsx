@@ -4,7 +4,7 @@ import useAuth from "../hooks/use-auth";
 
 
 interface RequireAuthProps {
-    children: JSX.Element;
+    children: React.JSX.Element;
 }
 
 const RequireAuth: FunctionComponent<RequireAuthProps> = ({ children }) => {

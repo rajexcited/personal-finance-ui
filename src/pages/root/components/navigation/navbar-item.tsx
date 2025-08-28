@@ -13,7 +13,7 @@ export interface NavbarItemProp {
 }
 
 const NavBarItem: FunctionComponent<NavbarItemProp> = ({ icon, label, link, id, isSelected }) => {
-    let itemLabelChild: JSX.Element;
+    let itemLabelChild: React.JSX.Element;
     if (icon) {
         itemLabelChild = (
             <span className="icon-text" key={ label }>

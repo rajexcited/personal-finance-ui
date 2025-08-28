@@ -22,8 +22,8 @@ const LoginPage: FunctionComponent = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [submitStatus, setSubmitStatus] = useState(LoginSubmitStatus.NotStarted);
     const [existingSession, setExistingSession] = useState(false);
-    const emailRef = useRef<InputRef>();
-    const passwordRef = useRef<InputRef>();
+    const emailRef = useRef<InputRef>(null);
+    const passwordRef = useRef<InputRef>(null);
 
     const location = useLocation();
     const navigate = useNavigate();
