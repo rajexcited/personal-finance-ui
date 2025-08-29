@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, json, redirect } from "react-router-dom";
+import { ActionFunctionArgs, redirect } from "react-router";
 import { getFullPath } from "../../../root";
 import {
   purchaseService,
@@ -12,6 +12,7 @@ import {
 import { ReceiptProps } from "../../../../components/receipt";
 import { uploadReceipts } from "../receipt/upload";
 import { getFormData } from "../common";
+import { responseJson } from "../../../../shared";
 
 const rhLogger = getLogger("route.handler.purchase.action", null, null, "DISABLED");
 
@@ -30,7 +31,7 @@ export const purchaseActionHandler = async ({ request }: ActionFunctionArgs) => 
       }
     }
   };
-  return json(error, { status: HttpStatusCode.InternalServerError });
+  return responseJson(error, HttpStatusCode.InternalServerError);
 };
 
 const purchaseAddUpdateActionHandler = async (request: Request) => {

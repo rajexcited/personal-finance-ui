@@ -92,7 +92,8 @@ export const addUpdatePymtAccount = async (data: PymtAccountFields) => {
       const updatingPymtAcc: PymtAccountFields = {
         ...data,
         status: existingPymtAcc.status,
-        auditDetails: auditData(existingPymtAcc.auditDetails.createdBy, existingPymtAcc.auditDetails.createdOn)
+        auditDetails: auditData(existingPymtAcc.auditDetails.createdBy, existingPymtAcc.auditDetails.createdOn),
+        tags: data.tags.map((tg) => tg.replace(" ", "-"))
       };
       await pymtAccDb.addUpdateItem(updatingPymtAcc);
       return { updated: updatingPymtAcc };
@@ -101,7 +102,8 @@ export const addUpdatePymtAccount = async (data: PymtAccountFields) => {
       ...data,
       id: uuidv4(),
       auditDetails: auditData(),
-      status: PymtAccStatus.Enable
+      status: PymtAccStatus.Enable,
+      tags: data.tags.map((tg) => tg.replace(" ", "-"))
     };
     await pymtAccDb.addItem(addedPymtAcc);
     return { added: addedPymtAcc };

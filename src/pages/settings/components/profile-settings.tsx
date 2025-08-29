@@ -1,7 +1,7 @@
 import "./profile-settings.css";
 import { FormEventHandler, FunctionComponent, MouseEventHandler, useEffect, useState } from "react";
 import { Animated, Input } from "../../../components";
-import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
+import { useActionData, useLoaderData, useSubmit } from "react-router";
 import { getFullPath } from "../../root";
 import { RouteHandlerResponse, getLogger } from "../services";
 import { ProfileDetailsLoaderResource } from "../route-handlers/profile-loader-action";

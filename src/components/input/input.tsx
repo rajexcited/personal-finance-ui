@@ -228,7 +228,7 @@ const Input = forwardRef((props: InputProps, ref) => {
         }
     };
 
-    let tooltip: JSX.Element | undefined;
+    let tooltip: React.JSX.Element | undefined;
     if (props.tooltip) {
         tooltip = <span className="icon has-text-info tooltip is-tooltip-multiline is-tooltip-right" data-tooltip={ props.tooltip }> <FontAwesomeIcon icon={ faInfoCircle } /> </span>;
     }

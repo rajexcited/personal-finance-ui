@@ -24,7 +24,7 @@ type ExpenseQueryParams = Record<"pageNo" | "status" | "pageMonths" | "belongsTo
 const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
 
 const rootPath = "/expenses";
-const _logger = getLogger("service.expense", null, null, "DEBUG");
+const _logger = getLogger("service.expense", null, null, "DISABLED");
 
 const getExpenseCount = pMemoize(async (queryParams: ExpenseQueryParams) => {
   const countResponse = await axios.get(`${rootPath}/count`, { params: queryParams });

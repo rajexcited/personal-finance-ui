@@ -1,7 +1,8 @@
-import { ActionFunctionArgs, json } from "react-router-dom";
+import { ActionFunctionArgs } from "react-router";
 import { authService, UpdateUserPasswordResource, UserDetailsResource } from "../../auth";
 import { ActionRelation, HttpStatusCode, RouteHandlerResponse, getLogger, handleRouteActionError } from "../services";
 import { UserLoginResource } from "../../auth/services";
+import { responseJson } from "../../../shared";
 
 export const securityDetailsLoaderHandler = async () => {
   const logger = getLogger("route.securityDetailsLoaderHandler");
@@ -9,7 +10,7 @@ export const securityDetailsLoaderHandler = async () => {
     const userDetails = await authService.getUserDetails();
     const response: RouteHandlerResponse<UserDetailsResource, null> = {
       type: "success",
-      data: userDetails,
+      data: userDetails
     };
     return response;
   } catch (e) {
@@ -34,11 +35,11 @@ export const securityDetailsActionHandler = async ({ request }: ActionFunctionAr
     errorMessage: "action not supported",
     data: {
       request: {
-        method: request.method,
-      },
-    },
+        method: request.method
+      }
+    }
   };
-  return json(error, { status: HttpStatusCode.InternalServerError });
+  return responseJson(error, HttpStatusCode.InternalServerError);
 };
 
 const detailsChangedActionHandler = async (data: UpdateUserPasswordResource) => {
@@ -47,7 +48,7 @@ const detailsChangedActionHandler = async (data: UpdateUserPasswordResource) => 
     await authService.updatePassword(data);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: "user password is updated",
+      data: "user password is updated"
     };
     return response;
   } catch (e) {
@@ -62,7 +63,7 @@ const deleteUserAccountActionHandler = async (data: UserLoginResource) => {
     await authService.deleteUserAccount(data);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: "user account deletion request is submitted",
+      data: "user account deletion request is submitted"
     };
     return response;
   } catch (e) {

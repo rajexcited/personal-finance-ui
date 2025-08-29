@@ -1,5 +1,5 @@
 import { FunctionComponent } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router";
 import { getFullPath } from "../../root";
 import { useAuth } from "../../auth";
 import { testAttributes } from "../../../shared";

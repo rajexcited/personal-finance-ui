@@ -9,7 +9,7 @@ interface ViewDialogProps {
     /** when open dialog upon initialized  */
     openDefault: boolean;
     /** if content is not present, default loading indicator will be displayed */
-    children: JSX.Element | JSX.Element[] | React.ReactNode;
+    children: React.JSX.Element | React.JSX.Element[] | React.ReactNode;
     /** default is false. if true, show loading indicator */
     loading?: boolean;
     /** title to dialog */

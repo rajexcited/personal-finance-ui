@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, json } from "react-router-dom";
+import { ActionFunctionArgs } from "react-router";
 import {
   DeleteSharePersonResource,
   HttpStatusCode,
@@ -10,6 +10,7 @@ import {
   handleRouteActionError,
   sharePersonService
 } from "../services";
+import { responseJson } from "../../../shared";
 
 const rhLogger = getLogger("route.handler.settings.sharePerson.loader", null, null, "DISABLED");
 
@@ -51,7 +52,7 @@ export const sharePersonListActionHandler = async ({ request }: ActionFunctionAr
       }
     }
   };
-  return json(error, { status: HttpStatusCode.InternalServerError });
+  return responseJson(error, HttpStatusCode.InternalServerError);
 };
 
 const sharePersonAddUpdateActionHandler = async (request: Request) => {
@@ -88,7 +89,7 @@ const sharePersonAddUpdateActionHandler = async (request: Request) => {
         }
       }
     };
-    return json(error, { status: HttpStatusCode.InternalServerError });
+    return responseJson(error, HttpStatusCode.InternalServerError);
   } catch (e) {
     logger.error("in action handler", e);
     return handleRouteActionError(e);

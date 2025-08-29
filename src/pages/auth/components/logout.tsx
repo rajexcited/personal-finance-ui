@@ -1,6 +1,6 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import useAuth from "../hooks/use-auth";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { testAttributes } from "../../../shared";
 
 

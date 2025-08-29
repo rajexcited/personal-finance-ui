@@ -1,5 +1,5 @@
 import { FunctionComponent } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
@@ -13,7 +13,7 @@ export interface NavbarItemProp {
 }
 
 const NavBarItem: FunctionComponent<NavbarItemProp> = ({ icon, label, link, id, isSelected }) => {
-    let itemLabelChild: JSX.Element;
+    let itemLabelChild: React.JSX.Element;
     if (icon) {
         itemLabelChild = (
             <span className="icon-text" key={ label }>

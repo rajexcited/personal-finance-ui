@@ -1,6 +1,6 @@
 import "./security.css";
 import { FunctionComponent, useState, useEffect } from "react";
-import { useActionData, useLoaderData, useSubmit } from "react-router-dom";
+import { useActionData, useLoaderData, useSubmit } from "react-router";
 import ReactMarkdown from "react-markdown";
 import { Animated } from "../../../../components";
 import { UpdateUserPasswordResource, useAuth, UserDetailsResource, UserLoginResource } from "../../../auth";

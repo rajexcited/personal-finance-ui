@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs } from "react-router-dom";
+import { LoaderFunctionArgs } from "react-router";
 import {
   ConfigResource,
   PymtAccountFields,
@@ -6,7 +6,7 @@ import {
   descCompare,
   RouteHandlerResponse,
   getLogger,
-  handleRouteActionError,
+  handleRouteActionError
 } from "../services";
 import { CurrencyProfileResource, currencyProfileService } from "../../settings/services";
 
@@ -24,7 +24,7 @@ export const pymtAccountListLoaderHandler = async () => {
     pymtAccList.sort((a, b) => descCompare(a.auditDetails.updatedOn, b.auditDetails.updatedOn));
     const response: RouteHandlerResponse<PymtAccountFields[], null> = {
       type: "success",
-      data: pymtAccList,
+      data: pymtAccList
     };
     return response;
   } catch (e) {
@@ -50,8 +50,8 @@ export const pymtAccountDetailLoaderHandler = async ({ params }: LoaderFunctionA
         pymtAccountDetail,
         pymtAccountTags: await pymtAccountTagsPromise,
         categoryTypes: await categoryTypesPromise,
-        currencyProfiles: await currencyProfilePromise,
-      },
+        currencyProfiles: await currencyProfilePromise
+      }
     };
     return response;
   } catch (e) {
@@ -75,8 +75,8 @@ export const pymtAccountDetailSupportingLoaderHandler = async () => {
         pymtAccountDetail: null,
         pymtAccountTags: await pymtAccountTagsPromise,
         categoryTypes: await categoryTypesPromise,
-        currencyProfiles: await currencyProfilePromise,
-      },
+        currencyProfiles: await currencyProfilePromise
+      }
     };
     return response;
   } catch (e) {

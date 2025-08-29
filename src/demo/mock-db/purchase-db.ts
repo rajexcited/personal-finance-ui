@@ -221,7 +221,8 @@ export const addUpdatePurchase = async (data: PurchaseFields) => {
       receipts: receiptResult.list || [],
       items: [...updatedExistingPurchaseIems, ...addedNewPurchaseIems],
       auditDetails: auditData(existingPurchase.auditDetails.createdBy, existingPurchase.auditDetails.createdOn),
-      currencyProfileId: await getDefaultCurrencyProfileId()
+      currencyProfileId: await getDefaultCurrencyProfileId(),
+      tags: data.tags.map((tg) => tg.replace(" ", "-"))
     };
     delete updatedPurchase.purchaseTypeName;
     delete updatedPurchase.paymentAccountName;
@@ -241,7 +242,8 @@ export const addUpdatePurchase = async (data: PurchaseFields) => {
     receipts: data.receipts.map((r) => ({ ...r, id: uuidv4(), relationId: "", url: "" })),
     items: data.items?.map((ei) => ({ ...ei, expenseCategoryName: undefined, id: uuidv4() })) || [],
     auditDetails: auditData(),
-    currencyProfileId: await getDefaultCurrencyProfileId()
+    currencyProfileId: await getDefaultCurrencyProfileId(),
+    tags: data.tags.map((tg) => tg.replace(" ", "-"))
   };
 
   await purchaseDb.addUpdateItem(addedPurchase);

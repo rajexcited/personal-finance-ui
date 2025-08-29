@@ -1,5 +1,5 @@
 import { FunctionComponent, useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router";
 import { Input, LoadSpinner, Animated, InputValidators, InputRef, ConfirmDialog } from "../../../components";
 import ReactMarkdown from "react-markdown";
 import useAuth from "../hooks/use-auth";
@@ -16,14 +16,14 @@ enum LoginSubmitStatus {
     CompletedError = "error-response"
 }
 
-const fcLogger = getLogger("FC.LoginPage", null, null, "DEBUG");
+const fcLogger = getLogger("FC.LoginPage", null, null, "DISABLED");
 
 const LoginPage: FunctionComponent = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [submitStatus, setSubmitStatus] = useState(LoginSubmitStatus.NotStarted);
     const [existingSession, setExistingSession] = useState(false);
-    const emailRef = useRef<InputRef>();
-    const passwordRef = useRef<InputRef>();
+    const emailRef = useRef<InputRef>(null);
+    const passwordRef = useRef<InputRef>(null);
 
     const location = useLocation();
     const navigate = useNavigate();

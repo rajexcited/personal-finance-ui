@@ -160,7 +160,8 @@ export const addUpdateIncome = async (data: IncomeFields) => {
       status: ExpenseStatus.Enable,
       receipts: receiptResult.list || [],
       auditDetails: auditData(existingIncome.auditDetails.createdBy, existingIncome.auditDetails.createdOn),
-      currencyProfileId: await getDefaultCurrencyProfileId()
+      currencyProfileId: await getDefaultCurrencyProfileId(),
+      tags: data.tags.map((tg) => tg.replace(" ", "-"))
     };
 
     // delete updatedIncome.paymentAccountName;
@@ -179,7 +180,8 @@ export const addUpdateIncome = async (data: IncomeFields) => {
     status: ExpenseStatus.Enable,
     receipts: data.receipts.map((r) => ({ ...r, id: uuidv4(), relationId: "", url: "" })),
     auditDetails: auditData(),
-    currencyProfileId: await getDefaultCurrencyProfileId()
+    currencyProfileId: await getDefaultCurrencyProfileId(),
+    tags: data.tags.map((tg) => tg.replace(" ", "-"))
   };
 
   await incomeDb.addUpdateItem(addedIncome);

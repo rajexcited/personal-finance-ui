@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, json } from "react-router-dom";
+import { ActionFunctionArgs } from "react-router";
 import {
   ConfigResource,
   DeleteConfigDetailsResource,
@@ -7,9 +7,10 @@ import {
   UpdateConfigDetailsResource,
   UpdateConfigStatusResource,
   getLogger,
-  handleRouteActionError,
+  handleRouteActionError
 } from "../services";
 import { refundReasonService } from "../../expenses/services";
+import { responseJson } from "../../../shared";
 
 const rhLogger = getLogger("route.handler.settings.refundReason.loader", null, null, "DISABLED");
 
@@ -28,8 +29,8 @@ export const refundReasonListLoaderHandler = async () => {
       type: "success",
       data: {
         refundReasons: reasonList,
-        reasonTags: reasonTags,
-      },
+        reasonTags: reasonTags
+      }
     };
 
     return response;
@@ -50,11 +51,11 @@ export const refundReasonListActionHandler = async ({ request }: ActionFunctionA
     errorMessage: "action not supported",
     data: {
       request: {
-        method: request.method,
-      },
-    },
+        method: request.method
+      }
+    }
   };
-  return json(error, { status: HttpStatusCode.InternalServerError });
+  return responseJson(error, HttpStatusCode.InternalServerError);
 };
 
 const refundReasonAddUpdateActionHandler = async (request: Request) => {
@@ -66,7 +67,7 @@ const refundReasonAddUpdateActionHandler = async (request: Request) => {
       await refundReasonService.addUpdateReason(data);
       const response: RouteHandlerResponse<string, null> = {
         type: "success",
-        data: "refund reason updated",
+        data: "refund reason updated"
       };
       return response;
     }
@@ -74,7 +75,7 @@ const refundReasonAddUpdateActionHandler = async (request: Request) => {
       await refundReasonService.updateStatus(data);
       const response: RouteHandlerResponse<string, null> = {
         type: "success",
-        data: `refund reason status is updated to ${data.status}`,
+        data: `refund reason status is updated to ${data.status}`
       };
       return response;
     }
@@ -84,11 +85,11 @@ const refundReasonAddUpdateActionHandler = async (request: Request) => {
       data: {
         request: {
           method: request.method,
-          data: data,
-        },
-      },
+          data: data
+        }
+      }
     };
-    return json(error, { status: HttpStatusCode.InternalServerError });
+    return responseJson(error, HttpStatusCode.InternalServerError);
   } catch (e) {
     logger.error("in action handler", e);
     return handleRouteActionError(e);
@@ -103,7 +104,7 @@ const refundReasonDeleteActionHandler = async (request: Request) => {
     await refundReasonService.deleteReason(data);
     const response: RouteHandlerResponse<string, null> = {
       type: "success",
-      data: `refund reason is deleted`,
+      data: `refund reason is deleted`
     };
     return response;
   } catch (e) {

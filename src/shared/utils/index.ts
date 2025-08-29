@@ -11,7 +11,7 @@ export {
   sleep
 } from "./date-utils";
 
-export { handleRouteActionError, getDefaultIfError } from "./error-handler-utils";
+export { handleRouteActionError, getDefaultIfError, responseJson } from "./error-handler-utils";
 export type { RouteHandlerResponse } from "./error-handler-utils";
 export {
   BadRequestError,

@@ -1,5 +1,5 @@
 import { FunctionComponent, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { getFullPath } from "../../../root";
 import { TagsInput, Input, TextArea, DropDown, InputValidators, DropDownItemType, CurrencySymbol } from "../../../../components";
 import { ConfigResource, PymtAccountFields, PymtAccStatus, getLogger } from "../../services";

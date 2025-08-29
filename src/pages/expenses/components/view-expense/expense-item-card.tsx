@@ -1,7 +1,7 @@
 import { faAngleUp, faAngleDown, faEdit, faTrash, faReceipt, faCircleDollarToSlot, faShoppingCart, faExchangeAlt, faArrowCircleUp, faDollarSign, faUndo, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { getFullPath } from "../../../root";
 import { Animated, VerifyIndicator } from "../../../../components";
 import { useAuth } from "../../../auth";

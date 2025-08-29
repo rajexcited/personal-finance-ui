@@ -29,7 +29,7 @@ import { CacheAction, ReceiptProps } from "../../../../components/receipt";
 import * as incomeTypeService from "./income-type-service";
 import { StatBelongsTo, statService } from "../../../home/services";
 
-const serviceLogger = getLogger("service.expense.income", null, null, "DEBUG");
+const serviceLogger = getLogger("service.expense.income", null, null, "DISABLED");
 
 const incomeDb = new MyLocalDatabase<IncomeFields>(LocalDBStore.Expense);
 const tagService = TagsService(TagBelongsTo.Income);
