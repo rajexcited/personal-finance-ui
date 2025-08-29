@@ -23,10 +23,19 @@ permissions:
   pull-requests: write
 
 jobs:
+  troubleshoot_display_eiligible:
+    name: Eligible Output Troubleshooting
+    runs-on: ubuntu-latest
+    outputs:
+      troubleshoot-display: ${{ env.DISPLAY_TROUBLESHOOT_OUTPUT }}
+    steps:
+      - run: echo hello
+
   display_output:
     name: Display Output
     runs-on: ubuntu-latest
-    if: env.DISPLAY_TROUBLESHOOT_OUTPUT == 'true'
+    needs: troubleshoot_display_eiligible
+    if: needs.troubleshoot_display_eiligible.outputs.troubleshoot-display == 'true'
     steps:
       # https://docs.github.com/en/webhooks/webhook-events-and-payloads#issues
       - env:

@@ -106,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - workflow_eligible
-    if: ${{ needs.workflow_eligible.outputs.troubleshoot-display == 'true' }}
+    if: needs.workflow_eligible.outputs.troubleshoot-display == 'true'
     steps:
       - name: Display Needs
         env:
