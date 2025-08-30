@@ -107,16 +107,14 @@ describe("Payment Account - Update Flow", () => {
     "A logged in and active user can update an existing payment account successfully",
     { tags: ["payment-account", "regression", "positive", "update", "update-payment-account-tc3"] },
     () => {
-      context("update all fields", () => {
-        it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
-          cy.setViewport("pixel9-pro");
-          runUpdatePaymentAccountTest({ existingRef: "travel-rewards-cc", updatingRef: "travel-saving" });
-        });
+      it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {
+        cy.setViewport("pixel9-pro");
+        runUpdatePaymentAccountTest({ existingRef: "travel-rewards-cc", updatingRef: "travel-saving" });
+      });
 
-        it("via large desktop view", { tags: ["desktop"] }, () => {
-          cy.setViewport("desktop");
-          runUpdatePaymentAccountTest({ existingRef: "travel-saving", updatingRef: "travel-rewards-cc" });
-        });
+      it("via large desktop view", { tags: ["desktop"] }, () => {
+        cy.setViewport("desktop");
+        runUpdatePaymentAccountTest({ existingRef: "travel-saving", updatingRef: "travel-rewards-cc" });
       });
     }
   );

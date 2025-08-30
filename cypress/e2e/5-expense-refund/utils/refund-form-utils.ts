@@ -65,22 +65,26 @@ const loadMoreItemsInDropdown = (itemText: string, remainingRetries: number): Cy
   if (remainingRetries < 0) {
     return cy.wrap(0);
   }
-  return cy
-    .get(".dropdown-menu")
-    .should("be.visible")
-    .then(($menu) => {
-      const $list = $menu.find(".dropdown-item");
-      const filtered = $list.filter(':contains("' + itemText + '")');
-      cy.log(`found ${filtered.length} dropdown items, remaining retries: ${remainingRetries}`);
-      if (filtered.length) {
-        return cy.wrap(filtered.length);
-      }
-      cy.get('[data-test="load-more-action"]').should("be.visible").click();
-      cy.get('[data-test="load-more-action"]').should("not.be.visible");
-      cy.get('button[data-test="toggle-dropdown-action"]').click();
-      cy.get('[data-test="dropdown-item-wait"]').should("not.exist");
-      return loadMoreItemsInDropdown(itemText, remainingRetries - 1);
-    });
+  return (
+    cy
+      .wait(1000)
+      // .pause()
+      .get(".dropdown-menu")
+      .should("be.visible")
+      .then(($menu) => {
+        const $list = $menu.find(".dropdown-item");
+        const filtered = $list.filter(':contains("' + itemText + '")');
+        cy.log(`found ${filtered.length} dropdown items, remaining retries: ${remainingRetries}`);
+        if (filtered.length) {
+          return cy.wrap(filtered.length);
+        }
+        cy.get('[data-test="load-more-action"]').should("be.visible").click();
+        cy.get('[data-test="load-more-action"]').should("not.be.visible");
+        cy.get('button[data-test="toggle-dropdown-action"]').click();
+        cy.get('[data-test="dropdown-item-wait"]').should("not.exist");
+        return loadMoreItemsInDropdown(itemText, remainingRetries - 1);
+      })
+  );
 };
 
 export const selectPurchase = (options: { existingPurchaseData?: ExpensePurchaseDetailType; newPurchaseData?: ExpensePurchaseDetailType }) => {
@@ -91,16 +95,20 @@ export const selectPurchase = (options: { existingPurchaseData?: ExpensePurchase
   const newPurchaseData = options.newPurchaseData;
   if (newPurchaseData && options.existingPurchaseData?.ref !== newPurchaseData.ref) {
     const dropdownSelectorId = "purchase-dd";
-    cy.get(`[data-test="dropdown-field"][data-dropdown-id="${dropdownSelectorId}"]`)
+    cy
+      // .pause()
+      .wait(1000)
+      .get(`[data-test="dropdown-field"][data-dropdown-id="${dropdownSelectorId}"]`)
       .should("be.visible")
       .within(() => {
         cy.get('button[data-test="toggle-dropdown-action"]').click();
-        cy.get('[data-test="load-more-action"]').should("be.visible").click().should("not.be.visible");
+        cy.get('[data-test="load-more-action"]').should("be.visible").click();
+        cy.get('[data-test="load-more-action"]').should("not.be.visible");
         cy.get('button[data-test="toggle-dropdown-action"]').click();
         cy.get('[data-test="dropdown-item-wait"]').should("not.exist");
         cy.get(`#${dropdownSelectorId}search-items`).should("be.visible").should("be.enabled").type(newPurchaseData.amount);
         loadMoreItemsInDropdown(getPurchaseText(newPurchaseData), 2);
-        cy.pause();
+        // cy.pause();
         // cy.get(".dropdown-menu")
         //   .should("be.visible")
         //   .find(".dropdown-item")

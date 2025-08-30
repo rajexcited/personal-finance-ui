@@ -1,23 +1,38 @@
 {
   "user1-success": {
+    "description": "all other scenarios, login, expense, payment accounts, settings, etc.",
     "firstName": "Steven",
     "lastName": "Jobs",
     "emailId": "steven.jobs@demo.com",
     "password": "st<Ven987",
-    "countryText": "United States of America"
+    "countryText": "United States of America",
+    "countryCode": "USA"
   },
-  "user3-duplicate": {
-    "firstName": "Steven",
-    "lastName": "Jobs",
-    "emailId": "steven.jobs.exists@demo.com",
-    "password": "$tEven123",
-    "countryText": "United States of America"
-  },
-  "user2-success": {
+  "user2-signup-success": {
+    "description": "signup success scenario",
     "firstName": "sardar vallabhbhai",
     "lastName": "patel",
     "emailId": "sardar.vallabhbhai.patel@demo.com",
     "password": "$Ardar456",
-    "countryText": "United States of America"
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user4-signup-success": {
+    "description": "signup success scenario",
+    "firstName": "vallabhbhai",
+    "lastName": "patel",
+    "emailId": "vallabhbhai.patel@demo.com",
+    "password": "s@Rdar456",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user3-duplicate": {
+    "description": "signup duplicate and login denied scenarios",
+    "firstName": "Steven",
+    "lastName": "Jobs",
+    "emailId": "steven.jobs.exists@demo.com",
+    "password": "$tEven123",
+    "countryText": "United States of America",
+    "countryCode": "USA"
   }
 }

@@ -52,7 +52,7 @@
   "giftcard": {
     "billName": "amazon giftcard 50",
     "description": "E-commerce order paid via Amazon gift card",
-    "tags": ["gift card", "online", "canceled"],
+    "tags": ["gift-card", "online", "canceled"],
     "verifiedTimestamp": "2025-06-27 10:30:00Z",
     "receipts": [{ "name": "amazon_giftcard.pdf", "contentType": "application/pdf" }],
     "amount": "50.00",

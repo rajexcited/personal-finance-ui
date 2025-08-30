@@ -131,7 +131,17 @@ describe("Expense - Update Refund Flow", () => {
   context(
     "A logged in and active user can update an existing refund successfully",
     {
-      tags: ["expense", "refund", "regression", "positive", "add", "edit-refund-tc4", "view", "view-expense-list-tc1", "view-receipts-expenses-tc2"]
+      tags: [
+        "expense",
+        "refund",
+        "regression",
+        "positive",
+        "update",
+        "edit-refund-tc4",
+        "view",
+        "view-expense-list-tc1",
+        "view-receipts-expenses-tc2"
+      ]
     },
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {

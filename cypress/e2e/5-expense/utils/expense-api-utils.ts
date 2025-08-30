@@ -177,7 +177,7 @@ const dispatchApiExpenseAddUpdate = (apiExpenseData: UnionApiResourceExpenseDeta
   if (!apiBaseUrl) {
     return cy
       .indexedDb(IndexedDbName.MockExpense)
-      .updateItems([apiExpenseData], { storeName: expenseStoreName })
+      .updateItems([{ ...apiExpenseData, tags: apiExpenseData.tags.map((t) => t.replace(" ", "-")) }], { storeName: expenseStoreName })
       .then((storedExpenseData) => {
         // hard wait to allow api to store the data and processed
         cy.wait(2000);

@@ -22,6 +22,7 @@
     "accountName": "1234--7823",
     "institutionName": "USA Federal",
     "accountTypeName": "checking",
+    "accountTypeRef": "checking",
     "tags": ["single", "job-salary", "primary"],
     "description": "Primary account for salary deposits"
   },
@@ -30,6 +31,7 @@
     "accountName": "fund acc 5678",
     "institutionName": "Global Credit Union",
     "accountTypeName": "savings",
+    "accountTypeRef": "savings",
     "tags": ["travel", "secondary", "vacation"],
     "description": "Savings account dedicated to travel and leisure expenses"
   },
@@ -38,6 +40,7 @@
     "accountName": "4321",
     "institutionName": "Metro Capital Bank",
     "accountTypeName": "checking",
+    "accountTypeRef": "checking",
     "tags": ["business", "tax"],
     "description": "Account used for managing freelance and business-related transactions"
   },
@@ -46,6 +49,7 @@
     "accountName": "9812",
     "institutionName": "Horizon Savings",
     "accountTypeName": "checking",
+    "accountTypeRef": "checking",
     "tags": ["emergency", "backup", "personal"],
     "description": "Emergency fund for unexpected costs or temporary gaps in income"
   },
@@ -54,6 +58,7 @@
     "accountName": "3344",
     "institutionName": "Zenith Financial",
     "accountTypeName": "investment",
+    "accountTypeRef": "investment",
     "tags": ["retirement", "growth", "long-term"],
     "description": "Account for long-term investments and retirement planning"
   },
@@ -62,6 +67,7 @@
     "accountName": "GC-AMZ-5044",
     "institutionName": "Amazon",
     "accountTypeName": "gift card",
+    "accountTypeRef": "gift-card",
     "tags": ["e-commerce"],
     "description": "Prepaid digital gift card with a $50 balance for online purchases. \nnever expires. \ncheck balance link: https://amazon.com/gift/balance-check"
   },
@@ -70,6 +76,7 @@
     "accountName": "4567---8901",
     "institutionName": "Horizon Bank",
     "accountTypeName": "credit card",
+    "accountTypeRef": "credit-card",
     "tags": ["travel", "rewards", "annual-fee"],
     "description": "Credit card used for booking flights and hotels, earns airline miles"
   },
@@ -78,6 +85,7 @@
     "accountName": "1111---2222",
     "institutionName": "Metro Capital",
     "accountTypeName": "credit card",
+    "accountTypeRef": "credit-card",
     "tags": ["groceries", "dining", "cashback", "no-annual-fee"],
     "description": "Main card for day-to-day purchases with cashback benefits"
   },
@@ -86,6 +94,7 @@
     "accountName": "3333---4444",
     "institutionName": "Zenith Financial",
     "accountTypeName": "credit card",
+    "accountTypeRef": "credit-card",
     "tags": ["business", "expenses", "travel", "annual-fee"],
     "description": "Corporate card for managing travel and client-related expenditures"
   },
@@ -94,6 +103,7 @@
     "accountName": "LOAN-00123",
     "institutionName": "USA Federal",
     "accountTypeName": "loan",
+    "accountTypeRef": "loan",
     "tags": ["sedan-car"],
     "description": "Auto loan for 2019 Toyota Camry with fixed APR. \nstarted at Jan 2025 and payment terms are for 5 years. \nmonthly payment is $435.62"
   },
@@ -102,6 +112,7 @@
     "accountName": "MORT-7890",
     "institutionName": "Family Trust Bank",
     "accountTypeName": "loan",
+    "accountTypeRef": "loan",
     "tags": ["housing", "long-term", "primary-residence"],
     "description": "30-year fixed mortgage for primary residential property. \n started at Nov 2023. monthly payment is $3451.77"
   }
