@@ -1,0 +1,149 @@
+{
+  "stats": {
+    "suites": 1,
+    "tests": 2,
+    "passes": 2,
+    "pending": 0,
+    "failures": 0,
+    "testsRegistered": 2,
+    "passPercent": 100,
+    "pendingPercent": 0,
+    "other": 0,
+    "hasOther": false,
+    "skipped": 0,
+    "hasSkipped": false,
+    "start": "2025-08-23T19:06:09.489Z",
+    "end": "2025-08-23T19:07:06.357Z",
+    "duration": 56868
+  },
+  "results": [
+    {
+      "uuid": "bfb33579-43e9-4e66-a226-53b10d1bba51",
+      "title": "",
+      "fullFile": "cypress\\e2e\\1-login-logout\\login-logout-success.cy.ts",
+      "file": "cypress\\e2e\\1-login-logout\\login-logout-success.cy.ts",
+      "beforeHooks": [],
+      "afterHooks": [],
+      "tests": [],
+      "suites": [
+        {
+          "uuid": "ae4f734b-221d-42b6-ba76-3435173ab018",
+          "title": "User Login Logout Success Flow",
+          "fullFile": "cypress\\e2e\\1-login-logout\\login-logout-success.cy.ts",
+          "file": "cypress\\e2e\\1-login-logout\\login-logout-success.cy.ts",
+          "beforeHooks": [],
+          "afterHooks": [],
+          "tests": [],
+          "suites": [
+            {
+              "uuid": "6ed989ef-eda6-45ba-b3b8-39c987033da9",
+              "title": "Verifies user can successfully login and logout",
+              "fullFile": "",
+              "file": "",
+              "beforeHooks": [],
+              "afterHooks": [],
+              "tests": [
+                {
+                  "title": "via Google Pixel 9 Pro Tags: [login, logout, regression, positive, login-tc1, logout-tc1, login-tc5, smoke, mobile]",
+                  "fullTitle": "User Login Logout Success Flow Verifies user can successfully login and logout via Google Pixel 9 Pro Tags: [login, logout, regression, positive, login-tc1, logout-tc1, login-tc5, smoke, mobile]",
+                  "timedOut": null,
+                  "duration": 42495,
+                  "state": "passed",
+                  "speed": "slow",
+                  "pass": true,
+                  "fail": false,
+                  "pending": false,
+                  "context": "[\n    {\n        \"title\": \"Tags\",\n        \"value\": \"login, logout, regression, positive, login-tc1, logout-tc1, login-tc5, smoke, mobile\"\n    },\n    {\n        \"title\": \"Viewport\",\n        \"value\": {\n            \"width\": 1000,\n            \"height\": 660\n        }\n    },\n    {\n        \"title\": \"EndTime\",\n        \"value\": \"2025-08-23T19:06:53.502Z\"\n    },\n    {\n        \"title\": \"Spec video recording\",\n        \"value\": \"videos\\\\cypress\\\\e2e\\\\1-login-logout/login-logout-success.cy.ts.mp4\"\n    }\n]",
+                  "code": "",
+                  "err": {},
+                  "uuid": "041080eb-4789-4abe-b351-fafd0757fd80",
+                  "parentUUID": "6ed989ef-eda6-45ba-b3b8-39c987033da9",
+                  "isHook": false,
+                  "skipped": false
+                },
+                {
+                  "title": "via large desktop Tags: [login, logout, regression, positive, login-tc1, logout-tc1, login-tc5, smoke, desktop]",
+                  "fullTitle": "User Login Logout Success Flow Verifies user can successfully login and logout via large desktop Tags: [login, logout, regression, positive, login-tc1, logout-tc1, login-tc5, smoke, desktop]",
+                  "timedOut": null,
+                  "duration": 12171,
+                  "state": "passed",
+                  "speed": "slow",
+                  "pass": true,
+                  "fail": false,
+                  "pending": false,
+                  "context": "[\n    {\n        \"title\": \"Tags\",\n        \"value\": \"login, logout, regression, positive, login-tc1, logout-tc1, login-tc5, smoke, desktop\"\n    },\n    {\n        \"title\": \"Viewport\",\n        \"value\": {\n            \"width\": 1000,\n            \"height\": 660\n        }\n    },\n    {\n        \"title\": \"EndTime\",\n        \"value\": \"2025-08-23T19:07:06.339Z\"\n    },\n    {\n        \"title\": \"Spec video recording\",\n        \"value\": \"videos\\\\cypress\\\\e2e\\\\1-login-logout/login-logout-success.cy.ts.mp4\"\n    }\n]",
+                  "code": "",
+                  "err": {},
+                  "uuid": "3eea7880-8bea-42f2-adb9-e61fe56cd477",
+                  "parentUUID": "6ed989ef-eda6-45ba-b3b8-39c987033da9",
+                  "isHook": false,
+                  "skipped": false
+                }
+              ],
+              "suites": [],
+              "passes": [
+                "041080eb-4789-4abe-b351-fafd0757fd80",
+                "3eea7880-8bea-42f2-adb9-e61fe56cd477"
+              ],
+              "failures": [],
+              "pending": [],
+              "skipped": [],
+              "duration": 54666,
+              "root": false,
+              "rootEmpty": false,
+              "_timeout": 2000
+            }
+          ],
+          "passes": [],
+          "failures": [],
+          "pending": [],
+          "skipped": [],
+          "duration": 0,
+          "root": false,
+          "rootEmpty": false,
+          "_timeout": 2000
+        }
+      ],
+      "passes": [],
+      "failures": [],
+      "pending": [],
+      "skipped": [],
+      "duration": 0,
+      "root": true,
+      "rootEmpty": true,
+      "_timeout": 2000
+    }
+  ],
+  "meta": {
+    "mocha": {
+      "version": "7.2.0"
+    },
+    "mochawesome": {
+      "options": {
+        "quiet": false,
+        "reportFilename": "mochawesome",
+        "saveHtml": false,
+        "saveJson": true,
+        "consoleReporter": "spec",
+        "useInlineDiffs": false,
+        "code": false
+      },
+      "version": "7.1.3"
+    },
+    "marge": {
+      "options": {
+        "reportDir": "cypress\\reports\\08232025_140559\\.jsons",
+        "charts": true,
+        "embeddedScreenshots": true,
+        "inlineAssets": true,
+        "saveJson": true,
+        "saveHtml": true,
+        "code": false,
+        "overwrite": false,
+        "html": false,
+        "json": true
+      },
+      "version": "6.2.0"
+    }
+  }
+}
