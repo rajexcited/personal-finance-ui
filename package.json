@@ -5,16 +5,18 @@
   "private": true,
   "homepage": "https://rajexcited.github.io/personal-finance-ui/",
   "scripts": {
+    "build": "vite build",
+    "preview": "vite preview",
     "prestart": "copy src\\demo\\demo.ts src\\demo\\index.ts",
-    "start": "react-scripts start",
+    "start": "vite",
     "env-learn-link": "https://create-react-app.dev/docs/adding-custom-environment-variables/#what-other-env-files-can-be-used",
-    "build": "react-scripts build",
-    "test": "react-scripts test"
+    "test": "vitest run"
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
+      "eslint:recommended",
+      "plugin:react/recommended",
+      "plugin:@typescript-eslint/recommended"
     ],
     "rules": {
       "@typescript-eslint/no-unused-vars": "off",
@@ -67,18 +69,25 @@
     "react-dom": "^19.1.1",
     "react-markdown": "^8.0.7",
     "react-router": "^7.8.2",
-    "react-scripts": "5.0.1",
-    "typescript": "^4.9.5",
+    "typescript": "^5.9.2",
     "uuid": "^9.0.1",
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
-    "@types/jest": "^27.5.2",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
     "@types/js-cookie": "^3.0.6",
     "@types/lodash": "^4.14.198",
-    "@types/node": "^16.18.41",
+    "@types/node": "^24.3.0",
     "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.8",
-    "@types/uuid": "^9.0.2"
+    "@types/uuid": "^9.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
+    "@vitejs/plugin-react": "^5.0.2",
+    "eslint": "^9.34.0",
+    "eslint-plugin-react": "^7.37.5",
+    "vite": "^7.1.3",
+    "vitest": "^3.2.4"
   }
 }

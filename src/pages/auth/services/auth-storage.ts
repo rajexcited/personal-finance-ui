@@ -18,7 +18,7 @@ const userLoggedInKey = "ul";
 const userLoggedInValue = "true";
 const storeLogger = getLogger("service.store.auth", null, null, "DISABLED");
 
-const MIN_SESSION_TIME_IN_SEC = ms(process.env.REACT_APP_MINIMUM_SESSION_TIME as StringValue) / 1000;
+const MIN_SESSION_TIME_IN_SEC = ms(import.meta.env.VITE_MINIMUM_SESSION_TIME as StringValue) / 1000;
 
 interface AuthStore {
   token: AccessTokenResource & AuditFields;

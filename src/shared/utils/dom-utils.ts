@@ -1,20 +1,20 @@
 import Cookies from "js-cookie";
 
 const isAutomationTest = () => {
-  const testCookie = Cookies.get(process.env.REACT_APP_TEST_COOKIE_KEY || "");
+  const testCookie = Cookies.get(import.meta.env.VITE_TEST_COOKIE_KEY || "");
   // console.log(
   //   "Cookies.attributes=",
   //   Cookies.attributes,
   //   "allCookies=",
   //   Cookies.get(),
   //   "TEST_COOKIE_KEY=",
-  //   process.env.REACT_APP_TEST_COOKIE_KEY,
+  //   import.meta.env.VITE_TEST_COOKIE_KEY,
   //   "testCookie=",
   //   testCookie,
   //   "REACT_APP_TEST_ATTR_CNDN=",
-  //   process.env.REACT_APP_TEST_ATTR_CNDN
+  //   import.meta.env.VITE_TEST_ATTR_CNDN
   // );
-  return process.env.REACT_APP_TEST_ATTR_CNDN === testCookie;
+  return import.meta.env.VITE_TEST_ATTR_CNDN === testCookie;
 };
 
 export const testAttributes = (...attrValues: string[]) => {

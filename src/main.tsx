@@ -5,7 +5,6 @@ import { RouterProvider } from 'react-router';
 import { AuthContextProvider, router } from './pages';
 
 
-
 const App = () => {
     return (
         <section className="root">

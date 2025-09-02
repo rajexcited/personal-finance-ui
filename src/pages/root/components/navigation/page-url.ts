@@ -1,6 +1,6 @@
 import { getLogger } from "../../services";
 
-export const pathBaseName = process.env.REACT_APP_BASE_PATH;
+export const pathBaseName = import.meta.env.VITE_BASE_PATH;
 
 const _logger = getLogger("navigation.pageurls", null, null, "DISABLED");
 
