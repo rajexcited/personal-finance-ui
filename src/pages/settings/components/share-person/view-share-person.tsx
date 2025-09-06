@@ -1,7 +1,6 @@
 import { FunctionComponent } from "react";
-import * as datetime from "date-and-time";
 import { SharePersonResource } from "../../services";
-import { testAttributes } from "../../../../shared";
+import { testAttributes, formatTimestamp } from "../../../../shared";
 
 
 interface ViewSharePersonProps {
@@ -73,11 +72,11 @@ export const ViewSharePerson: FunctionComponent<ViewSharePersonProps> = (props) 
             <div className="columns">
                 <div className="column">
                     <label className="label">Created Date: </label>
-                    <span { ...testAttributes("outvalue") }>{ props.details.auditDetails.createdOn instanceof Date ? dateutil.format(props.details.auditDetails.createdOn, "MM-DD-YYYY hh:mm:ss A") : "-" }</span>
+                    <span { ...testAttributes("outvalue") }>{ props.details.auditDetails.createdOn instanceof Date ? formatTimestamp(props.details.auditDetails.createdOn, "MM-DD-YYYY hh:mm:ss A") : "-" }</span>
                 </div>
                 <div className="column">
                     <label className="label">Last Updated Date: </label>
-                    <span { ...testAttributes("outvalue") }>{ props.details.auditDetails.updatedOn instanceof Date ? dateutil.format(props.details.auditDetails.updatedOn, "MM-DD-YYYY hh:mm:ss A") : "-" }</span>
+                    <span { ...testAttributes("outvalue") }>{ props.details.auditDetails.updatedOn instanceof Date ? formatTimestamp(props.details.auditDetails.updatedOn, "MM-DD-YYYY hh:mm:ss A") : "-" }</span>
                 </div>
             </div>
         </section>
