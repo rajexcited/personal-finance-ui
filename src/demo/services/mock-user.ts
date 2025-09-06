@@ -3,7 +3,7 @@ import { AxiosResponseCreator } from "./mock-response-create";
 import { missingValidation, validateAuthorization } from "./common-validators";
 import { tokenSessionData, UserDataType, userSessionDetails } from "./userDetails";
 import { v4 as uuidv4 } from "uuid";
-import datetime from "date-and-time";
+import * as datetime from "date-and-time";
 import { UserDetailsResource, UserLoginResource } from "../../pages/auth";
 import { UserStatus } from "../../pages/auth/services";
 import { getLogger } from "../../shared";

@@ -1,5 +1,5 @@
 import { FunctionComponent } from "react";
-import dateutil from "date-and-time";
+import * as datetime from "date-and-time";
 import { SharePersonResource } from "../../services";
 import { testAttributes } from "../../../../shared";
 

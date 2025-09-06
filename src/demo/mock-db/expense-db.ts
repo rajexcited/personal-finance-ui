@@ -1,4 +1,4 @@
-import datetime from "date-and-time";
+import * as datetime from "date-and-time";
 import { ExpenseStatus, ExpenseFields } from "../../pages/expenses";
 import { parseTimestamp, getLogger, LoggerBase } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";

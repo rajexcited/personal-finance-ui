@@ -53,7 +53,7 @@ const getDefaultPaymentAccounts = async () => {
 
   const pymtAccs = await getDefaultIfError(pymtAccountService.getPymtAccountList, []);
 
-  logger.info("transformed to pymt acc, ", pymtAccs, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+  logger.info("transformed to pymt acc, ", pymtAccs, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
   return pymtAccs;
 };
 
@@ -63,7 +63,7 @@ const getPaymentAccount = async (paymentAccId: string) => {
 
   const pymtAcc = await getDefaultIfError(async () => await pymtAccountService.getPymtAccount(paymentAccId), null);
 
-  logger.info("transformed to pymt acc, ", pymtAcc, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+  logger.info("transformed to pymt acc, ", pymtAcc, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
   return pymtAcc;
 };
 
@@ -84,7 +84,7 @@ const updatePaymentAccount = async (refunditem: PurchaseRefundFields) => {
     }
   }
 
-  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
 };
 
 const updateTags = async (refund: PurchaseRefundFields) => {
@@ -114,7 +114,7 @@ const updateReasonValue = async (refundDetails: PurchaseRefundFields) => {
     }
   }
 
-  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
 };
 
 export const addUpdateDbRefund = async (refunddetails: PurchaseRefundFields, loggerBase: LoggerBase) => {
@@ -135,9 +135,9 @@ export const addUpdateDbRefund = async (refunddetails: PurchaseRefundFields, log
   convertAuditFieldsToDateInstance(dbRefund.auditDetails);
   dbRefund.receipts = dbRefund.receipts.map((rct) => ({ ...rct, relationId: dbRefund.id }));
 
-  logger.info("transforming execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
+  logger.info("transforming execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds().value, " sec");
   await refundDb.addUpdateItem(dbRefund);
-  logger.info("dbPurchase =", dbRefund, ", execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
+  logger.info("dbPurchase =", dbRefund, ", execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds().value, " sec");
   return dbRefund;
 };
 

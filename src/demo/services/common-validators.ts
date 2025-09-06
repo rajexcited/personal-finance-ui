@@ -1,6 +1,6 @@
 import { AxiosResponseHeaders } from "axios";
 import { tokenSessionData } from "./userDetails";
-import datetime from "date-and-time";
+import * as datetime from "date-and-time";
 import { validate as uuidValidate, version as uuidVersion } from "uuid";
 
 export interface ValidationErrorResource<R> {
@@ -89,7 +89,7 @@ export const validateAuthorization = (headers?: any) => {
   const tokendata = tokenSessionData();
 
   if (tokendata.accessToken === token) {
-    const remainingSeconds = datetime.subtract(new Date(tokendata.expiryTime), new Date()).toSeconds();
+    const remainingSeconds = datetime.subtract(new Date(), new Date(tokendata.expiryTime)).toSeconds().value;
     return remainingSeconds > 1;
   }
   return false;

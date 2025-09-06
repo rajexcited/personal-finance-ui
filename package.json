@@ -58,7 +58,7 @@
     "bulma-carousel": "^4.0.24",
     "bulma-extensions": "^6.2.7",
     "bulma-list": "^1.2.0",
-    "date-and-time": "^3.0.2",
+    "date-and-time": "^4.0.4",
     "expiry-map": "^2.0.0",
     "idb": "^7.1.1",
     "js-cookie": "^3.0.5",

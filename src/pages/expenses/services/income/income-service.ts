@@ -66,7 +66,7 @@ const updatePaymentAccount = async (incomeDetails: IncomeFields) => {
     }
   }
 
-  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
 };
 
 const updateIncomeType = async (incomeDetails: IncomeFields) => {
@@ -87,7 +87,7 @@ const updateIncomeType = async (incomeDetails: IncomeFields) => {
     }
   }
 
-  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
 };
 
 const updateTags = async (incomeDetails: IncomeFields) => {
@@ -116,9 +116,9 @@ export const addUpdateDbIncome = async (incomeDetails: IncomeFields, loggerBase:
   convertAuditFieldsToDateInstance(dbIncome.auditDetails);
   dbIncome.receipts = dbIncome.receipts.map((rct) => ({ ...rct, relationId: dbIncome.id }));
 
-  logger.info("transforming execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
+  logger.info("transforming execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds().value, " sec");
   await incomeDb.addUpdateItem(dbIncome);
-  logger.info("dbIncome =", dbIncome, ", execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
+  logger.info("dbIncome =", dbIncome, ", execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds().value, " sec");
   return dbIncome;
 };
 

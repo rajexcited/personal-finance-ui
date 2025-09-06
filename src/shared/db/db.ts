@@ -1,6 +1,6 @@
 import { IDBPDatabase, openDB } from "idb";
 import { LoggerBase, getLogger } from "../utils";
-import datetime from "date-and-time";
+import * as datetime from "date-and-time";
 import { DataBaseConfig, CacheIndex, LocalDBStore, LocalDBStoreIndex, StoreConfigType } from "./def-config";
 
 export const getUpperBound = (key: string, posFromEnd?: number) => {
@@ -53,7 +53,7 @@ const configureLocalDatabase = async () => {
           db.clear(storeConfig.name);
         }
       });
-    },
+    }
   });
 
   db.close();
@@ -69,7 +69,7 @@ interface DbItem<T> {
 type MyLocalDatabaseCallback<T> = (item: T) => Promise<void>;
 
 enum MyLocalDatabaseCallbackName {
-  OnBeforeExpired = "onBeforeExpiredCallback",
+  OnBeforeExpired = "onBeforeExpiredCallback"
 }
 
 export class MyLocalDatabase<T> {
@@ -202,7 +202,7 @@ export class MyLocalDatabase<T> {
     const dbItem: DbItem<T> = {
       item: item,
       createdOn: new Date().getTime(),
-      updatedOn: new Date().getTime(),
+      updatedOn: new Date().getTime()
     };
     const addPromise = db.add(this._storeConfig.name, dbItem);
     return await addPromise;
@@ -212,7 +212,7 @@ export class MyLocalDatabase<T> {
     const dbItem: DbItem<T> = {
       item: item,
       createdOn: dbRecord.createdOn,
-      updatedOn: new Date().getTime(),
+      updatedOn: new Date().getTime()
     };
     const updatePromise = db.put(this._storeConfig.name, dbItem);
     return await updatePromise;

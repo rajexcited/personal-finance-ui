@@ -48,7 +48,7 @@ storeLogger.debug("initialized to default values. authStore=", authStore);
 export const getAuthorizationToken = pMemoize(async () => {
   const logger = getLogger("getAuthorizationToken", storeLogger);
   cleanupSessionIfNeed();
-  if (authStore.token.accessToken && subtractDatesDefaultToZero(authStore.token.expiryTime).toSeconds() > 0) {
+  if (authStore.token.accessToken && subtractDatesDefaultToZero(authStore.token.expiryTime).toSeconds().value > 0) {
     logger.debug("found valid accesstoken");
     return authStore.token.accessToken;
   }
@@ -58,7 +58,7 @@ export const getAuthorizationToken = pMemoize(async () => {
 
 export const getRemainingExpiryTimeInSeconds = pMemoizeSync(() => {
   const logger = getLogger("getRemainingExpiryTimeInSeconds", storeLogger);
-  const result = subtractDatesDefaultToZero(authStore.token.expiryTime).toSeconds();
+  const result = subtractDatesDefaultToZero(authStore.token.expiryTime).toSeconds().value;
   logger.debug("expiryTime, result=", result);
   return result;
 }, getCacheOptionWithKey("1 sec", "getRemainingExpiryTimeInSeconds"));
@@ -126,7 +126,7 @@ export const updateAuthorizationToken = (response: AxiosResponse<AccessTokenReso
   if (typeof accessToken === "string" && response.data.expiresIn && response.data.expiryTime) {
     if (
       response.data.expiresIn >= MIN_SESSION_TIME_IN_SEC &&
-      subtractDatesDefaultToZero(response.data.expiryTime).toSeconds() >= MIN_SESSION_TIME_IN_SEC
+      subtractDatesDefaultToZero(response.data.expiryTime).toSeconds().value >= MIN_SESSION_TIME_IN_SEC
     ) {
       logger.debug("found valid response");
       authStore.token.accessToken = accessToken;
@@ -250,7 +250,7 @@ const partKeyList = ["po", "pt", "pf", "ps", "pe"];
 const getTokenDetailsJsonString = () => {
   const logger = getLogger("getTokenDetailsJsonString", storeLogger);
   try {
-    if (subtractDatesDefaultToZero(authStore.token.expiryTime).toSeconds() >= 10) {
+    if (subtractDatesDefaultToZero(authStore.token.expiryTime).toSeconds().value >= 10) {
       const parts = authStore.token.accessToken.split(".");
       const pobj = partKeyList.reduce((obj: Record<string, string>, kk, i) => {
         obj[kk] = btoa(parts[i]);

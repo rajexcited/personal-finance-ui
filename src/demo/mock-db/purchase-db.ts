@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import datetime from "date-and-time";
+import * as datetime from "date-and-time";
 import { PurchaseFields, PurchaseItemFields, ExpenseStatus } from "../../pages/expenses";
 import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDateInstanceDefaultNewDate, getLogger } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";

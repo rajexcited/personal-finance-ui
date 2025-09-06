@@ -2,7 +2,7 @@ import { FunctionComponent, useEffect, useRef, useState } from 'react';
 import 'bulma-calendar/dist/css/bulma-calendar.min.css';
 import './calendar.css';
 import bulmaCalendar from "bulma-calendar";
-import dateutils from "date-and-time";
+import * as datetime from "date-and-time";
 import { formatTimestamp, getLogger, testAttributes } from '../shared';
 
 export interface CalendarProps extends bulmaCalendar.Options {
@@ -44,8 +44,8 @@ const Calendar: FunctionComponent<CalendarProps> = (props) => {
             ...props
         };
         if (options.startDate) {
-            options.maxDate = dateutils.addMonths(options.startDate, 1);
-            options.minDate = dateutils.addYears(options.startDate, -5);
+            options.maxDate = datetime.addMonths(options.startDate, 1);
+            options.minDate = datetime.addYears(options.startDate, -5);
         }
 
         options.onReady = () => {
