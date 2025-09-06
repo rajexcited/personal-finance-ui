@@ -3,7 +3,7 @@ import { AxiosResponseCreator } from "./mock-response-create";
 import { missingValidation, validateAuthorization } from "./common-validators";
 import { tokenSessionData, UserDataType, userSessionDetails } from "./userDetails";
 import { v4 as uuidv4 } from "uuid";
-import datetime from "date-and-time";
+import * as datetime from "date-and-time";
 import { UserDetailsResource, UserLoginResource } from "../../pages/auth";
 import { UserStatus } from "../../pages/auth/services";
 import { getLogger } from "../../shared";
@@ -15,7 +15,7 @@ const _rootLogger = getLogger("mock.api.user", null, null, "DISABLED");
 
 export const MockUser = (demoMock: MockAdapter) => {
   const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#<$>%^&*])[\w!@#<$>%^&\(\)\=*]{8,25}$/;
-  const sessionTime = (process.env.REACT_APP_MINIMUM_SESSION_TIME as StringValue) || "1 min";
+  const sessionTime = (import.meta.env.VITE_MINIMUM_SESSION_TIME as StringValue) || "1 min";
   const expiresInSec = ms(sessionTime) / 500;
 
   const isInvalidDemoEmailId = (emailId: string) => {

@@ -1,5 +1,5 @@
 import pMemoize, { pMemoizeClear } from "p-memoize";
-import datetime from "date-and-time";
+import * as datetime from "date-and-time";
 import {
   axios,
   getLogger,
@@ -68,7 +68,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
       const dbExpenses = await dbExpensePromise;
       logger.debug(
         "expenseDb.getAllFromIndex and expenseCount.api execution time =",
-        subtractDatesDefaultToZero(null, startTime).toSeconds(),
+        subtractDatesDefaultToZero(null, startTime).toSeconds().value,
         " sec."
       );
 
@@ -87,7 +87,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
           ", filteredExpenses.length=",
           filteredExpenses.length,
           ", execution time =",
-          subtractDatesDefaultToZero(null, startTime).toSeconds(),
+          subtractDatesDefaultToZero(null, startTime).toSeconds().value,
           " sec"
         );
         expenses = filteredExpenses;
@@ -103,12 +103,12 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
         "getExpenses api, queryParams =",
         queryParams,
         ", api execution time =",
-        subtractDatesDefaultToZero(null, apiStartTime).toSeconds(),
+        subtractDatesDefaultToZero(null, apiStartTime).toSeconds().value,
         " sec and time diff from request start =",
         subtractDates(null, startTime),
         " sec"
       );
-      logger.info("api execution time =", subtractDatesDefaultToZero(null, apiStartTime).toSeconds(), " sec");
+      logger.info("api execution time =", subtractDatesDefaultToZero(null, apiStartTime).toSeconds().value, " sec");
 
       apiStartTime = new Date();
       expenses = response.data as ExpenseFields[];
@@ -143,7 +143,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
         return await incomeService.addUpdateDbIncome(expense, logger);
       }
     });
-    logger.info("transformed expense resources, execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+    logger.info("transformed expense resources, execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
 
     const transformedExpenses = await Promise.all(promises);
     const returnResp = transformedExpenses.filter((xpns) => xpns !== undefined);
@@ -153,7 +153,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
   } finally {
-    logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+    logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
   }
 }, getCacheOption("3 min"));
 

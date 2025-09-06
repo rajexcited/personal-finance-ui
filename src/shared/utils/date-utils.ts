@@ -1,4 +1,4 @@
-import datetime from "date-and-time";
+import * as datetime from "date-and-time";
 import ms, { StringValue } from "ms";
 
 const DEFAULT_FORMAT_PATTERN = "MM-DD-YYYY HH:mm:ss.SSS Z";
@@ -76,13 +76,7 @@ export const subtractDatesDefaultToZero = (endDate: DateParamType, startDate?: D
   if (diff) {
     return diff;
   }
-  const defaultDiffZero: datetime.SubtractResult = {
-    toDays: () => 0,
-    toHours: () => 0,
-    toMilliseconds: () => 0,
-    toMinutes: () => 0,
-    toSeconds: () => 0
-  };
+  const defaultDiffZero = new datetime.Duration(0);
   return defaultDiffZero;
 };
 /**
@@ -97,7 +91,7 @@ export const subtractDates = (endDate: DateParamType, startDate?: DateParamType,
   const endDateInstance = getDateInstance(endDate, format);
   const startDateInstance = getDateInstance(startDate, format);
   if (endDateInstance && startDateInstance) {
-    return datetime.subtract(endDateInstance, startDateInstance);
+    return datetime.subtract(startDateInstance, endDateInstance);
   }
   return null;
 };

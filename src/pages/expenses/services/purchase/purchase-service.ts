@@ -47,7 +47,7 @@ const getPurchaseTypeEnum = async () => {
     typeMap.set(ctg.id, ctg.value);
     typeMap.set(ctg.value, ctg.id);
   });
-  logger.info("transformed to type Map, ", typeMap, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+  logger.info("transformed to type Map, ", typeMap, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
   return typeMap;
 };
 
@@ -61,7 +61,7 @@ const getDeletedPurchaseTypeEnum = async () => {
     typeMap.set(ctg.id, ctg.value);
     typeMap.set(ctg.value, ctg.id);
   });
-  logger.info("transformed to type Map, ", typeMap, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+  logger.info("transformed to type Map, ", typeMap, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
   return typeMap;
 };
 
@@ -74,7 +74,13 @@ const getPaymentAccountMap = async () => {
   pymtAccs.forEach((acc) => {
     pymtAccMap.set(acc.id, acc.shortName);
   });
-  logger.info("transformed to pymt acc Map, ", pymtAccMap, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+  logger.info(
+    "transformed to pymt acc Map, ",
+    pymtAccMap,
+    ", execution Time =",
+    subtractDatesDefaultToZero(null, startTime).toSeconds().value,
+    " sec"
+  );
   return pymtAccMap;
 };
 
@@ -134,7 +140,7 @@ const updatePurchaseTypeAndPymtAccName = async (purchaseItem: PurchaseFields) =>
     const deletedPymtAcc = await getDefaultIfError(async () => await pymtAccountService.getPymtAccount(pymtAccId), null);
     purchaseItem.paymentAccountName = deletedPymtAcc?.shortName;
   }
-  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
 };
 
 const updatePurchaseTags = async (purchase: PurchaseFields) => {
@@ -164,9 +170,9 @@ export const addUpdateDbPurchase = async (purchase: PurchaseFields, loggerBase: 
   convertAuditFieldsToDateInstance(dbPurchase.auditDetails);
   dbPurchase.receipts = dbPurchase.receipts.map((rct) => ({ ...rct, relationId: purchase.id }));
 
-  logger.info("transforming execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
+  logger.info("transforming execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds().value, " sec");
   await purchaseDb.addUpdateItem(dbPurchase);
-  logger.info("dbPurchase =", dbPurchase, ", execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
+  logger.info("dbPurchase =", dbPurchase, ", execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds().value, " sec");
   return dbPurchase;
 };
 
