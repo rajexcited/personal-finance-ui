@@ -31,7 +31,7 @@ export const PurchaseBreakDown: FunctionComponent<PurchaseBreakDownProps> = (pro
         const ids = oldList.map(item => item.id || "")
             .map(itemId => Number(itemId.replace(idPrefix, "")))
             .map(idnum => isNaN(idnum) ? 0 : idnum);
-        let maxIndexInList = Math.max(...ids, 0);
+        const maxIndexInList = Math.max(...ids, 0);
         return [...oldList, getEmptyPurchaseItem(props.parentPurchaseId, maxIndexInList + 1)];
     };
 

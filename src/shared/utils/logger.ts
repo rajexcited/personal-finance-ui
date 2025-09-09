@@ -22,7 +22,7 @@ enum LogLevel {
 }
 
 type LogLevelType = keyof typeof LogLevel;
-let defaultLogLevel: LogLevelType = "DEBUG";
+const defaultLogLevel: LogLevelType = "DEBUG";
 
 /**
  *

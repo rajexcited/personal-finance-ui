@@ -18,3 +18,4 @@ MockExpenses(demoMock);
 MockStats(demoMock);
 
 export default demoMock;
+export { isDemo } from "./mock";

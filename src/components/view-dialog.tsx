@@ -28,13 +28,13 @@ export const ViewDialog: FunctionComponent<ViewDialogProps> = (props) => {
     const [isOpen, setOpen] = useState(props.openDefault);
 
     const onClickCloseHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
-        const logger = getLogger("onClickCloseHandler", fcLogger);
+        const _logger = getLogger("onClickCloseHandler", fcLogger);
         event.preventDefault();
         setOpen(false);
     };
 
     const onClickOpenHandler: React.MouseEventHandler<HTMLButtonElement> = event => {
-        const logger = getLogger("onClickOpenHandler", fcLogger);
+        const _logger = getLogger("onClickOpenHandler", fcLogger);
         event.preventDefault();
         setOpen(true);
     };

@@ -89,7 +89,6 @@ const getKeyUpHandler = (tagsInput: BulmaTagsInput) => {
       tagsInput._onInputKeyDown(ev);
     } else {
       logger.debug("calling keyup lib handler");
-      const e = { charCode: codenum, preventDefault: () => event.preventDefault() };
       const returnValue = updateFilterDropdown.bind(tagsInput)(event);
       tagsInput._onInputKeyDown(ev);
       return returnValue;
@@ -150,7 +149,7 @@ function updateFilterDropdown(this: any, e: KeyboardEvent) {
 
         if (results.length) {
           results.forEach((result) => {
-            let item: TagItemResultType = {
+            const item: TagItemResultType = {
               value: "null",
               text: "null"
             };
@@ -222,7 +221,7 @@ export const buildDropdown = (tagsInput: BulmaTagsInput, sourceValues: string[] 
   logger.debug("starting to build dropdown", sourceValues.length, "items with source=", sourceValues);
   const results = [...sourceValues];
   results.forEach((result) => {
-    let item: TagItemResultType = {
+    const item: TagItemResultType = {
       value: "null",
       text: "null"
     };

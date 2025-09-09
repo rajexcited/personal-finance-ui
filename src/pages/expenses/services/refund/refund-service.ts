@@ -68,7 +68,7 @@ const getPaymentAccount = async (paymentAccId: string) => {
 };
 
 const updatePaymentAccount = async (refunditem: PurchaseRefundFields) => {
-  let startTime = new Date();
+  const startTime = new Date();
   const logger = getLogger("updatePaymentAccount", serviceLogger);
 
   if (refunditem.paymentAccountId && isUuid(refunditem.paymentAccountId)) {
@@ -97,7 +97,7 @@ const updateTags = async (refund: PurchaseRefundFields) => {
 };
 
 const updateReasonValue = async (refundDetails: PurchaseRefundFields) => {
-  let startTime = new Date();
+  const startTime = new Date();
   const logger = getLogger("updateReasonValue", serviceLogger);
 
   if (refundDetails.reasonId && isUuid(refundDetails.reasonId)) {

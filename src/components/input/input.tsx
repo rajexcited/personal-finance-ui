@@ -94,7 +94,7 @@ const Input = forwardRef((props: InputProps, ref) => {
         let hasInputError = false;
         if (inputRef.current) {
             const validity = inputRef.current.validity;
-            for (let key in validity) {
+            for (const key in validity) {
                 if (key !== "customError" && key !== "valid" && validity[key as keyof typeof validity]) {
                     hasInputError = true;
                     break;

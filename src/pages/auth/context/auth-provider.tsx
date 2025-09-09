@@ -42,7 +42,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
 
     useEffect(() => {
         const _logger = getLogger("useEffect.dep[userDetails, expiringStatus]", fcLogger);
-        let intervalId: NodeJS.Timer | undefined = undefined;
+        let intervalId: number | undefined = undefined;
 
         const setAuthenExpire = () => {
             const logger = getLogger("setAuthenExpire", _logger);
@@ -93,7 +93,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
             // scenario 5 session about to expire
             // scenario 6 session is refreshed
             // scenario 7 session is about to expire
-            intervalId = setInterval(async () => {
+            intervalId = window.setInterval(async () => {
                 const startTime = Date.now();
                 const logger = getLogger("authenticated.setInterval", _logger);
                 logger.debug("periodic execution. verify and update context");

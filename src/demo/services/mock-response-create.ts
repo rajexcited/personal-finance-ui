@@ -28,11 +28,11 @@ export const AxiosResponseCreator = (config: AxiosRequestConfig) => {
   };
 
   const toError = (status: number, errors: any) => {
-    return [status, errors, responseHeaders];
+    return toResponse(status, errors);
   };
 
   const toResponse = (status: number, data: any, respHdrs?: Record<string, string>) => {
-    return [status, data, { ...responseHeaders, ...respHdrs }];
+    return {status, data, headers: { ...responseHeaders, ...respHdrs } as AxiosHeaders};
   };
 
   return {

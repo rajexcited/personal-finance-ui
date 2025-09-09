@@ -50,7 +50,7 @@ const getFormData = (formData: FormData, formKey: ExpenseResourceKey) => {
         return jsonObj;
       }
       return formValue.toString();
-    } catch (ignore) {
+    } catch (_ignore) {
       return formValue.toString();
     }
   }

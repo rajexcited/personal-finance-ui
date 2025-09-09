@@ -80,7 +80,7 @@ export const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
       }
       setTagCount(prev => prev + 1);
     });
-    tagsInput.on("after.remove", (item) => {
+    tagsInput.on("after.remove", (_item) => {
       // removed item 
       if (props.onChange) {
         const tval = tagsInput.value as string;

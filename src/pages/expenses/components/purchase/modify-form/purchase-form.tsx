@@ -52,7 +52,7 @@ export const PurchaseForm: FunctionComponent<PurchaseFormProps> = (props) => {
     const [receipts, setReceipts] = useState<ReceiptProps[]>(props.details?.receipts || []);
     const [selectedSharePersonTagItems, setSelectedSharePersonTagItems] = useState<TagObject[]>([]);
     const [sourceSharePersonTagItems, setSourceSharePersonTagItems] = useState<TagObject[]>([]);
-    const [defaultCurrencyProfile, setDefaultCurrencyProfile] = useState<CurrencyProfileResource>(props.currencyProfiles[0]);
+    const [defaultCurrencyProfile, _setDefaultCurrencyProfile] = useState<CurrencyProfileResource>(props.currencyProfiles[0]);
     const navigate = useNavigate();
 
     const onSubmitHandler: React.FormEventHandler<HTMLFormElement> = async event => {

@@ -172,7 +172,7 @@ const NavBar: FunctionComponent = () => {
             if (!isNavbarBurgerAnchor(element) && !isNavbarBurgerAnchor(element.parentElement)) {
                 logger.debug("this is not navbar burger element click event. closing navbar");
                 sleep("0.5 sec")
-                    .then(() => setActive(prev => false));
+                    .then(() => setActive(_prev => false));
             }
         };
 

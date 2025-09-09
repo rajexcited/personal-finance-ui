@@ -51,8 +51,8 @@ const expenseComparator = (headers: ExpenseSortDetails[], a: ExpenseFields, b: E
 
   for (const sh of headers) {
     if (sh.sortDirection) {
-      let aDatafieldValue = getExpenseValue(sh, a);
-      let bDatafieldValue = getExpenseValue(sh, b);
+      const aDatafieldValue = getExpenseValue(sh, a);
+      const bDatafieldValue = getExpenseValue(sh, b);
       logger.debug(
         "sortDirection =",
         sh.sortDirection,

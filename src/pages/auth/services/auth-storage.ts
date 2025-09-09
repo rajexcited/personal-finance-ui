@@ -144,7 +144,7 @@ export const updateAuthorizationToken = (response: AxiosResponse<AccessTokenReso
 };
 
 export const getValidUserDetails = (loggerBase: LoggerBase) => {
-  const logger = getLogger("getValidUserDetails", loggerBase, storeLogger);
+  const _logger = getLogger("getValidUserDetails", loggerBase, storeLogger);
 
   cleanupSessionIfNeed();
 
@@ -293,7 +293,7 @@ const populateTokenDetailsFromJsonString = (json: string) => {
       authStore.token.createdOn = new Date(tokendetails.createdOn);
       authStore.token.updatedOn = new Date();
     }
-  } catch (e) {
+  } catch (_e) {
     logger.error("unable to retrieve token");
   }
 };
@@ -302,7 +302,7 @@ const reloadHandlerWhileLoggedIn = () => {
   const usrkey = "fin-usr";
   const tknkey = "fin-tkn";
   const logger = getLogger("reloadHandlerWhileLoggedIn", storeLogger);
-  window.addEventListener("beforeunload", (event) => {
+  window.addEventListener("beforeunload", (_event) => {
     const logg = getLogger("window.event.beforeunload", logger);
     logg.debug("before reload, saving item details");
     const tokenjson = getTokenDetailsJsonString();

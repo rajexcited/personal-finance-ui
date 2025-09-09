@@ -1,5 +1,5 @@
 import "./interceptors";
-import { LoggerBase, UnauthorizedError, axios, getCacheOption, getLogger, handleRestErrors, sleep } from "../../../shared";
+import { LoggerBase, UnauthorizedError, axios, getCacheOption, getLogger, handleRestErrors } from "../../../shared";
 import {
   CountryResource,
   UpdateUserDetailsResource,

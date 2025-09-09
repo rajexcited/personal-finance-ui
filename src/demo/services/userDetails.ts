@@ -57,7 +57,7 @@ const reloadHandlerWhileLoggedIn = () => {
   const usrkey = "fin-usr-demo";
   const tknkey = "fin-tkn-demo";
   const logger = getLogger("reloadHandlerWhileLoggedIn", rootLogger);
-  window.addEventListener("beforeunload", (event) => {
+  window.addEventListener("beforeunload", (_event) => {
     const itemDetails = JSON.stringify(UserSessionDetails);
     logger.debug("before reload, local storage item details", itemDetails);
     sessionStorage.setItem(usrkey, itemDetails);

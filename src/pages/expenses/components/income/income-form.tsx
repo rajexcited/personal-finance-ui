@@ -50,7 +50,7 @@ export const IncomeForm: FunctionComponent<IncomeFormProps> = (props) => {
     const [selectedDropdownIncomeType, setSelectedDropdownIncomeType] = useState<DropDownItemType>();
     const [selectedSharePersonTagItems, setSelectedSharePersonTagItems] = useState<TagObject[]>([]);
     const [sourceSharePersonTagItems, setSourceSharePersonTagItems] = useState<TagObject[]>([]);
-    const [defaultCurrencyProfile, setDefaultCurrencyProfile] = useState<CurrencyProfileResource>(props.currencyProfiles[0]);
+    const [defaultCurrencyProfile, _setDefaultCurrencyProfile] = useState<CurrencyProfileResource>(props.currencyProfiles[0]);
     const navigate = useNavigate();
 
 

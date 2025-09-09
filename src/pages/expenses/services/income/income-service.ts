@@ -49,7 +49,7 @@ const clearCache = (incomeData: IncomeFields) => {
 };
 
 const updatePaymentAccount = async (incomeDetails: IncomeFields) => {
-  let startTime = new Date();
+  const startTime = new Date();
   const logger = getLogger("updatePaymentAccount", serviceLogger);
 
   if (incomeDetails.paymentAccountId && isUuid(incomeDetails.paymentAccountId)) {
@@ -70,7 +70,7 @@ const updatePaymentAccount = async (incomeDetails: IncomeFields) => {
 };
 
 const updateIncomeType = async (incomeDetails: IncomeFields) => {
-  let startTime = new Date();
+  const startTime = new Date();
   const logger = getLogger("updateIncomeType", serviceLogger);
 
   if (incomeDetails.incomeTypeId && isUuid(incomeDetails.incomeTypeId)) {

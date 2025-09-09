@@ -15,7 +15,7 @@ const isDefined = (val: any) => {
   return true;
 };
 
-export const missingValidation = <T extends Object>(data: T | null | undefined, keys: (keyof T)[]): ValidationErrorResource<T>[] => {
+export const missingValidation = <T extends object>(data: T | null | undefined, keys: (keyof T)[]): ValidationErrorResource<T>[] => {
   if (!data) {
     return [{ path: "request", message: "missing request data" }];
   }

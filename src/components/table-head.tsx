@@ -2,7 +2,7 @@ import { faArrowDown, faArrowUp, faArrowsUpDown, faSortAlphaDown, faSortAlphaUp,
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { FunctionComponent, useEffect, useState } from "react";
 import { useDebounceState } from "../hooks";
-import { getLogger, testAttributes } from "../shared";
+import { getLogger } from "../shared";
 
 export type SortDirection = "asc" | "desc" | "";
 const directions: SortDirection[] = ["", "asc", "desc"];

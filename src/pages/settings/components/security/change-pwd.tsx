@@ -41,7 +41,7 @@ export const ChangePasswordSection: FunctionComponent<ChangePasswordSectionProps
                 logger.debug("prev value, newPasswordRepeat =", prev);
                 return "";
             });
-            setInvalidFormElements(prev => ["password-current", "password-new", "password-new-repeat"]);
+            setInvalidFormElements(_prev => ["password-current", "password-new", "password-new-repeat"]);
             logger.debug("password has been reset and invalidFormElement list has been re-initialized");
         }
     }, [actionState]);

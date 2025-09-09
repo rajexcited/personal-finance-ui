@@ -39,7 +39,7 @@ export type DropDownItemProps =
 const DropDownItem: FunctionComponent<DropDownItemProps> = (props) => {
     const [newInputValue, setNewInputValue] = useState('');
 
-    const selectItemHandler = (event: React.MouseEvent<HTMLDivElement>, id: string) => {
+    const selectItemHandler = (event: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>, id: string) => {
         event.preventDefault();
         event.stopPropagation();
         if ("onSelect" in props) {
@@ -48,6 +48,13 @@ const DropDownItem: FunctionComponent<DropDownItemProps> = (props) => {
             } else {
                 props.onSelect(undefined);
             }
+        }
+    };
+
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            selectItemHandler(event, props.id);
         }
     };
 
@@ -63,7 +70,10 @@ const DropDownItem: FunctionComponent<DropDownItemProps> = (props) => {
     return (
         <>
             <div className={ `dropdown-item ${isActive ? "is-active" : ""}` }
+                role="button"
+                tabIndex={ 0 }
                 onClick={ (e) => selectItemHandler(e, props.id) }
+                onKeyDown={ handleKeyDown }
                 { ...testAttributes(`dropdown-item-${props.type}`) } >
 
                 { props.type === "text" &&

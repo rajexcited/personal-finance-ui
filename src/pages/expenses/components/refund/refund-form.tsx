@@ -101,7 +101,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
     const [selectedDropdownReason, setSelectedDropdownReason] = useState<DropDownItemType>();
     const [selectedSharePersonTagItems, setSelectedSharePersonTagItems] = useState<TagObject[]>([]);
     const [sourceSharePersonTagItems, setSourceSharePersonTagItems] = useState<TagObject[]>([]);
-    const [defaultCurrencyProfile, setDefaultCurrencyProfile] = useState<CurrencyProfileResource>(props.currencyProfiles[0]);
+    const [defaultCurrencyProfile, _setDefaultCurrencyProfile] = useState<CurrencyProfileResource>(props.currencyProfiles[0]);
     const navigate = useNavigate();
 
 
@@ -196,7 +196,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
             logger.debug("mySelectedPaymentAcc =", mySelectedPaymentAcc);
             setSelectedDropdownPymtAccount(mySelectedPaymentAcc);
         } else {
-            let mySelectedPaymentAcc = ddPymtAccList.find(pymtacc => (pymtacc.id === purchasePymtAccId));
+            const mySelectedPaymentAcc = ddPymtAccList.find(pymtacc => (pymtacc.id === purchasePymtAccId));
             if (mySelectedPaymentAcc) {
                 setSelectedDropdownPymtAccount(prev => {
                     if (!prev) {
@@ -454,7 +454,7 @@ export const PurchaseRefundForm: FunctionComponent<PurchaseRefundFormProps> = (p
                                 {
                                     !!selectedPurchaseReference?.taggingPersons.length &&
                                     <ul { ...testAttributes("outvalue") }>
-                                        { selectedPurchaseReference.taggingPersons.map(sp => (<li>{ sp }</li>)) }
+                                        { selectedPurchaseReference.taggingPersons.map((sp, index) => (<li key={ index }>{ sp }</li>)) }
                                     </ul>
                                 }
                                 {

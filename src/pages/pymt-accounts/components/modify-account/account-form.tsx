@@ -29,7 +29,7 @@ const AccountForm: FunctionComponent<AccountFormProps> = (props) => {
     const [tags, setTags] = useState(props.details?.tags || []);
     const [dropdownAccTypes, setDropdownAccTypes] = useState<DropDownItemType[]>([]);
     const [selectedDropdownAccType, setSelectedDropdownAccType] = useState<DropDownItemType>();
-    const [defaultCurrencyProfile, setDefaultCurrencyProfile] = useState<CurrencyProfileResource>(props.currencyProfiles[0]);
+    const [defaultCurrencyProfile, _setDefaultCurrencyProfile] = useState<CurrencyProfileResource>(props.currencyProfiles[0]);
     const navigate = useNavigate();
 
     useEffect(() => {

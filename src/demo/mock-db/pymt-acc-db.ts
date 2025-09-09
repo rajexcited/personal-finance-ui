@@ -74,7 +74,7 @@ export const getPymtAccountList = async (statuses?: PymtAccStatus[], baseLogger?
 export const isDuplicateShortName = async (data: PymtAccountFields) => {
   const allPaymentAccounts = await pymtAccDb.getAll();
   let isValid = true;
-  for (let dbPymtAcc of allPaymentAccounts) {
+  for (const dbPymtAcc of allPaymentAccounts) {
     if (dbPymtAcc.shortName === data.shortName && dbPymtAcc.status !== PymtAccStatus.Deleted) {
       if (dbPymtAcc.id !== data.id) {
         isValid = false;

@@ -34,7 +34,7 @@ export const DeleteAccountSection: FunctionComponent<DeleteAccountSectionProps> 
                 logger.debug("primaryEmailId, prev value =", prev);
                 return "";
             });
-            setInvalidFormElements(prev => ["emailId", "password"]);
+            setInvalidFormElements(_prev => ["emailId", "password"]);
         }
     }, [actionState]);
 

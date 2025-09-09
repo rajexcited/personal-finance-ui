@@ -1,4 +1,4 @@
-import { faAngleUp, faAngleDown, faEdit, faTrash, faReceipt, faCircleDollarToSlot, faShoppingCart, faExchangeAlt, faArrowCircleUp, faDollarSign, faUndo, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
+import { faAngleUp, faAngleDown, faEdit, faTrash, faReceipt, faCircleDollarToSlot, faShoppingCart, faDollarSign, faUndo } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FunctionComponent, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
@@ -16,7 +16,7 @@ interface ExpenseItemCardProps {
     id: string;
     details: ExpenseFields;
     onSelect (expenseId: string, belongsTo: ExpenseBelongsTo): void;
-    isSelected: Boolean;
+    isSelected: boolean;
     onRemove (expense: ExpenseFields): void;
     onViewReceipt (expense: ExpenseFields): void;
     onRenderCompleted (expenseId: string): void;

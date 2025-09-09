@@ -1,4 +1,4 @@
-import { FunctionComponent, useEffect, useRef, useState } from "react";
+import { FunctionComponent, useEffect, useState } from "react";
 import { faEdit, faTrash, faReceipt, faCircleDollarToSlot } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ExpenseBelongsTo, ExpenseFields, formatTimestamp, getLogger } from "../../services";
@@ -15,7 +15,7 @@ interface ExpenseItemTableRowProps {
     id: string;
     details: ExpenseFields;
     onSelect (expenseId: string, belongsTo: ExpenseBelongsTo): void;
-    isSelected: Boolean;
+    isSelected: boolean;
     onRemove (expense: ExpenseFields): void;
     onViewReceipt (expense: ExpenseFields): void;
     onRenderCompleted (expenseId: string): void;

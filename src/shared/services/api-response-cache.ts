@@ -59,14 +59,14 @@ interface CriteriaResource {
  * @returns true, if api response is cached and matching given criteria. otherwise false
  */
 export const isApiCalled = async (criteria: CriteriaResource, url: string, queryParams?: Record<string, string[]> | null) => {
-  const logger = getLogger("isApiCalled", _logger);
+  const _fcLogger = getLogger("isApiCalled", _logger);
   const item = (await getApiResponse(url, queryParams)) as ApiResponseCacheResource;
   let isValid = !!item;
 
   // by default item is considered to be valid
   if (criteria.withinTime !== undefined && isValid) {
     const durationMillis = ms(criteria.withinTime);
-    const itemCacheMillis = subtractDatesDefaultToZero(null, item.updatedOn).toMilliseconds();
+    const itemCacheMillis = subtractDatesDefaultToZero(null, item.updatedOn).toMilliseconds().value;
     if (itemCacheMillis > durationMillis) {
       isValid = false;
     }

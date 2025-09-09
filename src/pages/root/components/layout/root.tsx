@@ -5,7 +5,7 @@ import { faBank, faDashboard, faGears, faMoneyBills, faSignIn, faUserPlus } from
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { getFullPath, NavBar } from "../navigation";
 import { LoadSpinner } from "../../../../components";
-import axiosMock from "../../../../demo";
+import { isDemo } from "../../../../demo";
 import { getLogger } from "../../services";
 
 const expenseJournalRoot = getFullPath("expenseJournalRoot");
@@ -45,7 +45,7 @@ const RootLayout: FunctionComponent = () => {
             <div className="columns">
                 <div className="column is-1">
                     {
-                        !axiosMock.history.isDummy &&
+                        isDemo &&
                         <div className="demo logo"><figure className="icon"></figure></div>
                     }
                 </div>

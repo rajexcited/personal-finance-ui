@@ -113,7 +113,7 @@ const updatePymtAcc = (pymtAccMap: Map<string, string>, item: PurchaseFields) =>
 
 const updatePurchaseTypeAndPymtAccName = async (purchaseItem: PurchaseFields) => {
   const logger = getLogger("updatePurchaseTypeAndPymtAccName", _logger);
-  let startTime = new Date();
+  const startTime = new Date();
   const typeMap = await getPurchaseTypeEnum();
   const pymtAccMap = await getPymtAccEnum();
   updatePurchaseType(typeMap, purchaseItem);
