@@ -6,18 +6,36 @@ import jsxA11y from "eslint-plugin-jsx-a11y";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
-  { ignores: ["**/*.d.ts"] },
+  { ignores: ["**/*.d.ts", "build/**/*", "dist/**/*", "node_modules/**/*", "coverage/**/*"] },
   {
-    files: ["**/*.{ts,tsx}"],
-    plugins: { js },
-    extends: ["js/recommended"],
-    languageOptions: { globals: globals.browser },
+    files: ["src/**/*.{ts,tsx}"],
+    extends: [js.configs.recommended],
+    languageOptions: { 
+      globals: globals.browser,
+      parserOptions: {
+        ecmaVersion: 2020,
+        sourceType: "module",
+      },
+    },
   },
-  tseslint.configs.recommended,
-  pluginReact.configs.flat.recommended,
-  pluginReact.configs.flat["jsx-runtime"],
-  jsxA11y.flatConfigs.recommended,
+  ...tseslint.configs.recommended.map(config => ({
+    ...config,
+    files: ["src/**/*.{ts,tsx}"],
+  })),
   {
+    files: ["src/**/*.{ts,tsx}"],
+    ...pluginReact.configs.flat.recommended,
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ...pluginReact.configs.flat["jsx-runtime"],
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ...jsxA11y.flatConfigs.recommended,
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
     rules: {
       "@typescript-eslint/no-empty-object-type": "off",
       "@typescript-eslint/no-explicit-any": "off", // Disable for now as it's widespread in the codebase
@@ -40,6 +58,7 @@ export default defineConfig([
     },
   },
   {
+    files: ["src/**/*.{ts,tsx}"],
     settings: {
       react: {
         version: "19.1.1",

@@ -33,9 +33,10 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: |
-          pwd
-          ls -la
-          npm run lint
+          echo "Build output files:"
+          ls -la build
+          ls -la build/assets
+      - run: npm run lint
 
 
   unittest:

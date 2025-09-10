@@ -14,8 +14,8 @@
     "start": "vite",
     "env-learn-link": "https://create-react-app.dev/docs/adding-custom-environment-variables/#what-other-env-files-can-be-used",
     "test": "vitest run",
-    "lint": "eslint src/**/*.ts src/**/*.tsx",
-    "lint:fix": "eslint src/**/*.ts src/**/*.tsx --fix"
+    "lint": "eslint",
+    "lint:fix": "eslint --fix"
   },
   "browserslist": {
     "production": [
