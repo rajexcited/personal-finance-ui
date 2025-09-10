@@ -17,5 +17,5 @@ MockRefund(demoMock);
 MockExpenses(demoMock);
 MockStats(demoMock);
 
+export const isDemo = true;
 export default demoMock;
-export { isDemo } from "./mock";

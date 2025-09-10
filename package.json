@@ -17,24 +17,21 @@
     "lint": "eslint src/**",
     "lint:fix": "eslint src/** --fix"
   },
-  "cssnano": {
-    "preset": [
-      "default",
-      {
-        "calc": false
-      }
-    ]
-  },
   "browserslist": {
     "production": [
       ">0.2%",
       "not dead",
-      "not op_mini all"
+      "not op_mini all",
+      "not ie <= 11",
+      "not chrome < 100",
+      "not firefox < 100",
+      "not safari < 20"
     ],
     "development": [
       "last 1 chrome version",
       "last 1 firefox version",
-      "last 1 safari version"
+      "last 1 safari version",
+      "last 1 edge version"
     ]
   },
   "dependencies": {
@@ -76,6 +73,7 @@
     "@types/react": "^19.1.11",
     "@types/react-dom": "^19.1.8",
     "@vitejs/plugin-react": "^5.0.2",
+    "cssnano": "^7.1.1",
     "eslint": "^9.35.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
