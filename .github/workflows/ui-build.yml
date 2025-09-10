@@ -32,7 +32,10 @@ jobs:
       - run: npm --version
       - run: npm ci
       - run: npm run build
-      - run: npm run lint
+      - run: |
+          pwd
+          ls -la
+          npm run lint
 
 
   unittest:
