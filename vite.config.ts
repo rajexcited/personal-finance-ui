@@ -14,6 +14,8 @@ export default defineConfig(({ mode }) => {
     react(),
   ],
   base: env.PUBLIC_URL,
+  // Specify which env variables should be exposed to client
+  envPrefix: ['VITE_'],
   resolve: {
     // Ensure we resolve correct file extensions
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.json', '.css']
