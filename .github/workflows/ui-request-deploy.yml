@@ -1475,15 +1475,15 @@ jobs:
           npm run build
           echo "artifact-name=$ARTIFACT_NAME_PREFIX-$ENV_REF_NAME" >> $GITHUB_OUTPUT
         env:
-          REACT_APP_BASE_PATH: ${{ vars.REACT_APP_BASE_PATH }}
-          REACT_APP_REST_API_BASE_PATH: ${{ vars.REACT_APP_REST_API_BASE_PATH }}
-          REACT_APP_MINIMUM_SESSION_TIME: ${{ vars.REACT_APP_MINIMUM_SESSION_TIME }}
+          VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH }}
+          VITE_REST_API_BASE_PATH: ${{ vars.VITE_REST_API_BASE_PATH }}
+          VITE_MINIMUM_SESSION_TIME: ${{ vars.VITE_MINIMUM_SESSION_TIME }}
           GENERATE_SOURCEMAP: ${{ needs.run_eligible.outputs.is-production != 'true' }}
           PUBLIC_URL: ${{ vars.PUBLIC_URL }}
           ARTIFACT_NAME_PREFIX: ${{ env.ARTIFACT_NAME_PREFIX }}
           ENV_REF_NAME: ${{ needs.run_eligible.outputs.env-ref-name }}
-          REACT_APP_TEST_ATTR_CNDN: ${{ steps.test-attr-condition.outputs.uuid }}
-          REACT_APP_TEST_COOKIE_KEY: ${{ vars.REACT_APP_TEST_COOKIE_KEY }}
+          VITE_TEST_ATTR_CNDN: ${{ steps.test-attr-condition.outputs.uuid }}
+          VITE_TEST_COOKIE_KEY: ${{ vars.VITE_TEST_COOKIE_KEY }}
       - name: upload artifact
         id: upload-artifact
         uses: actions/upload-artifact@v4

@@ -11,7 +11,7 @@ const isAutomationTest = () => {
   //   import.meta.env.VITE_TEST_COOKIE_KEY,
   //   "testCookie=",
   //   testCookie,
-  //   "REACT_APP_TEST_ATTR_CNDN=",
+  //   "VITE_TEST_ATTR_CNDN=",
   //   import.meta.env.VITE_TEST_ATTR_CNDN
   // );
   return import.meta.env.VITE_TEST_ATTR_CNDN === testCookie;

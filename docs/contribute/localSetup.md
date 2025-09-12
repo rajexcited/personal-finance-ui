@@ -20,10 +20,10 @@ Make sure you met pre-requistite. In project directory, run `npm install` to dow
 Create a file `.env.local` in project root directory with these contents
 
 ```properties
-REACT_APP_BASE_PATH=/personal-finance-ui
-REACT_APP_REST_API_BASE_PATH=/
+VITE_BASE_PATH=/personal-finance-ui
+VITE_REST_API_BASE_PATH=/
 GENERATE_SOURCEMAP=true
-REACT_APP_MINIMUM_SESSION_TIME=4 minutes
+VITE_MINIMUM_SESSION_TIME=4 minutes
 ```
 
 Run command `npm start` to start application in development mode.  

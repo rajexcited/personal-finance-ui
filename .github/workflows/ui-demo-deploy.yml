@@ -183,9 +183,9 @@ jobs:
       - run: cp src/demo/demo.ts src/demo/index.ts
       - run: npm run build
         env:
-          REACT_APP_BASE_PATH: ${{ vars.GH_REACT_APP_BASE_PATH }}
-          REACT_APP_REST_API_BASE_PATH: ${{ vars.GH_REACT_APP_REST_API_BASE_PATH }}
-          REACT_APP_MINIMUM_SESSION_TIME: ${{ vars.GH_REACT_APP_MINIMUM_SESSION_TIME }}
+          VITE_BASE_PATH: ${{ vars.GH_VITE_BASE_PATH }}
+          VITE_REST_API_BASE_PATH: ${{ vars.GH_VITE_REST_API_BASE_PATH }}
+          VITE_MINIMUM_SESSION_TIME: ${{ vars.GH_VITE_MINIMUM_SESSION_TIME }}
           GENERATE_SOURCEMAP: ${{ vars.GH_GENERATE_SOURCEMAP }}
           PUBLIC_URL: ${{ vars.GH_PUBLIC_URL }}
       - name: Deploy
