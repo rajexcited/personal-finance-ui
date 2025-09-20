@@ -13,11 +13,11 @@ import { ReceiptProps } from "../../components/receipt";
 import { JSONObject } from "../../shared/utils/deep-obj-difference";
 
 const purchaseDb = new MyLocalDatabase<PurchaseFields>(LocalDBStore.Expense);
-const _rootLogger = getLogger("mock.db.expense.purchase", null, null, "DISABLED");
+const rootLogger = getLogger("mock.db.expense.purchase", null, null, "DISABLED");
 
 // initialize on page load
-const init = async () => {
-  const logger = getLogger("init", _rootLogger);
+export const initializePurchaseDb = async () => {
+  const logger = getLogger("init", rootLogger);
 
   const purchaseTypes = (await getPurchaseTypes()).list;
   logger.debug("retrieved", purchaseTypes.length, "purchase types");
@@ -104,12 +104,12 @@ const init = async () => {
   });
 };
 
-await init();
+await initializePurchaseDb();
 
 export type PurchaseFilter = ExpenseFilter;
 
 export const getPurchaseTags = async (purchasedYears: number[]) => {
-  const logger = getLogger("getPurchaseTags", _rootLogger);
+  const logger = getLogger("getPurchaseTags", rootLogger);
 
   const purchaseList = await purchaseDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ExpenseBelongsTo.Purchase);
   logger.debug("retrieved", purchaseList.length, "purchase. now filtering by purchase year");
@@ -184,7 +184,7 @@ const getReceiptsForPurchaseAddUpdate = async (
 };
 
 export const addUpdatePurchase = async (data: PurchaseFields) => {
-  const logger = getLogger("addUpdate", _rootLogger);
+  const logger = getLogger("addUpdate", rootLogger);
   const existingPurchase = await purchaseDb.getItem(data.id);
 
   if (existingPurchase) {
@@ -192,13 +192,7 @@ export const addUpdatePurchase = async (data: PurchaseFields) => {
       "updating existing expense found. difference (data-existingPurchase) =",
       ObjectDeepDifference(data as unknown as JSONObject, existingPurchase as unknown as JSONObject)
     );
-    const receiptResult = await getReceiptsForPurchaseAddUpdate(
-      existingPurchase.receipts,
-      data.receipts,
-      existingPurchase.id,
-      existingPurchase.id,
-      logger
-    );
+    const receiptResult = await getReceiptsForPurchaseAddUpdate(existingPurchase.receipts, data.receipts, existingPurchase.id, existingPurchase.id, logger);
     if (receiptResult.error) {
       return { error: receiptResult.error };
     }
@@ -208,9 +202,7 @@ export const addUpdatePurchase = async (data: PurchaseFields) => {
       return obj;
     }, {});
     const purchaseItems = data.items || [];
-    const updatedExistingPurchaseIems = purchaseItems
-      .filter((ei) => existingPurchaseItems[ei.id])
-      .map((ei) => ({ ...ei, expenseCategoryName: undefined }));
+    const updatedExistingPurchaseIems = purchaseItems.filter((ei) => existingPurchaseItems[ei.id]).map((ei) => ({ ...ei, expenseCategoryName: undefined }));
     const addedNewPurchaseIems = purchaseItems
       .filter((ei) => !existingPurchaseItems[ei.id])
       .map((ei) => ({ ...ei, expenseCategoryName: undefined, id: uuidv4() }));

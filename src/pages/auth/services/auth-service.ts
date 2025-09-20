@@ -127,7 +127,7 @@ export const getUserDetails = pMemoize(async () => {
     const userDetailsResponse = response.data as UserDetailsResource;
 
     logger.debug("api response =", userDetailsResponse);
-    updateUserDetails(response);
+    await updateUserDetails(response);
     logger.debug("stored user data session");
     validUserDetail = getValidUserDetails(logger);
     if (validUserDetail) {
@@ -140,6 +140,7 @@ export const getUserDetails = pMemoize(async () => {
   }
   logger.debug("responding dummy user data");
   const dummyUserDetail: UserDetailsResource = {
+    id: "",
     emailId: "",
     firstName: "",
     lastName: "",
@@ -165,9 +166,7 @@ export const signup = pMemoize(async (details: UserSignupResource) => {
     pMemoizeClear(getUserDetails);
     logger.debug("stored token session data");
 
-    updateUserDetails({
-      data: { ...details, isAuthenticated: true, status: UserStatus.ACTIVE_USER, fullName: "" }
-    });
+    getUserDetails();
     logger.debug("stored user session data");
   } catch (e) {
     const err = e as Error;

@@ -42,10 +42,14 @@ export const setClearExpenseListCacheHandler = (clearCacheFn: Function) => {
   clearExpenseListCache = clearCacheFn;
 };
 
-const clearCache = (incomeData: IncomeFields) => {
+export const clearCache = (incomeData?: IncomeFields) => {
   clearExpenseListCache();
-  statService.clearStatsCache(StatBelongsTo.Income, getDateInstanceDefaultNewDate(incomeData.incomeDate).getFullYear());
   pMemoizeClear(getDetails);
+  if (incomeData) {
+    statService.clearStatsCache(StatBelongsTo.Income, getDateInstanceDefaultNewDate(incomeData.incomeDate).getFullYear());
+  } else {
+    statService.clearStatsCache(StatBelongsTo.Income);
+  }
 };
 
 const updatePaymentAccount = async (incomeDetails: IncomeFields) => {

@@ -3,17 +3,23 @@ import { ExpenseStatus, ExpenseFields } from "../../pages/expenses";
 import { parseTimestamp, getLogger, LoggerBase } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { ExpenseBelongsTo, PurchaseFields } from "../../pages/expenses/services";
+import { clearReceiptDb } from "./receipts-db";
 
 const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
-const _rootLogger = getLogger("mock.db.expense", null, null, "DISABLED");
+const rootLogger = getLogger("mock.db.expense", null, null, "DISABLED");
 
 // initialize on page load
 const init = async () => {
-  const logger = getLogger("init", _rootLogger);
+  const logger = getLogger("init", rootLogger);
   logger.debug("start");
 };
 
 await init();
+
+export const clearExpenseDb = async () => {
+  const _logger = getLogger("clearExpenseDb", rootLogger);
+  await Promise.all([expenseDb.clearAll(), clearReceiptDb()]);
+};
 
 export interface ExpenseFilter {
   status?: ExpenseStatus[];
@@ -44,7 +50,7 @@ export const getExpenseDate = (xpns: ExpenseFields, logger: LoggerBase) => {
 };
 
 export const getExpenses = async (filters: ExpenseFilter) => {
-  const logger = getLogger("getlist", _rootLogger);
+  const logger = getLogger("getlist", rootLogger);
 
   const filterStatuses = !filters.status || filters.status.length === 0 ? [ExpenseStatus.Enable] : filters.status;
   const expensePromises = filterStatuses.map((status) => {

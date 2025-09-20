@@ -41,10 +41,14 @@ export const setClearExpenseListCacheHandler = (clearCacheFn: Function) => {
   clearExpenseListCache = clearCacheFn;
 };
 
-const clearCache = (refundData: PurchaseRefundFields) => {
+export const clearCache = (refundData?: PurchaseRefundFields) => {
   clearExpenseListCache();
-  statService.clearStatsCache(StatBelongsTo.Refund, getDateInstanceDefaultNewDate(refundData.refundDate).getFullYear());
   pMemoizeClear(getDetails);
+  if (refundData) {
+    statService.clearStatsCache(StatBelongsTo.Refund, getDateInstanceDefaultNewDate(refundData.refundDate).getFullYear());
+  } else {
+    statService.clearStatsCache(StatBelongsTo.Refund);
+  }
 };
 
 const getDefaultPaymentAccounts = async () => {

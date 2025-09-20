@@ -12,6 +12,8 @@ import { AuditFields } from "../../../shared/services/audit-fields";
 import { subtractDatesDefaultToZero } from "../../../shared/utils/date-utils";
 import { UnauthorizedError } from "../../../shared/utils/rest-error-utils";
 import { isBlank } from "../../../shared/utils/string-utils";
+import { LocalDBStore, MyLocalDatabase } from "../../../shared";
+import { clearIndexedDbData } from "../../../shared/db/db";
 
 // user logged in flag
 const userLoggedInKey = "ul";
@@ -32,6 +34,7 @@ const authStore: AuthStore = {
     updatedOn: new Date()
   },
   userDetails: {
+    id: "",
     emailId: "",
     firstName: "",
     lastName: "",
@@ -87,6 +90,7 @@ const resetTokenSession = () => {
 const resetUserSession = () => {
   const logger = getLogger("resetUserSession", storeLogger);
   logger.debug("clearing user details session and updating audit fields");
+  authStore.userDetails.id = "";
   authStore.userDetails.emailId = "";
   authStore.userDetails.firstName = "";
   authStore.userDetails.lastName = "";
@@ -167,7 +171,7 @@ const getFullName = (firstName: string, lastName: string) => {
   return capitalize(lastName) + ", " + capitalize(firstName);
 };
 
-export const updateUserDetails = (response: AxiosResponse<UserDetailsResource, any> | Record<"data", UserDetailsResource>) => {
+export const updateUserDetails = async (response: AxiosResponse<UserDetailsResource, any> | Record<"data", UserDetailsResource>) => {
   const logger = getLogger("updateUserDetails", storeLogger);
   validateUserLoggedIn();
   if (isBlank(response.data.emailId)) {
@@ -180,6 +184,7 @@ export const updateUserDetails = (response: AxiosResponse<UserDetailsResource, a
     throw new Error("missing lastName in response");
   }
   logger.debug("valid response to update");
+  authStore.userDetails.id = response.data.id;
   authStore.userDetails.emailId = response.data.emailId;
   authStore.userDetails.firstName = response.data.firstName;
   authStore.userDetails.lastName = response.data.lastName;
@@ -188,6 +193,21 @@ export const updateUserDetails = (response: AxiosResponse<UserDetailsResource, a
   authStore.userDetails.status = response.data.status;
   authStore.userDetails.createdOn = new Date();
   authStore.userDetails.updatedOn = new Date();
+
+  await resetData();
+};
+
+export const resetData = async () => {
+  const logger = getLogger("resetData", storeLogger);
+  const oldUserId = localStorage.getItem("fin-user");
+  if (oldUserId && oldUserId === authStore.userDetails.id) {
+    logger.debug("user id is same as existing one. not updating");
+    return;
+  }
+  if (authStore.userDetails.id) {
+    localStorage.setItem("fin-user", authStore.userDetails.id);
+    await clearIndexedDbData();
+  }
 };
 
 export const updateNameInDetails = (response: UpdateUserDetailsResource) => {

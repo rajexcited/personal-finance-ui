@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 const rootLogger = getLogger("mock.db.pymtAcc", null, null, "DISABLED");
 const pymtAccDb = new MyLocalDatabase<PymtAccountFields>(LocalDBStore.PaymentAccount);
 
-const init = async () => {
+export const initializePaymentAccountDb = async () => {
   const pymtAccTypes = (await getPaymentAccountTypes()).list;
   const accTypeId = (accTypeName: string) => pymtAccTypes.find((item: any) => item.name === accTypeName)?.id as string;
 
@@ -49,7 +49,12 @@ const init = async () => {
   });
 };
 
-await init();
+await initializePaymentAccountDb();
+
+export const clearPaymentAccountDb = async () => {
+  const logger = getLogger("clearPaymentAccountDb", rootLogger);
+  await pymtAccDb.clearAll();
+};
 
 export const getPymtAccountList = async (statuses?: PymtAccStatus[], baseLogger?: LoggerBase) => {
   const logger = getLogger("getlist", rootLogger, baseLogger);

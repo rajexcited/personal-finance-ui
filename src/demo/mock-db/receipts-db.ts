@@ -4,7 +4,7 @@ import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
 import { isValidUuid } from "../services/common-validators";
 import { ExpenseBelongsTo } from "../../pages/expenses/services";
 
-const _rootLogger = getLogger("mock.db.expense.purchase.receipts");
+const rootLogger = getLogger("mock.db.expense.purchase.receipts");
 const receiptDb = new MyLocalDatabase<DbReceiptFileResource>(LocalDBStore.Receipt);
 
 interface DbReceiptFileResource {
@@ -15,6 +15,11 @@ interface DbReceiptFileResource {
   relationId: string;
   belongsTo: ExpenseBelongsTo;
 }
+
+export const clearReceiptDb = async () => {
+  const _logger = getLogger("clearReceiptDb", rootLogger);
+  await receiptDb.clearAll();
+};
 
 export const getReceiptFileData = async (purchaseId: string, receiptId: string, belongsTo: ExpenseBelongsTo) => {
   if (!isValidUuid(receiptId)) {
@@ -29,7 +34,7 @@ export const getReceiptFileData = async (purchaseId: string, receiptId: string, 
 };
 
 const updateRelationIdForReceipt = async (newRelationId: string, oldRelationId: string, receiptId: string, belongsTo: ExpenseBelongsTo) => {
-  const logger = getLogger("updateRelationIdForReceipt." + belongsTo, _rootLogger);
+  const logger = getLogger("updateRelationIdForReceipt." + belongsTo, rootLogger);
   const items = await receiptDb.getAllFromIndex(LocalDBStoreIndex.ExpenseReceiptName, [receiptId, oldRelationId]);
   if (items.length !== 1 || items[0].belongsTo !== belongsTo) {
     return { error: "receipt not found" };

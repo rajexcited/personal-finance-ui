@@ -8,7 +8,7 @@ const statsDb = new MyLocalDatabase<StatsExpenseResource>(LocalDBStore.Statistic
 const rootPath = "/stats";
 const _logger = getLogger("service.home.stats", null, null, "DISABLED");
 
-export const clearStatsCache = async (belongsTo: StatBelongsTo, years: number | number[]) => {
+export const clearStatsCache = async (belongsTo: StatBelongsTo, years?: number | number[]) => {
   if (belongsTo === StatBelongsTo.PurchaseMinusRefund) {
     // do nothing
     return;
@@ -17,11 +17,14 @@ export const clearStatsCache = async (belongsTo: StatBelongsTo, years: number | 
     pMemoizeClear(getPurchaseStats);
   } else if (belongsTo === StatBelongsTo.Refund) {
     pMemoizeClear(getRefundStats);
-  } else {
-    // if (belongsTo === StatBelongsTo.Income)
+  } else if (belongsTo === StatBelongsTo.Income) {
     pMemoizeClear(getIncomeStats);
   }
 
+  if (years === undefined) {
+    await statsDb.clearAll();
+    return;
+  }
   const statsYears = Array.isArray(years) ? years : [years];
   const statsDetailsPromiseList = statsYears.map((year) => statsDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, [belongsTo, year.toString()]));
   const statDetailsList = await Promise.all(statsDetailsPromiseList);

@@ -1,6 +1,6 @@
 import { getLogger, LoggerBase } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
-import { ExpenseBelongsTo, ExpenseFields } from "../../pages/expenses/services";
+import { ExpenseBelongsTo, ExpenseFields, ExpenseStatus } from "../../pages/expenses/services";
 import { MonthlyStatResource, StatBelongsTo, StatisticsBaseResource, StatsExpenseResource } from "../../pages/home/services/field-types";
 import { v4 as uuidv4 } from "uuid";
 import { getExpenseDate } from "./expense-db";
@@ -94,7 +94,7 @@ const getExpenseList = async (statsBelongsTo: StatBelongsTo, year: number, baseL
 
   logger.debug("filtering expenses by expense date where year is ", year, " for belongsTo =", xpnsBelongsTo);
 
-  const filteredExpenses = expenseList.filter((xpns) => getExpenseDateYear(xpns, logger) === year);
+  const filteredExpenses = expenseList.filter((xpns) => xpns.status === ExpenseStatus.Enable && getExpenseDateYear(xpns, logger) === year);
 
   logger.debug("before filtering, expenseList size=", expenseList.length, ", after filtering expenseList size =", filteredExpenses.length);
 

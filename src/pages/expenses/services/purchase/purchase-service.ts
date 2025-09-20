@@ -74,13 +74,7 @@ const getPaymentAccountMap = async () => {
   pymtAccs.forEach((acc) => {
     pymtAccMap.set(acc.id, acc.shortName);
   });
-  logger.info(
-    "transformed to pymt acc Map, ",
-    pymtAccMap,
-    ", execution Time =",
-    subtractDatesDefaultToZero(null, startTime).toSeconds().value,
-    " sec"
-  );
+  logger.info("transformed to pymt acc Map, ", pymtAccMap, ", execution Time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
   return pymtAccMap;
 };
 
@@ -209,10 +203,14 @@ export const setClearExpenseListCacheHandler = (clearCache: Function) => {
   clearExpenseListCache = clearCache;
 };
 
-const clearCache = (purchaseData: PurchaseFields) => {
+export const clearCache = (purchaseData?: PurchaseFields) => {
   clearExpenseListCache();
   pMemoizeClear(getPurchase);
-  statService.clearStatsCache(StatBelongsTo.Purchase, getDateInstanceDefaultNewDate(purchaseData.purchaseDate).getFullYear());
+  if (purchaseData) {
+    statService.clearStatsCache(StatBelongsTo.Purchase, getDateInstanceDefaultNewDate(purchaseData.purchaseDate).getFullYear());
+  } else {
+    statService.clearStatsCache(StatBelongsTo.Purchase);
+  }
 };
 
 export const getPurchase = pMemoize(async (purchaseId: string) => {

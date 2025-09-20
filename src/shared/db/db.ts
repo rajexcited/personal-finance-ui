@@ -357,3 +357,20 @@ export class MyLocalDatabase<T> {
     }
   }
 }
+
+export const clearIndexedDbData = async () => {
+  const logger = getLogger("clearIndexedDbData");
+  logger.debug("clearing all indexedDb data");
+  const db = await openDB(DataBaseConfig.name, DataBaseConfig.version);
+
+  try {
+    logger.info("object stores =", Array.from(db.objectStoreNames));
+    for (const store of Array.from(db.objectStoreNames)) {
+      logger.debug("clearing store =", store);
+      await db.clear(store);
+    }
+    logger.info("all items are deleted");
+  } finally {
+    db.close();
+  }
+};

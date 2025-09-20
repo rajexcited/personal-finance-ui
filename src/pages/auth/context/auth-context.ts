@@ -11,6 +11,7 @@ interface AuthContextInfo {
 }
 
 export const dummyUserDetails: UserDetailsResource = {
+  id: "",
   emailId: "",
   firstName: "",
   lastName: "",

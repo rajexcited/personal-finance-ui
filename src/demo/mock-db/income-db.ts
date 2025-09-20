@@ -11,11 +11,11 @@ import { JSONObject } from "../../shared/utils/deep-obj-difference";
 import { getDefaultCurrencyProfileId, getIncomeTypes } from "./config-type-db";
 
 const incomeDb = new MyLocalDatabase<IncomeFields>(LocalDBStore.Expense);
-const _rootLogger = getLogger("mock.db.expense.income", null, null, "DISABLED");
+const rootLogger = getLogger("mock.db.expense.income", null, null, "DISABLED");
 
 // initialize on page load
-const init = async () => {
-  const logger = getLogger("init", _rootLogger);
+export const initializeIncomeDb = async () => {
+  const logger = getLogger("init", rootLogger);
 
   const incomeTypes = (await getIncomeTypes()).list;
   logger.debug("retrieved", incomeTypes.length, "income types");
@@ -64,10 +64,10 @@ const init = async () => {
   });
 };
 
-await init();
+await initializeIncomeDb();
 
 export const getIncomeTags = async (incomeYears: number[]) => {
-  const logger = getLogger("getIncomeTags", _rootLogger);
+  const logger = getLogger("getIncomeTags", rootLogger);
 
   const incomeList = await incomeDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ExpenseBelongsTo.Income);
   logger.debug("retrieved", incomeList.length, "incomes. now filtering by year");
@@ -142,7 +142,7 @@ const getReceiptsForIncomeAddUpdate = async (
 };
 
 export const addUpdateIncome = async (data: IncomeFields) => {
-  const logger = getLogger("addUpdateIncome", _rootLogger);
+  const logger = getLogger("addUpdateIncome", rootLogger);
   const existingIncome = await incomeDb.getItem(data.id);
 
   if (existingIncome) {
