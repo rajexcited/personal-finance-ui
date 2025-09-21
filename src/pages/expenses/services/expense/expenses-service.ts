@@ -24,7 +24,7 @@ type ExpenseQueryParams = Record<"pageNo" | "status" | "pageMonths" | "belongsTo
 const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
 
 const rootPath = "/expenses";
-const _logger = getLogger("service.expense", null, null, "DISABLED");
+const rootLogger = getLogger("service.expense", null, null, "DISABLED");
 
 const getExpenseCount = pMemoize(async (queryParams: ExpenseQueryParams) => {
   const countResponse = await axios.get(`${rootPath}/count`, { params: queryParams });
@@ -43,7 +43,7 @@ const isExpenseWithinRange = (expense: ExpenseFields, rangeStartDate: Date, rang
 };
 
 export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseStatus, pageMonths?: number, belongsTo?: ExpenseBelongsTo) => {
-  const logger = getLogger("getExpenseList", _logger);
+  const logger = getLogger("getExpenseList", rootLogger);
 
   const startTime = new Date();
   try {
@@ -66,11 +66,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
       const expenseCountPromise = getExpenseCount(queryParams);
       await Promise.all([dbExpensePromise, expenseCountPromise]);
       const dbExpenses = await dbExpensePromise;
-      logger.debug(
-        "expenseDb.getAllFromIndex and expenseCount.api execution time =",
-        subtractDatesDefaultToZero(null, startTime).toSeconds().value,
-        " sec."
-      );
+      logger.debug("expenseDb.getAllFromIndex and expenseCount.api execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec.");
 
       const rangeStartDate = datetime.addMonths(new Date(), queryPageMonths * -1 * pageNo);
       const rangeEndDate = datetime.addMonths(new Date(), queryPageMonths * -1 * (pageNo - 1));

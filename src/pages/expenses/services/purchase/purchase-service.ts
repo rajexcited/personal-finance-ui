@@ -35,10 +35,10 @@ const purchaseTypeService = PurchaseTypeService();
 const tagService = TagsService(TagBelongsTo.Purchase);
 
 const rootPath = "/expenses/purchase";
-const _logger = getLogger("service.expense.purchase", null, null, "DISABLED");
+const rootLogger = getLogger("service.expense.purchase", null, null, "DISABLED");
 
 const getPurchaseTypeEnum = async () => {
-  const logger = getLogger("getPurchaseTypeEnum", _logger);
+  const logger = getLogger("getPurchaseTypeEnum", rootLogger);
   const startTime = new Date();
   logger.info("cache miss. calling service to get purchase types");
   const types = await getDefaultIfError(purchaseTypeService.getTypes, []);
@@ -52,7 +52,7 @@ const getPurchaseTypeEnum = async () => {
 };
 
 const getDeletedPurchaseTypeEnum = async () => {
-  const logger = getLogger("getDeletedPurchaseTypeEnum", _logger);
+  const logger = getLogger("getDeletedPurchaseTypeEnum", rootLogger);
   const startTime = new Date();
   logger.info("cache miss. calling service to get purchase types");
   const types = await getDefaultIfError(async () => await purchaseTypeService.getTypes(ConfigTypeStatus.Deleted), []);
@@ -66,7 +66,7 @@ const getDeletedPurchaseTypeEnum = async () => {
 };
 
 const getPaymentAccountMap = async () => {
-  const logger = getLogger("getPaymentAccountMap", _logger);
+  const logger = getLogger("getPaymentAccountMap", rootLogger);
   const startTime = new Date();
 
   const pymtAccs = await getDefaultIfError(pymtAccountService.getPymtAccountList, []);
@@ -79,7 +79,7 @@ const getPaymentAccountMap = async () => {
 };
 
 const getPymtAccEnum = async () => {
-  const logger = getLogger("getPymtAccEnum", _logger);
+  const logger = getLogger("getPymtAccEnum", rootLogger);
   logger.info("cache miss. calling service to get pymt accs");
   const pymtAccMap = await getPaymentAccountMap();
   const idkeys = [...pymtAccMap.keys()];
@@ -106,7 +106,7 @@ const updatePymtAcc = (pymtAccMap: Map<string, string>, item: PurchaseFields) =>
 };
 
 const updatePurchaseTypeAndPymtAccName = async (purchaseItem: PurchaseFields) => {
-  const logger = getLogger("updatePurchaseTypeAndPymtAccName", _logger);
+  const logger = getLogger("updatePurchaseTypeAndPymtAccName", rootLogger);
   const startTime = new Date();
   const typeMap = await getPurchaseTypeEnum();
   const pymtAccMap = await getPymtAccEnum();
@@ -138,7 +138,7 @@ const updatePurchaseTypeAndPymtAccName = async (purchaseItem: PurchaseFields) =>
 };
 
 const updatePurchaseTags = async (purchase: PurchaseFields) => {
-  const logger = getLogger("updatePurchaseTags", _logger);
+  const logger = getLogger("updatePurchaseTags", rootLogger);
   const purchaseTags = purchase.tags;
   logger.debug("purchase tags size: ", purchaseTags.length);
   const purchaseItemTags = purchase.items?.flatMap((ei) => ei.tags) || [];
@@ -214,7 +214,7 @@ export const clearCache = (purchaseData?: PurchaseFields) => {
 };
 
 export const getPurchase = pMemoize(async (purchaseId: string) => {
-  const logger = getLogger("getPurchase", _logger);
+  const logger = getLogger("getPurchase", rootLogger);
 
   try {
     if (!purchaseId) {
@@ -239,7 +239,7 @@ export const getPurchase = pMemoize(async (purchaseId: string) => {
 }, getCacheOption("10 sec"));
 
 export const addUpdatePurchase = pMemoize(async (purchase: PurchaseFields) => {
-  const logger = getLogger("addUpdatePurchase", _logger);
+  const logger = getLogger("addUpdatePurchase", rootLogger);
 
   validatePurchaseBelongsTo(purchase);
   try {
@@ -288,7 +288,7 @@ export const addUpdatePurchase = pMemoize(async (purchase: PurchaseFields) => {
 }, getCacheOption("5 sec"));
 
 export const removePurchase = pMemoize(async (purchaseId: string) => {
-  const logger = getLogger("removePurchase", _logger);
+  const logger = getLogger("removePurchase", rootLogger);
 
   try {
     const response = await axios.delete(rootPath + "/id/" + purchaseId);

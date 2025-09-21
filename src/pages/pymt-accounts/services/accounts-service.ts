@@ -20,7 +20,7 @@ import pMemoize, { pMemoizeClear } from "p-memoize";
 const paymentAccountDb = new MyLocalDatabase<PymtAccountFields>(LocalDBStore.PaymentAccount);
 const tagService = TagsService(TagBelongsTo.PaymentAccounts);
 const rootPath = "/payment/accounts";
-const _logger = getLogger("service.payment-account");
+const rootLogger = getLogger("service.payment-account");
 
 const getAccountTypesEnum = async () => {
   const acctypes = await pymtAccountTypeService.getAccountTypes();
@@ -43,7 +43,7 @@ const updateAccountType = (accountTypeMap: Map<string, string>, pymtAccount: Pym
 };
 
 export const getPymtAccountList = pMemoize(async (status?: PymtAccStatus) => {
-  const logger = getLogger("getPymtAccountList", _logger);
+  const logger = getLogger("getPymtAccountList", rootLogger);
 
   try {
     const pymtAccounts: PymtAccountFields[] = [];
@@ -96,7 +96,7 @@ export const getPymtAccountList = pMemoize(async (status?: PymtAccStatus) => {
 }, getCacheOption("1 min"));
 
 export const getPymtAccount = pMemoize(async (accountId: string) => {
-  const logger = getLogger("getPymtAccount", _logger);
+  const logger = getLogger("getPymtAccount", rootLogger);
 
   try {
     const pymtAccount = await paymentAccountDb.getItem(accountId);
@@ -133,7 +133,7 @@ export const getPymtAccount = pMemoize(async (accountId: string) => {
 }, getCacheOption("20 sec"));
 
 export const addUpdatePymtAccount = pMemoize(async (pymtAccount: PymtAccountFields) => {
-  const logger = getLogger("addUpdatePymtAccount", _logger);
+  const logger = getLogger("addUpdatePymtAccount", rootLogger);
 
   try {
     const accountTypeMap = await getAccountTypesEnum();
@@ -158,7 +158,7 @@ export const addUpdatePymtAccount = pMemoize(async (pymtAccount: PymtAccountFiel
 }, getCacheOption("5 sec"));
 
 export const removePymtAccount = pMemoize(async (accountId: string) => {
-  const logger = getLogger("removePymtAccount", _logger);
+  const logger = getLogger("removePymtAccount", rootLogger);
 
   try {
     const response = await axios.delete(`${rootPath}/id/${accountId}`);
@@ -183,7 +183,7 @@ export const getPymtAccountTypes = () => {
 };
 
 const initializePymtAccountTags = async () => {
-  const logger = getLogger("initializePymtAccountTags", _logger, null, "DISABLED");
+  const logger = getLogger("initializePymtAccountTags", rootLogger, null, "DISABLED");
   const tagCount = await tagService.getCount();
   logger.debug("tagCount =", tagCount);
   if (tagCount > 0) {

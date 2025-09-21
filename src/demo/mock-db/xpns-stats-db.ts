@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { getExpenseDate } from "./expense-db";
 
 const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
-const _rootLogger = getLogger("mock.db.expense.stats", null, null, "DISABLED");
+const rootLogger = getLogger("mock.db.expense.stats", null, null, "DISABLED");
 
 const getExpenseDateYear = (xpns: ExpenseFields, logger: LoggerBase) => {
   return getExpenseDate(xpns, logger).getFullYear();
@@ -17,18 +17,18 @@ const getMonthName = (monthNo: number, year: number) => {
 };
 
 export const getExpenseStats = async (belongsTo: StatBelongsTo, year: number) => {
-  const logger = getLogger("getExpenseStats", _rootLogger);
+  const logger = getLogger("getExpenseStats", rootLogger);
 
   const expenseList = await getExpenseList(belongsTo, year, logger);
-  type _MonthlyStatResource = Omit<MonthlyStatResource, "total"> & {
+  type MonthlyStatResourceV2 = Omit<MonthlyStatResource, "total"> & {
     total: number;
   };
-  type _StatisticsBaseResource = Omit<StatisticsBaseResource, "total" | "monthlyTotal"> & {
+  type StatisticsBaseResourceV2 = Omit<StatisticsBaseResource, "total" | "monthlyTotal"> & {
     total: number;
-    monthlyTotal: Record<number, _MonthlyStatResource>;
+    monthlyTotal: Record<number, MonthlyStatResourceV2>;
   };
 
-  const statDetails: _StatisticsBaseResource = {
+  const statDetails: StatisticsBaseResourceV2 = {
     total: 0,
     count: 0,
     monthlyTotal: {},

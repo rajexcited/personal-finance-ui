@@ -10,7 +10,7 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
   const configDb = new MyLocalDatabase<ConfigResource>(LocalDBStore.Config);
 
   const rootPath = `/config/types/belongs-to/${belongsToParam}`;
-  const _logger = getLogger("service.config-type." + belongsToParam, null, null, "DISABLED");
+  const rootLogger = getLogger("service.config-type." + belongsToParam, null, null, "DISABLED");
 
   /**
    * retieves list of configType. filter configType list by given parameter
@@ -19,7 +19,7 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
    * @returns list of config type
    */
   const getConfigTypeList = pMemoize(async (filterByStatuses?: ConfigTypeStatus[], minSize?: number) => {
-    const logger = getLogger("getConfigTypes", _logger);
+    const logger = getLogger("getConfigTypes", rootLogger);
     try {
       let dbKeys: string[] | string[][];
       let queyParams: Record<string, string[]> | null = null;
@@ -77,7 +77,7 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
    * @returns
    */
   const getConfigType = pMemoize(async (configId: string) => {
-    const logger = getLogger("getConfigType", _logger);
+    const logger = getLogger("getConfigType", rootLogger);
     try {
       const configType = await configDb.getItem(configId);
       if (configType) {
@@ -106,7 +106,7 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
    * @param configData
    */
   const addUpdateConfigType = pMemoize(async (configData: ConfigResource) => {
-    const logger = getLogger("addUpdateConfigType", _logger);
+    const logger = getLogger("addUpdateConfigType", rootLogger);
     try {
       const data = { ...configData };
       const response = await axios.post(rootPath, data);
@@ -130,7 +130,7 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
    * @param configId
    */
   const deleteConfigType = pMemoize(async (configId: string) => {
-    const logger = getLogger("deleteConfigType", _logger);
+    const logger = getLogger("deleteConfigType", rootLogger);
 
     try {
       const response = await axios.delete(`${rootPath}/id/${configId}`);
@@ -149,7 +149,7 @@ export const ConfigTypeService = (belongsToParam: ConfigTypeBelongsTo) => {
    * @param configstatusData
    */
   const updateConfigTypeStatus = pMemoize(async (configstatusData: UpdateConfigStatusResource) => {
-    const logger = getLogger("updateConfigTypeStatus", _logger);
+    const logger = getLogger("updateConfigTypeStatus", rootLogger);
 
     try {
       const response = await axios.post(`${rootPath}/id/${configstatusData.id}/status/${configstatusData.status}`);

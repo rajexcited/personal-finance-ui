@@ -7,7 +7,7 @@ import { ExpenseBelongsTo, IncomeFields } from "../../pages/expenses/services";
 import { addUpdateIncome, deleteIncome, getIncomeDetails, getIncomeTags } from "../mock-db/income-db";
 
 type IncomeParam = Partial<Record<"status" | "pageNo" | "pageMonths" | "year", string[]>>;
-const _rootLogger = getLogger("mock.api.expenses.income", null, null, "DISABLED");
+const rootLogger = getLogger("mock.api.expenses.income", null, null, "DISABLED");
 const rootPath = "/expenses/income";
 
 export const MockIncome = (demoMock: MockAdapter) => {
@@ -34,7 +34,7 @@ export const MockIncome = (demoMock: MockAdapter) => {
   });
 
   demoMock.onPost(rootPath).reply(async (config) => {
-    const logger = getLogger("addUpdate", _rootLogger);
+    const logger = getLogger("addUpdate", rootLogger);
     const responseCreator = AxiosResponseCreator(config);
     const isAuthorized = validateAuthorization(config.headers);
     if (!isAuthorized) {
@@ -63,7 +63,7 @@ export const MockIncome = (demoMock: MockAdapter) => {
   });
 
   demoMock.onGet(rootPath + "/tags").reply(async (config) => {
-    const logger = getLogger("getTags", _rootLogger);
+    const logger = getLogger("getTags", rootLogger);
     const responseCreator = AxiosResponseCreator(config);
 
     const isAuthorized = validateAuthorization(config.headers);
@@ -100,7 +100,7 @@ export const MockIncome = (demoMock: MockAdapter) => {
   });
 
   demoMock.onPost(new RegExp(rootPath + "/id/.+/receipts/id/.+")).reply(async (config) => {
-    const logger = getLogger("uploadReceipt", _rootLogger);
+    const logger = getLogger("uploadReceipt", rootLogger);
     const responseCreator = AxiosResponseCreator(config);
 
     const isAuthorized = validateAuthorization(config.headers);

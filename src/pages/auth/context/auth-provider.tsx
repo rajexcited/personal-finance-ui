@@ -187,7 +187,7 @@ const AuthContextProvider: FunctionComponent<AuthContextProviderProps> = ({ chil
               <div className="notification is-link is-light" {...testAttributes("expire-status-msg")}>
                 {expiringStatus === ExpireStatus.ExpiringSoon && (
                   <p>
-                    Time is running out. <Anchor onClick={onClickRefreshHandler}>click to continue</Anchor>{" "}
+                    Time is running out. <Anchor onClick={onClickRefreshHandler}>click to continue</Anchor>
                   </p>
                 )}
                 {expiringStatus === ExpireStatus.Expired && <ReactMarkdown children="You are logged out" />}

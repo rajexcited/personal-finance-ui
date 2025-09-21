@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 const statsDb = new MyLocalDatabase<StatsExpenseResource>(LocalDBStore.Statistics);
 
 const rootPath = "/stats";
-const _logger = getLogger("service.home.stats", null, null, "DISABLED");
+const rootLogger = getLogger("service.home.stats", null, null, "DISABLED");
 
 export const clearStatsCache = async (belongsTo: StatBelongsTo, years?: number | number[]) => {
   if (belongsTo === StatBelongsTo.PurchaseMinusRefund) {
@@ -33,7 +33,7 @@ export const clearStatsCache = async (belongsTo: StatBelongsTo, years?: number |
 };
 
 export const getRefundStats = pMemoize(async (year: string) => {
-  const logger = getLogger("getRefundStats", _logger);
+  const logger = getLogger("getRefundStats", rootLogger);
 
   try {
     const dbRefundStats = await statsDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, [StatBelongsTo.Refund, year]);
@@ -56,7 +56,7 @@ export const getRefundStats = pMemoize(async (year: string) => {
 }, getCacheOption("30 sec"));
 
 export const getPurchaseStats = pMemoize(async (year: string) => {
-  const logger = getLogger("getPurchaseStats", _logger);
+  const logger = getLogger("getPurchaseStats", rootLogger);
 
   try {
     const dbPurchaseStats = await statsDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, [StatBelongsTo.Purchase, year]);
@@ -80,7 +80,7 @@ export const getPurchaseStats = pMemoize(async (year: string) => {
 }, getCacheOption("30 sec"));
 
 export const getIncomeStats = pMemoize(async (year: string) => {
-  const logger = getLogger("getIncomeStats", _logger);
+  const logger = getLogger("getIncomeStats", rootLogger);
 
   try {
     const dbIncomeStats = await statsDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, [StatBelongsTo.Income, year]);

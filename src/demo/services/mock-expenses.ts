@@ -6,7 +6,7 @@ import { LoggerBase, getLogger } from "../../shared";
 import { ExpenseBelongsTo, ExpenseStatus } from "../../pages/expenses/services/expense/field-types";
 
 type ExpenseParam = Partial<Pick<Record<string, string[]>, "status" | "pageNo" | "pageMonths" | "belongsTo">>;
-const _rootLogger = getLogger("mock.api.expenses", null, null, "DISABLED");
+const rootLogger = getLogger("mock.api.expenses", null, null, "DISABLED");
 const rootPath = "/expenses";
 
 export const MockExpenses = (demoMock: MockAdapter) => {
@@ -63,7 +63,7 @@ export const MockExpenses = (demoMock: MockAdapter) => {
   };
 
   demoMock.onGet(rootPath + "/count").reply(async (config) => {
-    const logger = getLogger("getCount", _rootLogger);
+    const logger = getLogger("getCount", rootLogger);
     const responseCreator = AxiosResponseCreator(config);
 
     const isAuthorized = validateAuthorization(config.headers);
@@ -81,7 +81,7 @@ export const MockExpenses = (demoMock: MockAdapter) => {
   });
 
   demoMock.onGet(rootPath).reply(async (config) => {
-    const logger = getLogger("getList", _rootLogger);
+    const logger = getLogger("getList", rootLogger);
     const responseCreator = AxiosResponseCreator(config);
 
     const isAuthorized = validateAuthorization(config.headers);

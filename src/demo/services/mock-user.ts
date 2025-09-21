@@ -17,7 +17,7 @@ import { clearExpenseDb } from "../mock-db/expense-db";
 
 type UserDetailsRsc = Omit<UserDetailsResource, "isAuthenticated" | "fullName">;
 
-const _rootLogger = getLogger("mock.api.user", null, null, "DISABLED");
+const rootLogger = getLogger("mock.api.user", null, null, "DISABLED");
 
 const resetData = async () => {
   await Promise.all([clearExpenseDb(), clearPaymentAccountDb(), clearConfigTypeDb()]);
@@ -224,7 +224,7 @@ export const MockUser = (demoMock: MockAdapter) => {
   });
 
   demoMock.onDelete("/user/details").reply((config) => {
-    const logger = getLogger("deleteUser", _rootLogger);
+    const logger = getLogger("deleteUser", rootLogger);
     const responseCreator = AxiosResponseCreator(config);
 
     logger.debug("mock api called, config =", { ...config });

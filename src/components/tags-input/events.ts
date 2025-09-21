@@ -206,8 +206,8 @@ export interface TagObject {
   id: string;
 }
 
-export const buildDropdown = (tagsInput: BulmaTagsInput, sourceValues: string[] | TagObject[], _logger?: LoggerBase) => {
-  const logger = getLogger("buildDropdown", _logger, rootLogger);
+export const buildDropdown = (tagsInput: BulmaTagsInput, sourceValues: string[] | TagObject[], baseLogger?: LoggerBase) => {
+  const logger = getLogger("buildDropdown", baseLogger, rootLogger);
 
   const dropdownItemCount = Array.from(tagsInput.dropdown.children).filter((child) => !child.classList.contains("empty-title")).length;
   if (dropdownItemCount === sourceValues.length) {

@@ -14,14 +14,14 @@ interface ApiResponseCacheResource {
 
 const db = new MyLocalDatabase<ApiResponseCacheResource>(LocalDBStore.Config);
 
-const _logger = getLogger("service.api.response.cache", null, null, "DISABLED");
+const rootLogger = getLogger("service.api.response.cache", null, null, "DISABLED");
 
 const getId = (url: string, params: Record<string, string[]> | null | undefined) => {
   return url + "_" + JSON.stringify(params || {});
 };
 
 export const updateApiResponse = (response: AxiosResponse) => {
-  const logger = getLogger("updateApiResponse", _logger);
+  const logger = getLogger("updateApiResponse", rootLogger);
   const url = response.config.url as string;
   const params = (response.config.params || {}) as Record<string, string[]>;
   let listSize = 0;
@@ -59,7 +59,7 @@ interface CriteriaResource {
  * @returns true, if api response is cached and matching given criteria. otherwise false
  */
 export const isApiCalled = async (criteria: CriteriaResource, url: string, queryParams?: Record<string, string[]> | null) => {
-  const _fcLogger = getLogger("isApiCalled", _logger);
+  const _fcLogger = getLogger("isApiCalled", rootLogger);
   const item = (await getApiResponse(url, queryParams)) as ApiResponseCacheResource;
   let isValid = !!item;
 

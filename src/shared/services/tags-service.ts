@@ -22,11 +22,11 @@ interface TagResource {
 
 export const TagsService = (belongsTo: TagBelongsTo) => {
   const tagsDb = new MyLocalDatabase<TagResource>(LocalDBStore.Tags);
-  const _logger = getLogger("service.tags", null, null, "DISABLED");
+  const tagLogger = getLogger("service.tags", null, null, "DISABLED");
 
   return {
     updateTags: async (tags: string | string[]) => {
-      const logger = getLogger("updateTags." + belongsTo, _logger);
+      const logger = getLogger("updateTags." + belongsTo, tagLogger);
       const tagSet = new Set(tags);
       logger.debug("received [", tagSet.size, "] tags to update to db");
 
@@ -42,7 +42,7 @@ export const TagsService = (belongsTo: TagBelongsTo) => {
     },
 
     getTags: async () => {
-      const logger = getLogger("getTags." + belongsTo, _logger);
+      const logger = getLogger("getTags." + belongsTo, tagLogger);
       const list = await tagsDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, belongsTo);
       logger.debug("retrieved [", list.length, "] list of tags");
       return list.map((tr) => tr.value);
