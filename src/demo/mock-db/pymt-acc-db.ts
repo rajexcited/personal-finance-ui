@@ -52,7 +52,7 @@ export const initializePaymentAccountDb = async () => {
 await initializePaymentAccountDb();
 
 export const clearPaymentAccountDb = async () => {
-  const logger = getLogger("clearPaymentAccountDb", rootLogger);
+  const _logger = getLogger("clearPaymentAccountDb", rootLogger);
   await pymtAccDb.clearAll();
 };
 

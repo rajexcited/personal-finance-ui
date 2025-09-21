@@ -12,7 +12,6 @@ import { AuditFields } from "../../../shared/services/audit-fields";
 import { subtractDatesDefaultToZero } from "../../../shared/utils/date-utils";
 import { UnauthorizedError } from "../../../shared/utils/rest-error-utils";
 import { isBlank } from "../../../shared/utils/string-utils";
-import { LocalDBStore, MyLocalDatabase } from "../../../shared";
 import { clearIndexedDbData } from "../../../shared/db/db";
 
 // user logged in flag
