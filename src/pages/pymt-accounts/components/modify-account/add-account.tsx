@@ -7,87 +7,97 @@ import { getFullPath } from "../../../root";
 import { useAuth } from "../../../auth";
 import ReactMarkdown from "react-markdown";
 import { PymtAccountDetailLoaderResource } from "../../route-handlers/account-loader";
-import { testAttributes } from "../../../../shared";
+import { getLogger, testAttributes } from "../../../../shared";
+import { getShortPath } from "../../../root/components/navigation";
 
+const fcLogger = getLogger("FC.AddPymtAccount", null, null, "DISABLED");
 
 const AddAccount: FunctionComponent = () => {
-    const [accountId, setAccountId] = useState('');
-    const navigation = useNavigation();
-    const submit = useSubmit();
-    const auth = useAuth();
-    // for error
-    const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
-    const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountDetailLoaderResource, null>;
-    const [errorMessage, setErrorMessage] = useState("");
+  const [accountId, setAccountId] = useState("");
+  const navigation = useNavigation();
+  const submit = useSubmit();
+  const auth = useAuth();
+  // for error
+  const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
+  const loaderData = useLoaderData() as RouteHandlerResponse<PymtAccountDetailLoaderResource, null>;
+  const [errorMessage, setErrorMessage] = useState("");
+  const [submitLabel, setSubmitLabel] = useState("Add");
 
-    useEffect(() => {
-        // creating temporary id
-        setAccountId(uuidv4());
-    }, []);
+  useEffect(() => {
+    // creating temporary id
+    setAccountId(uuidv4());
+  }, []);
 
-    useEffect(() => {
-        if (loaderData.type === "error") {
-            setErrorMessage(loaderData.errorMessage);
-        }
-        else if (actionData?.type === "error") {
-            setErrorMessage(actionData.errorMessage);
-        } else if (actionData?.type === "success" || loaderData.type === "success") {
-            setErrorMessage("");
-        }
-    }, [actionData, loaderData]);
+  useEffect(() => {
+    if (loaderData.type === "error") {
+      setErrorMessage(loaderData.errorMessage);
+    } else if (actionData?.type === "error") {
+      setErrorMessage(actionData.errorMessage);
+    } else if (actionData?.type === "success" || loaderData.type === "success") {
+      setErrorMessage("");
+    }
+  }, [actionData, loaderData]);
 
-    const onAddedAccount = (data: PymtAccountFields) => {
-        if (auth.userDetails.isAuthenticated) {
-            const formData: any = {
-                ...data,
-                id: accountId,
-            };
+  useEffect(() => {
+    const useEffectLogger = getLogger("useEffect.dep[navigation.state, navigation.location]", fcLogger);
+    useEffectLogger.debug("navigation state:", navigation.state, "; navigation location:", navigation.location, "; shortPath: ", getShortPath("addPymAccount"));
+    if (navigation.state === "submitting") {
+      setSubmitLabel("Adding...");
+    } else if (navigation.state === "loading" && !navigation.location?.pathname.endsWith(getShortPath("addPymAccount"))) {
+      setSubmitLabel("Added...");
+    } else {
+      setSubmitLabel("Add");
+    }
+  }, [navigation.state, navigation.location]);
 
-            submit(formData, { action: getFullPath("addPymAccount"), method: "post", encType: "application/json" });
-        } else {
-            setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
-        }
-    };
+  const onAddedAccount = (data: PymtAccountFields) => {
+    if (auth.userDetails.isAuthenticated) {
+      const formData: any = {
+        ...data,
+        id: accountId
+      };
 
-    return (
-        <>
-            {
-                errorMessage &&
-                <article className="message is-danger" { ...testAttributes("add-payment-account-error-message") }>
-                    <div className="message-body">
-                        <ReactMarkdown children={ errorMessage } />
-                    </div>
-                </article>
-            }
+      submit(formData, { action: getFullPath("addPymAccount"), method: "post", encType: "application/json" });
+    } else {
+      setErrorMessage("you have been logged out. please (login)[/login] to add payment account");
+    }
+  };
 
-            {
-                loaderData.type === "success" && !auth.readOnly &&
+  return (
+    <>
+      {errorMessage && (
+        <article className="message is-danger" {...testAttributes("add-payment-account-error-message")}>
+          <div className="message-body">
+            <ReactMarkdown children={errorMessage} />
+          </div>
+        </article>
+      )}
 
-                <div className="columns">
-                    <div className="column">
-                        <AccountForm
-                            key="add-account-form"
-                            accountId={ accountId }
-                            submitLabel={ navigation.state === "submitting" ? "Adding Account details..." : "Add" }
-                            onSubmit={ onAddedAccount }
-                            sourceTags={ loaderData.data.pymtAccountTags }
-                            categoryTypes={ loaderData.data.categoryTypes }
-                            currencyProfiles={ loaderData.data.currencyProfiles }
-                        />
-                    </div>
-                </div>
-            }
+      {loaderData.type === "success" && !auth.readOnly && (
+        <div className="columns">
+          <div className="column">
+            <AccountForm
+              key="add-account-form"
+              accountId={accountId}
+              submitLabel={submitLabel}
+              onSubmit={onAddedAccount}
+              sourceTags={loaderData.data.pymtAccountTags}
+              categoryTypes={loaderData.data.categoryTypes}
+              currencyProfiles={loaderData.data.currencyProfiles}
+            />
+          </div>
+        </div>
+      )}
 
-            { auth.readOnly &&
-                <div className="columns">
-                    <div className="column">
-                        <span { ...testAttributes("add-payment-account-not-allowed") }>Not Allowed to add Payment Account</span>
-                    </div></div>
-            }
-
-        </>
-    );
+      {auth.readOnly && (
+        <div className="columns">
+          <div className="column">
+            <span {...testAttributes("add-payment-account-not-allowed")}>Not Allowed to add Payment Account</span>
+          </div>
+        </div>
+      )}
+    </>
+  );
 };
 
 export default AddAccount;
-
