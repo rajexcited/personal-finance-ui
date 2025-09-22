@@ -23,6 +23,7 @@ declare module "@creativebulma/bulma-tagsinput" {
     source?: string | string[] | ((val: string) => string[]); // Array/Function/Promise to get external data
     tagClass?: string; // Customize tags style by passing classes - They will be added to the tag element
     trim?: boolean; // Should we trim value before processing them ?
+    addNewLabelTemplate?: string; // Label to use in the dropdown to add a new tag
   }
 
   export default class BulmaTagsInput {
@@ -42,6 +43,7 @@ declare module "@creativebulma/bulma-tagsinput" {
      */
     static observeDom(selector: string, options: BulmaTagsInputOptions): void;
 
+    options: BulmaTagsInputOptions;
     /**
      * Get items
      */

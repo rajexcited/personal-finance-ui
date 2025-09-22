@@ -1,11 +1,10 @@
 import "./tags-input.css";
 import { FunctionComponent, useRef, useEffect, useState } from "react";
-import BulmaTagsInput, { BulmaTagsInputOptions } from '@creativebulma/bulma-tagsinput';
+import BulmaTagsInput, { BulmaTagsInputOptions } from "@creativebulma/bulma-tagsinput";
 import "@creativebulma/bulma-tagsinput/dist/css/bulma-tagsinput.min.css";
 import { getLogger, sleep, testAttributes } from "../../shared";
 import { DeviceMode, useOrientation } from "../../hooks";
 import { buildDropdown, initializeEventHandler } from "./events";
-
 
 interface TagsInputProps {
   id: string;
@@ -30,15 +29,15 @@ const defaultOptions: BulmaTagsInputOptions = {
   minChars: 2,
   noResultsLabel: "No results found",
   removable: true,
-  searchMinChars: 1,
+  searchMinChars: 0,
   searchOn: "text",
   selectable: true,
   tagClass: "is-rounded is-link",
   trim: true,
   itemText: "val",
-  maxTags: 10
+  maxTags: 10,
+  addNewLabelTemplate: '➕ Add "{{value}}" as new'
 };
-
 
 const fcLogger = getLogger("FC.TagsInput", null, null, "DISABLED");
 
@@ -63,7 +62,6 @@ export const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
     const options = {
       ...defaultOptions,
       ...props,
-      searchMinChars: deviceMode === DeviceMode.Mobile ? 0 : defaultOptions.searchMinChars,
       source: sourceValues
     };
     logger.debug("options =", options);
@@ -72,16 +70,16 @@ export const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
     const unbindEvents = initializeEventHandler(tagsInput);
     buildDropdown(tagsInput, props.sourceValues, logger);
 
-    tagsInput.on("after.add", (itemObj: { item: string; }) => {
-      // added item 
+    tagsInput.on("after.add", (itemObj: { item: string }) => {
+      // added item
       if (props.onChange) {
         updateSourceValues(itemObj.item);
         props.onChange((tagsInput.value as string).split(","));
       }
-      setTagCount(prev => prev + 1);
+      setTagCount((prev) => prev + 1);
     });
     tagsInput.on("after.remove", (_item) => {
-      // removed item 
+      // removed item
       if (props.onChange) {
         const tval = tagsInput.value as string;
         const updatedTags = [];
@@ -91,7 +89,7 @@ export const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
         props.onChange(updatedTags);
       }
       buildDropdown(tagsInput, sourceValues, logger);
-      setTagCount(prev => prev - 1);
+      setTagCount((prev) => prev - 1);
     });
     tagsInput.on("after.select", (itemObj) => {
       // when selected in mobile device, trigger remove
@@ -104,50 +102,52 @@ export const TagsInput: FunctionComponent<TagsInputProps> = (props) => {
 
     const updateSourceValues = (item: string) => {
       const sourceValueSet = new Set(props.sourceValues);
-      props.defaultValue.forEach(value => sourceValueSet.add(value));
+      props.defaultValue.forEach((value) => sourceValueSet.add(value));
       if (item) sourceValueSet.add(item);
 
       sourceValues.length = 0;
-      sourceValueSet.forEach(value => sourceValues.push(value));
+      sourceValueSet.forEach((value) => sourceValues.push(value));
     };
 
     updateSourceValues("");
     setTagCount(props.defaultValue.length);
 
     return () => {
-      logger.debug("tagsRef.current =", tagsRef.current, ", tagsInput =", tagsInput, ", tagsInput.container =", tagsInput.container, ", html =", tagsInput.container.parentElement?.outerHTML);
+      logger.debug(
+        "tagsRef.current =",
+        tagsRef.current,
+        ", tagsInput =",
+        tagsInput,
+        ", tagsInput.container =",
+        tagsInput.container,
+        ", html =",
+        tagsInput.container.parentElement?.outerHTML
+      );
       unbindEvents();
       tagsInput.flush();
       tagsInput.destroy();
 
       document.removeEventListener("click", tagsInput._onDocumentClick);
     };
-
   }, []);
 
-
-
   return (
-    <div className="field" { ...testAttributes("tags-field", "id", props.id) }>
-      <label className="label">{ props.label }</label>
-      {
-        deviceMode === DeviceMode.Mobile &&
-        <p className="help is-info">
-          tap on item to select tag from list or type comma to add written new tag
-        </p>
-      }
+    <div className="field" {...testAttributes("tags-field", "id", props.id)}>
+      <label className="label">{props.label}</label>
+      {deviceMode === DeviceMode.Mobile && <p className="help is-info">tap on item to select tag from list or type comma to add written new tag</p>}
       <div className="control">
-        <input ref={ tagsRef }
+        <input
+          ref={tagsRef}
           type="text"
-          placeholder={ props.placeholder }
+          placeholder={props.placeholder}
           className="input is-large"
           data-type="tags"
-          defaultValue={ props.defaultValue.join(",") }
+          defaultValue={props.defaultValue.join(",")}
           autoCapitalize="off"
         />
       </div>
-      <p className="help is-info has-text-right" { ...testAttributes(props.id + "-tags-counter") }>
-        { "counter: " + tagCount + (props.maxTags ? "/" + props.maxTags : "") }
+      <p className="help is-info has-text-right" {...testAttributes(props.id + "-tags-counter")}>
+        {"counter: " + tagCount + (props.maxTags ? "/" + props.maxTags : "")}
       </p>
     </div>
   );
