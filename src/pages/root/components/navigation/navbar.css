@@ -11,3 +11,13 @@
 .navbar.is-white .navbar-start .navbar-item.has-dropdown .navbar-dropdown>.navbar-item.is-active {
     background-color: #d5d5d5;
 }
+
+.navbar-dropdown.is-active {
+    display: block;
+}
+
+@media screen and (min-width: 1024px) {
+    .navbar-dropdown a.navbar-item .icon-text {
+        flex-wrap: nowrap;
+    }
+}
