@@ -236,6 +236,34 @@ const NavBar: FunctionComponent = () => {
     }
   };
 
+  const openNavbarItemDropdownOnFocus = (event: React.FocusEvent<HTMLDivElement>, prop: NavbarItemDropDownProp) => {
+    event.preventDefault();
+    if (deviceMode === DeviceMode.Desktop) {
+      setNavbarItems((prev) =>
+        prev.map((item) => {
+          if (item.id === prop.id) {
+            return { ...item, isHovered: true };
+          }
+          return item;
+        })
+      );
+    }
+  };
+
+  const closeNavbarItemDropdownOnBlur = (event: React.FocusEvent<HTMLDivElement>, prop: NavbarItemDropDownProp) => {
+    event.preventDefault();
+    if (deviceMode === DeviceMode.Desktop) {
+      setNavbarItems((prev) =>
+        prev.map((item) => {
+          if (item.id === prop.id) {
+            return { ...item, isHovered: false };
+          }
+          return item;
+        })
+      );
+    }
+  };
+
   const rootPath = getFullPath("rootPath");
   const logoutPage = getFullPath("logoutPage");
   fcLogger.debug("navbar component updated, isActive=", isActive);
@@ -281,6 +309,8 @@ const NavBar: FunctionComponent = () => {
                     key={"dropdown" + itemProp.id}
                     onMouseOver={(e) => openNavbarItemDropdown(e, itemProp)}
                     onMouseOut={(e) => closeNavbarItemDropdown(e, itemProp)}
+                    onFocus={(e) => openNavbarItemDropdownOnFocus(e, itemProp)}
+                    onBlur={(e) => closeNavbarItemDropdownOnBlur(e, itemProp)}
                   >
                     <NavBarItem
                       icon={itemProp.icon}
@@ -292,7 +322,7 @@ const NavBar: FunctionComponent = () => {
                       isSelected={itemProp.isSelected}
                       class="navbar-link"
                     />
-                    <div className={"navbar-dropdown" + (!!itemProp.isHovered ? " is-active" : "")}>
+                    <div className={"navbar-dropdown" + (itemProp.isHovered ? " is-active" : "")}>
                       {itemProp.dropdownItems.map((ddItemProp) => (
                         <NavBarItem
                           icon={ddItemProp.icon}

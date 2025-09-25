@@ -359,7 +359,7 @@ export class MyLocalDatabase<T> {
 }
 
 export const clearIndexedDbData = async () => {
-  const logger = getLogger("clearIndexedDbData");
+  const logger = getLogger("clearIndexedDbData", null, null, "DISABLED");
   logger.debug("clearing all indexedDb data");
   const db = await openDB(DataBaseConfig.name, DataBaseConfig.version);
 
