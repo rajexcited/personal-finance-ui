@@ -54,13 +54,14 @@ const subNavItemsMap: { [key: string]: SubNavItem[] } = {
   ]
 };
 
-type NavbarItemDropDownProp = NavbarItemProp & { isHovered?: boolean; dropdownItems?: NavbarItemProp[] };
+type NavbarItemDropDownProp = NavbarItemProp & { dropdownItems?: NavbarItemProp[] };
 
-const fcLogger = getLogger("FC.NavBar", null, null, "DISABLED");
+const fcLogger = getLogger("FC.NavBar", null, null, "DEBUG");
 
 const NavBar: FunctionComponent = () => {
   const [isActive, setActive] = useState(false);
   const [navbarItems, setNavbarItems] = useState<NavbarItemDropDownProp[]>([]);
+  const [hoveredNavbarId, setHoveredNavbarId] = useState("");
   const auth = useAuth();
   const { pathname } = useLocation();
   const { resultedDevice: deviceMode } = useOrientation(DeviceMode.Desktop);
@@ -70,7 +71,7 @@ const NavBar: FunctionComponent = () => {
     logger.debug("in useEffect, updating navbar");
     let navbarItemlist = navbarItems;
     if (!navbarItems.length || navbarItems[0].isProtected !== auth.userDetails.isAuthenticated) {
-      navbarItemlist = items.filter((item) => auth.userDetails.isAuthenticated === item.isProtected).map((item) => ({ ...item, isHovered: false }));
+      navbarItemlist = items.filter((item) => auth.userDetails.isAuthenticated === item.isProtected).map((item) => ({ ...item }));
       logger.debug("updated navbar item list because of auth mismatched");
     }
     if (auth.userDetails.isAuthenticated) {
@@ -130,21 +131,30 @@ const NavBar: FunctionComponent = () => {
             list.push(item);
           }
         });
+        // update navbarItemlist
         navbarItemlist = [...list];
       }
       const selectedItem = navbarItemlist.find((ni) => ni.isSelected);
       if (selectedItem?.dropdownItems) {
-        logger.debug("found dropdown items for selected navbar item, so updating dropdown item selection");
-        const selectedDdItemmatched = selectedItem.dropdownItems.find((ddItem) => ddItem.isSelected && ddItem.link === pathname);
-        if (!selectedDdItemmatched) {
+        logger.debug("found dropdown items for selected navbar item, determining dropdown item selection transition requirement");
+        const previouslySelectedDdItem = selectedItem.dropdownItems.find((ddItem) => ddItem.isSelected);
+        const expectedSelectedDdItemmatched = selectedItem.dropdownItems.find((ddItem) => ddItem.link === pathname);
+        // expected exists and is not previous - change
+        // expected exists and is previous - no change
+        // expected not exists and previous not exists - no change
+        // expected not exists and previous exist - change
+        if (expectedSelectedDdItemmatched !== previouslySelectedDdItem) {
+          logger.debug("there is a mismatch in dd item selection, so updating");
           const newddItems: NavbarItemProp[] = selectedItem.dropdownItems.map((ddItem) => ({
             ...ddItem,
             isSelected: ddItem.link === pathname
           }));
           selectedItem.dropdownItems = newddItems;
+          // update navbarItemlist
           navbarItemlist = [...navbarItemlist];
         }
       }
+      // now reset dropdown items of non-selected navbar items if required. a transition change monitoring
       let hasDropDownUpdated = false;
       const updatedItems = navbarItemlist.map((ni) => {
         if (ni.dropdownItems && !ni.isSelected) {
@@ -160,6 +170,8 @@ const NavBar: FunctionComponent = () => {
         return ni;
       });
       if (hasDropDownUpdated) {
+        logger.debug("transion change found. reset the non-selected navbar dropdown items.");
+        // update navbarItemlist
         navbarItemlist = updatedItems;
       }
     }
@@ -204,69 +216,30 @@ const NavBar: FunctionComponent = () => {
   const toggleNavbar: React.MouseEventHandler<HTMLAnchorElement> = (event) => {
     const logger = getLogger("toggleNavbar", fcLogger);
     event.preventDefault();
-    logger.debug("open / close navbar");
+    logger.debug("open / close navbar. isOpen now?", isActive);
     setActive((prev) => !prev);
   };
 
-  const openNavbarItemDropdown = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, prop: NavbarItemDropDownProp) => {
+  const openNavbarItemDropdown = (event: React.MouseEvent<HTMLDivElement, MouseEvent> | React.FocusEvent<HTMLDivElement>, prop: NavbarItemDropDownProp) => {
     event.preventDefault();
+    const logger = getLogger("openNavbarItemDropdown", fcLogger);
     if (deviceMode === DeviceMode.Desktop) {
-      setNavbarItems((prev) =>
-        prev.map((item) => {
-          if (item.id === prop.id) {
-            return { ...item, isHovered: true };
-          }
-          return item;
-        })
-      );
+      setHoveredNavbarId(prop.id);
+      logger.debug("navbar id is set for hovering. id=", prop.id);
     }
   };
 
-  const closeNavbarItemDropdown = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, prop: NavbarItemDropDownProp) => {
+  const closeNavbarItemDropdown = (event: React.MouseEvent<HTMLDivElement, MouseEvent> | React.FocusEvent<HTMLDivElement>, prop: NavbarItemDropDownProp) => {
     event.preventDefault();
+    const logger = getLogger("closeNavbarItemDropdown", fcLogger);
     if (deviceMode === DeviceMode.Desktop) {
-      setNavbarItems((prev) =>
-        prev.map((item) => {
-          if (item.id === prop.id) {
-            return { ...item, isHovered: false };
-          }
-          return item;
-        })
-      );
-    }
-  };
-
-  const openNavbarItemDropdownOnFocus = (event: React.FocusEvent<HTMLDivElement>, prop: NavbarItemDropDownProp) => {
-    event.preventDefault();
-    if (deviceMode === DeviceMode.Desktop) {
-      setNavbarItems((prev) =>
-        prev.map((item) => {
-          if (item.id === prop.id) {
-            return { ...item, isHovered: true };
-          }
-          return item;
-        })
-      );
-    }
-  };
-
-  const closeNavbarItemDropdownOnBlur = (event: React.FocusEvent<HTMLDivElement>, prop: NavbarItemDropDownProp) => {
-    event.preventDefault();
-    if (deviceMode === DeviceMode.Desktop) {
-      setNavbarItems((prev) =>
-        prev.map((item) => {
-          if (item.id === prop.id) {
-            return { ...item, isHovered: false };
-          }
-          return item;
-        })
-      );
+      setHoveredNavbarId("");
+      logger.debug("navbar id is unset for stop hovering. id=", prop.id);
     }
   };
 
   const rootPath = getFullPath("rootPath");
   const logoutPage = getFullPath("logoutPage");
-  fcLogger.debug("navbar component updated, isActive=", isActive);
 
   return (
     <section className="container">
@@ -309,8 +282,8 @@ const NavBar: FunctionComponent = () => {
                     key={"dropdown" + itemProp.id}
                     onMouseOver={(e) => openNavbarItemDropdown(e, itemProp)}
                     onMouseOut={(e) => closeNavbarItemDropdown(e, itemProp)}
-                    onFocus={(e) => openNavbarItemDropdownOnFocus(e, itemProp)}
-                    onBlur={(e) => closeNavbarItemDropdownOnBlur(e, itemProp)}
+                    onFocus={(e) => openNavbarItemDropdown(e, itemProp)}
+                    onBlur={(e) => closeNavbarItemDropdown(e, itemProp)}
                   >
                     <NavBarItem
                       icon={itemProp.icon}
@@ -322,7 +295,7 @@ const NavBar: FunctionComponent = () => {
                       isSelected={itemProp.isSelected}
                       class="navbar-link"
                     />
-                    <div className={"navbar-dropdown" + (itemProp.isHovered ? " is-active" : "")}>
+                    <div className={"navbar-dropdown" + (itemProp.id === hoveredNavbarId ? " is-active" : "")}>
                       {itemProp.dropdownItems.map((ddItemProp) => (
                         <NavBarItem
                           icon={ddItemProp.icon}

@@ -21,3 +21,11 @@
         flex-wrap: nowrap;
     }
 }
+
+@media screen and (max-width: 1023px) {
+
+    .navbar-link:not(.is-arrowless):after,
+    .select:not(.is-multiple):not(.is-loading):after {
+        display: none;
+    }
+}

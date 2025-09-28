@@ -11,7 +11,7 @@ import { PurchaseDetailLoaderResource } from "../../route-handlers";
 import { testAttributes } from "../../../../shared";
 import { getShortPath } from "../../../root/components/navigation";
 
-const fcLogger = getLogger("FC.UpdatePurchase", null, null, "DEBUG");
+const fcLogger = getLogger("FC.UpdatePurchase", null, null, "DISABLED");
 
 export const UpdatePurchase: FunctionComponent = () => {
   const [errorMessage, setErrorMessage] = useState("");
