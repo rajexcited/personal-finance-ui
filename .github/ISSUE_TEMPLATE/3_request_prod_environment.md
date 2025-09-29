@@ -72,8 +72,8 @@ https://github.com/rajexcited/personal-finance-ui/releases/tag/v0.2.0 <!--  tag 
 > **Note:** _Provide verification tasks to be performed after release deployment / rollback_
 
 - [ ] All public links are navigable before login
-- [ ] Successful login on Desktop Chrome browser v139.x
-- [ ] Successful login on Android(16) Chrome browser v139.x
+- [ ] Successful login on Desktop Chrome browser v140.x
+- [ ] Successful login on Android(16) Chrome browser v140.x
 - [ ] All links for "Expenses" are navigable after login
 - [ ] All links for "Payment Account" are navigable after login
 - [ ] All links for "Settings" are navigable after login

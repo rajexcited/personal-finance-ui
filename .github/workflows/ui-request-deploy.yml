@@ -716,7 +716,7 @@ jobs:
               const listMilestonesResponse = await github.rest.issues.listMilestones({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                state: "closed"
+                // state: "closed"
               });
               console.log("listMilestonesResponse: ", listMilestonesResponse);
               const deployedMilestone=listMilestonesResponse.data.find(mlst=>mlst.title===process.env.EXISTING_VERSION);
