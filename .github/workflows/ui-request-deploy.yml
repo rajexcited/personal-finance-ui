@@ -733,7 +733,7 @@ jobs:
               });
               console.log("listIssuesResponse: ", listIssuesResponse);
               const releaseRegex=new RegExp("^\\[Approved\\]\\s+\\[Request\\]\\s+Provision Production Environment.*","i");
-              const releasedRequest = listIssuesResponse.data.find(iss=>releaseRegex.test(iss.title.startsWith));
+              const releasedRequest = listIssuesResponse.data.find(iss=>releaseRegex.test(iss.title));
               if(!releasedRequest) {
                 throw new Error("prod release request form not found");
               }
