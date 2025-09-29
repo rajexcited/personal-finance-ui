@@ -58,7 +58,7 @@ def validate_release_details(release_detail_contents: List, request_form_issue_d
     if deployment_type == DeploymentType.Release:
         if not release_rollback_version:
             raise ValueError("release version is not provided")
-        if existing_version >= release_rollback_version:
+        if existing_version > release_rollback_version:
             raise ValueError("existing deployed version is higher than requested release version")
         if release_rollback_version != request_form_issue_details["milestone"]["title"]:
             raise ValueError("release version must match with assigned milestone")
