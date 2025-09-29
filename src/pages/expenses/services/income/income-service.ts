@@ -42,14 +42,18 @@ export const setClearExpenseListCacheHandler = (clearCacheFn: Function) => {
   clearExpenseListCache = clearCacheFn;
 };
 
-const clearCache = (incomeData: IncomeFields) => {
+export const clearCache = (incomeData?: IncomeFields) => {
   clearExpenseListCache();
-  statService.clearStatsCache(StatBelongsTo.Income, getDateInstanceDefaultNewDate(incomeData.incomeDate).getFullYear());
   pMemoizeClear(getDetails);
+  if (incomeData) {
+    statService.clearStatsCache(StatBelongsTo.Income, getDateInstanceDefaultNewDate(incomeData.incomeDate).getFullYear());
+  } else {
+    statService.clearStatsCache(StatBelongsTo.Income);
+  }
 };
 
 const updatePaymentAccount = async (incomeDetails: IncomeFields) => {
-  let startTime = new Date();
+  const startTime = new Date();
   const logger = getLogger("updatePaymentAccount", serviceLogger);
 
   if (incomeDetails.paymentAccountId && isUuid(incomeDetails.paymentAccountId)) {
@@ -66,11 +70,11 @@ const updatePaymentAccount = async (incomeDetails: IncomeFields) => {
     }
   }
 
-  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
 };
 
 const updateIncomeType = async (incomeDetails: IncomeFields) => {
-  let startTime = new Date();
+  const startTime = new Date();
   const logger = getLogger("updateIncomeType", serviceLogger);
 
   if (incomeDetails.incomeTypeId && isUuid(incomeDetails.incomeTypeId)) {
@@ -87,7 +91,7 @@ const updateIncomeType = async (incomeDetails: IncomeFields) => {
     }
   }
 
-  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+  logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
 };
 
 const updateTags = async (incomeDetails: IncomeFields) => {
@@ -116,9 +120,9 @@ export const addUpdateDbIncome = async (incomeDetails: IncomeFields, loggerBase:
   convertAuditFieldsToDateInstance(dbIncome.auditDetails);
   dbIncome.receipts = dbIncome.receipts.map((rct) => ({ ...rct, relationId: dbIncome.id }));
 
-  logger.info("transforming execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
+  logger.info("transforming execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds().value, " sec");
   await incomeDb.addUpdateItem(dbIncome);
-  logger.info("dbIncome =", dbIncome, ", execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds(), " sec");
+  logger.info("dbIncome =", dbIncome, ", execution time =", subtractDatesDefaultToZero(null, transformStart).toSeconds().value, " sec");
   return dbIncome;
 };
 

@@ -28,7 +28,7 @@ export const incrementPageNoToLoadMoreMonths = () => {
 
 export const getLoadMoreMonths = () => {
   const logger = getLogger("getLoadMoreMonths", rootLogger);
-  if (subtractDatesDefaultToZero(null, loadMoreMonthsProps.updatedOn).toMilliseconds() > 500) {
+  if (subtractDatesDefaultToZero(null, loadMoreMonthsProps.updatedOn).toMilliseconds().value > 500) {
     logger.debug("the time diff of last updated is out of range (>500 millis)");
     resetLoadMoreMonths();
   }

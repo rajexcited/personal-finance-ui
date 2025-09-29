@@ -89,7 +89,6 @@ const getKeyUpHandler = (tagsInput: BulmaTagsInput) => {
       tagsInput._onInputKeyDown(ev);
     } else {
       logger.debug("calling keyup lib handler");
-      const e = { charCode: codenum, preventDefault: () => event.preventDefault() };
       const returnValue = updateFilterDropdown.bind(tagsInput)(event);
       tagsInput._onInputKeyDown(ev);
       return returnValue;
@@ -113,18 +112,15 @@ function updateFilterDropdown(this: any, e: KeyboardEvent) {
 
   // ENTER key is permitted
   // backspace or delete keys are permitted
+  const codeOrKey = e.code || e.key;
   if (
     !value.length &&
-    e.code !== KeyboardCode.Enter &&
-    e.code !== KeyboardCode.NumpadEnter &&
-    e.code !== KeyboardCode.Backspace &&
-    e.code !== KeyboardCode.Delete
+    codeOrKey !== KeyboardCode.Enter &&
+    codeOrKey !== KeyboardCode.NumpadEnter &&
+    codeOrKey !== KeyboardCode.Backspace &&
+    codeOrKey !== KeyboardCode.Delete
   ) {
     return false;
-  }
-
-  if (this._filterInputAllowed) {
-    this._filterDropdownItems(value);
   }
 
   if (
@@ -148,9 +144,16 @@ function updateFilterDropdown(this: any, e: KeyboardEvent) {
       .then((results: string[]) => {
         results = this.emit("on.results.received", results);
 
+        if (this.options.addNewLabelTemplate && value.length >= this.options.minChars && !results.includes(value)) {
+          this._createDropdownItem({
+            value: value,
+            text: this.options.addNewLabelTemplate.replace("{{value}}", value)
+          });
+        }
+
         if (results.length) {
           results.forEach((result) => {
-            let item: TagItemResultType = {
+            const item: TagItemResultType = {
               value: "null",
               text: "null"
             };
@@ -207,8 +210,8 @@ export interface TagObject {
   id: string;
 }
 
-export const buildDropdown = (tagsInput: BulmaTagsInput, sourceValues: string[] | TagObject[], _logger?: LoggerBase) => {
-  const logger = getLogger("buildDropdown", _logger, rootLogger);
+export const buildDropdown = (tagsInput: BulmaTagsInput, sourceValues: string[] | TagObject[], baseLogger?: LoggerBase) => {
+  const logger = getLogger("buildDropdown", baseLogger, rootLogger);
 
   const dropdownItemCount = Array.from(tagsInput.dropdown.children).filter((child) => !child.classList.contains("empty-title")).length;
   if (dropdownItemCount === sourceValues.length) {
@@ -221,8 +224,16 @@ export const buildDropdown = (tagsInput: BulmaTagsInput, sourceValues: string[] 
 
   logger.debug("starting to build dropdown", sourceValues.length, "items with source=", sourceValues);
   const results = [...sourceValues];
+
+  const currentInputValue = tagsInput.input.value.trim();
+  if (tagsInput.options.addNewLabelTemplate && currentInputValue.length >= tagsInput.options.minChars! && !results.includes(currentInputValue)) {
+    tagsInput._createDropdownItem({
+      value: currentInputValue,
+      text: tagsInput.options.addNewLabelTemplate.replace("{{value}}", currentInputValue)
+    });
+  }
   results.forEach((result) => {
-    let item: TagItemResultType = {
+    const item: TagItemResultType = {
       value: "null",
       text: "null"
     };

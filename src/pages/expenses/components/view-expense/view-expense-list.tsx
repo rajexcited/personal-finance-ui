@@ -59,7 +59,7 @@ export const ExpenseList: FunctionComponent = () => {
                 logger.debug("replacing new list");
                 return [...loaderData.data.expenseList];
             });
-            setSharePersons(prev => [...loaderData.data.sharePersons]);
+            setSharePersons(_prev => [...loaderData.data.sharePersons]);
 
         } else {
             setErrorMessage(loaderData.errorMessage);

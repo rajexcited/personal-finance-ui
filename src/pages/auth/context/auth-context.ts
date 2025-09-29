@@ -11,6 +11,7 @@ interface AuthContextInfo {
 }
 
 export const dummyUserDetails: UserDetailsResource = {
+  id: "",
   emailId: "",
   firstName: "",
   lastName: "",
@@ -22,13 +23,13 @@ export const dummyUserDetails: UserDetailsResource = {
 const defaultAuthContext: AuthContextInfo = {
   userDetails: { ...dummyUserDetails },
   readOnly: true,
-  login: async (id: string, pass: string, forceLogin: boolean) => {
+  login: async (_id: string, _pass: string, _forceLogin: boolean) => {
     /* do nothing */
   },
   logout: async () => {
     /* do nothing */
   },
-  signup: async (details: UserSignupResource) => {
+  signup: async (_details: UserSignupResource) => {
     /* do nothing */
   },
   validateExpiryStatusOnLocationChange: () => {}

@@ -2,3 +2,10 @@
 .tags-input[disabled] .tag {
     color: #f1f1f1;
 }
+
+.tags-input .dropdown-item[data-text*="➕ Add"] {
+    background-color: #f0f9ff;
+    border-left: 3px solid #3273dc;
+    font-weight: 500;
+    color: #3273dc;
+}

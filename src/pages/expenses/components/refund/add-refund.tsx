@@ -10,86 +10,121 @@ import { getLogger, PurchaseRefundFields, RouteHandlerResponse } from "../../ser
 import { PurchaseRefundForm } from "./refund-form";
 import { RefundDetailLoaderResource } from "../../route-handlers";
 import { testAttributes } from "../../../../shared";
-
+import { getShortPath } from "../../../root/components/navigation";
 
 const fcLogger = getLogger("FC.AddRefund", null, null, "DISABLED");
 
 export const AddRefund: FunctionComponent = () => {
-    const [refundId, setRefundId] = useState("");
-    const navigation = useNavigation();
-    const submit = useSubmit();
-    const auth = useAuth();
-    // for error
-    const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
-    const loaderData = useLoaderData() as RouteHandlerResponse<RefundDetailLoaderResource, null>;
-    const [errorMessage, setErrorMessage] = useState("");
+  const [refundId, setRefundId] = useState("");
+  const navigation = useNavigation();
+  const submit = useSubmit();
+  const auth = useAuth();
+  // for error
+  const actionData = useActionData() as RouteHandlerResponse<null, any> | null;
+  const loaderData = useLoaderData() as RouteHandlerResponse<RefundDetailLoaderResource, null>;
+  const [errorMessage, setErrorMessage] = useState("");
+  const [submitLabel, setSubmitLabel] = useState("Add");
 
-    useEffect(() => {
-        setRefundId(uuidv4());
-    }, []);
+  useEffect(() => {
+    setRefundId(uuidv4());
+  }, []);
 
-    useEffect(() => {
-        if (loaderData.type === "error") {
-            setErrorMessage(loaderData.errorMessage);
-        } else if (actionData?.type === "error") {
-            setErrorMessage(actionData.errorMessage);
-        } else {
-            setErrorMessage("");
-        }
-    }, [loaderData, actionData]);
+  useEffect(() => {
+    if (loaderData.type === "error") {
+      setErrorMessage(loaderData.errorMessage);
+    } else if (actionData?.type === "error") {
+      setErrorMessage(actionData.errorMessage);
+    } else {
+      setErrorMessage("");
+    }
+  }, [loaderData, actionData]);
 
-    const onRefundAdded = (data: PurchaseRefundFields, formData: FormData) => {
-        const logger = getLogger("onRefundAdded", fcLogger);
-        if (auth.userDetails.isAuthenticated) {
-            // logger.debug("purchase added", data.purchaseId, data);
-            submit(formData, { action: getFullPath("addPurchaseRefund", data.purchaseId || "unknown"), method: "post", encType: "multipart/form-data" });
-        } else {
-            //todo verify
-            // this is probably never getting called.
-            logger.warn("user is not authenticated. details = ", { ...auth.userDetails });
-            setErrorMessage("you have been logged out. please (login)[/login] to add refund");
-        }
-    };
-
-    fcLogger.debug("navigation state =", navigation.state, ", text =", navigation.text, ", location =", navigation.location, ", formAction =", navigation.formAction);
-
-    return (
-        <>
-            {
-                errorMessage &&
-                <Animated animateOnMount={ true } isPlayIn={ true } animatedIn="fadeInDown" animatedOut="fadeOutUp"
-                    scrollBeforePlayIn={ true } { ...testAttributes("add-refund-error-message") }>
-                    <article className="message is-danger">
-                        <div className="message-body">
-                            <ReactMarkdown children={ errorMessage } />
-                        </div>
-                    </article>
-                </Animated>
-            }
-            { loaderData.type === "success" && !auth.readOnly &&
-                <div className="columns">
-                    <div className="column">
-                        <PurchaseRefundForm
-                            key="add-purchase-refund-form"
-                            submitLabel={ navigation.state === "submitting" ? "Adding Refund details..." : "Add" }
-                            onSubmit={ onRefundAdded }
-                            refundId={ refundId }
-                            purchaseDetails={ loaderData.data.purchaseDetail }
-                            paymentAccounts={ loaderData.data.paymentAccounts }
-                            sourceTags={ loaderData.data.refundTags }
-                            reasons={ loaderData.data.refundReasons }
-                            sharePersons={ loaderData.data.sharePersons }
-                            currencyProfiles={ loaderData.data.currencyProfiles }
-                        />
-                    </div>
-                </div>
-            }
-            { auth.readOnly &&
-                <div className="columns">
-                    <div className="column">
-                        <span { ...testAttributes("add-refund-not-allowed") }>Not Allowed to add Refund</span>
-                    </div></div>
-            }
-        </>
+  useEffect(() => {
+    const useEffectLogger = getLogger("useEffect.dep[navigation.state, navigation.location]", fcLogger);
+    useEffectLogger.debug(
+      "navigation state:",
+      navigation.state,
+      "; navigation location:",
+      navigation.location,
+      "; shortPath: ",
+      getShortPath("addPurchaseRefund")
     );
+    if (navigation.state === "submitting") {
+      setSubmitLabel("Adding...");
+    } else if (navigation.state === "loading" && !navigation.location?.pathname.endsWith(getShortPath("addPurchaseRefund"))) {
+      setSubmitLabel("Added...");
+    } else {
+      setSubmitLabel("Add");
+    }
+  }, [navigation.state, navigation.location]);
+
+  const onRefundAdded = (data: PurchaseRefundFields, formData: FormData) => {
+    const logger = getLogger("onRefundAdded", fcLogger);
+    if (auth.userDetails.isAuthenticated) {
+      // logger.debug("purchase added", data.purchaseId, data);
+      submit(formData, { action: getFullPath("addPurchaseRefund", data.purchaseId || "unknown"), method: "post", encType: "multipart/form-data" });
+    } else {
+      //todo verify
+      // this is probably never getting called.
+      logger.warn("user is not authenticated. details = ", { ...auth.userDetails });
+      setErrorMessage("you have been logged out. please (login)[/login] to add refund");
+    }
+  };
+
+  fcLogger.debug(
+    "navigation state =",
+    navigation.state,
+    ", text =",
+    navigation.text,
+    ", location =",
+    navigation.location,
+    ", formAction =",
+    navigation.formAction
+  );
+
+  return (
+    <>
+      {errorMessage && (
+        <Animated
+          animateOnMount={true}
+          isPlayIn={true}
+          animatedIn="fadeInDown"
+          animatedOut="fadeOutUp"
+          scrollBeforePlayIn={true}
+          {...testAttributes("add-refund-error-message")}
+        >
+          <article className="message is-danger">
+            <div className="message-body">
+              <ReactMarkdown children={errorMessage} />
+            </div>
+          </article>
+        </Animated>
+      )}
+      {loaderData.type === "success" && !auth.readOnly && (
+        <div className="columns">
+          <div className="column">
+            <PurchaseRefundForm
+              key="add-purchase-refund-form"
+              submitLabel={submitLabel}
+              onSubmit={onRefundAdded}
+              refundId={refundId}
+              purchaseDetails={loaderData.data.purchaseDetail}
+              paymentAccounts={loaderData.data.paymentAccounts}
+              sourceTags={loaderData.data.refundTags}
+              reasons={loaderData.data.refundReasons}
+              sharePersons={loaderData.data.sharePersons}
+              currencyProfiles={loaderData.data.currencyProfiles}
+            />
+          </div>
+        </div>
+      )}
+      {auth.readOnly && (
+        <div className="columns">
+          <div className="column">
+            <span {...testAttributes("add-refund-not-allowed")}>Not Allowed to add Refund</span>
+          </div>
+        </div>
+      )}
+    </>
+  );
 };

@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 const rootLogger = getLogger("mock.db.pymtAcc", null, null, "DISABLED");
 const pymtAccDb = new MyLocalDatabase<PymtAccountFields>(LocalDBStore.PaymentAccount);
 
-const init = async () => {
+export const initializePaymentAccountDb = async () => {
   const pymtAccTypes = (await getPaymentAccountTypes()).list;
   const accTypeId = (accTypeName: string) => pymtAccTypes.find((item: any) => item.name === accTypeName)?.id as string;
 
@@ -49,7 +49,12 @@ const init = async () => {
   });
 };
 
-await init();
+await initializePaymentAccountDb();
+
+export const clearPaymentAccountDb = async () => {
+  const _logger = getLogger("clearPaymentAccountDb", rootLogger);
+  await pymtAccDb.clearAll();
+};
 
 export const getPymtAccountList = async (statuses?: PymtAccStatus[], baseLogger?: LoggerBase) => {
   const logger = getLogger("getlist", rootLogger, baseLogger);
@@ -74,7 +79,7 @@ export const getPymtAccountList = async (statuses?: PymtAccStatus[], baseLogger?
 export const isDuplicateShortName = async (data: PymtAccountFields) => {
   const allPaymentAccounts = await pymtAccDb.getAll();
   let isValid = true;
-  for (let dbPymtAcc of allPaymentAccounts) {
+  for (const dbPymtAcc of allPaymentAccounts) {
     if (dbPymtAcc.shortName === data.shortName && dbPymtAcc.status !== PymtAccStatus.Deleted) {
       if (dbPymtAcc.id !== data.id) {
         isValid = false;

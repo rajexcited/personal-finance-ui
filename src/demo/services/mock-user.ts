@@ -1,21 +1,32 @@
 import MockAdapter from "axios-mock-adapter";
 import { AxiosResponseCreator } from "./mock-response-create";
 import { missingValidation, validateAuthorization } from "./common-validators";
-import { tokenSessionData, UserDataType, userSessionDetails } from "./userDetails";
+import { getPreviousUserSessionDetails, tokenSessionData, UserDataType, userSessionDetails } from "./userDetails";
 import { v4 as uuidv4 } from "uuid";
-import datetime from "date-and-time";
+import * as datetime from "date-and-time";
 import { UserDetailsResource, UserLoginResource } from "../../pages/auth";
 import { UserStatus } from "../../pages/auth/services";
 import { getLogger } from "../../shared";
 import ms, { StringValue } from "ms";
+import { clearConfigTypeDb, initializeConfigTypeDb } from "../mock-db/config-type-db";
+import { clearPaymentAccountDb, initializePaymentAccountDb } from "../mock-db/pymt-acc-db";
+import { initializeIncomeDb } from "../mock-db/income-db";
+import { initializePurchaseDb } from "../mock-db/purchase-db";
+import { initializeRefundDb } from "../mock-db/refund-db";
+import { clearExpenseDb } from "../mock-db/expense-db";
 
 type UserDetailsRsc = Omit<UserDetailsResource, "isAuthenticated" | "fullName">;
 
-const _rootLogger = getLogger("mock.api.user", null, null, "DISABLED");
+const rootLogger = getLogger("mock.api.user", null, null, "DISABLED");
+
+const resetData = async () => {
+  await Promise.all([clearExpenseDb(), clearPaymentAccountDb(), clearConfigTypeDb()]);
+  await Promise.all([initializeIncomeDb(), initializePurchaseDb(), initializeRefundDb(), initializePaymentAccountDb(), initializeConfigTypeDb()]);
+};
 
 export const MockUser = (demoMock: MockAdapter) => {
   const passwordRegex = /^(?=.*[\d])(?=.*[A-Z])(?=.*[!@#<$>%^&*])[\w!@#<$>%^&\(\)\=*]{8,25}$/;
-  const sessionTime = (process.env.REACT_APP_MINIMUM_SESSION_TIME as StringValue) || "1 min";
+  const sessionTime = (import.meta.env.VITE_MINIMUM_SESSION_TIME as StringValue) || "1 min";
   const expiresInSec = ms(sessionTime) / 500;
 
   const isInvalidDemoEmailId = (emailId: string) => {
@@ -46,17 +57,27 @@ export const MockUser = (demoMock: MockAdapter) => {
       return responseCreator.toValidationError([{ path: "emailId", message: "the user with emailId already exists" }]);
     }
 
-    userSessionDetails(data);
+    userSessionDetails(
+      {
+        id: uuidv4(),
+        emailId: data.emailId,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        countryCode: data.countryCode,
+        password: data.password,
+        status: UserStatus.ACTIVE_USER
+      },
+      true
+    );
+    resetData();
+
     const response = tokenSessionData({
       expiresIn: expiresInSec,
       accessToken: uuidv4(),
       expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime()
     });
 
-    return responseCreator.toCreateResponse(
-      { expiresIn: response.expiresIn, expiryTime: response.expiryTime },
-      { Authorization: response.accessToken }
-    );
+    return responseCreator.toCreateResponse({ expiresIn: response.expiresIn, expiryTime: response.expiryTime }, { Authorization: response.accessToken });
   });
 
   demoMock.onPost("/user/login").reply((config) => {
@@ -81,24 +102,37 @@ export const MockUser = (demoMock: MockAdapter) => {
       firstName: data.emailId.replace("@demo.com", ""),
       lastName: "demo",
       countryCode: "USA",
-      password: atob(data.password)
+      password: atob(data.password),
+      status: UserStatus.ACTIVE_USER,
+      id: uuidv4()
     };
 
     if (responseData.emailId.includes("wrong") || responseData.password.includes("wrong")) {
       return responseCreator.toForbiddenError("emailId or password invalid");
     }
 
-    userSessionDetails({ ...responseData });
+    if (responseData.emailId.includes("deleted")) {
+      responseData.status = UserStatus.DELETED_USER;
+    }
+    if (responseData.emailId.includes("old")) {
+      responseData.status = UserStatus.DEACTIVATED_USER;
+    }
+
+    const previousUserSessionDetails = getPreviousUserSessionDetails();
+    if (previousUserSessionDetails.emailId !== responseData.emailId) {
+      resetData();
+    } else {
+      responseData.id = previousUserSessionDetails.id;
+    }
+    userSessionDetails({ ...responseData }, true);
+
     const response = tokenSessionData({
       expiresIn: expiresInSec,
       accessToken: uuidv4(),
       expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime()
     });
 
-    return responseCreator.toSuccessResponse(
-      { expiresIn: response.expiresIn, expiryTime: response.expiryTime },
-      { Authorization: response.accessToken }
-    );
+    return responseCreator.toSuccessResponse({ expiresIn: response.expiresIn, expiryTime: response.expiryTime }, { Authorization: response.accessToken });
   });
 
   demoMock.onPost("/user/logout").reply((config) => {
@@ -108,7 +142,7 @@ export const MockUser = (demoMock: MockAdapter) => {
       return responseCreator.toForbiddenError("not authorized");
     }
 
-    userSessionDetails({ emailId: "", firstName: "", lastName: "", password: "", countryCode: "" });
+    userSessionDetails({ emailId: "", firstName: "", lastName: "", password: "", countryCode: "", id: "", status: UserStatus.PUBLIC_USER }, true);
     tokenSessionData({
       expiresIn: expiresInSec,
       accessToken: "",
@@ -131,10 +165,7 @@ export const MockUser = (demoMock: MockAdapter) => {
       expiryTime: datetime.addSeconds(new Date(), expiresInSec).getTime()
     });
 
-    return responseCreator.toSuccessResponse(
-      { expiresIn: response.expiresIn, expiryTime: response.expiryTime },
-      { Authorization: response.accessToken }
-    );
+    return responseCreator.toSuccessResponse({ expiresIn: response.expiresIn, expiryTime: response.expiryTime }, { Authorization: response.accessToken });
   });
 
   demoMock.onGet("/user/details").reply((config) => {
@@ -146,6 +177,7 @@ export const MockUser = (demoMock: MockAdapter) => {
 
     const details = userSessionDetails();
     const response: UserDetailsRsc = {
+      id: details.id,
       emailId: details.emailId,
       firstName: details.firstName,
       lastName: details.lastName,
@@ -192,7 +224,7 @@ export const MockUser = (demoMock: MockAdapter) => {
   });
 
   demoMock.onDelete("/user/details").reply((config) => {
-    const logger = getLogger("deleteUser", _rootLogger);
+    const logger = getLogger("deleteUser", rootLogger);
     const responseCreator = AxiosResponseCreator(config);
 
     logger.debug("mock api called, config =", { ...config });
@@ -228,6 +260,7 @@ export const MockUser = (demoMock: MockAdapter) => {
     });
 
     const response: UserDetailsRsc = {
+      id: respDetails.id,
       emailId: respDetails.emailId,
       firstName: respDetails.firstName,
       lastName: respDetails.lastName,

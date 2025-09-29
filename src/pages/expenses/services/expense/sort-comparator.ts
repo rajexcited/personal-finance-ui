@@ -4,8 +4,8 @@ import { ExpenseSortStateType, ExpenseSortDetails } from "./sort-headers";
 
 const rootLogger = getLogger("service.expense.sort-comparator", null, null, "DISABLED");
 
-export const getSortedExpenses = (expenses: ExpenseFields[], sortDetails: ExpenseSortStateType, _logger: LoggerBase) => {
-  const logger = getLogger("getSortedExpenses", _logger);
+export const getSortedExpenses = (expenses: ExpenseFields[], sortDetails: ExpenseSortStateType, baseLogger: LoggerBase) => {
+  const logger = getLogger("getSortedExpenses", baseLogger);
   logger.debug("sortDetails =", sortDetails);
   logger.debug(
     "list before sorting =",
@@ -51,8 +51,8 @@ const expenseComparator = (headers: ExpenseSortDetails[], a: ExpenseFields, b: E
 
   for (const sh of headers) {
     if (sh.sortDirection) {
-      let aDatafieldValue = getExpenseValue(sh, a);
-      let bDatafieldValue = getExpenseValue(sh, b);
+      const aDatafieldValue = getExpenseValue(sh, a);
+      const bDatafieldValue = getExpenseValue(sh, b);
       logger.debug(
         "sortDirection =",
         sh.sortDirection,

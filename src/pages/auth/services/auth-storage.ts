@@ -12,13 +12,14 @@ import { AuditFields } from "../../../shared/services/audit-fields";
 import { subtractDatesDefaultToZero } from "../../../shared/utils/date-utils";
 import { UnauthorizedError } from "../../../shared/utils/rest-error-utils";
 import { isBlank } from "../../../shared/utils/string-utils";
+import { clearIndexedDbData } from "../../../shared/db/db";
 
 // user logged in flag
 const userLoggedInKey = "ul";
 const userLoggedInValue = "true";
 const storeLogger = getLogger("service.store.auth", null, null, "DISABLED");
 
-const MIN_SESSION_TIME_IN_SEC = ms(process.env.REACT_APP_MINIMUM_SESSION_TIME as StringValue) / 1000;
+const MIN_SESSION_TIME_IN_SEC = ms(import.meta.env.VITE_MINIMUM_SESSION_TIME as StringValue) / 1000;
 
 interface AuthStore {
   token: AccessTokenResource & AuditFields;
@@ -32,6 +33,7 @@ const authStore: AuthStore = {
     updatedOn: new Date()
   },
   userDetails: {
+    id: "",
     emailId: "",
     firstName: "",
     lastName: "",
@@ -48,7 +50,7 @@ storeLogger.debug("initialized to default values. authStore=", authStore);
 export const getAuthorizationToken = pMemoize(async () => {
   const logger = getLogger("getAuthorizationToken", storeLogger);
   cleanupSessionIfNeed();
-  if (authStore.token.accessToken && subtractDatesDefaultToZero(authStore.token.expiryTime).toSeconds() > 0) {
+  if (authStore.token.accessToken && subtractDatesDefaultToZero(authStore.token.expiryTime).toSeconds().value > 0) {
     logger.debug("found valid accesstoken");
     return authStore.token.accessToken;
   }
@@ -58,7 +60,7 @@ export const getAuthorizationToken = pMemoize(async () => {
 
 export const getRemainingExpiryTimeInSeconds = pMemoizeSync(() => {
   const logger = getLogger("getRemainingExpiryTimeInSeconds", storeLogger);
-  const result = subtractDatesDefaultToZero(authStore.token.expiryTime).toSeconds();
+  const result = subtractDatesDefaultToZero(authStore.token.expiryTime).toSeconds().value;
   logger.debug("expiryTime, result=", result);
   return result;
 }, getCacheOptionWithKey("1 sec", "getRemainingExpiryTimeInSeconds"));
@@ -87,6 +89,7 @@ const resetTokenSession = () => {
 const resetUserSession = () => {
   const logger = getLogger("resetUserSession", storeLogger);
   logger.debug("clearing user details session and updating audit fields");
+  authStore.userDetails.id = "";
   authStore.userDetails.emailId = "";
   authStore.userDetails.firstName = "";
   authStore.userDetails.lastName = "";
@@ -126,7 +129,7 @@ export const updateAuthorizationToken = (response: AxiosResponse<AccessTokenReso
   if (typeof accessToken === "string" && response.data.expiresIn && response.data.expiryTime) {
     if (
       response.data.expiresIn >= MIN_SESSION_TIME_IN_SEC &&
-      subtractDatesDefaultToZero(response.data.expiryTime).toSeconds() >= MIN_SESSION_TIME_IN_SEC
+      subtractDatesDefaultToZero(response.data.expiryTime).toSeconds().value >= MIN_SESSION_TIME_IN_SEC
     ) {
       logger.debug("found valid response");
       authStore.token.accessToken = accessToken;
@@ -144,7 +147,7 @@ export const updateAuthorizationToken = (response: AxiosResponse<AccessTokenReso
 };
 
 export const getValidUserDetails = (loggerBase: LoggerBase) => {
-  const logger = getLogger("getValidUserDetails", loggerBase, storeLogger);
+  const _logger = getLogger("getValidUserDetails", loggerBase, storeLogger);
 
   cleanupSessionIfNeed();
 
@@ -167,7 +170,7 @@ const getFullName = (firstName: string, lastName: string) => {
   return capitalize(lastName) + ", " + capitalize(firstName);
 };
 
-export const updateUserDetails = (response: AxiosResponse<UserDetailsResource, any> | Record<"data", UserDetailsResource>) => {
+export const updateUserDetails = async (response: AxiosResponse<UserDetailsResource, any> | Record<"data", UserDetailsResource>) => {
   const logger = getLogger("updateUserDetails", storeLogger);
   validateUserLoggedIn();
   if (isBlank(response.data.emailId)) {
@@ -180,6 +183,7 @@ export const updateUserDetails = (response: AxiosResponse<UserDetailsResource, a
     throw new Error("missing lastName in response");
   }
   logger.debug("valid response to update");
+  authStore.userDetails.id = response.data.id;
   authStore.userDetails.emailId = response.data.emailId;
   authStore.userDetails.firstName = response.data.firstName;
   authStore.userDetails.lastName = response.data.lastName;
@@ -188,6 +192,21 @@ export const updateUserDetails = (response: AxiosResponse<UserDetailsResource, a
   authStore.userDetails.status = response.data.status;
   authStore.userDetails.createdOn = new Date();
   authStore.userDetails.updatedOn = new Date();
+
+  await resetData();
+};
+
+export const resetData = async () => {
+  const logger = getLogger("resetData", storeLogger);
+  const oldUserId = localStorage.getItem("fin-user");
+  if (oldUserId && oldUserId === authStore.userDetails.id) {
+    logger.debug("user id is same as existing one. not updating");
+    return;
+  }
+  if (authStore.userDetails.id) {
+    localStorage.setItem("fin-user", authStore.userDetails.id);
+    await clearIndexedDbData();
+  }
 };
 
 export const updateNameInDetails = (response: UpdateUserDetailsResource) => {
@@ -250,7 +269,7 @@ const partKeyList = ["po", "pt", "pf", "ps", "pe"];
 const getTokenDetailsJsonString = () => {
   const logger = getLogger("getTokenDetailsJsonString", storeLogger);
   try {
-    if (subtractDatesDefaultToZero(authStore.token.expiryTime).toSeconds() >= 10) {
+    if (subtractDatesDefaultToZero(authStore.token.expiryTime).toSeconds().value >= 10) {
       const parts = authStore.token.accessToken.split(".");
       const pobj = partKeyList.reduce((obj: Record<string, string>, kk, i) => {
         obj[kk] = btoa(parts[i]);
@@ -293,7 +312,7 @@ const populateTokenDetailsFromJsonString = (json: string) => {
       authStore.token.createdOn = new Date(tokendetails.createdOn);
       authStore.token.updatedOn = new Date();
     }
-  } catch (e) {
+  } catch (_e) {
     logger.error("unable to retrieve token");
   }
 };
@@ -302,7 +321,7 @@ const reloadHandlerWhileLoggedIn = () => {
   const usrkey = "fin-usr";
   const tknkey = "fin-tkn";
   const logger = getLogger("reloadHandlerWhileLoggedIn", storeLogger);
-  window.addEventListener("beforeunload", (event) => {
+  window.addEventListener("beforeunload", (_event) => {
     const logg = getLogger("window.event.beforeunload", logger);
     logg.debug("before reload, saving item details");
     const tokenjson = getTokenDetailsJsonString();

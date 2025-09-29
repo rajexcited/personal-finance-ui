@@ -56,7 +56,7 @@ const VerifyIndicator: FunctionComponent<VerifyIndicatorProps> = (props) => {
 
     const badgeSizeClass = props.className && props.className.includes("is-smaller") ? "" : "is-large";
 
-    let verifiedConfirmDialogContent = verifiedDate ?
+    const verifiedConfirmDialogContent = verifiedDate ?
         "Really, Do you want to un-verify this expense?" :
         "Do you want to verify this expense manually?";
 

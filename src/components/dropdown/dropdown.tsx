@@ -29,12 +29,15 @@ export interface DropDownProps {
 
 const findUniqueElementId = (prefix: string) => {
     let id;
+    let isUnique = false;
     do {
         id = prefix + Math.floor(Math.random() * 1000);
-        if (!document.querySelector(`#${id}`))
+        if (!document.querySelector(`#${id}`)) {
+            isUnique = true;
             break;
+        }
     }
-    while (true);
+    while (!isUnique);
     return id;
 };
 

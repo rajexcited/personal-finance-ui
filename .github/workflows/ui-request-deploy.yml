@@ -2155,7 +2155,7 @@ jobs:
       - validate_request
       - validate_request_api
       - validate_stack
-    if: needs.run_eligible.outputs.is-testplan-deprovision == 'true'
+    if: needs.run_eligible.outputs.is-testplan-deprovision == 'true' || needs.run_eligible.outputs.is-development-deprovision == 'true'
     environment: static-site
     outputs:
       start-time: ${{ steps.create-api-issue.outputs.startTime }}
@@ -2478,25 +2478,27 @@ jobs:
                 issue_number: context.payload.issue.number
               });
               console.log("issue is lock again, lock issue response:", lockIssueResponse);
-              const unlockIssueResponse2 = await github.rest.issues.unlock({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: process.env.TESTPLAN_ISSUE_NUMBER
-              });
-              console.log("testplan issue is unlock temporarily, unlock issue response:", unlockIssueResponse2);
-              const parentCommentResponse = await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: process.env.TESTPLAN_ISSUE_NUMBER,
-                body: commentBody.join("\n")
-              });
-              console.log("for testplan, commentResponse: ", parentCommentResponse);
-              const lockIssueResponse2 = await github.rest.issues.lock({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: process.env.TESTPLAN_ISSUE_NUMBER
-              });
-              console.log("issue is lock again, lock issue response:", lockIssueResponse2);
+              if(process.env.TESTPLAN_ISSUE_NUMBER) {
+                const unlockIssueResponse2 = await github.rest.issues.unlock({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: process.env.TESTPLAN_ISSUE_NUMBER
+                });
+                console.log("testplan issue is unlock temporarily, unlock issue response:", unlockIssueResponse2);
+                const parentCommentResponse = await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: process.env.TESTPLAN_ISSUE_NUMBER,
+                  body: commentBody.join("\n")
+                });
+                console.log("for testplan, commentResponse: ", parentCommentResponse);
+                const lockIssueResponse2 = await github.rest.issues.lock({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: process.env.TESTPLAN_ISSUE_NUMBER
+                });
+                console.log("issue is lock again, lock issue response:", lockIssueResponse2);
+              }
               if(process.env.PR_NUMBER) {
                 const prCommentResponse = await github.rest.issues.createComment({
                   owner: context.repo.owner,

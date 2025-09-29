@@ -1,8 +1,8 @@
 import { getLogger } from "../../services";
 
-export const pathBaseName = process.env.REACT_APP_BASE_PATH;
+export const pathBaseName = import.meta.env.VITE_BASE_PATH;
 
-const _logger = getLogger("navigation.pageurls", null, null, "DISABLED");
+const rootLogger = getLogger("navigation.pageurls", null, null, "DISABLED");
 
 interface PageRouteResource {
   shortUrl: string;
@@ -125,7 +125,7 @@ const PAGE_URL: Record<RouteId, PageRouteResource> = {
 };
 
 const getParamKey = (routeResource: PageRouteResource) => {
-  const logger = getLogger("getParamKey", _logger);
+  const logger = getLogger("getParamKey", rootLogger);
   const parts = routeResource.shortUrl.split(":");
   logger.debug("parts=", parts);
   let paramKey = null;
@@ -137,7 +137,7 @@ const getParamKey = (routeResource: PageRouteResource) => {
 };
 
 export const getFullPath = (routeId: RouteId | null, paramValue?: string) => {
-  const logger = getLogger("getFullPath", _logger);
+  const logger = getLogger("getFullPath", rootLogger);
   logger.debug("routeId =", routeId, ", paramValue =", paramValue);
   if (!routeId) {
     return "";

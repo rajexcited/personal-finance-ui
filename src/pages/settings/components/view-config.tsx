@@ -1,9 +1,9 @@
 import "./view-config.css";
 import { FunctionComponent } from "react";
 import { ConfigResource } from "../services";
-import dateutil from "date-and-time";
 import { Input } from "../../../components";
-import { testAttributes } from "../../../shared";
+import { testAttributes, formatTimestamp } from "../../../shared";
+
 
 
 interface ViewConfigProps {
@@ -76,11 +76,11 @@ const ViewConfig: FunctionComponent<ViewConfigProps> = (props) => {
             <div className="columns">
                 <div className="column">
                     <label className="label">Created Date: </label>
-                    <span { ...testAttributes("outvalue") }>{ props.details.auditDetails.createdOn instanceof Date ? dateutil.format(props.details.auditDetails.createdOn, "MM-DD-YYYY hh:mm:ss A") : "-" }</span>
+                    <span { ...testAttributes("outvalue") }>{ props.details.auditDetails.createdOn instanceof Date ? formatTimestamp(props.details.auditDetails.createdOn, "MM-DD-YYYY hh:mm:ss A") : "-" }</span>
                 </div>
                 <div className="column">
                     <label className="label">Last Updated Date: </label>
-                    <span { ...testAttributes("outvalue") }>{ props.details.auditDetails.updatedOn instanceof Date ? dateutil.format(props.details.auditDetails.updatedOn, "MM-DD-YYYY hh:mm:ss A") : "-" }</span>
+                    <span { ...testAttributes("outvalue") }>{ props.details.auditDetails.updatedOn instanceof Date ? formatTimestamp(props.details.auditDetails.updatedOn, "MM-DD-YYYY hh:mm:ss A") : "-" }</span>
                 </div>
             </div>
         </section>

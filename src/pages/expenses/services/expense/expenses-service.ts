@@ -1,5 +1,5 @@
 import pMemoize, { pMemoizeClear } from "p-memoize";
-import datetime from "date-and-time";
+import * as datetime from "date-and-time";
 import {
   axios,
   getLogger,
@@ -24,7 +24,7 @@ type ExpenseQueryParams = Record<"pageNo" | "status" | "pageMonths" | "belongsTo
 const expenseDb = new MyLocalDatabase<ExpenseFields>(LocalDBStore.Expense);
 
 const rootPath = "/expenses";
-const _logger = getLogger("service.expense", null, null, "DISABLED");
+const rootLogger = getLogger("service.expense", null, null, "DISABLED");
 
 const getExpenseCount = pMemoize(async (queryParams: ExpenseQueryParams) => {
   const countResponse = await axios.get(`${rootPath}/count`, { params: queryParams });
@@ -43,7 +43,7 @@ const isExpenseWithinRange = (expense: ExpenseFields, rangeStartDate: Date, rang
 };
 
 export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseStatus, pageMonths?: number, belongsTo?: ExpenseBelongsTo) => {
-  const logger = getLogger("getExpenseList", _logger);
+  const logger = getLogger("getExpenseList", rootLogger);
 
   const startTime = new Date();
   try {
@@ -66,11 +66,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
       const expenseCountPromise = getExpenseCount(queryParams);
       await Promise.all([dbExpensePromise, expenseCountPromise]);
       const dbExpenses = await dbExpensePromise;
-      logger.debug(
-        "expenseDb.getAllFromIndex and expenseCount.api execution time =",
-        subtractDatesDefaultToZero(null, startTime).toSeconds(),
-        " sec."
-      );
+      logger.debug("expenseDb.getAllFromIndex and expenseCount.api execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec.");
 
       const rangeStartDate = datetime.addMonths(new Date(), queryPageMonths * -1 * pageNo);
       const rangeEndDate = datetime.addMonths(new Date(), queryPageMonths * -1 * (pageNo - 1));
@@ -87,7 +83,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
           ", filteredExpenses.length=",
           filteredExpenses.length,
           ", execution time =",
-          subtractDatesDefaultToZero(null, startTime).toSeconds(),
+          subtractDatesDefaultToZero(null, startTime).toSeconds().value,
           " sec"
         );
         expenses = filteredExpenses;
@@ -103,12 +99,12 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
         "getExpenses api, queryParams =",
         queryParams,
         ", api execution time =",
-        subtractDatesDefaultToZero(null, apiStartTime).toSeconds(),
+        subtractDatesDefaultToZero(null, apiStartTime).toSeconds().value,
         " sec and time diff from request start =",
         subtractDates(null, startTime),
         " sec"
       );
-      logger.info("api execution time =", subtractDatesDefaultToZero(null, apiStartTime).toSeconds(), " sec");
+      logger.info("api execution time =", subtractDatesDefaultToZero(null, apiStartTime).toSeconds().value, " sec");
 
       apiStartTime = new Date();
       expenses = response.data as ExpenseFields[];
@@ -143,7 +139,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
         return await incomeService.addUpdateDbIncome(expense, logger);
       }
     });
-    logger.info("transformed expense resources, execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+    logger.info("transformed expense resources, execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
 
     const transformedExpenses = await Promise.all(promises);
     const returnResp = transformedExpenses.filter((xpns) => xpns !== undefined);
@@ -153,7 +149,7 @@ export const getExpenseList = pMemoize(async (pageNo: number, status?: ExpenseSt
     handleAndRethrowServiceError(e as Error, logger);
     throw new Error("this never gets thrown");
   } finally {
-    logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds(), " sec");
+    logger.info("execution time =", subtractDatesDefaultToZero(null, startTime).toSeconds().value, " sec");
   }
 }, getCacheOption("3 min"));
 

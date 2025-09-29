@@ -1,5 +1,5 @@
 import "./interceptors";
-import { LoggerBase, UnauthorizedError, axios, getCacheOption, getLogger, handleRestErrors, sleep } from "../../../shared";
+import { LoggerBase, UnauthorizedError, axios, getCacheOption, getLogger, handleRestErrors } from "../../../shared";
 import {
   CountryResource,
   UpdateUserDetailsResource,
@@ -23,10 +23,10 @@ import { pMemoizeSyncClear } from "../../../shared/utils/cache-utils";
 
 const rootPath = "/user";
 const MARGIN_ERROR_TIME_IN_SEC = 1;
-const _logger = getLogger("service.auth", null, null, "DISABLED");
+const rootLogger = getLogger("service.auth", null, null, "DISABLED");
 
 export const login = pMemoize(async (details: UserLoginResource, forceLogin: boolean) => {
-  const logger = getLogger("login", _logger);
+  const logger = getLogger("login", rootLogger);
   try {
     if (isAuthenticated(logger)) {
       logger.debug("already logged in");
@@ -88,7 +88,7 @@ export const isAuthenticated = (loggerBase?: LoggerBase): boolean => {
 };
 
 export const logout = pMemoize(async () => {
-  const logger = getLogger("logout", _logger);
+  const logger = getLogger("logout", rootLogger);
   logger.debug("session is cleared. calling api");
   try {
     // to make user experience better, not waiting for response. actual api call may take  upto 3 sec
@@ -109,7 +109,7 @@ export const logout = pMemoize(async () => {
  *  @returns user details
  */
 export const getUserDetails = pMemoize(async () => {
-  const logger = getLogger("getUserDetails", _logger);
+  const logger = getLogger("getUserDetails", rootLogger);
   try {
     if (!isTokenSessionValid(logger)) {
       logger.debug("invalid token");
@@ -127,7 +127,7 @@ export const getUserDetails = pMemoize(async () => {
     const userDetailsResponse = response.data as UserDetailsResource;
 
     logger.debug("api response =", userDetailsResponse);
-    updateUserDetails(response);
+    await updateUserDetails(response);
     logger.debug("stored user data session");
     validUserDetail = getValidUserDetails(logger);
     if (validUserDetail) {
@@ -140,6 +140,7 @@ export const getUserDetails = pMemoize(async () => {
   }
   logger.debug("responding dummy user data");
   const dummyUserDetail: UserDetailsResource = {
+    id: "",
     emailId: "",
     firstName: "",
     lastName: "",
@@ -151,7 +152,7 @@ export const getUserDetails = pMemoize(async () => {
 }, getCacheOption("3 sec"));
 
 export const signup = pMemoize(async (details: UserSignupResource) => {
-  const logger = getLogger("signup", _logger);
+  const logger = getLogger("signup", rootLogger);
   try {
     if (isAuthenticated(logger)) {
       logger.debug("logged in already");
@@ -165,9 +166,7 @@ export const signup = pMemoize(async (details: UserSignupResource) => {
     pMemoizeClear(getUserDetails);
     logger.debug("stored token session data");
 
-    updateUserDetails({
-      data: { ...details, isAuthenticated: true, status: UserStatus.ACTIVE_USER, fullName: "" }
-    });
+    getUserDetails();
     logger.debug("stored user session data");
   } catch (e) {
     const err = e as Error;
@@ -178,7 +177,7 @@ export const signup = pMemoize(async (details: UserSignupResource) => {
 }, getCacheOption("3 sec"));
 
 export const updateName = pMemoize(async (details: UpdateUserDetailsResource) => {
-  const logger = getLogger("updateName", _logger);
+  const logger = getLogger("updateName", rootLogger);
   try {
     const response = await axios.post(`${rootPath}/details`, details);
 
@@ -193,7 +192,7 @@ export const updateName = pMemoize(async (details: UpdateUserDetailsResource) =>
 }, getCacheOption("3 sec"));
 
 export const updatePassword = pMemoize(async (details: UpdateUserPasswordResource) => {
-  const logger = getLogger("updatePassword", _logger);
+  const logger = getLogger("updatePassword", rootLogger);
   try {
     // encode before sending over api call
     const data: UpdateUserPasswordResource = {
@@ -211,7 +210,7 @@ export const updatePassword = pMemoize(async (details: UpdateUserPasswordResourc
 }, getCacheOption("3 sec"));
 
 export const getTokenExpiryTime = () => {
-  const logger = getLogger("getTokenExpiryTime", _logger, null, "DISABLED");
+  const logger = getLogger("getTokenExpiryTime", rootLogger, null, "DISABLED");
   const validSessionSeconds = getRemainingExpiryTimeInSeconds();
   logger.debug("validSessionSeconds =", validSessionSeconds, ", responding boolean result = ", !(validSessionSeconds <= MARGIN_ERROR_TIME_IN_SEC));
   if (validSessionSeconds > MARGIN_ERROR_TIME_IN_SEC) {
@@ -223,7 +222,7 @@ export const getTokenExpiryTime = () => {
 };
 
 export const refreshToken = pMemoize(async () => {
-  const logger = getLogger("refreshToken", _logger);
+  const logger = getLogger("refreshToken", rootLogger);
   try {
     const response = await axios.post(`${rootPath}/refresh`);
     updateAuthorizationToken(response);
@@ -240,7 +239,7 @@ export const refreshToken = pMemoize(async () => {
 }, getCacheOption("3 sec"));
 
 export const deleteUserAccount = pMemoize(async (details: UserLoginResource) => {
-  const logger = getLogger("deleteUserAccount", _logger);
+  const logger = getLogger("deleteUserAccount", rootLogger);
   try {
     // encode before sending over api call
     const data: UserLoginResource = {
@@ -260,7 +259,7 @@ export const deleteUserAccount = pMemoize(async (details: UserLoginResource) => 
 }, getCacheOption("3 sec"));
 
 export const isUserAccountReadOnly = async () => {
-  const logger = getLogger("isUserAccountReadOnly", _logger);
+  const logger = getLogger("isUserAccountReadOnly", rootLogger);
   const userDetails = getValidUserDetails(logger);
   return !!userDetails?.isAuthenticated && userDetails.status !== UserStatus.ACTIVE_USER;
 };

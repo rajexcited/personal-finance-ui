@@ -13,6 +13,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build
@@ -29,6 +32,12 @@ jobs:
       - run: npm --version
       - run: npm ci
       - run: npm run build
+      - run: |
+          echo "Build output files:"
+          ls -la build
+          ls -la build/assets
+      - run: npm run lint
+
 
   unittest:
     name: Unit Tests

@@ -1,5 +1,6 @@
 const demoMock = {
-  history: { isDummy: true },
 };
+
+export const isDemo = false;
 
 export default demoMock;

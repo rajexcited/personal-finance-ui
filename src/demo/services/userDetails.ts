@@ -3,8 +3,9 @@ import { formatTimestamp, getLogger } from "../../shared";
 
 const rootLogger = getLogger("mock.service.userDetails", null, null, "DISABLED");
 
-export type UserDataType = Record<"firstName" | "lastName" | "emailId" | "password" | "countryCode" | "status", string>;
-const UserSessionDetails: UserDataType = {
+export type UserDataType = Record<"firstName" | "lastName" | "emailId" | "password" | "countryCode" | "status" | "id", string>;
+const sessionUserDetails: UserDataType = {
+  id: "",
   firstName: "",
   lastName: "",
   emailId: "",
@@ -12,21 +13,30 @@ const UserSessionDetails: UserDataType = {
   countryCode: "",
   status: UserStatus.ACTIVE_USER
 };
+const prevUserSessionDetails: UserDataType = { ...sessionUserDetails };
 
-export const userSessionDetails = (setter?: Partial<UserDataType>) => {
-  UserSessionDetails.emailId = setter?.emailId || UserSessionDetails.emailId;
-  UserSessionDetails.firstName = setter?.firstName || UserSessionDetails.firstName;
-  UserSessionDetails.lastName = setter?.lastName || UserSessionDetails.lastName;
-  UserSessionDetails.password = setter?.password || UserSessionDetails.password;
-  UserSessionDetails.countryCode = setter?.countryCode || UserSessionDetails.countryCode;
-  UserSessionDetails.status = setter?.status || UserSessionDetails.status;
+export const userSessionDetails = (setter?: Partial<UserDataType>, saveAsPrevBeforeSet?: boolean) => {
+  if (saveAsPrevBeforeSet) {
+    Object.assign(prevUserSessionDetails, sessionUserDetails);
+  }
+  sessionUserDetails.id = setter?.id || sessionUserDetails.id;
+  sessionUserDetails.emailId = setter?.emailId || sessionUserDetails.emailId;
+  sessionUserDetails.firstName = setter?.firstName || sessionUserDetails.firstName;
+  sessionUserDetails.lastName = setter?.lastName || sessionUserDetails.lastName;
+  sessionUserDetails.password = setter?.password || sessionUserDetails.password;
+  sessionUserDetails.countryCode = setter?.countryCode || sessionUserDetails.countryCode;
+  sessionUserDetails.status = setter?.status || sessionUserDetails.status;
 
-  return { ...UserSessionDetails };
+  return { ...sessionUserDetails };
+};
+
+export const getPreviousUserSessionDetails = () => {
+  return { ...prevUserSessionDetails };
 };
 
 export const fullName = () => {
-  if (UserSessionDetails.firstName) {
-    return [UserSessionDetails.lastName, UserSessionDetails.firstName].join(", ");
+  if (sessionUserDetails.firstName) {
+    return [sessionUserDetails.lastName, sessionUserDetails.firstName].join(", ");
   }
   return "-";
 };
@@ -54,13 +64,18 @@ export const tokenSessionData = (data?: TokenDataType) => {
 };
 
 const reloadHandlerWhileLoggedIn = () => {
+  const prevusrkey = "fin-usr-demo-prev";
   const usrkey = "fin-usr-demo";
   const tknkey = "fin-tkn-demo";
   const logger = getLogger("reloadHandlerWhileLoggedIn", rootLogger);
-  window.addEventListener("beforeunload", (event) => {
-    const itemDetails = JSON.stringify(UserSessionDetails);
+  window.addEventListener("beforeunload", (_event) => {
+    const itemDetails = JSON.stringify(sessionUserDetails);
     logger.debug("before reload, local storage item details", itemDetails);
     sessionStorage.setItem(usrkey, itemDetails);
+
+    const prevItemDetails = JSON.stringify(prevUserSessionDetails);
+    logger.debug("before reload, local storage item details", prevItemDetails);
+    sessionStorage.setItem(prevusrkey, prevItemDetails);
 
     sessionStorage.setItem(tknkey, JSON.stringify(tokenData));
   });
@@ -70,11 +85,11 @@ const reloadHandlerWhileLoggedIn = () => {
     logger.debug("after reload, local storage user details", authUsr);
     const authUsrSession = JSON.parse(authUsr) as UserDataType;
     if (authUsrSession.firstName) {
-      UserSessionDetails.emailId = authUsrSession.emailId;
-      UserSessionDetails.firstName = authUsrSession.firstName;
-      UserSessionDetails.lastName = authUsrSession.lastName;
-      UserSessionDetails.password = authUsrSession.password;
-      UserSessionDetails.countryCode = authUsrSession.countryCode;
+      sessionUserDetails.emailId = authUsrSession.emailId;
+      sessionUserDetails.firstName = authUsrSession.firstName;
+      sessionUserDetails.lastName = authUsrSession.lastName;
+      sessionUserDetails.password = authUsrSession.password;
+      sessionUserDetails.countryCode = authUsrSession.countryCode;
     }
   }
   const authTkn = sessionStorage.getItem(tknkey);

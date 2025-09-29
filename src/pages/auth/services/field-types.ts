@@ -19,6 +19,7 @@ export enum UserStatus {
 }
 
 export interface UserDetailsResource {
+  id: string;
   emailId: string;
   isAuthenticated: boolean;
   fullName: string;

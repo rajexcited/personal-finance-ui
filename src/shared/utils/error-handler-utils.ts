@@ -48,7 +48,7 @@ export const handleRouteActionError = (e: unknown, overrideMessages?: Record<str
 export const getDefaultIfError = async <T>(fn: () => Promise<T>, defaultValue: T) => {
   try {
     return await fn();
-  } catch (ignore) {
+  } catch (_ignore) {
     return defaultValue;
   }
 };
@@ -74,6 +74,6 @@ const overrideResponseError = (
   }
 };
 
-export const responseJson = (resp: Object, httpStatus: HttpStatusCode) => {
+export const responseJson = (resp: object, httpStatus: HttpStatusCode) => {
   return new Response(JSON.stringify(resp), { status: httpStatus });
 };

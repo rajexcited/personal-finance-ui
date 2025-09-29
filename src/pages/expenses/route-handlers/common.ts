@@ -35,7 +35,7 @@ export const getFormData = <T extends ExpenseFields>(formData: FormData, formKey
         return jsonObj;
       }
       return formValue.toString();
-    } catch (ignore) {
+    } catch (_ignore) {
       return formValue.toString();
     }
   }

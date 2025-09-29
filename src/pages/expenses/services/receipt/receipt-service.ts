@@ -10,7 +10,7 @@ const onBeforeExpiredReceiptFileCallback = async (item: DownloadReceiptResource)
 const receiptFileDb = new MyLocalDatabase<DownloadReceiptResource>(LocalDBStore.ReceiptFile, onBeforeExpiredReceiptFileCallback);
 
 const rootPath = "/expenses";
-const _logger = getLogger("service.expense.receipt", null, null, "DISABLED");
+const rootLogger = getLogger("service.expense.receipt", null, null, "DISABLED");
 
 export const cacheReceiptFile = async (
   receipt: ReceiptProps,
@@ -18,7 +18,7 @@ export const cacheReceiptFile = async (
   fileData?: ArrayBuffer,
   newReceipt?: ReceiptProps
 ): Promise<DownloadReceiptResource | undefined> => {
-  const logger = getLogger("cacheReceiptFile", _logger);
+  const logger = getLogger("cacheReceiptFile", rootLogger);
   const resp = await receiptFileDb.getItem(receipt.id);
   logger.debug("resp=", resp);
   if (newReceipt && newReceipt.belongsTo !== receipt.belongsTo) {
@@ -82,7 +82,7 @@ export const cacheReceiptFile = async (
 };
 
 export const uploadReceipts = async (receipts: ReceiptProps[]) => {
-  const logger = getLogger("uploadReceipts", _logger);
+  const logger = getLogger("uploadReceipts", rootLogger);
   // make sure to have unique names
   const receiptNames = new Set(receipts.map((rct) => rct.name));
   if (receiptNames.size !== receipts.length) {
@@ -135,7 +135,7 @@ export const uploadReceipts = async (receipts: ReceiptProps[]) => {
 };
 
 export const downloadReceipts = async (receipts: ReceiptProps[]) => {
-  const logger = getLogger("downloadReceipts", _logger);
+  const logger = getLogger("downloadReceipts", rootLogger);
   logger.debug("starting to download and prepare resource list");
 
   const promises = receipts.map(async (rct) => {
@@ -171,7 +171,7 @@ export const downloadReceipts = async (receipts: ReceiptProps[]) => {
 };
 
 (() => {
-  const logger = getLogger("onPageLoad", _logger);
+  const logger = getLogger("onPageLoad", rootLogger);
   const receiptFileDb = new MyLocalDatabase<DownloadReceiptResource>(LocalDBStore.ReceiptFile);
   logger.debug("deleting all receipt urls");
   receiptFileDb.clearAll();

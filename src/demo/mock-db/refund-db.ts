@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import datetime from "date-and-time";
+import * as datetime from "date-and-time";
 import { ExpenseStatus } from "../../pages/expenses";
 import { LoggerBase, ObjectDeepDifference, formatTimestamp, getDateInstanceDefaultNewDate, getLogger } from "../../shared";
 import { LocalDBStore, LocalDBStoreIndex, MyLocalDatabase } from "./db";
@@ -15,11 +15,11 @@ import { ExpenseFilter } from "./expense-db";
 
 const refundDb = new MyLocalDatabase<PurchaseRefundFields>(LocalDBStore.Expense);
 
-const _rootLogger = getLogger("mock.db.expense.purchase.refund", null, null, "DISABLED");
+const rootLogger = getLogger("mock.db.expense.purchase.refund", null, null, "DISABLED");
 
 // initialize on page load
-const init = async () => {
-  const logger = getLogger("init", _rootLogger);
+export const initializeRefundDb = async () => {
+  const logger = getLogger("init", rootLogger);
 
   const refundReasons = (await getRefundReasons()).list;
   logger.debug("retrieved", refundReasons.length, "refund reasons");
@@ -94,12 +94,12 @@ const init = async () => {
   });
 };
 
-await init();
+await initializeRefundDb();
 
 export type RefundFilter = ExpenseFilter;
 
 export const getRefundTags = async (years: number[]) => {
-  const logger = getLogger("getRefundTags", _rootLogger);
+  const logger = getLogger("getRefundTags", rootLogger);
 
   const refundList = await refundDb.getAllFromIndex(LocalDBStoreIndex.BelongsTo, ExpenseBelongsTo.PurchaseRefund);
   logger.debug("retrieved", refundList.length, "refund. now filtering by year");
@@ -174,7 +174,7 @@ const getReceiptsForRefundAddUpdate = async (
 };
 
 export const addUpdateRefund = async (data: PurchaseRefundFields) => {
-  const logger = getLogger("addUpdate", _rootLogger);
+  const logger = getLogger("addUpdate", rootLogger);
   const existingRefund = await refundDb.getItem(data.id);
 
   if (existingRefund) {

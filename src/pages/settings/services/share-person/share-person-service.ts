@@ -16,8 +16,8 @@ const configTypeService = ConfigTypeService(ConfigTypeBelongsTo.SharePerson);
 const rootLogger = getLogger("settings.service.sharePerson", null, null, "DISABLED");
 const tagService = TagsService(TagBelongsTo.SharePersonConfig);
 
-const convertConfigResourceToSharePerson = (cfg: ConfigResource, _logger: LoggerBase) => {
-  const logger = getLogger("convertConfigResourceToSharePerson", _logger);
+const convertConfigResourceToSharePerson = (cfg: ConfigResource, baseLogger: LoggerBase) => {
+  const logger = getLogger("convertConfigResourceToSharePerson", baseLogger);
   logger.debug("cfg.id =", cfg.id, "cfg.name =", cfg.name);
 
   const list = JSON.parse(cfg.value) as string[];
@@ -39,8 +39,8 @@ const convertConfigResourceToSharePerson = (cfg: ConfigResource, _logger: Logger
   return sharePerson;
 };
 
-const convertSharePersonToConfigResource = (sharePerson: SharePersonResource, _logger: LoggerBase) => {
-  const logger = getLogger("convertSharePersonToConfigResource", _logger);
+const convertSharePersonToConfigResource = (sharePerson: SharePersonResource, baseLogger: LoggerBase) => {
+  const logger = getLogger("convertSharePersonToConfigResource", baseLogger);
   logger.debug("sharePerson.id =", sharePerson.id, "email =", sharePerson.emailId);
 
   const list: string[] = [sharePerson.firstName, sharePerson.lastName, sharePerson.nickName || "", sharePerson.phone || ""];

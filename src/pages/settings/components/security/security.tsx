@@ -70,7 +70,6 @@ export const SecurityPage: FunctionComponent = () => {
         }
     };
 
-    const details = loaderData.type === "success" ? loaderData.data : null;
     fcLogger.debug("userAction =", userAction, " userAction.state === ActionState.NoAction? ", (userAction.state === ActionState.NoAction));
 
 

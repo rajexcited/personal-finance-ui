@@ -8,7 +8,7 @@ import { getExpenseStats } from "../mock-db/xpns-stats-db";
 
 type StatsParam = Record<"year", string[]>;
 
-const _rootLogger = getLogger("mock.api.stats", null, null, "DISABLED");
+const rootLogger = getLogger("mock.api.stats", null, null, "DISABLED");
 const rootPath = "/stats";
 
 export const MockStats = (demoMock: MockAdapter) => {
@@ -21,11 +21,11 @@ export const MockStats = (demoMock: MockAdapter) => {
       return { errors: yearErrors };
     }
     const convertedParams = {
-      year: Number(params.year[0]),
+      year: Number(params.year[0])
     };
     logger.debug("convertedParams =", convertedParams);
     return {
-      params: convertedParams,
+      params: convertedParams
     };
   };
 
@@ -47,17 +47,17 @@ export const MockStats = (demoMock: MockAdapter) => {
   };
 
   demoMock.onGet(rootPath + "/purchase").reply(async (config) => {
-    const logger = getLogger("getPurchaseStats", _rootLogger);
+    const logger = getLogger("getPurchaseStats", rootLogger);
     return getStats(config, StatBelongsTo.Purchase, logger);
   });
 
   demoMock.onGet(rootPath + "/refund").reply(async (config) => {
-    const logger = getLogger("getRefundStats", _rootLogger);
+    const logger = getLogger("getRefundStats", rootLogger);
     return getStats(config, StatBelongsTo.Refund, logger);
   });
 
   demoMock.onGet(rootPath + "/income").reply(async (config) => {
-    const logger = getLogger("getIncomeStats", _rootLogger);
+    const logger = getLogger("getIncomeStats", rootLogger);
     return getStats(config, StatBelongsTo.Income, logger);
   });
 };

@@ -1,5 +1,5 @@
 import { IDBPDatabase, openDB } from "idb";
-import datetime from "date-and-time";
+import * as datetime from "date-and-time";
 import { LoggerBase, getLogger } from "../../shared";
 
 export enum LocalDBStore {
@@ -125,13 +125,13 @@ const getItemKeyPath = (storeKeyPath: string | string[]) => {
 };
 
 const configureLocalDatabase = async () => {
-  const _logger = getLogger("configureLocalDatabase", rootLogger);
-  _logger.debug("opening DB");
+  const cfgDbLogger = getLogger("configureLocalDatabase", rootLogger);
+  cfgDbLogger.debug("opening DB");
 
   // https://hackernoon.com/use-indexeddb-with-idb-a-1kb-library-that-makes-it-easy-8p1f3yqq
   const db = await openDB(DataBaseConfig.name, DataBaseConfig.version, {
     upgrade(db, oldVersion, newVersion, transaction, event) {
-      const logger = getLogger("openDB.upgrade", _logger);
+      const logger = getLogger("openDB.upgrade", cfgDbLogger);
       logger.debug("db =", db, ", oldVersion =", oldVersion, ", newVersion =", newVersion, ", transaction =", transaction, ", event =", event);
       DataBaseConfig.stores.forEach((storeConfig) => {
         logger.debug("storeObj =", storeConfig);
@@ -165,8 +165,8 @@ interface DbItem<T> {
 }
 
 export class MyLocalDatabase<T> {
-  private readonly _storeConfig: StoreConfigType;
-  private readonly _logger: LoggerBase;
+  private readonly storeConfig: StoreConfigType;
+  private readonly clsLogger: LoggerBase;
 
   constructor(objectStoreName: LocalDBStore) {
     const storeConfig = DataBaseConfig.stores.find((s) => s.name === objectStoreName);
@@ -174,25 +174,36 @@ export class MyLocalDatabase<T> {
       throw Error("object store is not supported for Db");
     }
 
-    this._storeConfig = JSON.parse(JSON.stringify(storeConfig));
-    if (this._storeConfig.expireHoure === undefined) {
-      this._storeConfig.expireHoure = DataBaseConfig.expireHour;
+    this.storeConfig = JSON.parse(JSON.stringify(storeConfig));
+    if (this.storeConfig.expireHoure === undefined) {
+      this.storeConfig.expireHoure = DataBaseConfig.expireHour;
     }
 
-    this._logger = getLogger("MyLocalDatabase." + objectStoreName, rootLogger, null, "DISABLED");
+    this.clsLogger = getLogger("MyLocalDatabase." + objectStoreName, rootLogger, null, "DISABLED");
+  }
+
+  public async clearAll() {
+    const logger = getLogger("clearAll", this.clsLogger);
+    const db = await openDB(DataBaseConfig.name, DataBaseConfig.version);
+    try {
+      await db.clear(this.storeConfig.name);
+      logger.debug("all records cleared from store [", this.storeConfig.name, "]");
+    } finally {
+      db.close();
+    }
   }
 
   private validateKeyPath(logger: LoggerBase, key?: string | string[] | IDBKeyRange, index?: LocalDBStoreIndex) {
     let keyPath = undefined;
     if (index) {
-      const foundIndex = this._storeConfig.indexes.find((si) => si.name === index);
+      const foundIndex = this.storeConfig.indexes.find((si) => si.name === index);
       if (!foundIndex) {
         throw new Error("invalid index");
       }
       keyPath = foundIndex.keyPath;
       logger.debug("validating key, for index [", index, "] having keyPath [", keyPath, "] where given key [", key, "].");
     } else {
-      keyPath = this._storeConfig.keyPath;
+      keyPath = this.storeConfig.keyPath;
       logger.debug("validating key for having keyPath [", keyPath, "] where given key [", key, "].");
     }
 
@@ -224,9 +235,9 @@ export class MyLocalDatabase<T> {
   }
 
   private validateIndex(logger: LoggerBase, index?: LocalDBStoreIndex) {
-    const foundIndex = this._storeConfig.indexes.find((si) => si.name === index);
+    const foundIndex = this.storeConfig.indexes.find((si) => si.name === index);
     if (!foundIndex) {
-      logger.debug("validateIndex, given index[", index, "] is not found in store [", this._storeConfig.name, "]");
+      logger.debug("validateIndex, given index[", index, "] is not found in store [", this.storeConfig.name, "]");
       throw new Error("incorrect db index used");
     }
   }
@@ -235,20 +246,20 @@ export class MyLocalDatabase<T> {
     // delete all expired items
     const logger = getLogger("validateCacheExpiry", loggerBase);
 
-    const cacheExpiryHour = this._storeConfig.expireHoure || 0;
+    const cacheExpiryHour = this.storeConfig.expireHoure || 0;
     const expiredTime = datetime.addHours(new Date(), cacheExpiryHour * -1).getTime();
     logger.debug("expiredTime =", expiredTime, " - ", new Date(expiredTime));
     const upperBoundQuery = IDBKeyRange.upperBound(expiredTime, true);
 
-    const list = (await db.getAllFromIndex(this._storeConfig.name, CacheIndex.name, upperBoundQuery)) as DbItem<T>[];
+    const list = (await db.getAllFromIndex(this.storeConfig.name, CacheIndex.name, upperBoundQuery)) as DbItem<T>[];
     logger.debug("deleting", list.length, "items");
     const deletePromises = list.map(async (o) => {
       const item = o.item as any;
-      if (this._storeConfig.keyPath in item) {
-        const key = item[this._storeConfig.keyPath];
-        await db.delete(this._storeConfig.name, IDBKeyRange.only(key));
+      if (this.storeConfig.keyPath in item) {
+        const key = item[this.storeConfig.keyPath];
+        await db.delete(this.storeConfig.name, IDBKeyRange.only(key));
       } else {
-        logger.info("keypath [", this._storeConfig.keyPath, "] not found in item,", item);
+        logger.info("keypath [", this.storeConfig.keyPath, "] not found in item,", item);
       }
     });
 
@@ -257,7 +268,7 @@ export class MyLocalDatabase<T> {
   }
 
   public async countFromIndex(index: LocalDBStoreIndex, key?: string | string[]) {
-    const logger = getLogger("countFromIndex", this._logger);
+    const logger = getLogger("countFromIndex", this.clsLogger);
     this.validateIndex(logger, index);
     const db = await openDB(DataBaseConfig.name, DataBaseConfig.version);
     logger.debug("db is opened. clearing cache now");
@@ -266,7 +277,7 @@ export class MyLocalDatabase<T> {
       this.validateKeyPath(logger, key, index);
       const dbkey = key;
       logger.debug("dbkey =", dbkey, "getting count from index [", index, "]");
-      const countPromise = db.countFromIndex(this._storeConfig.name, index, dbkey);
+      const countPromise = db.countFromIndex(this.storeConfig.name, index, dbkey);
       const count = await countPromise;
       logger.debug("count response =", count);
       return count;
@@ -283,7 +294,7 @@ export class MyLocalDatabase<T> {
       createdOn: new Date().getTime(),
       updatedOn: new Date().getTime()
     };
-    const addPromise = db.add(this._storeConfig.name, dbItem);
+    const addPromise = db.add(this.storeConfig.name, dbItem);
     return await addPromise;
   }
 
@@ -293,7 +304,7 @@ export class MyLocalDatabase<T> {
       createdOn: dbRecord.createdOn,
       updatedOn: new Date().getTime()
     };
-    const updatePromise = db.put(this._storeConfig.name, dbItem);
+    const updatePromise = db.put(this.storeConfig.name, dbItem);
     return await updatePromise;
   }
 
@@ -309,11 +320,11 @@ export class MyLocalDatabase<T> {
   public async addUpdateItem(item: T) {
     const db = await openDB(DataBaseConfig.name, DataBaseConfig.version);
     try {
-      const storeConfig = DataBaseConfig.stores.find((s) => s.name === this._storeConfig.name) as StoreConfigType;
+      const storeConfig = DataBaseConfig.stores.find((s) => s.name === this.storeConfig.name) as StoreConfigType;
       const itm = item as any;
       if (storeConfig.keyPath in itm) {
         const key = itm[storeConfig.keyPath];
-        const dbRecord = (await db.get(this._storeConfig.name, key)) as DbItem<T> | undefined;
+        const dbRecord = (await db.get(this.storeConfig.name, key)) as DbItem<T> | undefined;
         if (dbRecord) {
           return await this.updateToDb(dbRecord, item, db);
         }
@@ -326,14 +337,14 @@ export class MyLocalDatabase<T> {
   }
 
   public async getAllFromIndex(index: LocalDBStoreIndex, key?: string | string[] | IDBKeyRange) {
-    const logger = getLogger("getAllFromIndex", this._logger);
+    const logger = getLogger("getAllFromIndex", this.clsLogger);
     this.validateIndex(logger, index);
     const db = await openDB(DataBaseConfig.name, DataBaseConfig.version);
     logger.debug("db is opened. now clearing expired");
     try {
       await this.validateCacheExpiry(db, logger);
       this.validateKeyPath(logger, key, index);
-      const records = (await db.getAllFromIndex(this._storeConfig.name, index, key)) as DbItem<T>[] | undefined;
+      const records = (await db.getAllFromIndex(this.storeConfig.name, index, key)) as DbItem<T>[] | undefined;
       logger.debug("retrieved array response");
       return (records || []).map((r) => r.item);
     } finally {
@@ -344,14 +355,14 @@ export class MyLocalDatabase<T> {
   }
 
   public async getAll() {
-    const logger = getLogger("getAll", this._logger);
+    const logger = getLogger("getAll", this.clsLogger);
     const db = await openDB(DataBaseConfig.name, DataBaseConfig.version);
     logger.debug("db is opened. now clearing expired");
     try {
       await this.validateCacheExpiry(db, logger);
 
       logger.debug("getting all items");
-      const records = (await db.getAll(this._storeConfig.name)) as DbItem<T>[] | undefined;
+      const records = (await db.getAll(this.storeConfig.name)) as DbItem<T>[] | undefined;
       logger.debug("retrieved array response");
       return (records || []).map((r) => r.item);
     } finally {
@@ -362,14 +373,14 @@ export class MyLocalDatabase<T> {
   }
 
   public async getItem(key: string) {
-    const logger = getLogger("getItem", this._logger);
+    const logger = getLogger("getItem", this.clsLogger);
     const db = await openDB(DataBaseConfig.name, DataBaseConfig.version);
     logger.debug("db is opened. now clearing expired");
     try {
       await this.validateCacheExpiry(db, logger);
       this.validateKeyPath(logger, key);
       logger.debug("get item with key [", key, "]");
-      const dbRecord = (await db.get(this._storeConfig.name, key)) as DbItem<T> | undefined;
+      const dbRecord = (await db.get(this.storeConfig.name, key)) as DbItem<T> | undefined;
       logger.debug("retrieved item response");
       if (dbRecord) {
         return dbRecord.item;
@@ -383,12 +394,12 @@ export class MyLocalDatabase<T> {
   }
 
   public async delete(key: string) {
-    const logger = getLogger("delete", this._logger);
+    const logger = getLogger("delete", this.clsLogger);
     const db = await openDB(DataBaseConfig.name, DataBaseConfig.version);
     logger.debug("db is opened");
     try {
       this.validateKeyPath(logger, key);
-      await db.delete(this._storeConfig.name, key);
+      await db.delete(this.storeConfig.name, key);
       logger.debug("item deleted with key [", key, "]");
     } finally {
       logger.debug("closing db");

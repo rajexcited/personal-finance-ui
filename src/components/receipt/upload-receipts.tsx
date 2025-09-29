@@ -87,7 +87,7 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
         tempReceipts.forEach(rct => {
             tempReceiptsMap[rct.name] = rct;
         });
-        if (!!files?.length)
+        if (files?.length)
             for (const file of files) {
                 const fileType = getValidType(file.type);
                 const receipt = tempReceiptsMap[file.name];
@@ -117,9 +117,9 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
     };
 
     const addReceiptsTempDetails = (files: FileList | null) => {
-        const logger = getLogger("addReceiptsTempDetails", fcLogger);
+        const _logger = getLogger("addReceiptsTempDetails", fcLogger);
         const tempReceipts: LoadingReceiptProps[] = [];
-        if (!!files?.length) {
+        if (files?.length) {
             for (const file of files) {
                 tempReceipts.push({
                     name: file.name,
@@ -249,8 +249,8 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
     };
 
     const scaleTooltip = " current scale: " + (scaleValue * 100).toFixed(2) + "%";
-    const nextScaleTooltip = !!nextScaleValue ? "next zoom In: " + nextScaleValue : "cannot zoom in anymore.";
-    const prevScaleTooltip = !!previousScaleValue ? "previous zoom out: " + previousScaleValue : "cannot zoom out anymore.";
+    const nextScaleTooltip = nextScaleValue ? "next zoom In: " + nextScaleValue : "cannot zoom in anymore.";
+    const prevScaleTooltip = previousScaleValue ? "previous zoom out: " + previousScaleValue : "cannot zoom out anymore.";
     const validReceiptSize = receipts.filter(rct => !rct.errorMessage).length;
     const invalidReceiptSize = receipts.length - validReceiptSize;
     fcLogger.debug("all receipts = ", receipts.map(r => ({ ...r })), "validReceiptSize=", validReceiptSize, "invalidReceiptSize=", invalidReceiptSize);
@@ -320,7 +320,7 @@ export const UploadReceiptsModal: FunctionComponent<UploadReceiptsModalProps> = 
                             { ...testAttributes("container-header-close-action") }></button>
                     </header>
                     <section className="modal-card-body">
-                        <div className={ `file ${!!errorMessage ? "is-danger" : ""}` }>
+                        <div className={ `file ${errorMessage ? "is-danger" : ""}` }>
                             <label className="file-label" { ...testAttributes("file-receipts") }>
                                 <input
                                     id="file-receipts"
