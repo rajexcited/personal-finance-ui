@@ -732,7 +732,8 @@ jobs:
                 milestone: deployedMilestone.number
               });
               console.log("listIssuesResponse: ", listIssuesResponse);
-              const releasedRequest = listIssuesResponse.data.find(iss=>iss.title.startsWith("[Approved] [Request] Provision Production Environment"));
+              const releaseRegex=new RegExp("^\\[Approved\\]\\s+\\[Request\\]\\s+Provision Production Environment.*","i");
+              const releasedRequest = listIssuesResponse.data.find(iss=>releaseRegex.test(iss.title.startsWith));
               if(!releasedRequest) {
                 throw new Error("prod release request form not found");
               }
