@@ -2,12 +2,7 @@ import { getExpenseRefund, getExpenseRefundList } from "../../support/fixture-ut
 import { NavBarSelectors, UpdateRefOptions } from "../../support/resource-types";
 import { createOrUpdatePaymentAccount } from "../5-payment-accounts/utils/payment-account-api-utils";
 import { createOrUpdateRefundReason } from "../5-settings/utils/config-type-utils";
-import {
-  navigateToEditExpense,
-  selectExpenseDate,
-  validateExpenseDateInForm,
-  validateUploadReceiptSection
-} from "../5-expense/utils/expense-form-utils";
+import { navigateToEditExpense, selectExpenseDate, validateExpenseDateInForm, validateUploadReceiptSection } from "../5-expense/utils/expense-form-utils";
 import { ExpenseBelongsTo, ExpenseStatus } from "../../support/api-resource-types";
 import {
   getBelongsToLabel,
@@ -105,8 +100,8 @@ function runUpdateRefundTest(refundOptions: UpdateRefOptions, validateExpense: V
   });
   cy.verifyCurrencySection();
 
-  cy.get('button[data-test="cancel-refund"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
-  cy.get('button[data-test="submit-refund"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Update").click();
+  cy.get('button[data-test="cancel-refund"]').filter(":visible").should("have.length", 1).should("have.text", "Cancel");
+  cy.get('button[data-test="submit-refund"]').filter(":visible").should("have.length", 1).should("have.text", "Update").click();
 
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.waitForPageLoad();
@@ -131,17 +126,7 @@ describe("Expense - Update Refund Flow", () => {
   context(
     "A logged in and active user can update an existing refund successfully",
     {
-      tags: [
-        "expense",
-        "refund",
-        "regression",
-        "positive",
-        "update",
-        "edit-refund-tc4",
-        "view",
-        "view-expense-list-tc1",
-        "view-receipts-expenses-tc2"
-      ]
+      tags: ["expense", "refund", "regression", "positive", "update", "edit-refund-tc4", "view", "view-expense-list-tc1", "view-receipts-expenses-tc2"]
     },
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {

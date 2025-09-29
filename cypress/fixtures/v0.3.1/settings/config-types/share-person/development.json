@@ -1,0 +1,18 @@
+{
+  "share-person1": {
+    "emailId": "share-person1@example.com",
+    "firstName": "share person",
+    "lastName": "one",
+    "tags": [],
+    "nickName": "",
+    "description": "share person 1 for expense"
+  },
+  "share-person2": {
+    "emailId": "share-person2@example.com",
+    "firstName": "share person",
+    "lastName": "two",
+    "tags": [],
+    "nickName": "",
+    "description": "share person 2 for expense"
+  }
+}

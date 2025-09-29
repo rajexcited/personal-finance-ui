@@ -3,12 +3,7 @@ import { NavBarSelectors, UpdateRefOptions } from "../../support/resource-types"
 import { validateAndToggleVerifyIndicator } from "./utils/purchase-form-utils";
 import { ExpenseBelongsTo, ExpenseStatus } from "../../support/api-resource-types";
 import { createOrUpdateExpensePurchase } from "../5-expense/utils/expense-api-utils";
-import {
-  navigateToEditExpense,
-  selectExpenseDate,
-  validateExpenseDateInForm,
-  validateUploadReceiptSection
-} from "../5-expense/utils/expense-form-utils";
+import { navigateToEditExpense, selectExpenseDate, validateExpenseDateInForm, validateUploadReceiptSection } from "../5-expense/utils/expense-form-utils";
 import {
   getBelongsToLabel,
   ValidateExpenseCallbackFn,
@@ -51,11 +46,7 @@ function runUpdatePurchaseTest(purchaseOptions: UpdateRefOptions, validateExpens
       requiredError: true
     });
     cy.get('[data-test="purchase-desc-counter"]').should("be.visible").should("have.text", `counter: ${existingPurchaseData.description.length}/150`);
-    cy.get("#purchase-desc")
-      .should("be.visible")
-      .should("have.value", existingPurchaseData.description)
-      .clear()
-      .type(updatingPuchaseData.description);
+    cy.get("#purchase-desc").should("be.visible").should("have.value", existingPurchaseData.description).clear().type(updatingPuchaseData.description);
     cy.get('[data-test="purchase-desc-counter"]').should("be.visible").should("have.text", `counter: ${updatingPuchaseData.description.length}/150`);
     cy.selectTags({
       tagsSelectorId: "purchase-tags",
@@ -75,13 +66,8 @@ function runUpdatePurchaseTest(purchaseOptions: UpdateRefOptions, validateExpens
   });
   cy.verifyCurrencySection();
 
-  cy.get('button[data-test="cancel-purchase"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
-  cy.get('button[data-test="submit-purchase"]')
-    .filter(":visible")
-    .should("have.length", 1)
-    .should("be.visible")
-    .should("have.text", "Update")
-    .click();
+  cy.get('button[data-test="cancel-purchase"]').filter(":visible").should("have.length", 1).should("have.text", "Cancel");
+  cy.get('button[data-test="submit-purchase"]').filter(":visible").should("have.length", 1).should("have.text", "Update").click();
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.waitForPageLoad();
 
@@ -104,17 +90,7 @@ describe("Expense - Update Purchase Flow", () => {
   context(
     "A logged in and active user can update an existing purchase successfully",
     {
-      tags: [
-        "expense",
-        "purchase",
-        "regression",
-        "positive",
-        "update",
-        "edit-purchase-tc3",
-        "view",
-        "view-expense-list-tc1",
-        "view-receipts-expenses-tc2"
-      ]
+      tags: ["expense", "purchase", "regression", "positive", "update", "edit-purchase-tc3", "view", "view-expense-list-tc1", "view-receipts-expenses-tc2"]
     },
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {

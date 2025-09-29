@@ -1,0 +1,11 @@
+{
+  "user1-success": {
+    "description": "all other scenarios, login, expense, payment accounts, settings, etc.",
+    "firstName": "Saitama",
+    "lastName": "Sensei",
+    "emailId": "test1@example.com",
+    "password": "3xbayXQf4A$J98H",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  }
+}

@@ -81,8 +81,8 @@ function runUpdatePaymentAccountTest(paymentAccountoptions: UpdateRefOptions) {
     });
   });
   cy.verifyCurrencySection();
-  cy.get('button[data-test="cancel-payment-account"]').should("be.visible");
-  cy.get('button[data-test="submit-payment-account"]').filter(":visible").should("be.visible").should("have.text", "Update").click();
+  cy.get('button[data-test="cancel-payment-account"]').filter(":visible").should("have.length", 1).should("have.text", "Cancel");
+  cy.get('button[data-test="submit-payment-account"]').filter(":visible").should("have.length", 1).should("have.text", "Update").click();
 
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.waitForPageLoad();

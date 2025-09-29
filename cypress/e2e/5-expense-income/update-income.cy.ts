@@ -2,12 +2,7 @@ import { getExpenseIncome, getExpenseIncomeList } from "../../support/fixture-ut
 import { NavBarSelectors, UpdateRefOptions } from "../../support/resource-types";
 import { ExpenseBelongsTo, ExpenseStatus } from "../../support/api-resource-types";
 import { createOrUpdateExpenseIncome } from "../5-expense/utils/expense-api-utils";
-import {
-  navigateToEditExpense,
-  selectExpenseDate,
-  validateExpenseDateInForm,
-  validateUploadReceiptSection
-} from "../5-expense/utils/expense-form-utils";
+import { navigateToEditExpense, selectExpenseDate, validateExpenseDateInForm, validateUploadReceiptSection } from "../5-expense/utils/expense-form-utils";
 import {
   getBelongsToLabel,
   ValidateExpenseCallbackFn,
@@ -68,8 +63,8 @@ function runUpdateIncomeTest(incomeOptions: UpdateRefOptions, validateExpense: V
   });
   cy.verifyCurrencySection();
 
-  cy.get('button[data-test="cancel-income"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
-  cy.get('button[data-test="submit-income"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Update").click();
+  cy.get('button[data-test="cancel-income"]').filter(":visible").should("have.length", 1).should("have.text", "Cancel");
+  cy.get('button[data-test="submit-income"]').filter(":visible").should("have.length", 1).should("have.text", "Update").click();
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.waitForPageLoad();
 
@@ -92,17 +87,7 @@ describe("Expense - Update Income Flow", () => {
   context(
     "A logged in and active user can update an existing income successfully",
     {
-      tags: [
-        "expense",
-        "income",
-        "regression",
-        "positive",
-        "update",
-        "edit-income-tc3",
-        "view",
-        "view-expense-list-tc1",
-        "view-receipts-expenses-tc2"
-      ]
+      tags: ["expense", "income", "regression", "positive", "update", "edit-income-tc3", "view", "view-expense-list-tc1", "view-receipts-expenses-tc2"]
     },
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {

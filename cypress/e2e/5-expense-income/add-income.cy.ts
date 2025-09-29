@@ -2,12 +2,7 @@ import { IndexedDbName } from "../../plugins/indexedDb/resource";
 import { ExpenseBelongsTo } from "../../support/api-resource-types";
 import { getExpenseIncome } from "../../support/fixture-utils/read-expense-income";
 import { NavBarSelectors } from "../../support/resource-types";
-import {
-  selectExpenseDate,
-  selectUploadReceipts,
-  validateExpenseDateInForm,
-  validateUploadReceiptSection
-} from "../5-expense/utils/expense-form-utils";
+import { selectExpenseDate, selectUploadReceipts, validateExpenseDateInForm, validateUploadReceiptSection } from "../5-expense/utils/expense-form-utils";
 import {
   getBelongsToLabel,
   ValidateExpenseCallbackFn,
@@ -55,8 +50,8 @@ function runAddIncomeTest(incomeRef: string, validateExpense: ValidateExpenseCal
   });
   cy.verifyCurrencySection();
 
-  cy.get('button[data-test="cancel-income"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
-  cy.get('button[data-test="submit-income"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Add").click();
+  cy.get('button[data-test="cancel-income"]').filter(":visible").should("have.length", 1).should("have.text", "Cancel");
+  cy.get('button[data-test="submit-income"]').filter(":visible").should("have.length", 1).should("have.text", "Add").click();
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.waitForPageLoad();
 

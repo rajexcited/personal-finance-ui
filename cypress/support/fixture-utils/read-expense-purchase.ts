@@ -22,7 +22,7 @@ export interface ExpensePurchaseDetailType {
   paymentAccountRef: string;
   purchaseDate: string;
   belongsTo: ExpenseBelongsTo.Purchase;
-  items: any[];
+  items: Array<Record<"id"|"name" | "amount" | "purchaseTypeRef", string>>;
 }
 
 const aliasName = "expensePurchaseMap";

@@ -2,12 +2,7 @@ import { getExpenseRefund } from "../../support/fixture-utils/read-expense-refun
 import { NavBarSelectors } from "../../support/resource-types";
 import { createOrUpdatePaymentAccount } from "../5-payment-accounts/utils/payment-account-api-utils";
 import { createOrUpdateRefundReason } from "../5-settings/utils/config-type-utils";
-import {
-  selectExpenseDate,
-  selectUploadReceipts,
-  validateExpenseDateInForm,
-  validateUploadReceiptSection
-} from "../5-expense/utils/expense-form-utils";
+import { selectExpenseDate, selectUploadReceipts, validateExpenseDateInForm, validateUploadReceiptSection } from "../5-expense/utils/expense-form-utils";
 import { ExpenseBelongsTo, ExpenseStatus } from "../../support/api-resource-types";
 import {
   getBelongsToLabel,
@@ -67,8 +62,8 @@ function runAddRefundWithoutPurchaseTest(refundRef: string, validateExpense: Val
   });
   cy.verifyCurrencySection();
 
-  cy.get('button[data-test="cancel-refund"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
-  cy.get('button[data-test="submit-refund"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Add").click();
+  cy.get('button[data-test="cancel-refund"]').filter(":visible").should("have.length", 1).should("have.text", "Cancel");
+  cy.get('button[data-test="submit-refund"]').filter(":visible").should("have.length", 1).should("have.text", "Add").click();
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.waitForPageLoad();
 
@@ -143,8 +138,8 @@ function runAddRefundWithPurchaseTest(refundRef: string, validateExpense: Valida
   });
   cy.verifyCurrencySection();
 
-  cy.get('button[data-test="cancel-refund"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
-  cy.get('button[data-test="submit-refund"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Add").click();
+  cy.get('button[data-test="cancel-refund"]').filter(":visible").should("have.length", 1).should("have.text", "Cancel");
+  cy.get('button[data-test="submit-refund"]').filter(":visible").should("have.length", 1).should("have.text", "Add").click();
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.waitForPageLoad();
 

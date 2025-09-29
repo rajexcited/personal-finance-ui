@@ -1,5 +1,12 @@
 import { ExpenseBelongsTo, ReceiptContentType } from "../../../support/api-resource-types";
-import { dateFormatLabel, dateTimestampFormatApi, expenseDateFormatFixture, formatTimestamp, parseTimestamp } from "../../../support/date-utils";
+import {
+  dateFormatLabel,
+  dateTimestampFormatApi,
+  expenseDateFormatFixture,
+  formatTimestamp,
+  parseTimestamp,
+  subtractDates
+} from "../../../support/date-utils";
 import { ExpenseIncomeDetailType, getExpenseIncome } from "../../../support/fixture-utils/read-expense-income";
 import { ExpensePurchaseDetailType, getExpensePurchase, ReceiptDetailType } from "../../../support/fixture-utils/read-expense-purchase";
 import { ExpenseRefundDetailType, getExpenseRefund } from "../../../support/fixture-utils/read-expense-refund";
@@ -21,7 +28,7 @@ export const getExpense = (belongsTo: ExpenseBelongsTo, ref: string): Cypress.Ch
   throw new UnSupportedError(belongsTo + " not configured in fixture");
 };
 
-export const getExpenseDateFormatLabel = (expenseData: UnionExpenseDetailType) => {
+const getExpenseDateInstance = (expenseData: UnionExpenseDetailType) => {
   let expenseDateFromData: string | null = null;
   if (expenseData.belongsTo === ExpenseBelongsTo.Purchase) {
     expenseDateFromData = expenseData.purchaseDate;
@@ -38,10 +45,15 @@ export const getExpenseDateFormatLabel = (expenseData: UnionExpenseDetailType) =
         `date for ${expenseData.belongsTo} is not in expected format[${expenseDateFormatFixture}]. actual date[${expenseDateFromData}]`
       );
     }
-    const dateLabel = formatTimestamp(dateInstance, dateFormatLabel);
-    return dateLabel;
+    return dateInstance;
   }
   throw new UnSupportedError("date not available");
+};
+
+export const getExpenseDateFormatLabel = (expenseData: UnionExpenseDetailType) => {
+  const dateInstance = getExpenseDateInstance(expenseData);
+  const dateLabel = formatTimestamp(dateInstance, dateFormatLabel);
+  return dateLabel;
 };
 
 const getVerifiedTimestampLabel = (expenseData: UnionExpenseDetailType) => {
@@ -83,6 +95,28 @@ export const getBelongsToLabel = (belongsTo: ExpenseBelongsTo) => {
   throw new UnSupportedError(belongsTo + " is not matched");
 };
 
+/**
+ * Loads more expenses if the target expense is older than 6 months.
+ * This function needs to be called before validating specific expense elements
+ * because the load-more button is outside the scope of individual cards/rows.
+ */
+const loadMoreExpenses = (expenseData: UnionExpenseDetailType) => {
+  const expenseDateInstance = getExpenseDateInstance(expenseData);
+  const monthsSinceExpense = (subtractDates(new Date(), expenseDateInstance)?.toDays() || 0) / 30;
+
+  if (monthsSinceExpense > 6) {
+    cy.get('[data-test="load-more-expense-action"]').scrollIntoView();
+    cy.get('[data-test="load-more-expense-action"]').should("be.visible").should("be.enabled").click();
+    cy.waitForPageLoad();
+    const pageMonths = 3;
+    let pageMonthsAccumulated = pageMonths - 6;
+    do {
+      cy.get('[data-test="load-more-expense-action"]').scrollIntoView().should("be.visible").should("be.enabled").click();
+      pageMonthsAccumulated -= pageMonths;
+    } while (pageMonthsAccumulated > 0);
+  }
+};
+
 export const validateExpenseCardOnSmall = (belongsTo: ExpenseBelongsTo, ref: string) => {
   cy.get('[data-test="expense-list-view"]').should("be.visible");
   cy.get('[data-test="expense-list-error-message"]').should("not.be.visible");
@@ -93,7 +127,10 @@ export const validateExpenseCardOnSmall = (belongsTo: ExpenseBelongsTo, ref: str
     const expenseCategoryName = getExpenseCategoryName(expenseData);
     const belongsToLabel = getBelongsToLabel(expenseData.belongsTo);
 
+    // Load more expenses BEFORE validating the specific card to ensure it's available
+    loadMoreExpenses(expenseData);
     // cy.pause();
+    // Find and validate the expense card that matches our criteria
     cy.get('[data-test="expense-card"]')
       .find('[data-test="card-header"]')
       .filter(`[data-belongs-to="${belongsToLabel}"]`)
@@ -167,33 +204,38 @@ export const validateExpenseTableRowOnLarge = (belongsTo: ExpenseBelongsTo, ref:
   cy.get('[data-test="expense-list-view"]').should("be.visible");
   cy.get('[data-test="expense-list-error-message"]').should("not.be.visible");
 
-  cy.get('[data-test="load-more-expense-action"]').should("be.visible").should("be.enabled");
-  // validate headers
-  const headerLabels = [
-    { label: "Type", isSortable: true },
-    { label: "Expense Date", isSortable: true },
-    { label: "Payment Account", isSortable: true },
-    { label: "Bill Name", isSortable: true },
-    { label: "Amount", isSortable: true },
-    { label: "Category", isSortable: false },
-    { label: "Tags", isSortable: false },
-    { label: "Actions", isSortable: false }
-  ];
-  cy.get('[data-test="expense-table"]')
-    .should("be.visible")
-    .within(() => {
-      cy.get("thead th")
-        .should("have.length", headerLabels.length)
-        .each(($th, $ind) => {
-          if (headerLabels[$ind].isSortable) {
-            cy.wrap($th).should("be.visible").should("contain.text", headerLabels[$ind].label).find(".icon").should("exist");
-          } else {
-            cy.wrap($th).should("be.visible").should("contain.text", headerLabels[$ind].label).find(".icon").should("not.exist");
-          }
-        });
+  cy.get('[data-test="load-more-expense-action"]').should("be.enabled");
 
-      getExpense(belongsTo, ref).then((data) => {
-        const expenseData = data as UnionExpenseDetailType;
+  getExpense(belongsTo, ref).then((data) => {
+    const expenseData = data as UnionExpenseDetailType;
+
+    // Load more expenses BEFORE validating the specific table row to ensure it's available
+    loadMoreExpenses(expenseData);
+
+    // validate headers
+    const headerLabels = [
+      { label: "Type", isSortable: true },
+      { label: "Expense Date", isSortable: true },
+      { label: "Payment Account", isSortable: true },
+      { label: "Bill Name", isSortable: true },
+      { label: "Amount", isSortable: true },
+      { label: "Category", isSortable: false },
+      { label: "Tags", isSortable: false },
+      { label: "Actions", isSortable: false }
+    ];
+    cy.get('[data-test="expense-table"]')
+      .should("be.visible")
+      .within(() => {
+        cy.get("thead th")
+          .should("have.length", headerLabels.length)
+          .each(($th, $ind) => {
+            if (headerLabels[$ind].isSortable) {
+              cy.wrap($th).should("be.visible").should("contain.text", headerLabels[$ind].label).find(".icon").should("exist");
+            } else {
+              cy.wrap($th).should("be.visible").should("contain.text", headerLabels[$ind].label).find(".icon").should("not.exist");
+            }
+          });
+
         const expenseDateLabel = getExpenseDateFormatLabel(expenseData);
         const expenseCategoryName = getExpenseCategoryName(expenseData);
         const belongsToLabel = getBelongsToLabel(expenseData.belongsTo);
@@ -257,7 +299,7 @@ export const validateExpenseTableRowOnLarge = (belongsTo: ExpenseBelongsTo, ref:
               });
           });
       });
-    });
+  });
   validateReceiptCarousel(belongsTo, ref);
   return cy.get("@actionContainer");
 };

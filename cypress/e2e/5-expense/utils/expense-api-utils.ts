@@ -359,9 +359,9 @@ const createOrUpdateExpensePurchaseViaApi = (purchaseData: ExpensePurchaseDetail
           return {
             id: pfi.id || `item-${ind}`,
             amount: pfi.amount,
-            billName: pfi.billName,
-            description: pfi.description,
-            tags: pfi.tags || [],
+            billName: pfi.name,
+            description: "",
+            tags: [],
             purchaseTypeId: purchaseTypeDataMapByRef[pfi.purchaseTypeRef]?.id
           };
         });

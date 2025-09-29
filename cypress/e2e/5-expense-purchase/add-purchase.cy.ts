@@ -4,12 +4,7 @@ import { NavBarSelectors } from "../../support/resource-types";
 import { createOrUpdatePaymentAccount } from "../5-payment-accounts/utils/payment-account-api-utils";
 import { validateAndToggleVerifyIndicator } from "./utils/purchase-form-utils";
 import { createOrUpdatePurchaseType } from "../5-settings/utils/config-type-utils";
-import {
-  selectExpenseDate,
-  selectUploadReceipts,
-  validateExpenseDateInForm,
-  validateUploadReceiptSection
-} from "../5-expense/utils/expense-form-utils";
+import { selectExpenseDate, selectUploadReceipts, validateExpenseDateInForm, validateUploadReceiptSection } from "../5-expense/utils/expense-form-utils";
 import { ExpenseBelongsTo } from "../../support/api-resource-types";
 import {
   getBelongsToLabel,
@@ -61,8 +56,8 @@ function runAddPurchaseTest(purchaseRef: string, validateExpense: ValidateExpens
   });
   cy.verifyCurrencySection();
 
-  cy.get('button[data-test="cancel-purchase"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Cancel");
-  cy.get('button[data-test="submit-purchase"]').filter(":visible").should("have.length", 1).should("be.visible").should("have.text", "Add").click();
+  cy.get('button[data-test="cancel-purchase"]').filter(":visible").should("have.length", 1).should("have.text", "Cancel");
+  cy.get('button[data-test="submit-purchase"]').filter(":visible").should("have.length", 1).should("have.text", "Add").click();
   cy.get('[data-test="loading-spinner"]').should("be.visible");
   cy.waitForPageLoad();
 
@@ -86,17 +81,7 @@ describe("Expense - Add Purchase Flow", () => {
   context(
     "A logged in and active user can add a new purchase successfully",
     {
-      tags: [
-        "expense",
-        "purchase",
-        "regression",
-        "positive",
-        "add",
-        "add-purchase-tc1",
-        "view",
-        "view-expense-list-tc1",
-        "view-receipts-expenses-tc2"
-      ]
+      tags: ["expense", "purchase", "regression", "positive", "add", "add-purchase-tc1", "view", "view-expense-list-tc1", "view-receipts-expenses-tc2"]
     },
     () => {
       it("via Google Pixel 9 Pro", { tags: ["mobile"] }, () => {

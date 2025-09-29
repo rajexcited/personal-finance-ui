@@ -1,0 +1,79 @@
+{
+  "user1-success": {
+    "description": "all other scenarios, login, expense, payment accounts, settings, etc.",
+    "firstName": "Saitama",
+    "lastName": "Sensei",
+    "emailId": "saitama.opm@example.com",
+    "password": "0nePUnch!",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user2-signup-success-run1": {
+    "description": "signup success scenario",
+    "firstName": "sardar vallabhbhai",
+    "lastName": "patel",
+    "emailId": "sardar.vallabhbhai.patel@example.com",
+    "password": "$Ardar456",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user4-signup-success-run1": {
+    "description": "signup success scenario",
+    "firstName": "Luffy",
+    "lastName": "Monkey D",
+    "emailId": "luffy.pirateking@example.com",
+    "password": "G0muG0mu!",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user3-duplicate": {
+    "description": "signup duplicate and login denied scenarios",
+    "firstName": "Steven",
+    "lastName": "Jobs",
+    "emailId": "steven.jobs@example.com",
+    "password": "$tEven123",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user1-success-run2": {
+    "description": "all other scenarios, login, expense, payment accounts, settings, etc. for run2",
+    "firstName": "Goku",
+    "lastName": "Son",
+    "emailId": "goku.saiyan@example.com",
+    "password": "$anG0ku1",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user2-signup-success": {
+    "firstName": "Naruto",
+    "lastName": "Uzumaki",
+    "emailId": "naruto.uzumaki@demo.com",
+    "password": "Ras<ngan2025!",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user4-signup-success": {
+    "firstName": "Light",
+    "lastName": "Yagami",
+    "emailId": "light.kira@example.com",
+    "password": "D34thN0te#",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user5-success": {
+    "firstName": "Ichigo",
+    "lastName": "Kurosaki",
+    "emailId": "ichigo.shinigami@example.com",
+    "password": "B@nkai123",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  },
+  "user10-success": {
+    "firstName": "Eren",
+    "lastName": "Yeager",
+    "emailId": "eren.titan@example.com",
+    "password": "F0und1ngT!",
+    "countryText": "United States of America",
+    "countryCode": "USA"
+  }
+}
